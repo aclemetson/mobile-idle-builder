@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_10
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_10
+  displayName: 'Spallation: Bromine to Gallium'
+  description: 'Spallation: Bromine to Gallium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 68db96b3a01840542b477e7bf10713ba, type: 2}
+  depthInTree: 24
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 17700000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 3e969bbc28633de4cb8a93f2077b8048, type: 2}
+  - {fileID: 11400000, guid: a44f5b0f14e5c0947a0e3505237d6976, type: 2}
+  - {fileID: 11400000, guid: 9ffbf013a224d3947b74fb8730a66349, type: 2}
+  - {fileID: 11400000, guid: 949b7487c47f6eb4cab3b5e207c6a8a0, type: 2}
+  - {fileID: 11400000, guid: 7a4f4bd0ff4598c41a3333cd60fab9db, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 278b97c5376cb4b48a0d34053f7d738e, type: 2}
+  - {fileID: 11400000, guid: 641e74ebe4ecac045980d9c971d96735, type: 2}
+  - {fileID: 11400000, guid: 882831d92ffb27643858c704814e1a9e, type: 2}
+  - {fileID: 11400000, guid: a9e0dabc90d034c4d93ec2ee896fde5e, type: 2}
+  - {fileID: 11400000, guid: 19cc8727fad8b384d9f68616d7ea3a77, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 77635a3946f63554da5cd3071dca709b, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Bromine to Gallium'

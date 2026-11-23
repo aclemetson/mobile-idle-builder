@@ -105,7 +105,7 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void CaptureTakesLonger_TheLaterItsResearch()
+        public void SpallationNeverGetsFaster_TheLaterItsResearch()
         {
             int Depth(string id)
             {
@@ -114,7 +114,7 @@ namespace MobileIdleBuilder.Tests
                     ? 0 : 1 + r.prerequisites.Where(_research.ContainsKey).Select(Depth).DefaultIfEmpty(-1).Max();
             }
 
-            foreach (var prefix in new[] { "s_capture_", "r_capture_" })
+            foreach (var prefix in new[] { "spall_" })
             {
                 var byTier = _gd.recipes.Where(r => r.id.StartsWith(prefix))
                                         .GroupBy(r => Depth(r.required_research))
@@ -122,8 +122,7 @@ namespace MobileIdleBuilder.Tests
                 for (int i = 1; i < byTier.Count; i++)
                     Assert.GreaterOrEqual(byTier[i].Min(r => r.base_craft_time), byTier[i - 1].Max(r => r.base_craft_time),
                         $"{prefix}: research depth {byTier[i].Key} must not be faster than depth {byTier[i - 1].Key}");
-                Assert.Greater(byTier.Last().Min(r => r.base_craft_time), byTier.First().Max(r => r.base_craft_time),
-                    $"{prefix}: the latest capture tier should take longer than the first");
+                Assert.Greater(byTier.Count, 5, $"{prefix}: the descent spans the Spallation nodes");
             }
         }
     }

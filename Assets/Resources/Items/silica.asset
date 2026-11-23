@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: "Silicon dioxide \u2014 the primary component of sand, glass, and quartz.
     Ultrapure silica is the substrate from which semiconductor wafers are grown."
   codexUnlocked: 0
-  baseSellValue: 42100
+  baseSellValue: 4010
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Neon (Ne), element number 10 with mass number 20. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 1210
+  baseSellValue: 600
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

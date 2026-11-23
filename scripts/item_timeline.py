@@ -158,7 +158,7 @@ def atoms(formula):
 CHEM_SOURCES = [
     ("hydrogen_gas", "Hydrogen Gas", "H2", "keep"), ("oxygen_gas", "Oxygen Gas", "O2", "keep"),
     ("nitrogen_gas", "Nitrogen Gas", "N2", "keep"), ("graphite", "Graphite", "C", "keep"),
-    ("sulfur", "Sulfur", "S", "new"), ("phosphorus", "Red Phosphorus", "P", "new"),
+    ("native_sulfur", "Native Sulfur", "S", "new"), ("red_phosphorus", "Red Phosphorus", "P", "new"),
     ("halite", "Halite (rock salt)", "NaCl", "new"), ("sylvite", "Sylvite (potash)", "KCl", "new"),
     ("limestone", "Limestone", "CaCO3", "new"),
 ]
@@ -186,9 +186,9 @@ CHEM = [
     ("acetic_acid", "Acetic Acid", "C2H4O2", "c3", [(1, "methanol"), (1, "carbon_monoxide")], 1, [], ORG, "new"),
     ("glycerol", "Glycerol", "C3H8O3", "c3", [(3, "carbon_monoxide"), (4, "hydrogen_gas")], 1, [], ORG, "new"),
     # C4 Phosphorus & Sulfur
-    ("hydrogen_sulfide", "Hydrogen Sulfide", "H2S", "c4", [(1, "sulfur"), (1, "hydrogen_gas")], 1, [], SYN, "new"),
-    ("sulfuric_acid", "Sulfuric Acid", "H2SO4", "c4", [(2, "sulfur"), (3, "oxygen_gas"), (2, "water")], 2, [], REACT, "keep"),
-    ("phosphoric_acid", "Phosphoric Acid", "H3PO4", "c4", [(4, "phosphorus"), (5, "oxygen_gas"), (6, "water")], 4, [], REACT, "new"),
+    ("hydrogen_sulfide", "Hydrogen Sulfide", "H2S", "c4", [(1, "native_sulfur"), (1, "hydrogen_gas")], 1, [], SYN, "new"),
+    ("sulfuric_acid", "Sulfuric Acid", "H2SO4", "c4", [(2, "native_sulfur"), (3, "oxygen_gas"), (2, "water")], 2, [], REACT, "keep"),
+    ("phosphoric_acid", "Phosphoric Acid", "H3PO4", "c4", [(4, "red_phosphorus"), (5, "oxygen_gas"), (6, "water")], 4, [], REACT, "new"),
     ("glycerol_phosphate", "Glycerol Phosphate", "C3H9O6P", "c4", [(1, "glycerol"), (1, "phosphoric_acid")], 1, [(1, "water")], ORG, "new"),
     # C5 Building Blocks of Life
     ("glycine", "Glycine", "C2H5NO2", "c5", [(1, "acetic_acid"), (1, "ammonia")], 1, [(1, "hydrogen_gas")], ORG, "new"),
@@ -241,44 +241,30 @@ def proposal(gd, built):
                      "builtDays": built_d.get(iid), "pinDay": None, **kw})
 
     # ── Physics: fusion climbs to Mn (Silicon on day 4 opens Chemistry), Uranium walks down to Iron ──
-    particles = {"up_quark": "p_ignition", "down_quark": "p_ignition", "electron": "p_ignition",
-                 "proton": "p_ignition", "neutron": "p_ignition", "neutrino": "p_light1",
-                 "gamma_photon": "p_light1", "alpha_particle": "p_descent", "beta_particle": "p_descent"}
-    for iid, ph in particles.items():
+    # Rows follow PHYS_NODES (the research nodes the game will get), so the timeline and the game agree.
+    def add_item(iid, ph_, node, how, status="keep"):
         it = items.get(iid)
         if it:
-            add(iid, it["display_name"], "world_physics", ph, "keep", z=0, how="particle")
-
-    def phys_phase(z):
-        if z <= 2 or z == 6: return "p_ignition"
-        if z <= 8: return "p_light1"
-        if z <= 14: return "p_light2"
-        if z < 26: return "p_light3"
-        if z == 26: return "p_iron"
-        if 81 <= z <= 92: return "p_descent"
-        if z < 81: return "p_metals"
-        return "p_deep"
-
-    how_by_phase = {"p_ignition": "atom generator / first fusion", "p_light1": "fusion", "p_light2": "fusion",
-                    "p_light3": "fusion", "p_iron": "both ends: fusion and descent", "p_descent": "decay chain",
-                    "p_metals": "fission / neutron capture", "p_deep": "transuranic / superheavy"}
-    elements = sorted((i for i in gd["items"] if i.get("category") in ("Element", "Isotope")
-                       and (i.get("world") or "world_physics") == "world_physics"),
-                      key=lambda i: (i.get("atomic_number") or 0, i["id"]))
-    for it in elements:
-        z = it.get("atomic_number") or 0
-        ph_ = phys_phase(z)
-        how = "mined source" if it["id"] == "uranium" else how_by_phase[ph_]
-        add(it["id"], it["display_name"], "world_physics", ph_,
-            "moved" if ph_ in ("p_descent", "p_metals", "p_iron") else "keep", z=z, how=how)
+            add(iid, it["display_name"], "world_physics", ph_, status, z=it.get("atomic_number") or 0,
+                how=how, node=node)
+    for iid in ("up_quark", "down_quark", "electron", "proton", "neutron", "deuterium", "hydrogen", "helium_4",
+                "carbon"):
+        add_item(iid, "p_ignition", None, "tutorial")
     order_key = {p["id"]: i for i, p in enumerate(PHASES)}
-    desc = ("p_descent", "p_metals")
-    rows.sort(key=lambda r: (order_key[r["phase"]], 0 if r["id"] == "uranium" else 1,
-                             -r["z"] if r["phase"] in desc else r["z"]))
+    for node, name, ph_, iids, *_ in phys_nodes(items):
+        for iid in iids:
+            how = {"p_descent": "decay chain", "p_metals": "spallation", "p_iron": "both ends meet",
+                   "p_deep": "transuranic / superheavy"}.get(ph_, "fusion")
+            add_item(iid, ph_, node, "mined source" if iid == "uranium" else how,
+                     "moved" if ph_ in ("p_descent", "p_metals", "p_iron") else "keep")
+    for ph_, iids in (("p_light1", ("neutrino", "gamma_photon")), ("p_descent", ("alpha_particle", "beta_particle"))):
+        for iid in iids:
+            add_item(iid, ph_, None, "byproduct particle")
+    rows.sort(key=lambda r: order_key[r["phase"]])     # stable: keeps node order inside a phase
 
     # ── Chemistry: life chemistry ──
     src_phase = {"hydrogen_gas": "c1", "oxygen_gas": "c1", "nitrogen_gas": "c2", "graphite": "c2",
-                 "sulfur": "c4", "phosphorus": "c4", "halite": "c5", "sylvite": "c5", "limestone": "c5"}
+                 "native_sulfur": "c4", "red_phosphorus": "c4", "halite": "c5", "sylvite": "c5", "limestone": "c5"}
     for iid, name, f, st in CHEM_SOURCES:
         add(iid, name, "world_chemistry", src_phase[iid], st, formula=f, how="mined source")
     for iid, name, f, ph_, ins, outq, byp, b, st in CHEM:
@@ -324,8 +310,56 @@ LATER_RECIPES = {
     "graviton_lens": ([(2, "metamaterial"), (1, "quantum_processor")], 5400),
     "dyson_node": ([(1, "graviton_lens"), (1, "orbital_frame"), (1, "antimatter_cell"), (1, "ecosystem")], 7200),
 }
-# Craft seconds for one step down the descent (decay is quick, fission/capture slower).
-DESCENT_CRAFT = {"p_descent": 20.0, "p_metals": 30.0}
+# Craft seconds for one spallation step (heavier element + neutron -> the next lighter element).
+SPALLATION_CRAFT = 30.0
+DROP_RESEARCH_RECIPES = set()
+
+# The Physics research nodes after the tutorial, in order: (id, display name, phase, items it unlocks,
+# buildings it unlocks, fields it lets you buy). Existing ids are kept where the content matches, so saves,
+# tests and the Chemistry prerequisites keep working. Metal Descent is generated: 5 elements per node, from
+# Mercury down to Cobalt.
+PHYS_NODES_FIXED = [
+    ("light_elements", "Light Elements", "p_light1", ["lithium", "beryllium", "boron"], [], []),
+    ("cno_cycle", "CNO Cycle", "p_light1", ["nitrogen", "oxygen"], [], []),
+    ("fusion_ii", "Stellar Forge", "p_light2", ["fluorine", "neon", "sodium"], [], []),
+    ("mid_elements", "Neon Burning", "p_light2", ["magnesium", "aluminum", "silicon"], [], []),
+    ("fusion_iii", "Oxygen Burning", "p_light3", ["phosphorus", "sulfur", "chlorine", "argon"], [], []),
+    ("explosive_burning", "Explosive Burning", "p_light3", ["potassium", "calcium", "scandium", "titanium"], [], []),
+    ("silicon_burning", "Silicon Burning", "p_light3", ["vanadium", "chromium", "manganese"], [], []),
+    ("heavy_elements", "Uranium Vein", "p_descent", ["uranium", "thorium", "radium"],
+     ["radioactive_containment"], ["uranium_field"]),
+    ("radioactive_isotopes", "Radioactive Decay", "p_descent", ["radon", "polonium", "lead"], [], []),
+    ("isotope_chemistry", "Isotope Chemistry", "p_descent",
+     ["uranium_235", "thorium_233", "protactinium", "radium_227", "actinium"], ["isotopic_manipulator"], []),
+    ("decay_branches", "Decay Branches", "p_descent",
+     ["radon_223", "francium", "radon_211", "astatine", "lead_209", "bismuth", "lead_201", "thallium"], [], []),
+]
+PHYS_NODES_TAIL = [
+    ("iron_convergence", "Iron Convergence", "p_iron", ["iron"], [], []),
+    ("fission_i", "Breeder Reactor", "p_deep", ["neptunium", "plutonium"], ["fission_reactor"], []),
+    ("transuranic_elements", "Transuranic Elements", "p_deep",
+     ["americium", "curium", "berkelium", "californium", "einsteinium", "fermium"], [], []),
+    ("superheavy_synthesis", "Superheavy Synthesis", "p_deep",
+     ["mendelevium", "nobelium", "lawrencium", "rutherfordium", "dubnium", "seaborgium", "bohrium", "hassium",
+      "meitnerium", "darmstadtium"], [], []),
+    ("island_of_stability", "Island of Stability", "p_deep",
+     ["roentgenium", "copernicium", "nihonium", "flerovium", "moscovium", "livermorium", "tennessine",
+      "oganesson"], [], []),
+]
+SPALLATION_PER_NODE = 5
+
+
+def phys_nodes(items):
+    """PHYS_NODES_FIXED + the generated Metal Descent nodes (Hg -> Co) + PHYS_NODES_TAIL."""
+    by_z = {i.get("atomic_number"): i for i in items.values() if i.get("category") == "Element"}
+    metals = [by_z[z]["id"] for z in range(80, 26, -1) if z in by_z]
+    nodes = list(PHYS_NODES_FIXED)
+    for k in range(0, len(metals), SPALLATION_PER_NODE):
+        chunk = metals[k:k + SPALLATION_PER_NODE]
+        first, last = items[chunk[0]]["display_name"], items[chunk[-1]]["display_name"]
+        nodes.append((f"spallation_{k // SPALLATION_PER_NODE + 1}", f"Spallation: {first} to {last}", "p_metals",
+                      chunk, ["neutron_capture"] if k == 0 else [], []))
+    return nodes + PHYS_NODES_TAIL
 # Default craft seconds for a new Chemistry reaction, by phase (kept items keep today's craft time).
 CHEM_CRAFT = {"c1": 15, "c2": 30, "c3": 45, "c4": 60, "c5": 90, "c6": 150}
 
@@ -335,28 +369,45 @@ def attach_recipes(gd, rows, built):
     LATER_RECIPES, Chemistry from its reaction (today's craft time when the item already exists), Physics from
     its first recipe in game_data.json. Sources with no inputs are mines."""
     value = {b["id"]: b["value"] for b in built}
-    prev = None
+    items_by_id = {i["id"]: i for i in gd["items"]}
+    phys_buildings = {bd["id"] for bd in gd["buildings"] if bd.get("world") == "world_physics"}
+    phys_first = {}
+    for r in gd["recipes"]:
+        if set(r.get("valid_buildings") or []) & phys_buildings and r.get("required_research") not in DROP_RESEARCH_RECIPES:
+            if not r["id"].startswith(("s_capture_", "r_capture_", "fuse_iron", "fission_")):
+                phys_first.setdefault(r["output_item"], r)
+    z_of = {i["id"]: i.get("atomic_number") or 0 for i in gd["items"]}
+    elem_by_z = {i.get("atomic_number"): i["id"] for i in gd["items"] if i.get("category") == "Element"}
     for row in rows:
-        if row["phase"] in ("p_descent", "p_metals") and row.get("z"):
-            if row["id"] == "uranium":
-                row["inputs"], row["craft"], row["outQ"] = [], 60.0, 1
-            elif prev:
-                extra = [{"item": "neutron", "q": 1}] if row["phase"] == "p_metals" else []
-                row["inputs"] = [{"item": prev, "q": 1}] + extra
-                row["craft"] = DESCENT_CRAFT[row["phase"]]
-                row["outQ"] = 1
-                row["how"] = ("decay of " if row["phase"] == "p_descent" else "fission / capture from ") + prev
-            prev = row["id"]
-        elif row["id"] == "iron":
-            row["inputs"] = [{"item": "manganese", "q": 1}, {"item": prev or "cobalt", "q": 1}]
+        if row["world"] != "world_physics" or row["phase"] == "p_ignition":
+            continue
+        iid = row["id"]
+        if iid == "uranium":
+            row["inputs"], row["craft"], row["outQ"] = [], 60.0, 1
+        elif row["phase"] == "p_metals":
+            heavier = elem_by_z[z_of[iid] + 1]
+            row["inputs"] = [{"item": heavier, "q": 1}, {"item": "neutron", "q": 1}]
+            row["craft"], row["outQ"] = SPALLATION_CRAFT, 1
+            row["how"] = "spallation of " + heavier
+        elif iid == "iron":
+            row["inputs"] = [{"item": "manganese", "q": 1}, {"item": "cobalt", "q": 1}]
             row["craft"], row["outQ"] = 60.0, 1
-    descent_done = {r["id"] for r in rows if r.get("inputs") is not None and r["phase"] in ("p_descent", "p_metals", "p_iron")}
+        elif iid in phys_first:
+            r = phys_first[iid]
+            row["inputs"] = [{"item": i["item"], "q": i["quantity"]} for i in r["inputs"]]
+            row["craft"], row["outQ"] = float(r.get("base_craft_time") or 1), r.get("output_quantity") or 1
+            row["recipe"] = r["id"]
+        else:
+            row["inputs"], row["craft"], row["outQ"] = [], None, 1
+    descent_done = {r["id"] for r in rows if r["world"] == "world_physics" and r["phase"] != "p_ignition"}
     first = {}
     for r in gd["recipes"]:
         first.setdefault(r["output_item"], r)
     for row in rows:
         iid = row["id"]
         row["builtValue"] = value.get(iid)
+        if row.get("how") == "byproduct particle":
+            row["builtValue"] = float(items_by_id[iid].get("base_sell_value") or 0)
         if iid in descent_done:
             continue
         if iid in LATER_RECIPES:
@@ -503,34 +554,40 @@ WALLS = [
 # Prestige shop plan: today's upgrades plus one track per world, each priced so its walls fall at the planned
 # repeats. Costs are prestige currency per level.
 UPGRADES = [
+    # Prestige currency is log10(net worth): a run earns ~90 at the first wall, ~250 at Iron, ~500 at the Dyson
+    # Node. Each new level costs about half a prestige at the wall it is for, rising x1.4, so every repeat at a
+    # wall buys about one level. "effect" names the per-world multiplier the game applies (2026-11-23).
     {"id": "assembly_line", "name": "Assembly Line", "effect": "+10% craft speed / level", "levels": 5,
      "costs": "15, 30, 60, 120, 240", "status": "keep", "world": "All", "walls": "Oxygen, Silicon"},
     {"id": "memory_resonance", "name": "Memory Resonance", "effect": "-5% research cost / level", "levels": 5,
      "costs": "10, 20, 40, 80, 160", "status": "keep", "world": "All", "walls": "Oxygen, Silicon"},
     {"id": "quantum_yield", "name": "Quantum Yield", "effect": "+10% output / level", "levels": 10,
-     "costs": "40, 80, 160, 320, 640, 1.3k, 2.6k, 5k, 10k, 20k", "status": "extend (5 -> 10)",
+     "costs": "40, 80, 160, 320, 640, 960, 1500, 2200, 3300, 4900", "status": "extend (5 -> 10)",
      "world": "All", "walls": "Sodium, Copper"},
-    {"id": "entropy_headstart", "name": "Entropy Headstart", "effect": "start with more entropy (x4 per level)",
-     "levels": 10, "costs": "5 ... 2.5k", "status": "extend (5 -> 10)", "world": "All", "walls": "Sodium"},
+    {"id": "entropy_headstart", "name": "Entropy Headstart", "effect": "+250 starting entropy / level",
+     "levels": 5, "costs": "5, 10, 20, 40, 80", "status": "keep", "world": "All", "walls": "Sodium"},
     {"id": "research_overdrive", "name": "Research Overdrive", "effect": "-5% research timer / level",
-     "levels": 10, "costs": "30 ... 2.8k", "status": "keep", "world": "All", "walls": "Titanium"},
-    {"id": "entropy_echo", "name": "Entropy Echo", "effect": "+5% prestige currency / level", "levels": 8,
-     "costs": "200, 600, 1.8k, 5.4k, 16k, 49k, 146k, 437k", "status": "extend (4 -> 8)", "world": "All",
-     "walls": "Titanium, Ecosystem"},
-    {"id": "fission_yield", "name": "Fission Yield", "effect": "+15% decay and fission output / level",
-     "levels": 6, "costs": "300 ... 10k", "status": "new", "world": "Physics", "walls": "Lead, Iron"},
-    {"id": "neutron_economy", "name": "Neutron Economy", "effect": "-10% neutrons per capture / level",
-     "levels": 5, "costs": "800 ... 13k", "status": "new", "world": "Physics", "walls": "Copper, Iron"},
+     "levels": 10, "costs": "30 ... 2800", "status": "keep", "world": "All", "walls": "Titanium"},
+    {"id": "entropy_echo", "name": "Entropy Echo", "effect": "+5% prestige currency / level", "levels": 4,
+     "costs": "200, 600, 1800, 5400", "status": "keep", "world": "All", "walls": "Titanium, Ecosystem"},
+    {"id": "fission_yield", "name": "Fission Yield", "effect": "+15% Physics output / level",
+     "levels": 6, "costs": "95, 140, 190, 270, 370, 520", "status": "new", "world": "Physics", "walls": "Lead, Iron"},
+    {"id": "neutron_economy", "name": "Neutron Economy", "effect": "+10% Physics craft speed / level",
+     "levels": 5, "costs": "130, 180, 250, 340, 480", "status": "new", "world": "Physics", "walls": "Copper, Iron"},
     {"id": "spring_pressure", "name": "Spring Pressure", "effect": "+20% Spring flow / level", "levels": 6,
-     "costs": "250 ... 8k", "status": "new", "world": "Chemistry", "walls": "HCN, Palmitic Acid"},
+     "costs": "89, 130, 180, 250, 340, 480", "status": "new", "world": "Chemistry", "walls": "HCN, Palmitic Acid"},
     {"id": "catalysis", "name": "Catalysis", "effect": "+15% Chemistry craft speed / level", "levels": 8,
-     "costs": "600 ... 40k", "status": "new", "world": "Chemistry", "walls": "Phosphoric Acid, Palmitic Acid, ATP"},
+     "costs": "120, 170, 230, 320, 450, 630, 870, 1300", "status": "new", "world": "Chemistry",
+     "walls": "Phosphoric Acid, Palmitic Acid, ATP"},
     {"id": "growth_media", "name": "Growth Media", "effect": "+15% Biology output / level", "levels": 8,
-     "costs": "5k ... 300k", "status": "new", "world": "Biology", "walls": "Prokaryotic Cell, Ecosystem"},
-    {"id": "furnace_heat", "name": "Furnace Heat", "effect": "+15% Metallurgy speed / level", "levels": 8,
-     "costs": "40k ... 2.5M", "status": "new", "world": "Metallurgy", "walls": "Titanium Alloy, Metamaterial"},
+     "costs": "180, 250, 350, 480, 680, 940, 1400, 1900", "status": "new", "world": "Biology",
+     "walls": "Prokaryotic Cell, Ecosystem"},
+    {"id": "furnace_heat", "name": "Furnace Heat", "effect": "+15% Metallurgy craft speed / level", "levels": 8,
+     "costs": "220, 310, 440, 610, 850, 1200, 1700, 2400", "status": "new", "world": "Metallurgy",
+     "walls": "Titanium Alloy, Metamaterial"},
     {"id": "precision", "name": "Precision", "effect": "+10% Engineering output / level", "levels": 8,
-     "costs": "250k ... 16M", "status": "new", "world": "Engineering", "walls": "Metamaterial, Graviton Lens"},
+     "costs": "240, 330, 460, 650, 900, 1300, 1800, 2500", "status": "new", "world": "Engineering",
+     "walls": "Metamaterial, Graviton Lens"},
 ]
 
 # Pricing model the page applies live (edit it there):
@@ -538,7 +595,7 @@ UPGRADES = [
 #   value   = (inputs + wage x craft) / output quantity  (the game's derived-economy rule, with wage on time)
 #   research cost = buildings x wage x upgrade multiplier x active seconds since the world's previous unlock,
 #   where the upgrade multiplier grows (1 + wallGain) per wall already cleared. Tutorial items keep their values.
-PRICES = {"wage0": 20, "anchorH": 1.0, "doubleH": 10, "buildings": 5, "wallGain": 0.35, "minPaybackMin": 2}
+PRICES = {"wage0": 20, "anchorH": 1.0, "doubleH": 10, "buildings": 5, "wallGain": 0.15, "minPaybackMin": 2}
 
 
 # Ascension: once every item is unlocked, Ascend (worlds lock again; items, research and prestige currency
@@ -547,6 +604,9 @@ PRICES = {"wage0": 20, "anchorH": 1.0, "doubleH": 10, "buildings": 5, "wallGain"
 ASCENSION = {"firstLoopDays": 91, "loopShrink": 0.82, "floorDays": 21, "materialFirst": 10,
              "materialGrowth": 1.18, "stageCostFirst": 10, "stageCostGrowth": 1.55, "stageBonusPct": 10,
              "years": 4}
+
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 def main():
@@ -563,6 +623,13 @@ def main():
         "prices": PRICES,
         "asBuilt": built, "proposal": prop,
     }
+    if "--export" in sys.argv:
+        out = ROOT_DIR / "docs" / "balance" / "item-timeline-plan.json"
+        keep = {k: data[k] for k in ("generated", "phases", "proposal", "walls", "upgrades", "ascension",
+                                     "activeHoursPerDay", "prices", "worlds")}
+        out.write_text(json.dumps(keep, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+        print(out)
+        return
     if "--check" in sys.argv:
         print(f"as built: {len(built)} items; proposal: {len(prop)} rows; runs: {len(runs)} ({runs_source})")
         print(f"Chemistry opens at {chem['h']:.1f} active h / {chem['days']:.1f} days, after run {chem['afterRun']}")

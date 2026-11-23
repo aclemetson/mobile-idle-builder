@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: 'The workhorse of industrial chemistry: a strong diprotic acid made
     from sulfur, oxygen, and hydrogen.'
   codexUnlocked: 0
-  baseSellValue: 79600
+  baseSellValue: 6360
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

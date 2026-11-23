@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Lead with seven neutrons removed. It captures an electron and becomes
     Thallium-201, used in heart scans.
   codexUnlocked: 0
-  baseSellValue: 65900
+  baseSellValue: 5630
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

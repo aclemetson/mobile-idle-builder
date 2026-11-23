@@ -23,15 +23,15 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: ae97d5b34020944489d374a606b1cc39, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 172
-  manualCraftTime: 172
+  baseCraftTime: 60
+  manualCraftTime: 60
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 2d7c496a801b4914da73d81a39290f27, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 219e645a0be6cd14f8d941ce4841deee, type: 2}
+  requiredResearch: {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
   simplificationNote: Harvested from a fissile field.

@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: A neutron-heavy radon that beta-decays into Francium-223, the only
     francium found in nature.
   codexUnlocked: 0
-  baseSellValue: 61400
+  baseSellValue: 4500
   isotopeSellMultiplier: 1.148
   escapesAsEntropy: 0

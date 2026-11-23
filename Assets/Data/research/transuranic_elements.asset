@@ -13,27 +13,24 @@ MonoBehaviour:
   m_Name: transuranic_elements
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: transuranic_elements
-  displayName: Transuranic Synthesis
-  description: "Unlock plutonium \u2014 heavier than uranium, only stable in carefully
-    controlled nuclear conditions."
+  displayName: Transuranic Elements
+  description: Americium to Fermium, assembled nucleon by nucleon.
   icon: {fileID: 0}
   branch: 1
   prerequisites:
-  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
-  depthInTree: 11
-  block: synthetic_frontier
+  - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
+  depthInTree: 28
+  block: deep_physics
   treeX: -1
   treeY: -1
   requiredWorld: world_chemistry
   world: world_physics
-  costBaseCurrency: 265000000
+  costBaseCurrency: 6710000000
   costPrestigeCurrency: 0
-  durationSeconds: 7200
+  durationSeconds: 3600
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
-  - {fileID: 11400000, guid: e641a470bcfe96d41a60bb21fda4e7ef, type: 2}
-  - {fileID: 11400000, guid: 2f5ade56dc84849479196cd977a31212, type: 2}
   - {fileID: 11400000, guid: d122a8df04b9882438bac0800c224f1d, type: 2}
   - {fileID: 11400000, guid: c1f8395abe816e6439f2b2f386b3bd70, type: 2}
   - {fileID: 11400000, guid: 959f572c33a24fa4392e3c959f8734ce, type: 2}
@@ -41,8 +38,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f6e556eef630c3f4f88d23041c599cd5, type: 2}
   - {fileID: 11400000, guid: 9f2edcf6f9b4fd9448f277de751a9928, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 194369f721a00bc49b6fe9c24f2c2838, type: 2}
-  - {fileID: 11400000, guid: 3147937b0dc07804f8f2554f07ad699c, type: 2}
   - {fileID: 11400000, guid: 825eb24d3e6c9554da4e5c60fc8ad417, type: 2}
   - {fileID: 11400000, guid: 69306d901a1f6c44ab93bec2aa585abe, type: 2}
   - {fileID: 11400000, guid: 1c00d9d851b76d5478fa188f5eeebf46, type: 2}

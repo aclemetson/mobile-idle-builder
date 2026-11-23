@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_2
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_2
+  displayName: 'Spallation: Rhenium to Lutetium'
+  description: 'Spallation: Rhenium to Lutetium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 0cfd34920e495da4782d7cfc42b81da8, type: 2}
+  depthInTree: 16
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 6270000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 9bd03071e3b484d4e922eab7313f7e72, type: 2}
+  - {fileID: 11400000, guid: 833a0def7293a3b4da63df48e83593e1, type: 2}
+  - {fileID: 11400000, guid: 54e1be32f8019c0439fd8701f11665a9, type: 2}
+  - {fileID: 11400000, guid: aa28db57f21966c4a8e83f8e24d93c0f, type: 2}
+  - {fileID: 11400000, guid: c95a666dd713d4547902ee0d477feef7, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 8eafd003527c1ea4f83175e9ceddde42, type: 2}
+  - {fileID: 11400000, guid: 788d00af81b4e4247bbba7b2a733da11, type: 2}
+  - {fileID: 11400000, guid: eea7c2746eed6344ea262b131943ed4a, type: 2}
+  - {fileID: 11400000, guid: 06236a20cdac58844a0a509fd5351374, type: 2}
+  - {fileID: 11400000, guid: 3261dfbec2970be468d404a4ccd45aa2, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 621a1d20a5d7f7d478631ff482fb6585, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Rhenium to Lutetium'

@@ -365,7 +365,8 @@ namespace MobileIdleBuilder
             // for the world they belong to. Runs on scene load and every site/world switch.
             if (save != null && _ecsReady)
             {
-                WorldRules.Apply(_em, WorldRules.StreamTransport(save), FindAnyObjectByType<BuildingVisualizer>());
+                WorldRules.Apply(_em, WorldRules.StreamTransport(save), FindAnyObjectByType<BuildingVisualizer>(),
+                    WorldRules.ActiveWorld(save)?.id);
                 // Each world runs its own tutorial; the Physics one never runs in Chemistry.
                 TutorialFlows.Activate(_em, save, WorldRules.ActiveWorld(save));
             }
@@ -583,7 +584,7 @@ namespace MobileIdleBuilder
             float megaSpeedMult = 1f + (MegastructureService.Instance?.GetSpeedBonus() ?? 0f);
             float boostMult     = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
             float globalRate    = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f)
-                                  * boostMult * megaSpeedMult;
+                                  * boostMult * megaSpeedMult * WorldRules.WorldMultipliers(WorldRules.ActiveWorld(save)?.id).speed;
 
             int primed = BeltPrimer.PrimeAllChains(_em, _conveyorQuery, _buildingQuery, resolve, globalRate);
             if (primed > 0)
@@ -680,7 +681,10 @@ namespace MobileIdleBuilder
             float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
             // Quantum Yield (prestige output) composes the same way it does live in ProductionSystem.
             if (save.prestigeOutputMultiplier > 0f) megaOutputMult *= save.prestigeOutputMultiplier;
-            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * megaSpeedMult;
+            // The live world's shop track (Fission Yield, Neutron Economy...), as ProductionSystem reads it.
+            var (worldSpeed, worldOutput) = WorldRules.WorldMultipliers(WorldRules.ActiveWorld(save)?.id);
+            megaOutputMult *= worldOutput;
+            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * megaSpeedMult * worldSpeed;
 
             int activeSite = save.currentRun?.activeSiteIndex ?? 0;
             float getManagerOutputMultiplier(BuildingSaveData bsd)

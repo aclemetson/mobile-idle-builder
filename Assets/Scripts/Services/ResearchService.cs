@@ -430,6 +430,16 @@ namespace MobileIdleBuilder
         {
             // 2026-11-19: Surplus Containment unlocks Input Capacity upgrades too.
             { "feedstock_buffers", "surplus_containment" },
+            // 2026-11-23 Item Timeline (scripts/apply_item_timeline.py REMOVED_RESEARCH): the s/r-process capture
+            // groups became the Spallation descent and Uranium is mined from the Uranium Vein.
+            { "transition_metals",            "iron_convergence" },
+            { "precious_metals",              "spallation_1" },
+            { "exotic_metals",                "spallation_1" },
+            { "lanthanides_and_heavy_metals", "spallation_3" },
+            { "heavy_transition_metals",      "spallation_5" },
+            { "rapid_neutron_capture",        "spallation_4" },
+            { "slow_neutron_capture",         "spallation_7" },
+            { "fissile_extraction",           "heavy_elements" },
         };
 
         /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>

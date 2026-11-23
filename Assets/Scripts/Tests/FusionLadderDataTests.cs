@@ -99,16 +99,25 @@ namespace MobileIdleBuilder.Tests
             CollectionAssert.IsEmpty(bad);
         }
 
-        [Test]
-        public void ExplosiveBurning_UnlocksTheOddRungsChlorineToManganese()
+        /// <summary>
+        /// The fusion climb in Item Timeline order (2026-11-23): each node unlocks the next few elements, Silicon
+        /// closes Stellar Forge (the Chemistry gate) and Manganese closes the climb, one step short of Iron.
+        /// </summary>
+        [TestCase("light_elements",    "lithium", "beryllium", "boron")]
+        [TestCase("cno_cycle",         "nitrogen", "oxygen")]
+        [TestCase("fusion_ii",         "fluorine", "neon", "sodium")]
+        [TestCase("mid_elements",      "magnesium", "aluminum", "silicon")]
+        [TestCase("fusion_iii",        "phosphorus", "sulfur", "chlorine", "argon")]
+        [TestCase("explosive_burning", "potassium", "calcium", "scandium", "titanium")]
+        [TestCase("silicon_burning",   "vanadium", "chromium", "manganese")]
+        public void FusionClimb_UnlocksInTimelineOrder(string node, params string[] elements)
         {
-            var odd = new[] { "chlorine", "potassium", "scandium", "vanadium", "manganese" };
-            foreach (var el in odd)
+            foreach (var el in elements)
             {
-                var r = _gd.recipes.Single(x => x.id == $"capture_{el}");
-                Assert.AreEqual("explosive_burning", r.required_research, el);
+                var r = _gd.recipes.Single(x => BuiltIn(x, "fusion_reactor") && x.output_item == el);
+                Assert.AreEqual(node, r.required_research, el);
             }
-            Assert.IsTrue(Requires("explosive_burning", "fusion_iii"));
+            Assert.IsTrue(Requires(node, "fusion_i"));
         }
 
         [Test]

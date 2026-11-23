@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: fission_reactor
   displayName: Fission Reactor
-  description: Splits a fissile nucleus with a neutron into mid-weight fragments.
-    Unlocked by Nuclear Fission research.
+  description: 'A breeder: Uranium soaks up the reactor''s own neutrons and decays
+    into Neptunium, then Plutonium.'
   icon: {fileID: 0}
   prefab: {fileID: 0}
   buildingId: 12
@@ -37,19 +37,11 @@ MonoBehaviour:
   isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: 3c0787a948f661f48a2ca71ec42eaeb1, type: 2}
-  - {fileID: 11400000, guid: abb0f48e8ca71864e9236f126dfd0757, type: 2}
-  - {fileID: 11400000, guid: 17d7d7b689e473148b2704c6cacd77fb, type: 2}
-  - {fileID: 11400000, guid: a54f7fcb06142054b82a8e9a98330546, type: 2}
-  - {fileID: 11400000, guid: 0cf01bbff6d29394994b1219829584d4, type: 2}
-  - {fileID: 11400000, guid: 7d89bfccfbbc9374786b95bb9d727b4e, type: 2}
-  - {fileID: 11400000, guid: b1ba269b0d4ff7e419531923e86102cd, type: 2}
-  - {fileID: 11400000, guid: 81d3e11de48055f4386e1eaa2dee8aff, type: 2}
-  - {fileID: 11400000, guid: 7f46442546b09714fa1b2ecc7999c5ad, type: 2}
-  - {fileID: 11400000, guid: f17c23f834f9cba4c9a898442d81fba9, type: 2}
+  - {fileID: 11400000, guid: 27b1ffd5a27fa1647b167ff73afaa115, type: 2}
+  - {fileID: 11400000, guid: 4587cf12f86bb154e866675da181cac2, type: 2}
   inputSlotCount: 1
   inputSlotLabels:
-  - Fissile
+  - Fuel
   isEntropySink: 0
   isItemFilter: 0
   isSplitter: 0

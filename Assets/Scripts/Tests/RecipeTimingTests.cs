@@ -66,9 +66,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void FuseIron_CraftTime_Is28s()
+        public void IronConvergence_CraftTime_Is60s()
         {
-            Assert.AreEqual(28f, RequireRecipe("fuse_iron").base_craft_time, 0.001f);
+            // Item Timeline (2026-11-23): Iron joins Manganese and Cobalt, the slowest fusion step.
+            Assert.AreEqual(60f, RequireRecipe("iron_convergence").base_craft_time, 0.001f);
         }
 
         // ── Tier 3 — Molecular craft times ───────────────────────────────────

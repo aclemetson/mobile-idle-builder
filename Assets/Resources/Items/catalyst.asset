@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: A prepared metal surface that speeds a reaction without being consumed.
     The quiet enabler of every industrial-scale synthesis.
   codexUnlocked: 0
-  baseSellValue: 131000
+  baseSellValue: 624000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

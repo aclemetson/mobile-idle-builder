@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: "A bilayer of fatty acids that separates inside from outside. The first
     boundary \u2014 without it, there is no cell."
   codexUnlocked: 0
-  baseSellValue: 4630000
+  baseSellValue: 219000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

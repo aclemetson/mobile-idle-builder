@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: An ionic lattice of sodium and chlorine. The archetypal salt and an
     essential electrolyte.
   codexUnlocked: 0
-  baseSellValue: 64900
+  baseSellValue: 6300
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

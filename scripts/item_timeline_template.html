@@ -163,7 +163,7 @@ select.f, input.f { font: 13px var(--body); padding: 6px 8px; border: 1px solid 
     <div class="row"><h2>Prices and time to create</h2><span class="status" id="priceSummary"></span></div>
     <p class="note">Every item is priced the way the game prices recipes today: value = inputs + wage x craft time, so each craft
       earns about the wage. The wage (entropy per building-second) grows with active play hours. Research for an item costs the
-      active time the timeline gives it (since the world's previous unlock) x the income of that moment: buildings x wage x the
+      active time the timeline gives it (since the previous unlock in any world: entropy is one wallet) x the income of that moment: buildings x wage x the
       upgrade multiplier, which grows with every wall cleared. "Work" is the total building time one item takes, all the way from raw sources; "Slowest step" is how often one comes out with
       one building on each step (the step to multiply). Edit craft times in the item table.</p>
     <div class="asc-params" id="priceParams"></div>
@@ -231,24 +231,27 @@ const wageAt = h => { const P = state.prices; return P.wage0 * Math.pow(2, (h - 
 function pricePlan() {
   const P = state.prices, ahpd = state.activeHoursPerDay || 2, byId = {};
   state.proposal.forEach(r => byId[r.id] = r);
-  const live = state.proposal.filter(r => r.d != null).sort((a, b) => a.d - b.d);
+  const phaseIx = Object.fromEntries(state.phases.map((p, i) => [p.id, i])), rowIx = new Map(state.proposal.map((r, i) => [r, i]));
+  const live = state.proposal.filter(r => r.d != null).sort((a, b) =>
+    (Math.round(a.d * 1e6) - Math.round(b.d * 1e6)) || ((phaseIx[a.phase] ?? 0) - (phaseIx[b.phase] ?? 0)) || (rowIx.get(a) - rowIx.get(b)));
   const wallDays = state.walls.map(w => byId[w.before]?.d).filter(d => d != null);
-  const lastH = {};
+  let lastH = null;      // one wallet: a research gap runs from the previous unlock in any world
   for (const r of live) {
     const H = r.d * ahpd, w = Math.max(1, wageAt(H));
     r.wage = w;
     const craft = r.craft == null || r.craft === "" ? null : +r.craft;
     if (r.phase === "p_ignition" && r.builtValue != null) r.value = r.builtValue;          // tutorial anchor
-    else if (craft == null) r.value = r.id === "megastructure_material" ? null : (r.builtValue != null && r.z === 0 ? r.builtValue : Math.ceil(w * 60));
+    else if (craft == null) r.value = r.id === "megastructure_material" ? null : (r.builtValue != null && (r.z === 0 || r.how === "byproduct particle") ? r.builtValue : Math.ceil(w * 60));
     else {
       const ins = (r.inputs || []).reduce((a, i) => a + (byId[i.item]?.value || 0) * i.q, 0);
       r.value = nice((ins + w * craft) / (r.outQ || 1));
     }
     const walls = wallDays.filter(d => d < r.d).length, mult = Math.pow(1 + P.wallGain, walls);
-    const gapS = Math.max(P.minPaybackMin * 60, (H - (lastH[r.world] ?? H)) * 3600);
-    r.research = r.phase === "p_ignition" ? null : nice(P.buildings * w * mult * gapS);
     r.mult = mult;
-    lastH[r.world] = H;
+    if (r.phase === "p_ignition" || r.how === "byproduct particle" || r.id === "megastructure_material") { r.research = null; continue; }
+    const gapS = Math.max(P.minPaybackMin * 60, (H - (lastH ?? H)) * 3600);
+    r.research = nice(P.buildings * w * mult * gapS);
+    lastH = H;
   }
   state.proposal.filter(r => r.d == null).forEach(r => { r.value = r.research = r.wage = null; r.pipe = null; });
   for (const r of live) r.pipe = pipeline(r, byId);

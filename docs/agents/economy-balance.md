@@ -153,6 +153,17 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 
 **Live wiring:** `assembly_line` (craft speed) and `quantum_yield` (output) flow through `PrestigeData.SpeedMultiplier`/`OutputMultiplier`, which `ProductionSystem` and `CollectorSystem` read live (with the megastructure `GlobalProductionBonus`) and the idle snapshot folds in. Fractional output bonuses carry between crafts (`OutputCarry`). Research is priced by `ResearchCost.Effective`: Memory Resonance on every node. Research discounts come from upgrades only; the per-node "finished on an earlier run" discount (`prestige_memory_discount`) was removed 2026-11-15.
 
+
+### Planned content: the Item Timeline economy (2026-11-23)
+
+Content marked `"planned": true` in `game_data.json` (items, recipes, research, blocks) is priced by `scripts/economy_plan.py`, the model the Item Timeline page shows (https://claude.ai/artifact/68WpPYX6DBZiXku4sES1Dd), and `rebalance_curve.py` leaves it alone (it treats planned research as off-curve and planned items as already priced). Phase 1 covers Physics from `light_elements` to `iron_convergence`; Chemistry, Biology, components and Deep Physics are still on the derived curve above until their phases.
+
+- **Wage on time, not research count:** wage(H) = 20 x 2^((H - 1) / 10) entropy per building-second at active hour H (2 active hours a day). Value = (inputs + wage x craft) / output quantity, as before.
+- **Research** = 5 buildings x wage x (1.15 ^ walls cleared) x the active seconds since the previous unlock in any world (one wallet). Walls (`walls` in the plan) are where the timeline makes the player prestige several times at one spot; the 1.15 per wall is what the prestige shop's tracks are assumed to add.
+- **Smoothing:** costs along the planned chain are pooled (pool adjacent violators) so a node never costs less than its prerequisite; a wall becomes a stretch of dear research.
+- `progression_curve.py --report` has no prestige-upgrade model, so planned blocks read about 1.15^walls slower than their `target_hours`; that is expected.
+- **World tracks** in the prestige shop: `UpgradeEffectType.WorldCraftSpeed` / `WorldOutput` with `UpgradeDef.world` (Physics: Fission Yield +15% output, Neutron Economy +10% speed). `WorldRules` writes them onto the `ActiveWorldRules` singleton (`SpeedMult`, `OutputMult`) on every world load and after a purchase; `ProductionSystem`, `CollectorSystem`, the idle snapshot and the inspector apply them. Quantum Yield now has 10 levels.
+
 ## Managers (prestige-currency sink — `game_data.json` `managers`, `ManagerService.cs`)
 
 Hireable crew; each grants ONE passive bonus to ONE assigned building. Hired managers + assignments + star levels all survive prestige (`SaveData.managerStars`). Star upgrades (max 5★) spend prestige currency; the *star-scaled* value is what gets baked/read (single accessor `ManagerService.EffectiveBonusValue`). Bonus types: CraftSpeed (×ProductionSpeed, crafters only — collectors ignore it), OutputQuantity (×recipe output, floored), PowerDiscount (multiplier on eV draw kept, e.g. 0.8 = −20%; live in `PowerGridSystem`).

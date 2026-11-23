@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: A powerful oxidizing acid of nitrogen, oxygen, and hydrogen. The reagent
     behind fertilizers, explosives, and etched metal.
   codexUnlocked: 0
-  baseSellValue: 28700
+  baseSellValue: 2030
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

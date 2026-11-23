@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: cno_cycle
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: cno_cycle
+  displayName: CNO Cycle
+  description: Capture a proton on Carbon for Nitrogen; fuse Carbon with helium for
+    Oxygen.
+  icon: {fileID: 0}
+  branch: 4
+  prerequisites:
+  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
+  depthInTree: 5
+  block: first_fusion
+  treeX: -1
+  treeY: -1
+  requiredWorld: 
+  world: world_physics
+  costBaseCurrency: 308000
+  costPrestigeCurrency: 0
+  durationSeconds: 120
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
+  - {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: a2f350106494f5c44ba427f09c97f0e0, type: 2}
+  - {fileID: 11400000, guid: 18d8c24fc0a976944b3b0a238ce26f4a, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Capture a proton on Carbon for Nitrogen; fuse Carbon with helium for
+    Oxygen.
