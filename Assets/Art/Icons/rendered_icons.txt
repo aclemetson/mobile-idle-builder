@@ -7,6 +7,4 @@ fatty_acid
 glucose
 methane
 nitric_acid
-octane
-polymer_precursor
 water

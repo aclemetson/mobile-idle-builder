@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: One carbon bonded to two oxygens. The exhaust of combustion and the
     feedstock of photosynthesis.
   codexUnlocked: 0
-  baseSellValue: 1670
+  baseSellValue: 1010
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -97,15 +97,14 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void MethaneCombustion_BalancesWithWaterByproduct()
+        public void Byproducts_LeaveOnTheStream_AsRealMolecules()
         {
-            // CH4 + 2 O2 -> CO2 + 2 H2O
-            var r = _recipes.Single(x => x.id == "methane_combustion");
-            Assert.AreEqual("carbon_dioxide", r.outputItem.id);
-            Assert.AreEqual(1, r.outputQuantity);
-            Assert.AreEqual(1, r.inputs.Single(i => i.item.id == "methane").quantity);
-            Assert.AreEqual(2, r.inputs.Single(i => i.item.id == "oxygen_gas").quantity);
-            Assert.AreEqual(2, r.byproducts.Single(i => i.item.id == "water").quantity);
+            // 2026-11-23 life chemistry: water and hydrogen leave reactions as byproducts (HCN, urea, glycine...)
+            // and ride the stream to whoever uses them next.
+            var r = _recipes.Single(x => x.id == "hydrogen_cyanide");
+            Assert.AreEqual(3, r.byproducts.Single(i => i.item.id == "hydrogen_gas").quantity, "CH4 + NH3 -> HCN + 3 H2");
+            var urea = _recipes.Single(x => x.id == "urea");
+            Assert.AreEqual(1, urea.byproducts.Single(i => i.item.id == "water").quantity, "CO2 + 2 NH3 -> urea + H2O");
         }
     }
 }

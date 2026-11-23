@@ -83,6 +83,7 @@ block's expected prestiges and permanent upgrades bought, worlds and sites that 
 | `block capture <n\|id\|name>` | Save the current game as that block's save point (e.g. after laying out a starter factory) |
 
 - `block load 1` is a fresh game (the tutorial).
+- A block in another world (2026-11-23: the six Chemistry blocks `chemistry_entry` .. `chem_molecules_of_life`; Metallurgy and Engineering as they arrive) opens that world and starts you on its entry site. That world's tutorial is marked done, except on its first block (`block fresh chemistry_entry` plays the Chemistry tutorial). `block list` shows each block's world. To test one world's tutorial on its own, use `visit world <id>` or `tutorial restart <world>`.
 - Wait for the game to finish loading before running `block load`; it refuses while a scene transition is running.
 - Back up first with `snapshot save <name>` if you want your current save back (`snapshot load <name>`).
 - Captured save points live in `persistentDataPath/snapshots/block_<id>.json`, per device.

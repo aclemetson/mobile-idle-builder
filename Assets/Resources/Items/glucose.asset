@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: A simple sugar and the universal cellular fuel. Chemistry's first step
     toward biology.
   codexUnlocked: 0
-  baseSellValue: 12500
+  baseSellValue: 23500
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

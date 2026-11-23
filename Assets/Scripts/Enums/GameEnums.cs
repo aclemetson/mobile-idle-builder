@@ -164,6 +164,7 @@ namespace MobileIdleBuilder
         SurplusResale,            // additive fraction of the Demon price paid for auto-sold unused items (+0.10 = 10 %)
         WorldCraftSpeed,          // additive craft speed in one world only (UpgradeDef.world), e.g. Neutron Economy
         WorldOutput,              // additive output in one world only (UpgradeDef.world), e.g. Fission Yield
+        WorldStreamFlow,          // additive Spring flow in one stream world (UpgradeDef.world), e.g. Spring Pressure
     }
 
     public enum AchievementTrigger

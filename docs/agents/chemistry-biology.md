@@ -45,6 +45,18 @@ First prestiges land across P2–P3 (wall = 50,000e net worth).
 
 ---
 
+
+## Life chemistry: Item Timeline phase 2 (shipped 2026-11-23) - read this first
+
+Supersedes the C1-C4 tables in "World 2" below (kept for history).
+
+- **36 balanced reactions** from `scripts/item_timeline.py` `CHEM`, one research chain (`CHEM_NODES`): `chemistry_lab` (H2, O2, water) > `molecular_synthesis` (graphite, CO2, methane) > `nitrogen_fixation` (N2, ammonia) > `syngas` > `carbonyl_chemistry` (Catalytic Reactor) > `prebiotic_nitrogen` (HCN, urea, nitric acid; Compound Synthesizer) > `hydrocarbons` (Organic Synthesizer) > `alcohols_and_acids` > `sulfur_chemistry` > `phosphorus_chemistry` > `mineral_salts` > `amino_acids` > `sugars` > `nucleobases` > `fatty_acids` > `peptides` > `nucleotides` > `membranes` > `energy_currency` (ATP) > `biochem_precursors` (Biology). Blocks: `chemistry_entry`, `chem_small_molecules`, `chem_organics`, `chem_sulfur_phosphorus`, `chem_building_blocks`, `chem_molecules_of_life`.
+- **Sources** (Extractor, bought after their node): H2/O2 vents, graphite, N2, and new **Sulfur Vent** (`native_sulfur`), **Phosphate Rock** (`red_phosphorus`), **Halite / Sylvite / Limestone beds**. Chemistry's own ids, never the Physics `sulfur` / `phosphorus`. The Mineral Bed now drops only silicon (the metal chain until phase 3).
+- **Byproducts** (water, hydrogen) leave reactions onto the stream. Every reaction balances atom for atom: `ChemistryFeedstockTests.EveryChemistryReaction_Balances` reads the formulas from item symbols.
+- **Retired** (refunded at their old price on load, `ECSLoadBridge.RetiredItems`): octane, polymer precursor, catalyst, chlorine gas, sodium hydroxide, table salt. Amino acid, fatty acid, nucleotide (Biology's inputs) and uranium hexafluoride (the Superconductor) retire in phase 3. `organic_chemistry` merges into `hydrocarbons`.
+- **Belt visuals:** structures come from PubChem through `scripts/belt_items/build_molecules.py`; the phospholipid is an inline heavy-atom schematic (PubChem has no 3D conformer for it). Icons for new items come from MobileIdleBuilder > Generate Element Icons.
+- **Prestige shop:** Spring Pressure (+20% Spring flow, `UpgradeEffectType.WorldStreamFlow` -> `ActiveWorldRules.FlowMult`, read by `StreamFlowSystem`, the idle snapshot and the Spring inspector) and Catalysis (+15% Chemistry craft speed).
+
 ## World 2 — Chemistry
 
 **Gate (2026-11-19, replaces the research gate described below):** Chemistry opens from **delivery tasks**, not research or entropy. `world_tasks` in `game_data.json` holds five stages (`WorldTaskSO`, `Resources/WorldTasks.asset`): Carbon; Helium-4 + Carbon; Li/Be/B; O/Ne/Mg/Si; N/Na/Al + Silicon. Items Maxwell's Demon consumes while a stage is active count toward it (they still pay entropy; idle chains ending at the Demon count at the idle rate). Stages survive prestige and are sized one per run, so Chemistry opens after about five prestiges. `world_chemistry.unlock_by_tasks = true`, `prereq_unlock_ids = []`; `WorldTaskService` unlocks it when the last stage finishes. Before the gate Physics reaches **Hydrogen to Silicon only and makes no molecules**: every research past that (heavy_elements, isotopes, fission, `fusion_iii` onward) and the whole Chemistry tree carry `required_world: "world_chemistry"` (`WorldGate`), and molecular/Chemistry buildings carry `world` so they are only built in Chemistry. Inside Chemistry, `chemistry_lab` (no prereqs) comes first, then `molecular_synthesis` (Molecular Synthesizer; liquid H2, water, methane, ammonia); the Element Harvester also collects nitrogen and silicon.

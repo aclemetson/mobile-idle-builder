@@ -163,6 +163,7 @@ CHEM_SOURCES = [
     ("limestone", "Limestone", "CaCO3", "new"),
 ]
 SYN, REACT, ORG, BIO = "molecular_synthesizer", "catalytic_reactor", "organic_synthesizer", "organic_synthesizer"
+COMP = "compound_synthesizer"     # the mineral acids (nitric, sulfuric, phosphoric)
 CHEM = [
     # C1 First Water: the burst right after the gate.
     ("water", "Water", "H2O", "c1", [(2, "hydrogen_gas"), (1, "oxygen_gas")], 2, [], SYN, "keep"),
@@ -177,7 +178,7 @@ CHEM = [
     ("formic_acid", "Formic Acid", "CH2O2", "c2", [(1, "carbon_monoxide"), (1, "water")], 1, [], REACT, "new"),
     ("hydrogen_cyanide", "Hydrogen Cyanide", "HCN", "c2", [(1, "methane"), (1, "ammonia")], 1, [(3, "hydrogen_gas")], REACT, "new"),
     ("urea", "Urea", "CH4N2O", "c2", [(1, "carbon_dioxide"), (2, "ammonia")], 1, [(1, "water")], REACT, "new"),
-    ("nitric_acid", "Nitric Acid", "HNO3", "c2", [(1, "ammonia"), (2, "oxygen_gas")], 1, [(1, "water")], REACT, "keep"),
+    ("nitric_acid", "Nitric Acid", "HNO3", "c2", [(1, "ammonia"), (2, "oxygen_gas")], 1, [(1, "water")], COMP, "keep"),
     # C3 Organics
     ("ethylene", "Ethylene", "C2H4", "c3", [(2, "methane")], 1, [(2, "hydrogen_gas")], ORG, "new"),
     ("acetylene", "Acetylene", "C2H2", "c3", [(2, "methane")], 1, [(3, "hydrogen_gas")], ORG, "new"),
@@ -187,8 +188,8 @@ CHEM = [
     ("glycerol", "Glycerol", "C3H8O3", "c3", [(3, "carbon_monoxide"), (4, "hydrogen_gas")], 1, [], ORG, "new"),
     # C4 Phosphorus & Sulfur
     ("hydrogen_sulfide", "Hydrogen Sulfide", "H2S", "c4", [(1, "native_sulfur"), (1, "hydrogen_gas")], 1, [], SYN, "new"),
-    ("sulfuric_acid", "Sulfuric Acid", "H2SO4", "c4", [(2, "native_sulfur"), (3, "oxygen_gas"), (2, "water")], 2, [], REACT, "keep"),
-    ("phosphoric_acid", "Phosphoric Acid", "H3PO4", "c4", [(4, "red_phosphorus"), (5, "oxygen_gas"), (6, "water")], 4, [], REACT, "new"),
+    ("sulfuric_acid", "Sulfuric Acid", "H2SO4", "c4", [(2, "native_sulfur"), (3, "oxygen_gas"), (2, "water")], 2, [], COMP, "keep"),
+    ("phosphoric_acid", "Phosphoric Acid", "H3PO4", "c4", [(4, "red_phosphorus"), (5, "oxygen_gas"), (6, "water")], 4, [], COMP, "new"),
     ("glycerol_phosphate", "Glycerol Phosphate", "C3H9O6P", "c4", [(1, "glycerol"), (1, "phosphoric_acid")], 1, [(1, "water")], ORG, "new"),
     # C5 Building Blocks of Life
     ("glycine", "Glycine", "C2H5NO2", "c5", [(1, "acetic_acid"), (1, "ammonia")], 1, [(1, "hydrogen_gas")], ORG, "new"),
@@ -263,13 +264,21 @@ def proposal(gd, built):
     rows.sort(key=lambda r: order_key[r["phase"]])     # stable: keeps node order inside a phase
 
     # ── Chemistry: life chemistry ──
-    src_phase = {"hydrogen_gas": "c1", "oxygen_gas": "c1", "nitrogen_gas": "c2", "graphite": "c2",
+    src_phase = {"hydrogen_gas": "c1", "oxygen_gas": "c1", "nitrogen_gas": "c1", "graphite": "c1",
                  "native_sulfur": "c4", "red_phosphorus": "c4", "halite": "c5", "sylvite": "c5", "limestone": "c5"}
     for iid, name, f, st in CHEM_SOURCES:
         add(iid, name, "world_chemistry", src_phase[iid], st, formula=f, how="mined source")
     for iid, name, f, ph_, ins, outq, byp, b, st in CHEM:
         add(iid, name, "world_chemistry", ph_, st, formula=f, how="reaction",
             equation=equation(ins, outq, iid, byp), building=b, inputs=[{"item": x, "q": q} for q, x in ins])
+    # Chemistry rows follow CHEM_NODES (the research nodes the game gets), like Physics follows phys_nodes.
+    node_ix = {iid: (k, n[0]) for k, n in enumerate(CHEM_NODES) for iid in n[3]}
+    chem = [r for r in rows if r["world"] == "world_chemistry"]
+    rest = [r for r in rows if r["world"] != "world_chemistry"]
+    for r in chem:
+        r["node"] = node_ix[r["id"]][1]
+    chem.sort(key=lambda r: node_ix[r["id"]][0])
+    rows[:] = rest + chem
     for iid, why in RETIRED.items():
         it = items.get(iid)
         if it:
@@ -310,6 +319,36 @@ LATER_RECIPES = {
     "graviton_lens": ([(2, "metamaterial"), (1, "quantum_processor")], 5400),
     "dyson_node": ([(1, "graviton_lens"), (1, "orbital_frame"), (1, "antimatter_cell"), (1, "ecosystem")], 7200),
 }
+# The Chemistry research nodes, in order: (id, display name, phase, items, buildings it unlocks, fields it sells).
+# chemistry_lab, molecular_synthesis and nitrogen_fixation keep their ids (the Chemistry tutorial uses the first).
+CHEM_NODES = [
+    ("chemistry_lab", "Chemistry Lab", "c1", ["hydrogen_gas", "oxygen_gas", "water"],
+     ["element_harvester", "molecular_synthesizer"], ["hydrogen_gas_field", "oxygen_gas_field"]),
+    ("molecular_synthesis", "Carbon Chemistry", "c1", ["graphite", "carbon_dioxide", "methane"], [], ["graphite_field"]),
+    ("nitrogen_fixation", "Nitrogen Fixation", "c1", ["nitrogen_gas", "ammonia"], [], ["nitrogen_gas_field"]),
+    ("syngas", "Syngas", "c2", ["carbon_monoxide", "hydrogen_peroxide"], [], []),
+    ("carbonyl_chemistry", "Carbonyl Chemistry", "c2", ["formaldehyde", "methanol", "formic_acid"],
+     ["catalytic_reactor"], []),
+    ("prebiotic_nitrogen", "Prebiotic Nitrogen", "c2", ["hydrogen_cyanide", "urea", "nitric_acid"],
+     ["compound_synthesizer"], []),
+    ("hydrocarbons", "Hydrocarbons", "c3", ["ethylene", "acetylene", "ethane"], ["organic_synthesizer"], []),
+    ("alcohols_and_acids", "Alcohols and Acids", "c3", ["ethanol", "acetic_acid", "glycerol"], [], []),
+    ("sulfur_chemistry", "Sulfur Chemistry", "c4", ["native_sulfur", "hydrogen_sulfide", "sulfuric_acid"], [],
+     ["sulfur_vent_field"]),
+    ("phosphorus_chemistry", "Phosphorus Chemistry", "c4", ["red_phosphorus", "phosphoric_acid", "glycerol_phosphate"],
+     [], ["phosphate_rock_field"]),
+    ("mineral_salts", "Mineral Salts", "c5", ["halite", "sylvite", "limestone"], [],
+     ["halite_bed_field", "sylvite_bed_field", "limestone_bed_field"]),
+    ("amino_acids", "Amino Acids", "c5", ["glycine", "alanine", "serine", "cysteine"], [], []),
+    ("sugars", "Sugars", "c5", ["ribose", "glucose"], [], []),
+    ("nucleobases", "Nucleobases", "c5", ["adenine", "guanine", "cytosine"], [], []),
+    ("fatty_acids", "Fatty Acids", "c5", ["palmitic_acid"], [], []),
+    ("peptides", "Peptide Bonds", "c6", ["dipeptide"], [], []),
+    ("nucleotides", "Nucleotides", "c6", ["amp"], [], []),
+    ("membranes", "Membranes", "c6", ["phospholipid"], [], []),
+    ("energy_currency", "Energy Currency", "c6", ["atp"], [], []),
+]
+
 # Craft seconds for one spallation step (heavier element + neutron -> the next lighter element).
 SPALLATION_CRAFT = 30.0
 DROP_RESEARCH_RECIPES = set()

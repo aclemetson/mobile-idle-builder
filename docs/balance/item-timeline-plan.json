@@ -3675,6 +3675,7 @@
    "pinDay": null,
    "formula": "H2",
    "how": "mined source",
+   "node": "chemistry_lab",
    "builtValue": 191.0,
    "inputs": [],
    "craft": 4.0,
@@ -3690,114 +3691,10 @@
    "pinDay": null,
    "formula": "O2",
    "how": "mined source",
+   "node": "chemistry_lab",
    "builtValue": 191.0,
    "inputs": [],
    "craft": 4.0,
-   "outQ": 1
-  },
-  {
-   "id": "nitrogen_gas",
-   "name": "Nitrogen Gas",
-   "world": "world_chemistry",
-   "phase": "c2",
-   "status": "keep",
-   "builtDays": 4.554,
-   "pinDay": null,
-   "formula": "N2",
-   "how": "mined source",
-   "builtValue": 406.0,
-   "inputs": [],
-   "craft": 6.0,
-   "outQ": 1
-  },
-  {
-   "id": "graphite",
-   "name": "Graphite",
-   "world": "world_chemistry",
-   "phase": "c2",
-   "status": "keep",
-   "builtDays": 4.508,
-   "pinDay": null,
-   "formula": "C",
-   "how": "mined source",
-   "builtValue": 341.0,
-   "inputs": [],
-   "craft": 6.0,
-   "outQ": 1
-  },
-  {
-   "id": "native_sulfur",
-   "name": "Native Sulfur",
-   "world": "world_chemistry",
-   "phase": "c4",
-   "status": "new",
-   "builtDays": null,
-   "pinDay": null,
-   "formula": "S",
-   "how": "mined source",
-   "builtValue": null,
-   "inputs": [],
-   "craft": 20.0,
-   "outQ": 1
-  },
-  {
-   "id": "red_phosphorus",
-   "name": "Red Phosphorus",
-   "world": "world_chemistry",
-   "phase": "c4",
-   "status": "new",
-   "builtDays": null,
-   "pinDay": null,
-   "formula": "P",
-   "how": "mined source",
-   "builtValue": null,
-   "inputs": [],
-   "craft": 20.0,
-   "outQ": 1
-  },
-  {
-   "id": "halite",
-   "name": "Halite (rock salt)",
-   "world": "world_chemistry",
-   "phase": "c5",
-   "status": "new",
-   "builtDays": null,
-   "pinDay": null,
-   "formula": "NaCl",
-   "how": "mined source",
-   "builtValue": null,
-   "inputs": [],
-   "craft": 20.0,
-   "outQ": 1
-  },
-  {
-   "id": "sylvite",
-   "name": "Sylvite (potash)",
-   "world": "world_chemistry",
-   "phase": "c5",
-   "status": "new",
-   "builtDays": null,
-   "pinDay": null,
-   "formula": "KCl",
-   "how": "mined source",
-   "builtValue": null,
-   "inputs": [],
-   "craft": 20.0,
-   "outQ": 1
-  },
-  {
-   "id": "limestone",
-   "name": "Limestone",
-   "world": "world_chemistry",
-   "phase": "c5",
-   "status": "new",
-   "builtDays": null,
-   "pinDay": null,
-   "formula": "CaCO3",
-   "how": "mined source",
-   "builtValue": null,
-   "inputs": [],
-   "craft": 20.0,
    "outQ": 1
   },
   {
@@ -3822,9 +3719,26 @@
      "q": 1
     }
    ],
+   "node": "chemistry_lab",
    "builtValue": 645.0,
    "craft": 15.0,
    "outQ": 2
+  },
+  {
+   "id": "graphite",
+   "name": "Graphite",
+   "world": "world_chemistry",
+   "phase": "c1",
+   "status": "keep",
+   "builtDays": 4.508,
+   "pinDay": null,
+   "formula": "C",
+   "how": "mined source",
+   "node": "molecular_synthesis",
+   "builtValue": 341.0,
+   "inputs": [],
+   "craft": 6.0,
+   "outQ": 1
   },
   {
    "id": "carbon_dioxide",
@@ -3848,6 +3762,7 @@
      "q": 1
     }
    ],
+   "node": "molecular_synthesis",
    "builtValue": 1670.0,
    "craft": 20.0,
    "outQ": 1
@@ -3874,8 +3789,25 @@
      "q": 2
     }
    ],
+   "node": "molecular_synthesis",
    "builtValue": 3000.0,
    "craft": 40.0,
+   "outQ": 1
+  },
+  {
+   "id": "nitrogen_gas",
+   "name": "Nitrogen Gas",
+   "world": "world_chemistry",
+   "phase": "c1",
+   "status": "keep",
+   "builtDays": 4.554,
+   "pinDay": null,
+   "formula": "N2",
+   "how": "mined source",
+   "node": "nitrogen_fixation",
+   "builtValue": 406.0,
+   "inputs": [],
+   "craft": 6.0,
    "outQ": 1
   },
   {
@@ -3900,6 +3832,7 @@
      "q": 3
     }
    ],
+   "node": "nitrogen_fixation",
    "builtValue": 1710.0,
    "craft": 36.0,
    "outQ": 2
@@ -3926,6 +3859,7 @@
      "q": 1
     }
    ],
+   "node": "syngas",
    "builtValue": null,
    "craft": 30,
    "outQ": 2
@@ -3952,6 +3886,7 @@
      "q": 1
     }
    ],
+   "node": "syngas",
    "builtValue": null,
    "craft": 30,
    "outQ": 1
@@ -3978,6 +3913,7 @@
      "q": 1
     }
    ],
+   "node": "carbonyl_chemistry",
    "builtValue": null,
    "craft": 30,
    "outQ": 1
@@ -4004,6 +3940,7 @@
      "q": 2
     }
    ],
+   "node": "carbonyl_chemistry",
    "builtValue": null,
    "craft": 30,
    "outQ": 1
@@ -4030,6 +3967,7 @@
      "q": 1
     }
    ],
+   "node": "carbonyl_chemistry",
    "builtValue": null,
    "craft": 30,
    "outQ": 1
@@ -4056,6 +3994,7 @@
      "q": 1
     }
    ],
+   "node": "prebiotic_nitrogen",
    "builtValue": null,
    "craft": 30,
    "outQ": 1
@@ -4082,6 +4021,7 @@
      "q": 2
     }
    ],
+   "node": "prebiotic_nitrogen",
    "builtValue": null,
    "craft": 30,
    "outQ": 1
@@ -4097,7 +4037,7 @@
    "formula": "HNO3",
    "how": "reaction",
    "equation": "NH3 + 2 O2 -> HNO3 + H2O",
-   "building": "catalytic_reactor",
+   "building": "compound_synthesizer",
    "inputs": [
     {
      "item": "ammonia",
@@ -4108,6 +4048,7 @@
      "q": 2
     }
    ],
+   "node": "prebiotic_nitrogen",
    "builtValue": 2030.0,
    "craft": 30.0,
    "outQ": 1
@@ -4130,6 +4071,7 @@
      "q": 2
     }
    ],
+   "node": "hydrocarbons",
    "builtValue": null,
    "craft": 45,
    "outQ": 1
@@ -4152,6 +4094,7 @@
      "q": 2
     }
    ],
+   "node": "hydrocarbons",
    "builtValue": null,
    "craft": 45,
    "outQ": 1
@@ -4178,6 +4121,7 @@
      "q": 1
     }
    ],
+   "node": "hydrocarbons",
    "builtValue": 4110.0,
    "craft": 25.0,
    "outQ": 1
@@ -4204,6 +4148,7 @@
      "q": 1
     }
    ],
+   "node": "alcohols_and_acids",
    "builtValue": 5920.0,
    "craft": 30.0,
    "outQ": 1
@@ -4230,6 +4175,7 @@
      "q": 1
     }
    ],
+   "node": "alcohols_and_acids",
    "builtValue": null,
    "craft": 45,
    "outQ": 1
@@ -4256,8 +4202,25 @@
      "q": 4
     }
    ],
+   "node": "alcohols_and_acids",
    "builtValue": null,
    "craft": 45,
+   "outQ": 1
+  },
+  {
+   "id": "native_sulfur",
+   "name": "Native Sulfur",
+   "world": "world_chemistry",
+   "phase": "c4",
+   "status": "new",
+   "builtDays": null,
+   "pinDay": null,
+   "formula": "S",
+   "how": "mined source",
+   "node": "sulfur_chemistry",
+   "builtValue": null,
+   "inputs": [],
+   "craft": 20.0,
    "outQ": 1
   },
   {
@@ -4282,6 +4245,7 @@
      "q": 1
     }
    ],
+   "node": "sulfur_chemistry",
    "builtValue": null,
    "craft": 60,
    "outQ": 1
@@ -4297,7 +4261,7 @@
    "formula": "H2SO4",
    "how": "reaction",
    "equation": "2 S + 3 O2 + 2 H2O -> 2 H2SO4",
-   "building": "catalytic_reactor",
+   "building": "compound_synthesizer",
    "inputs": [
     {
      "item": "native_sulfur",
@@ -4312,9 +4276,26 @@
      "q": 2
     }
    ],
+   "node": "sulfur_chemistry",
    "builtValue": 6360.0,
    "craft": 40.0,
    "outQ": 2
+  },
+  {
+   "id": "red_phosphorus",
+   "name": "Red Phosphorus",
+   "world": "world_chemistry",
+   "phase": "c4",
+   "status": "new",
+   "builtDays": null,
+   "pinDay": null,
+   "formula": "P",
+   "how": "mined source",
+   "node": "phosphorus_chemistry",
+   "builtValue": null,
+   "inputs": [],
+   "craft": 20.0,
+   "outQ": 1
   },
   {
    "id": "phosphoric_acid",
@@ -4327,7 +4308,7 @@
    "formula": "H3PO4",
    "how": "reaction",
    "equation": "4 P + 5 O2 + 6 H2O -> 4 H3PO4",
-   "building": "catalytic_reactor",
+   "building": "compound_synthesizer",
    "inputs": [
     {
      "item": "red_phosphorus",
@@ -4342,6 +4323,7 @@
      "q": 6
     }
    ],
+   "node": "phosphorus_chemistry",
    "builtValue": null,
    "craft": 60,
    "outQ": 4
@@ -4368,8 +4350,57 @@
      "q": 1
     }
    ],
+   "node": "phosphorus_chemistry",
    "builtValue": null,
    "craft": 60,
+   "outQ": 1
+  },
+  {
+   "id": "halite",
+   "name": "Halite (rock salt)",
+   "world": "world_chemistry",
+   "phase": "c5",
+   "status": "new",
+   "builtDays": null,
+   "pinDay": null,
+   "formula": "NaCl",
+   "how": "mined source",
+   "node": "mineral_salts",
+   "builtValue": null,
+   "inputs": [],
+   "craft": 20.0,
+   "outQ": 1
+  },
+  {
+   "id": "sylvite",
+   "name": "Sylvite (potash)",
+   "world": "world_chemistry",
+   "phase": "c5",
+   "status": "new",
+   "builtDays": null,
+   "pinDay": null,
+   "formula": "KCl",
+   "how": "mined source",
+   "node": "mineral_salts",
+   "builtValue": null,
+   "inputs": [],
+   "craft": 20.0,
+   "outQ": 1
+  },
+  {
+   "id": "limestone",
+   "name": "Limestone",
+   "world": "world_chemistry",
+   "phase": "c5",
+   "status": "new",
+   "builtDays": null,
+   "pinDay": null,
+   "formula": "CaCO3",
+   "how": "mined source",
+   "node": "mineral_salts",
+   "builtValue": null,
+   "inputs": [],
+   "craft": 20.0,
    "outQ": 1
   },
   {
@@ -4394,6 +4425,7 @@
      "q": 1
     }
    ],
+   "node": "amino_acids",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4420,6 +4452,7 @@
      "q": 1
     }
    ],
+   "node": "amino_acids",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4446,6 +4479,7 @@
      "q": 1
     }
    ],
+   "node": "amino_acids",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4472,6 +4506,7 @@
      "q": 1
     }
    ],
+   "node": "amino_acids",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4494,6 +4529,7 @@
      "q": 5
     }
    ],
+   "node": "sugars",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4516,6 +4552,7 @@
      "q": 6
     }
    ],
+   "node": "sugars",
    "builtValue": 12500.0,
    "craft": 45.0,
    "outQ": 1
@@ -4538,6 +4575,7 @@
      "q": 5
     }
    ],
+   "node": "nucleobases",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4564,6 +4602,7 @@
      "q": 1
     }
    ],
+   "node": "nucleobases",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4590,6 +4629,7 @@
      "q": 1
     }
    ],
+   "node": "nucleobases",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4616,6 +4656,7 @@
      "q": 14
     }
    ],
+   "node": "fatty_acids",
    "builtValue": null,
    "craft": 90,
    "outQ": 1
@@ -4642,6 +4683,7 @@
      "q": 1
     }
    ],
+   "node": "peptides",
    "builtValue": null,
    "craft": 150,
    "outQ": 1
@@ -4672,6 +4714,7 @@
      "q": 1
     }
    ],
+   "node": "nucleotides",
    "builtValue": null,
    "craft": 150,
    "outQ": 1
@@ -4698,6 +4741,7 @@
      "q": 2
     }
    ],
+   "node": "membranes",
    "builtValue": null,
    "craft": 150,
    "outQ": 1
@@ -4724,6 +4768,7 @@
      "q": 2
     }
    ],
+   "node": "energy_currency",
    "builtValue": null,
    "craft": 150,
    "outQ": 1

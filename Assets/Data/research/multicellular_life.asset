@@ -25,7 +25,7 @@ MonoBehaviour:
   treeY: -1
   requiredWorld: 
   world: world_biology
-  costBaseCurrency: 77800000
+  costBaseCurrency: 1090000000
   costPrestigeCurrency: 0
   durationSeconds: 14400
   fieldCooldownMult: 1
