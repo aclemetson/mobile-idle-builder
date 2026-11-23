@@ -1037,9 +1037,225 @@ def finish_phase3(plan, entries):
     gd.save()
 
 
+# ── Phase 4: the Engineering world, Deep Physics on the plan, Ascension ──────────────────────────────────
+ENG_NODES = [
+    ("circuitry", "Circuitry", "e1", ["circuit_board", "quantum_processor"], ["component_fabricator"]),
+    ("containment", "Plasma Containment", "e1", ["plasma_containment_ring"], []),
+    ("structures", "Orbital Structures", "e2", ["orbital_frame"], []),
+    ("antimatter", "Antimatter", "e2", ["antimatter_cell"], []),
+    ("gravitics", "Gravitics", "e2", ["graviton_lens"], []),
+    ("dyson_engineering", "Dyson Engineering", "e3", ["dyson_node"], []),
+]
+ENG_PHASE_BLOCK = {"e1": "engineering_components", "e2": "engineering_systems", "e3": "engineering_megastructure"}
+P4_BLOCK_TEXT = {
+    "engineering_components": ("Components", "Circuit boards, quantum processors and plasma containment, from Metallurgy's materials."),
+    "engineering_systems": ("Systems", "Orbital frames, antimatter cells and graviton lenses."),
+    "engineering_megastructure": ("Megastructure", "Dyson Nodes for the Dyson Sphere; every research done opens Ascension."),
+}
+REMOVED_RESEARCH_P4 = {"component_engineering": "circuitry", "megastructure_theory": "dyson_engineering"}
+ENG_TASKS = {
+    "world": "world_engineering", "deliver_in": "world_metallurgy", "display_name": "Path to Engineering",
+    "stages": [
+        {"id": "eng_task_1", "display_name": "Structural Steel", "description": "Every machine starts as steel. Send it to Maxwell's Demon.",
+         "items": [{"item": "steel", "quantity": 300}], "dialogue": ""},
+        {"id": "eng_task_2", "display_name": "Light Alloys", "description": "Titanium and carbon fibre: strong and light.",
+         "items": [{"item": "titanium_alloy", "quantity": 120}, {"item": "carbon_fiber", "quantity": 120}], "dialogue": ""},
+        {"id": "eng_task_3", "display_name": "Exotic Materials", "description": "Superconductors and metamaterial: the stuff of machines that bend physics.",
+         "items": [{"item": "superconductor", "quantity": 30}, {"item": "metamaterial", "quantity": 5}], "dialogue": ""},
+    ]}
+ENG_DIALOGUES = [
+    {"id": "intro_world_engineering", "lines": [
+        {"speaker_name": "The Architect", "text": "Physics, chemistry, life and metal: you have every material. Engineering puts them together into machines, and the machines into a megastructure around the star.", "portrait_path": "TODO", "pause_game": True, "highlight_target": "", "action": ""},
+        {"speaker_name": "The Architect", "text": "Engineering is open. Its parts take materials from every world; carry them in your inventory and the Component Fabricator draws on it.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "eng_tut_welcome", "lines": [
+        {"speaker_name": "The Architect", "text": "The assembly bay. Nothing grows or is mined here: every part is built from what the other worlds make.", "portrait_path": "TODO", "pause_game": True, "highlight_target": "", "action": ""},
+        {"speaker_name": "The Architect", "text": "I have set aside enough entropy for Circuitry. A circuit board is a wafer and copper wire from Metallurgy.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "eng_tut_fabricator", "lines": [
+        {"speaker_name": "The Architect", "text": "Place a Component Fabricator. It takes its parts from your inventory when nothing feeds it by belt.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "eng_tut_next", "lines": [
+        {"speaker_name": "The Architect", "text": "Each Engineering part is slow and precious. The last is the Dyson Node; finish every research in one run and you can Ascend from the Megastructure panel.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+]
+
+
+def phase4(gd_json, apply):
+    plan = ep.build(ep.load())
+    eng = {r["id"]: r for r in plan["proposal"] if r["world"] == "world_engineering" and r.get("inputs") is not None
+           and r["id"] != "megastructure_material"}
+    deep = {r["id"]: r for r in plan["proposal"] if r["phase"] == "p_deep"}
+    items = {i["id"]: i for i in gd_json["items"]}
+    recipes = {r["id"]: r for r in gd_json["recipes"]}
+    research = {r["id"]: r for r in gd_json["research"]}
+    next_item = max(i["item_id"] for i in gd_json["items"]) + 1
+    next_recipe = max(r["recipe_id"] for r in gd_json["recipes"]) + 1
+    out = []
+
+    new_items = []
+    if "circuit_board" not in items:
+        new_items.append({
+            "id": "circuit_board", "display_name": "Circuit Board", "symbol": "PCB", "icon_path": "TODO",
+            "item_id": next_item, "tier": 5, "tier_ref": "tier_5", "category": "Component", "atomic_number": 0,
+            "atomic_mass": 0, "charge": "0", "is_radioactive": False, "decay_type": "None", "half_life_note": "",
+            "is_fissile": False, "is_harvested": False, "field_type": "None", "is_secondary_particle": False,
+            "particle_uses": 0, "codex_entry": "A silicon wafer etched and wired with copper: the first machine part.",
+            "base_sell_value": float(eng["circuit_board"]["value"]), "isotope_sell_multiplier": 1.0,
+            "world": "world_engineering", "planned": True})
+    node_of = {iid: n[0] for n in ENG_NODES for iid in n[3]}
+    new_recipes, recipe_updates = [], {}
+    for iid, r in eng.items():
+        body = {"display_name": items[iid]["display_name"] if iid in items else "Circuit Board", "tier": 5,
+                "category": "Component", "inputs": [{"item": i["item"], "quantity": i["q"]} for i in r["inputs"]],
+                "neutron_adjustment": [], "output_item": iid, "output_quantity": 1, "byproducts": [],
+                "base_craft_time": float(r["craft"]), "manual_craft_time": 0.0, "power_cost_is_dynamic": False,
+                "fixed_power_cost_ev": 0.0, "valid_buildings": ["component_fabricator"], "can_craft_manually": False,
+                "known_from_start": False, "required_research": node_of[iid], "unlocks_research": None,
+                "is_simplified": True, "simplification_note": r.get("how") or "", "planned": True}
+        if iid in recipes:
+            recipe_updates[iid] = body
+        else:
+            new_recipes.append(dict({"id": iid, "recipe_id": next_recipe}, **body))
+            next_recipe += 1
+
+    # research: Engineering chain, and Deep Physics' existing nodes priced by the plan
+    entries = []
+    prev = None
+    for node, name, ph, iids, buildings in ENG_NODES:
+        base = dict(research.get(node) or {})
+        entries.append({
+            "id": node, "display_name": name, "description": f"{name}: " + ", ".join(eng[i]["name"] for i in iids) + ".",
+            "branch": "Engineering", "prerequisites": [prev] if prev else [], "depth_in_tree": 3 + len(entries),
+            "cost_base_currency": int(sum(eng[i]["research"] or 0 for i in iids)), "cost_prestige_currency": 0,
+            "duration_seconds": 3600, "unlocks_items": iids, "unlocks_recipes": iids, "unlocks_buildings": buildings,
+            "unlocks_grid_expansion": False, "unlocks_research": [], "resets_on_prestige": True,
+            "codex_entry": name, "icon_path": base.get("icon_path") or "TODO", "block": ENG_PHASE_BLOCK[ph],
+            "required_world": "world_engineering", "world": "world_engineering", "planned": True})
+        prev = node
+    for e, c in zip(entries, pav([e["cost_base_currency"] for e in entries])):
+        e["cost_base_currency"] = int(ep.nice(c))
+    deep_nodes = [n for n in tl.phys_nodes(items) if n[2] == "p_deep"]
+    floor = research["iron_convergence"]["cost_base_currency"]
+    deep_costs = pav([max(floor, sum(deep[i]["research"] or 0 for i in n[3] if i in deep)) for n in deep_nodes])
+    deep_costs = [int(ep.nice(c)) for c in deep_costs]
+    out.append("engineering: " + " > ".join(f"{e['id']}({e['cost_base_currency']:,})" for e in entries))
+    out.append("deep physics: " + " > ".join(f"{n[0]}({c:,})" for n, c in zip(deep_nodes, deep_costs)))
+    if not apply:
+        print("\n".join(out))
+        return
+
+    gd = GameData()
+    last = json.loads(gd.text)["items"][-1]["id"]
+    for it in new_items:
+        gd.insert_after("items", last, it)
+    for iid, r in eng.items():
+        if iid in items:
+            gd.update("items", iid, base_sell_value=float(r["value"]), planned=True, world="world_engineering")
+    for iid, r in deep.items():
+        if iid in items and r.get("value") is not None and r.get("how") != "byproduct particle":
+            gd.update("items", iid, base_sell_value=float(r["value"]), planned=True)
+    for rid, body in recipe_updates.items():
+        gd.update("recipes", rid, **body)
+    last = max(json.loads(gd.text)["recipes"], key=lambda r: r["recipe_id"])["id"]
+    for rec in new_recipes:
+        gd.insert_after("recipes", last, rec)
+        last = rec["id"]
+    for (node, *_), c in zip(deep_nodes, deep_costs):
+        gd.update("research", node, cost_base_currency=c, planned=True)
+    for rid in REMOVED_RESEARCH_P4:
+        if gd.has("research", rid):
+            gd.delete("research", rid)
+    after = "metamaterials"
+    for e in entries:
+        if gd.has("research", e["id"]):
+            gd.put("research", e)
+        else:
+            gd.insert_after("research", after, e)
+        after = e["id"]
+    gd.save()
+    finish_phase4(plan, entries)
+
+
+def finish_phase4(plan, entries):
+    gd = GameData()
+    data = json.loads(gd.text)
+    for r in data["research"]:
+        pre = list(dict.fromkeys(REMOVED_RESEARCH_P4.get(p, p) for p in r.get("prerequisites") or []))
+        if pre != (r.get("prerequisites") or []):
+            gd.update("research", r["id"], prerequisites=pre)
+            r["prerequisites"] = pre
+    children = {r["id"]: [] for r in data["research"]}
+    for r in data["research"]:
+        for p in r.get("prerequisites") or []:
+            if p in children:
+                children[p].append(r["id"])
+    for r in data["research"]:
+        if (r.get("unlocks_research") or []) != children[r["id"]]:
+            gd.update("research", r["id"], unlocks_research=children[r["id"]])
+    gd.update("buildings", "component_fabricator", world="world_engineering", requires_power=False,
+              required_research="circuitry",
+              supported_recipes=[r["id"] for r in data["recipes"] if "component_fabricator" in (r.get("valid_buildings") or [])])
+    # The megastructure opens with Dyson Engineering (its research moved with the components)
+    meg = data["megastructure"]
+    if meg.get("required_research") != "dyson_engineering":
+        gd.text = gd.text.replace('"required_research": "megastructure_theory"', '"required_research": "dyson_engineering"')
+    gd.insert_after("sites", "site_foundry", {
+        "id": "site_assembly", "display_name": "Assembly Bay", "unlock_cost": 0,
+        "_note_eng": "First Engineering-world site (Item Timeline phase 4, 2026-11-23). No fields: every part is built from other worlds' materials carried in the inventory.",
+        "field_overrides": [{"field": "quark_field", "density_multiplier": 0.0}, {"field": "electron_field", "density_multiplier": 0.0}]})
+    gd.insert_after("worlds", "world_metallurgy", {
+        "id": "world_engineering", "display_name": "Engineering", "unlock_cost": 0,
+        "_note_gate": "Item Timeline phase 4 (2026-11-23): delivery stages made in Metallurgy (more_world_tasks) unlock it.",
+        "prereq_unlock_ids": [], "unlock_by_tasks": True, "site_ids": ["site_assembly"],
+        "theme": {"background_color": "#0d0f1a", "tile_color": "#1f2440", "field_tint": "#c8d2ff"}})
+    costs = {e["id"]: e["cost_base_currency"] for e in entries}
+    grant = int(ep.nice(costs["circuitry"] + float(gd.get("buildings", "component_fabricator").get("entropy_cost") or 0) + 100000))
+    gd.insert_after("world_tutorials", "tutorial_metallurgy", {
+        "id": "tutorial_engineering", "world": "world_engineering", "completion_message": "Engineering tutorial complete. Build the megastructure.",
+        "steps": [
+            {"id": "eng_welcome", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "eng_tut_welcome"}},
+            {"id": "eng_grant", "hint": "", "advance_condition": {"type": "Auto"}, "on_enter": {}, "reward_entropy": grant},
+            {"id": "eng_research", "hint": "Open Research and study Circuitry.", "advance_condition": {"type": "ResearchUnlocked", "research_id": "circuitry"}, "on_enter": {"pulse_button_id": "btn-research"}},
+            {"id": "eng_place_fabricator", "hint": "Place a Component Fabricator.", "advance_condition": {"type": "BuildingMin", "building_id": "component_fabricator", "min_count": 1}, "on_enter": {"dialogue_id": "eng_tut_fabricator", "pulse_button_id": "btn-place-component_fabricator"}},
+            {"id": "eng_next", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "eng_tut_next"}},
+        ]})
+    last = "met_tut_next"
+    for d in ENG_DIALOGUES:
+        if not gd.has("dialogues", d["id"]):
+            gd.insert_after("dialogues", last, d)
+        last = d["id"]
+    if "WorldTasks_eng" not in gd.text and '"world": "world_engineering"' not in gd.text.split('"world_tasks"')[0].split('"more_world_tasks"')[-1]:
+        from gamedata_edit import fmt_obj
+        key = '\n  ],\n  "world_tasks": {'
+        i = gd.text.index(key)
+        gd.text = gd.text[:i] + ',\n' + fmt_obj(ENG_TASKS) + gd.text[i:]
+    old = {b["id"]: b for b in data["research_blocks"]}
+    order = [b["id"] for b in sorted(data["research_blocks"], key=lambda b: b["order"]) if b["id"] != "synthetic_frontier"]
+    order += list(ENG_PHASE_BLOCK.values())
+    phase_of = {v: k for k, v in ENG_PHASE_BLOCK.items()}
+    blocks = []
+    for n, bid in enumerate(order, start=1):
+        if bid in phase_of:
+            ph = next(p for p in plan["phases"] if p["id"] == phase_of[bid])
+            name, desc = P4_BLOCK_TEXT[bid]
+            src = blocks[-1]
+            b = {"id": bid, "name": name, "order": n,
+                 "target_hours": round((ph["end"] - ph["start"]) * plan["activeHoursPerDay"], 2),
+                 "anchor": False, "planned": True, "description": desc}
+            for k in ("start_prestige_count", "start_prestige_currency_earned", "start_permanent_upgrades",
+                      "start_entropy", "start_sites"):
+                b[k] = src.get(k, [] if k in ("start_permanent_upgrades", "start_sites") else 0)
+        else:
+            b = dict(old[bid], order=n)
+            if bid == "deep_physics":
+                ph = next(p for p in plan["phases"] if p["id"] == "p_deep")
+                b["target_hours"] = round((ph["end"] - ph["start"]) * plan["activeHoursPerDay"], 2)
+                b["planned"] = True
+        blocks.append(b)
+    _replace_blocks(gd, data["research_blocks"], blocks)
+    gd.save()
+
+
 if __name__ == "__main__":
     # Phases build on each other: start from release/0.6's game_data.json (git show origin/release/0.6:...), apply 1, 2, ... in order,
     # then run scripts/rebalance_curve.py --apply for the content not planned yet.
     phase = int(sys.argv[sys.argv.index("--phase") + 1]) if "--phase" in sys.argv else 1
     gd_json = json.loads((ep.ROOT / "Assets" / "Data" / "game_data.json").read_text(encoding="utf-8"))
-    {1: phase1, 2: phase2, 3: phase3}[phase](gd_json, "--apply" in sys.argv)
+    {1: phase1, 2: phase2, 3: phase3, 4: phase4}[phase](gd_json, "--apply" in sys.argv)

@@ -18,6 +18,7 @@ namespace MobileIdleBuilder
         public const string Chemistry = "world_chemistry";
         public const string Biology   = "world_biology";
         public const string Metallurgy = "world_metallurgy";
+        public const string Engineering = "world_engineering";
 
         /// <summary>True if content that needs <paramref name="worldId"/> is open on this save.</summary>
         public static bool IsOpen(string worldId, IReadOnlyCollection<string> unlockedWorlds)

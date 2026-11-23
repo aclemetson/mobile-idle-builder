@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: 'Oganesson (Og), element number 118 with mass number 294. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 24700
+  baseSellValue: 180000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

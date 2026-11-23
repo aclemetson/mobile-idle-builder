@@ -36,7 +36,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2a9cbaca2f12ce249acb2300ace3a5e3, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch:
-  - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  unlocksResearch: []
   resetsOnPrestige: 1
   codexEntry: Metamaterials

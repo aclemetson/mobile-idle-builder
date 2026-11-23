@@ -21,21 +21,23 @@ MonoBehaviour:
   inputs:
   - item: {fileID: 11400000, guid: 24398ca4d86eb704b8b607716a77000c, type: 2}
     quantity: 3
-  - item: {fileID: 11400000, guid: 24bcd30ef7b5e7b44a0d68fb21137ee2, type: 2}
+  - item: {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: fb74179fba2d23d419bd0a385c9cbee7, type: 2}
     quantity: 2
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 322e03abb99e3884492502befead50cc, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 4000
+  baseCraftTime: 3600
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 100000000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 843d72e51b7c3cd45b63328eecb849aa, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 7ba831a6a8f7b0149b267ccf87e0ff11, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: titanium + carbon fiber

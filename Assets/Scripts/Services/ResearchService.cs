@@ -448,6 +448,9 @@ namespace MobileIdleBuilder
             { "advanced_molecules",           "roasting" },
             { "materials_science",            "steelmaking" },
             { "advanced_materials",           "metamaterials" },
+            // Phase 4: the components moved to the Engineering world.
+            { "component_engineering",        "circuitry" },
+            { "megastructure_theory",         "dyson_engineering" },
         };
 
         /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>

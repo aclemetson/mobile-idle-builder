@@ -19,23 +19,23 @@ MonoBehaviour:
   tier: 5
   category: 7
   inputs:
-  - item: {fileID: 11400000, guid: 322e03abb99e3884492502befead50cc, type: 2}
+  - item: {fileID: 11400000, guid: baa79aaa0a014ce4189cb696387a0deb, type: 2}
     quantity: 2
-  - item: {fileID: 11400000, guid: 15ee57d7a12401b4ea36624da0ebbcec, type: 2}
-    quantity: 2
+  - item: {fileID: 11400000, guid: 1b66bbcb303b5af4483e4cc80afab64b, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: f527515f051f9ba49b4323a464712129, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 5000
+  baseCraftTime: 5400
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 500000000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 843d72e51b7c3cd45b63328eecb849aa, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 80bc36f1f3afb7249a3774024bc40584, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: metamaterial + processor

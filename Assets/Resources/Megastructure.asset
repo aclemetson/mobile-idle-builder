@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.MegastructureSO
   id: dyson_sphere
   displayName: Dyson Sphere
-  requiredResearch: megastructure_theory
+  requiredResearch: dyson_engineering
   stages:
   - id: ms_stage_1
     displayName: Scaffold Ring

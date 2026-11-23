@@ -28,14 +28,14 @@ namespace MobileIdleBuilder.Tests
         // ── Item count ───────────────────────────────────────────────────────
 
         [Test]
-        public void AllItems_TotalCount_Is216()
+        public void AllItems_TotalCount_Is217()
         {
             // 149 physics + 4 OrganicCompound (P2) + 3 C1 (P4a) + 8 C2-C3 (P4b) + 4 B1 Biomolecules
             // + 10 B2-B4 (4 CellPart B2 + 3 B3 + 3 Organism B4) + 2 fusion particles (neutrino, gamma)
             // + 6 decay-chain isotopes (#322) - Tritium and Carbon-14 (retired 2026-11-19)
             // + 32 life chemistry (Item Timeline phase 2, 2026-11-23) - 6 industrial products retired with it.
-            Assert.AreEqual(216, _items.Length,
-                $"Expected 216 items in Resources/Items/, found {_items.Length}. " +
+            Assert.AreEqual(217, _items.Length,
+                $"Expected 217 items in Resources/Items/, found {_items.Length}. " +
                 "Did a game_data.json import add or remove an item?");
         }
 
@@ -75,9 +75,9 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T2_Platinum_SellValue()    => AssertSell("platinum",   15400f);
         [Test] public void T2_Gold_SellValue()        => AssertSell("gold",       12200f);
         [Test] public void T2_Uranium_SellValue()     => AssertSell("uranium",    3170f);          // cheap fission floor
-        [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  26200f);          // harvested on the Actinide Vein: cheap
-        [Test] public void T2_Americium_SellValue()   => AssertSell("americium",  14700f);   // first post-iron synthetic
-        [Test] public void T2_Oganesson_SellValue()   => AssertSell("oganesson",  24700f); // global max
+        [Test] public void T2_Plutonium_SellValue()   => AssertSell("plutonium",  2400000f);          // harvested on the Actinide Vein: cheap
+        [Test] public void T2_Americium_SellValue()   => AssertSell("americium",  1380000f);   // first post-iron synthetic
+        [Test] public void T2_Oganesson_SellValue()   => AssertSell("oganesson",  180000000f); // global max
 
         // ── Tier 2 — Isotopes (base = round(nucYield(Z) × isotopeSellMultiplier)) ──────
 
@@ -143,12 +143,12 @@ namespace MobileIdleBuilder.Tests
 
         // ── Tier 5 — Components ──────────────────────────────────────────────
 
-        [Test] public void T5_QuantumProcessor_SellValue()        => AssertSell("quantum_processor",       1780000000f);
-        [Test] public void T5_PlasmaContainmentRing_SellValue()   => AssertSell("plasma_containment_ring", 11200000000f);
-        [Test] public void T5_AntimatterCell_SellValue()          => AssertSell("antimatter_cell",         8560000000f);
-        [Test] public void T5_DysonNode_SellValue()               => AssertSell("dyson_node",              26000000000f);
-        [Test] public void T5_OrbitalFrame_SellValue()            => AssertSell("orbital_frame",           52600000000f);
-        [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           123000000000f);
+        [Test] public void T5_QuantumProcessor_SellValue()        => AssertSell("quantum_processor",       8190000000f);
+        [Test] public void T5_PlasmaContainmentRing_SellValue()   => AssertSell("plasma_containment_ring", 5970000000f);
+        [Test] public void T5_AntimatterCell_SellValue()          => AssertSell("antimatter_cell",         13700000000f);
+        [Test] public void T5_DysonNode_SellValue()               => AssertSell("dyson_node",              94500000000f);
+        [Test] public void T5_OrbitalFrame_SellValue()            => AssertSell("orbital_frame",           7870000000f);
+        [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           33600000000f);
 
         // ── Helper ───────────────────────────────────────────────────────────
 

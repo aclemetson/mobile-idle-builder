@@ -23,7 +23,7 @@ MonoBehaviour:
   isObsoleteable: 0
   obsoleteCondition: 
   obsoletedByResearch: 
-  requiresPower: 1
+  requiresPower: 0
   isPowerSource: 0
   basePowerCostEV: 200
   powerCostIsDynamic: 0
@@ -42,6 +42,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bb179f5212dd1cc4da28657a681470bc, type: 2}
   - {fileID: 11400000, guid: 5a693a9ed7796e442a66d2637fffaf33, type: 2}
   - {fileID: 11400000, guid: cdb9fcbad19bbe24ca4c2548d342d0ad, type: 2}
+  - {fileID: 11400000, guid: a6e88dee5de92e14a911e898de736c4e, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
   - Primary Material
@@ -67,7 +68,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
-  world: 
+  world: world_engineering
   entropyCost: 5000000
   baseMaxOutputItems: 10
   baseMaxInputItemsPerSlot: 30
@@ -108,7 +109,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 407758744366c814d991e87b6a1dd0c1, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

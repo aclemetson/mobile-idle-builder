@@ -687,6 +687,31 @@ namespace MobileIdleBuilder.Dev
                     return "Prestige requested. PrestigeSystem will process on next frame.";
                 });
 
+            // ── Ascension (Item Timeline phase 4) ─────────────────────────────
+            _registry.Register("ascend", "Ascend now (skips the every-research check): prestige + lock worlds + pay megastructure material",
+                _ =>
+                {
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    AscensionRules.Pending = true;
+                    var entity = _progressQuery.GetSingletonEntity();
+                    var data   = _em.GetComponentData<PlayerProgressData>(entity);
+                    data.PrestigeRequested = true;
+                    _em.SetComponentData(entity, data);
+                    var save = SaveManager.Instance?.Current;
+                    return $"Ascension requested: +{AscensionRules.MaterialFor(save?.ascensionCount ?? 0)} material.";
+                });
+
+            _registry.Register("add material <n>", "Add megastructure material (buys Expansion levels in the Megastructure panel)",
+                args =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: no save.";
+                    if (!long.TryParse(args[0], out long n) || n <= 0) return "Error: <n> must be a positive integer.";
+                    save.megastructureMaterial += n;
+                    MegastructureService.Instance?.ApplyBonusToECS();
+                    return $"Megastructure material: {save.megastructureMaterial:N0}.";
+                });
+
             // ── PVP ───────────────────────────────────────────────────────────
             _registry.Register("unlock pvp", "Override PVP prestige lock",
                 _ =>
