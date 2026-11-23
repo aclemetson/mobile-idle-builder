@@ -223,10 +223,10 @@ namespace MobileIdleBuilder
         {
             if (_btnPrestige == null) return;
             var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-            // During a tournament run the button stays (tapping it explains the lock) but shows the countdown.
+            // During a tournament run prestige stays available (it asks first, then ends the run) and shows the time left.
             var tournament = TournamentService.Instance;
-            string text = tournament != null && tournament.PrestigeLocked
-                ? TournamentRules.PrestigeLockText(tournament.RunRemaining)
+            string text = tournament != null && tournament.PrestigeLeavesRun
+                ? TournamentRules.PrestigeInRunText(tournament.RunRemaining)
                 : PrestigeButtonText;
             if (progress.PrestigeAvailable == _lastPrestigeAvailable && text == _lastPrestigeText) return;
             _lastPrestigeAvailable         = progress.PrestigeAvailable;

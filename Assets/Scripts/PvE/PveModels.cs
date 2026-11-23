@@ -57,6 +57,7 @@ namespace MobileIdleBuilder
         public string name;
         public string startUtc;
         public bool dev;
+        public bool retired;            // left early (#505): score frozen at the retire snapshot (rate 0), no more snapshots
         public List<PveSnap> snaps = new List<PveSnap>();
     }
 
@@ -139,6 +140,7 @@ namespace MobileIdleBuilder
         public string runEndsUtc;
         public string bracketId;
         public bool bracketSettled;
+        public bool retired;            // this player left this week's run early
     }
 
     [Serializable]
@@ -157,6 +159,7 @@ namespace MobileIdleBuilder
         public double value;
         public bool projected;
         public bool you;
+        public bool retired;            // left early: the value is final
         public int elapsed;             // that player's own elapsed seconds (clamped to the run)
     }
 
@@ -193,5 +196,6 @@ namespace MobileIdleBuilder
         public const string Busy            = "busy";
         public const string NothingToClaim  = "nothing_to_claim";
         public const string Config          = "config_missing";
+        public const string Retired         = "retired";
     }
 }

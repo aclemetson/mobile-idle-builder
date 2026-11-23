@@ -1430,6 +1430,10 @@
 }
 
 /* Tournament leaderboard rows (TournamentPanelController). Projected values (players behind you) are italic with "~". */
+.tournament-row--retired .tournament-row__value {
+    color: var(--color-text-secondary);
+}
+
 .tournament-row {
     flex-direction: row;
     align-items: center;

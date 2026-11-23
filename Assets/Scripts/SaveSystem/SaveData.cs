@@ -360,6 +360,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public int    prestigeCountAtJoin = -1;
         public bool   finalSent;            // the snapshot at the 24h mark went through
+        public bool   retired;              // left the run early (#505): score frozen on the server, run over for this device
         // The latest snapshot taken during the run that the server hasn't confirmed (pendingT = its elapsed
         // seconds; -1 = none). Kept so a snapshot lost when the OS suspended the app still counts: it is sent
         // on the next launch with its own time (TournamentRules.CapturePending, PveRules.SnapshotTime).
