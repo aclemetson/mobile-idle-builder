@@ -34,7 +34,7 @@ Cloud Save data the module writes:
 
 ## 2. Deploy the module
 
-Needs the .NET 8 SDK installed (the module targets .NET 6, and the SDK fetches that targeting pack on first build).
+Needs the **.NET 9 SDK** (the module targets .NET 9, like Unity's Cloud Code module template). The Deployment window runs `dotnet publish PveModule.sln -c Release -r linux-x64` and finds the module's main project through its single publish profile, `PveModule/Properties/PublishProfiles/FolderProfile.pubxml`. Keep exactly one `.pubxml` in `CloudCode/PveModule` ("Could not find a Publish Profile" / "Too many Publish Profiles" otherwise). The test project sets `IsPublishable=false` so it stays out of the upload.
 
 1. In the Unity Editor menu bar: **Services → Deployment** (a top-level menu next to Window; package `com.unity.services.deployment`). It opens a dockable **Deployment** window.
 2. Select the environment at the top.

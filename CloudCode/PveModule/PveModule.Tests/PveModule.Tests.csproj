@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- Keep the tests out of the module: the Deployment window publishes the whole solution. -->
+    <IsPublishable>false</IsPublishable>
     <Nullable>disable</Nullable>
     <LangVersion>9.0</LangVersion>
   </PropertyGroup>
