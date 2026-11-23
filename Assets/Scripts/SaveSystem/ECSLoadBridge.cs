@@ -469,6 +469,11 @@ namespace MobileIdleBuilder
             { 158, 7000 },    // chlorine_gas
             { 159, 2280 },    // sodium_hydroxide
             { 155, 6300 },    // table_salt
+            // Phase 3: Biology runs on the life chemicals; UF6 left with the old Superconductor recipe.
+            { 152, 3360 },    // amino_acid
+            { 151, 109000 },  // fatty_acid
+            { 153, 31800 },   // nucleotide
+            { 38, 20000 },    // uranium_hexafluoride
         };
 
         /// <summary>

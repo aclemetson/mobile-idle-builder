@@ -38,7 +38,6 @@ MonoBehaviour:
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
   - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
   resetsOnPrestige: 1
   codexEntry: 'Manganese from fusion and Cobalt from the descent meet: Iron, the

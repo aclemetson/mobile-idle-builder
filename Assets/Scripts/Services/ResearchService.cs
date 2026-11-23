@@ -442,6 +442,12 @@ namespace MobileIdleBuilder
             { "fissile_extraction",           "heavy_elements" },
             // Phase 2: Organic Chemistry became Hydrocarbons (and Alcohols and Acids after it).
             { "organic_chemistry",            "hydrocarbons" },
+            // Phase 3: Biology's precursors are the life chemicals; metals and materials moved to Metallurgy.
+            { "biochem_precursors",           "energy_currency" },
+            { "reaction_engineering",         "ore_prospecting" },
+            { "advanced_molecules",           "roasting" },
+            { "materials_science",            "steelmaking" },
+            { "advanced_materials",           "metamaterials" },
         };
 
         /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>

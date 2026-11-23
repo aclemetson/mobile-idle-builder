@@ -36,6 +36,7 @@ MonoBehaviour:
   isPlacedSink: 0
   baseOutputRate: 0.5
   supportedRecipes:
+  - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
   - {fileID: 11400000, guid: 10c02035ae7c1ec4398fa9d4d0d19537, type: 2}
   - {fileID: 11400000, guid: eaf3cd13e4f877f4bac45df8e3ad7352, type: 2}
   - {fileID: 11400000, guid: 4a4f782d9a14f8a49801706630a8ca81, type: 2}
@@ -43,6 +44,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4928b1063bab4d343b8f81bcd14dd1f7, type: 2}
   - {fileID: 11400000, guid: bdfedfe0a6559ab429d82dc778e6fdf3, type: 2}
   - {fileID: 11400000, guid: 2a9cbaca2f12ce249acb2300ace3a5e3, type: 2}
+  - {fileID: 11400000, guid: 1416f0252cbbbd84ca3836e80f4a27d7, type: 2}
+  - {fileID: 11400000, guid: 43b81269ada262c4fa0d9cfde6cdd070, type: 2}
   inputSlotCount: 1
   inputSlotLabels:
   - Stream
@@ -64,7 +67,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
-  world: world_chemistry
+  world: world_metallurgy
   entropyCost: 50000
   baseMaxOutputItems: 15
   baseMaxInputItemsPerSlot: 30
@@ -121,7 +124,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  requiredResearch: {fileID: 11400000, guid: d972fab1d135c7f4694979b3619e3406, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

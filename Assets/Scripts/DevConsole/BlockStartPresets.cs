@@ -182,6 +182,11 @@ namespace MobileIdleBuilder.Dev
             save.worldTaskProgressKeys?.Clear();
             save.worldTaskProgressValues?.Clear();
             WorldTasks.Migrate(save, tasks, isNewGame: false);
+            // The other worlds' delivery tasks (Metallurgy, Engineering): done if their world is open, else unstarted.
+            save.worldTaskSets?.Clear();
+            foreach (var t in WorldTasks.All)
+                if (t != null && t != tasks && save.unlockedWorlds.Contains(t.worldId))
+                    WorldTasks.SetStage(save, t, WorldTasks.StageCount(t));
             save.devConsoleUsed   = true;
             return save;
         }

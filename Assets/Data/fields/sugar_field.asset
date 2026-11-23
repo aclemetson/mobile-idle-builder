@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: sugar_field
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: sugar_field
-  displayName: Sugar Bloom
+  displayName: Sugar Pool
   fieldType: Organic
   drops:
   - item: {fileID: 11400000, guid: 56d7d1047f99e5a439dfaf7f3de183d6, type: 2}

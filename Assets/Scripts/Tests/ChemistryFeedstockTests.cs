@@ -74,7 +74,8 @@ namespace MobileIdleBuilder.Tests
         {
             int checkedCount = 0;
             foreach (var r in MadeIn(WorldGate.Chemistry).Where(r => r.outputItem != null
-                         && r.outputItem.category == ItemCategory.Molecule && r.inputs != null && r.inputs.Length > 0))
+                         && (r.outputItem.category == ItemCategory.Molecule || r.outputItem.category == ItemCategory.OrganicCompound)
+                         && r.inputs != null && r.inputs.Length > 0))
             {
                 var left = new Dictionary<string, int>();
                 var right = new Dictionary<string, int>();

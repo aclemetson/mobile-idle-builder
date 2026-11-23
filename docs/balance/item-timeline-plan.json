@@ -890,7 +890,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.345,
+   "builtDays": 5.239,
    "pinDay": null,
    "z": 19,
    "how": "fusion",
@@ -916,7 +916,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.345,
+   "builtDays": 5.239,
    "pinDay": null,
    "z": 20,
    "how": "fusion",
@@ -942,7 +942,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.345,
+   "builtDays": 5.239,
    "pinDay": null,
    "z": 21,
    "how": "fusion",
@@ -968,7 +968,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.345,
+   "builtDays": 5.239,
    "pinDay": null,
    "z": 22,
    "how": "fusion",
@@ -994,7 +994,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.437,
+   "builtDays": 5.345,
    "pinDay": null,
    "z": 23,
    "how": "fusion",
@@ -1020,7 +1020,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.437,
+   "builtDays": 5.345,
    "pinDay": null,
    "z": 24,
    "how": "fusion",
@@ -1046,7 +1046,7 @@
    "world": "world_physics",
    "phase": "p_light3",
    "status": "keep",
-   "builtDays": 5.437,
+   "builtDays": 5.345,
    "pinDay": null,
    "z": 25,
    "how": "fusion",
@@ -1072,7 +1072,7 @@
    "world": "world_physics",
    "phase": "p_descent",
    "status": "moved",
-   "builtDays": 5.528,
+   "builtDays": 5.554,
    "pinDay": null,
    "z": 92,
    "how": "mined source",
@@ -1088,7 +1088,7 @@
    "world": "world_physics",
    "phase": "p_descent",
    "status": "moved",
-   "builtDays": 5.528,
+   "builtDays": 5.554,
    "pinDay": null,
    "z": 90,
    "how": "decay chain",
@@ -1110,7 +1110,7 @@
    "world": "world_physics",
    "phase": "p_descent",
    "status": "moved",
-   "builtDays": 5.528,
+   "builtDays": 5.554,
    "pinDay": null,
    "z": 88,
    "how": "decay chain",
@@ -2921,7 +2921,7 @@
    "craft": 240.0,
    "outQ": 1,
    "recipe": "breed_neptunium",
-   "builtValue": 114000.0
+   "builtValue": 58000.0
   },
   {
    "id": "plutonium",
@@ -2943,7 +2943,7 @@
    "craft": 240.0,
    "outQ": 1,
    "recipe": "breed_plutonium",
-   "builtValue": 224000.0
+   "builtValue": 113000.0
   },
   {
    "id": "americium",
@@ -2973,7 +2973,7 @@
    "craft": 243.0,
    "outQ": 1,
    "recipe": "americium",
-   "builtValue": 134000.0
+   "builtValue": 66900.0
   },
   {
    "id": "curium",
@@ -3003,7 +3003,7 @@
    "craft": 247.0,
    "outQ": 1,
    "recipe": "curium",
-   "builtValue": 136000.0
+   "builtValue": 68000.0
   },
   {
    "id": "berkelium",
@@ -3033,7 +3033,7 @@
    "craft": 247.0,
    "outQ": 1,
    "recipe": "berkelium",
-   "builtValue": 136000.0
+   "builtValue": 68000.0
   },
   {
    "id": "californium",
@@ -3063,7 +3063,7 @@
    "craft": 251.0,
    "outQ": 1,
    "recipe": "californium",
-   "builtValue": 138000.0
+   "builtValue": 69100.0
   },
   {
    "id": "einsteinium",
@@ -3093,7 +3093,7 @@
    "craft": 252.0,
    "outQ": 1,
    "recipe": "einsteinium",
-   "builtValue": 139000.0
+   "builtValue": 69400.0
   },
   {
    "id": "fermium",
@@ -3123,7 +3123,7 @@
    "craft": 257.0,
    "outQ": 1,
    "recipe": "fermium",
-   "builtValue": 141000.0
+   "builtValue": 70800.0
   },
   {
    "id": "mendelevium",
@@ -3153,7 +3153,7 @@
    "craft": 258.0,
    "outQ": 1,
    "recipe": "mendelevium",
-   "builtValue": 169000.0
+   "builtValue": 84400.0
   },
   {
    "id": "nobelium",
@@ -3183,7 +3183,7 @@
    "craft": 259.0,
    "outQ": 1,
    "recipe": "nobelium",
-   "builtValue": 169000.0
+   "builtValue": 84700.0
   },
   {
    "id": "lawrencium",
@@ -3213,7 +3213,7 @@
    "craft": 266.0,
    "outQ": 1,
    "recipe": "lawrencium",
-   "builtValue": 174000.0
+   "builtValue": 87000.0
   },
   {
    "id": "rutherfordium",
@@ -3243,7 +3243,7 @@
    "craft": 267.0,
    "outQ": 1,
    "recipe": "rutherfordium",
-   "builtValue": 175000.0
+   "builtValue": 87300.0
   },
   {
    "id": "dubnium",
@@ -3273,7 +3273,7 @@
    "craft": 268.0,
    "outQ": 1,
    "recipe": "dubnium",
-   "builtValue": 175000.0
+   "builtValue": 87600.0
   },
   {
    "id": "seaborgium",
@@ -3303,7 +3303,7 @@
    "craft": 269.0,
    "outQ": 1,
    "recipe": "seaborgium",
-   "builtValue": 176000.0
+   "builtValue": 88000.0
   },
   {
    "id": "bohrium",
@@ -3333,7 +3333,7 @@
    "craft": 270.0,
    "outQ": 1,
    "recipe": "bohrium",
-   "builtValue": 177000.0
+   "builtValue": 88300.0
   },
   {
    "id": "hassium",
@@ -3363,7 +3363,7 @@
    "craft": 269.0,
    "outQ": 1,
    "recipe": "hassium",
-   "builtValue": 176000.0
+   "builtValue": 88000.0
   },
   {
    "id": "meitnerium",
@@ -3393,7 +3393,7 @@
    "craft": 278.0,
    "outQ": 1,
    "recipe": "meitnerium",
-   "builtValue": 182000.0
+   "builtValue": 90900.0
   },
   {
    "id": "darmstadtium",
@@ -3423,7 +3423,7 @@
    "craft": 281.0,
    "outQ": 1,
    "recipe": "darmstadtium",
-   "builtValue": 184000.0
+   "builtValue": 91900.0
   },
   {
    "id": "roentgenium",
@@ -3453,7 +3453,7 @@
    "craft": 282.0,
    "outQ": 1,
    "recipe": "roentgenium",
-   "builtValue": 219000.0
+   "builtValue": 110000.0
   },
   {
    "id": "copernicium",
@@ -3483,7 +3483,7 @@
    "craft": 285.0,
    "outQ": 1,
    "recipe": "copernicium",
-   "builtValue": 221000.0
+   "builtValue": 111000.0
   },
   {
    "id": "nihonium",
@@ -3513,7 +3513,7 @@
    "craft": 286.0,
    "outQ": 1,
    "recipe": "nihonium",
-   "builtValue": 222000.0
+   "builtValue": 112000.0
   },
   {
    "id": "flerovium",
@@ -3543,7 +3543,7 @@
    "craft": 289.0,
    "outQ": 1,
    "recipe": "flerovium",
-   "builtValue": 225000.0
+   "builtValue": 113000.0
   },
   {
    "id": "moscovium",
@@ -3573,7 +3573,7 @@
    "craft": 290.0,
    "outQ": 1,
    "recipe": "moscovium",
-   "builtValue": 225000.0
+   "builtValue": 113000.0
   },
   {
    "id": "livermorium",
@@ -3603,7 +3603,7 @@
    "craft": 293.0,
    "outQ": 1,
    "recipe": "livermorium",
-   "builtValue": 228000.0
+   "builtValue": 114000.0
   },
   {
    "id": "tennessine",
@@ -3633,7 +3633,7 @@
    "craft": 294.0,
    "outQ": 1,
    "recipe": "tennessine",
-   "builtValue": 228000.0
+   "builtValue": 115000.0
   },
   {
    "id": "oganesson",
@@ -3663,7 +3663,7 @@
    "craft": 294.0,
    "outQ": 1,
    "recipe": "oganesson",
-   "builtValue": 228000.0
+   "builtValue": 115000.0
   },
   {
    "id": "hydrogen_gas",
@@ -3671,12 +3671,12 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.471,
+   "builtDays": 4.427,
    "pinDay": null,
    "formula": "H2",
    "how": "mined source",
    "node": "chemistry_lab",
-   "builtValue": 191.0,
+   "builtValue": 130.0,
    "inputs": [],
    "craft": 4.0,
    "outQ": 1
@@ -3687,12 +3687,12 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.471,
+   "builtDays": 4.427,
    "pinDay": null,
    "formula": "O2",
    "how": "mined source",
    "node": "chemistry_lab",
-   "builtValue": 191.0,
+   "builtValue": 132.0,
    "inputs": [],
    "craft": 4.0,
    "outQ": 1
@@ -3703,7 +3703,7 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.471,
+   "builtDays": 4.427,
    "pinDay": null,
    "formula": "H2O",
    "how": "reaction",
@@ -3720,7 +3720,7 @@
     }
    ],
    "node": "chemistry_lab",
-   "builtValue": 645.0,
+   "builtValue": 445.0,
    "craft": 15.0,
    "outQ": 2
   },
@@ -3730,12 +3730,12 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.508,
+   "builtDays": 4.461,
    "pinDay": null,
    "formula": "C",
    "how": "mined source",
    "node": "molecular_synthesis",
-   "builtValue": 341.0,
+   "builtValue": 201.0,
    "inputs": [],
    "craft": 6.0,
    "outQ": 1
@@ -3746,7 +3746,7 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.508,
+   "builtDays": 4.461,
    "pinDay": null,
    "formula": "CO2",
    "how": "reaction",
@@ -3763,7 +3763,7 @@
     }
    ],
    "node": "molecular_synthesis",
-   "builtValue": 1670.0,
+   "builtValue": 1010.0,
    "craft": 20.0,
    "outQ": 1
   },
@@ -3773,7 +3773,7 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.508,
+   "builtDays": 4.461,
    "pinDay": null,
    "formula": "CH4",
    "how": "reaction",
@@ -3790,7 +3790,7 @@
     }
    ],
    "node": "molecular_synthesis",
-   "builtValue": 3000.0,
+   "builtValue": 1830.0,
    "craft": 40.0,
    "outQ": 1
   },
@@ -3800,12 +3800,12 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.554,
+   "builtDays": 4.499,
    "pinDay": null,
    "formula": "N2",
    "how": "mined source",
    "node": "nitrogen_fixation",
-   "builtValue": 406.0,
+   "builtValue": 208.0,
    "inputs": [],
    "craft": 6.0,
    "outQ": 1
@@ -3816,7 +3816,7 @@
    "world": "world_chemistry",
    "phase": "c1",
    "status": "keep",
-   "builtDays": 4.554,
+   "builtDays": 4.499,
    "pinDay": null,
    "formula": "NH3",
    "how": "reaction",
@@ -3833,7 +3833,7 @@
     }
    ],
    "node": "nitrogen_fixation",
-   "builtValue": 1710.0,
+   "builtValue": 935.0,
    "craft": 36.0,
    "outQ": 2
   },
@@ -3843,7 +3843,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.364,
    "pinDay": null,
    "formula": "CO",
    "how": "reaction",
@@ -3860,7 +3860,7 @@
     }
    ],
    "node": "syngas",
-   "builtValue": null,
+   "builtValue": 797.0,
    "craft": 30,
    "outQ": 2
   },
@@ -3870,7 +3870,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.364,
    "pinDay": null,
    "formula": "H2O2",
    "how": "reaction",
@@ -3887,7 +3887,7 @@
     }
    ],
    "node": "syngas",
-   "builtValue": null,
+   "builtValue": 1400.0,
    "craft": 30,
    "outQ": 1
   },
@@ -3897,7 +3897,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.421,
    "pinDay": null,
    "formula": "CH2O",
    "how": "reaction",
@@ -3914,7 +3914,7 @@
     }
    ],
    "node": "carbonyl_chemistry",
-   "builtValue": null,
+   "builtValue": 2100.0,
    "craft": 30,
    "outQ": 1
   },
@@ -3924,7 +3924,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.421,
    "pinDay": null,
    "formula": "CH4O",
    "how": "reaction",
@@ -3941,7 +3941,7 @@
     }
    ],
    "node": "carbonyl_chemistry",
-   "builtValue": null,
+   "builtValue": 2270.0,
    "craft": 30,
    "outQ": 1
   },
@@ -3951,7 +3951,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.421,
    "pinDay": null,
    "formula": "CH2O2",
    "how": "reaction",
@@ -3968,7 +3968,7 @@
     }
    ],
    "node": "carbonyl_chemistry",
-   "builtValue": null,
+   "builtValue": 2500.0,
    "craft": 30,
    "outQ": 1
   },
@@ -3978,7 +3978,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.488,
    "pinDay": null,
    "formula": "HCN",
    "how": "reaction",
@@ -3995,7 +3995,7 @@
     }
    ],
    "node": "prebiotic_nitrogen",
-   "builtValue": null,
+   "builtValue": 4250.0,
    "craft": 30,
    "outQ": 1
   },
@@ -4005,7 +4005,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 5.488,
    "pinDay": null,
    "formula": "CH4N2O",
    "how": "reaction",
@@ -4022,7 +4022,7 @@
     }
    ],
    "node": "prebiotic_nitrogen",
-   "builtValue": null,
+   "builtValue": 4440.0,
    "craft": 30,
    "outQ": 1
   },
@@ -4032,7 +4032,7 @@
    "world": "world_chemistry",
    "phase": "c2",
    "status": "keep",
-   "builtDays": 6.6,
+   "builtDays": 5.488,
    "pinDay": null,
    "formula": "HNO3",
    "how": "reaction",
@@ -4049,7 +4049,7 @@
     }
    ],
    "node": "prebiotic_nitrogen",
-   "builtValue": 2030.0,
+   "builtValue": 2900.0,
    "craft": 30.0,
    "outQ": 1
   },
@@ -4059,7 +4059,7 @@
    "world": "world_chemistry",
    "phase": "c3",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C2H4",
    "how": "reaction",
@@ -4072,7 +4072,7 @@
     }
    ],
    "node": "hydrocarbons",
-   "builtValue": null,
+   "builtValue": 6210.0,
    "craft": 45,
    "outQ": 1
   },
@@ -4082,7 +4082,7 @@
    "world": "world_chemistry",
    "phase": "c3",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C2H2",
    "how": "reaction",
@@ -4095,7 +4095,7 @@
     }
    ],
    "node": "hydrocarbons",
-   "builtValue": null,
+   "builtValue": 6400.0,
    "craft": 45,
    "outQ": 1
   },
@@ -4122,7 +4122,7 @@
     }
    ],
    "node": "hydrocarbons",
-   "builtValue": 4110.0,
+   "builtValue": 7990.0,
    "craft": 25.0,
    "outQ": 1
   },
@@ -4149,7 +4149,7 @@
     }
    ],
    "node": "alcohols_and_acids",
-   "builtValue": 5920.0,
+   "builtValue": 8830.0,
    "craft": 30.0,
    "outQ": 1
   },
@@ -4159,7 +4159,7 @@
    "world": "world_chemistry",
    "phase": "c3",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C2H4O2",
    "how": "reaction",
@@ -4176,7 +4176,7 @@
     }
    ],
    "node": "alcohols_and_acids",
-   "builtValue": null,
+   "builtValue": 6700.0,
    "craft": 45,
    "outQ": 1
   },
@@ -4186,7 +4186,7 @@
    "world": "world_chemistry",
    "phase": "c3",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C3H8O3",
    "how": "reaction",
@@ -4203,7 +4203,7 @@
     }
    ],
    "node": "alcohols_and_acids",
-   "builtValue": null,
+   "builtValue": 7350.0,
    "craft": 45,
    "outQ": 1
   },
@@ -4213,12 +4213,12 @@
    "world": "world_chemistry",
    "phase": "c4",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "S",
    "how": "mined source",
    "node": "sulfur_chemistry",
-   "builtValue": null,
+   "builtValue": 1970.0,
    "inputs": [],
    "craft": 20.0,
    "outQ": 1
@@ -4229,7 +4229,7 @@
    "world": "world_chemistry",
    "phase": "c4",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "H2S",
    "how": "reaction",
@@ -4246,7 +4246,7 @@
     }
    ],
    "node": "sulfur_chemistry",
-   "builtValue": null,
+   "builtValue": 8310.0,
    "craft": 60,
    "outQ": 1
   },
@@ -4277,7 +4277,7 @@
     }
    ],
    "node": "sulfur_chemistry",
-   "builtValue": 6360.0,
+   "builtValue": 4810.0,
    "craft": 40.0,
    "outQ": 2
   },
@@ -4287,12 +4287,12 @@
    "world": "world_chemistry",
    "phase": "c4",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "P",
    "how": "mined source",
    "node": "phosphorus_chemistry",
-   "builtValue": null,
+   "builtValue": 2340.0,
    "inputs": [],
    "craft": 20.0,
    "outQ": 1
@@ -4303,7 +4303,7 @@
    "world": "world_chemistry",
    "phase": "c4",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "H3PO4",
    "how": "reaction",
@@ -4324,7 +4324,7 @@
     }
    ],
    "node": "phosphorus_chemistry",
-   "builtValue": null,
+   "builtValue": 5730.0,
    "craft": 60,
    "outQ": 4
   },
@@ -4334,7 +4334,7 @@
    "world": "world_chemistry",
    "phase": "c4",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C3H9O6P",
    "how": "reaction",
@@ -4351,7 +4351,7 @@
     }
    ],
    "node": "phosphorus_chemistry",
-   "builtValue": null,
+   "builtValue": 24900.0,
    "craft": 60,
    "outQ": 1
   },
@@ -4361,12 +4361,12 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "NaCl",
    "how": "mined source",
    "node": "mineral_salts",
-   "builtValue": null,
+   "builtValue": 3940.0,
    "inputs": [],
    "craft": 20.0,
    "outQ": 1
@@ -4377,12 +4377,12 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "KCl",
    "how": "mined source",
    "node": "mineral_salts",
-   "builtValue": null,
+   "builtValue": 4010.0,
    "inputs": [],
    "craft": 20.0,
    "outQ": 1
@@ -4393,12 +4393,12 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "CaCO3",
    "how": "mined source",
    "node": "mineral_salts",
-   "builtValue": null,
+   "builtValue": 4090.0,
    "inputs": [],
    "craft": 20.0,
    "outQ": 1
@@ -4409,7 +4409,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C2H5NO2",
    "how": "reaction",
@@ -4426,7 +4426,7 @@
     }
    ],
    "node": "amino_acids",
-   "builtValue": null,
+   "builtValue": 26400.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4436,7 +4436,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C3H7NO2",
    "how": "reaction",
@@ -4453,7 +4453,7 @@
     }
    ],
    "node": "amino_acids",
-   "builtValue": null,
+   "builtValue": 26500.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4463,7 +4463,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C3H7NO3",
    "how": "reaction",
@@ -4480,7 +4480,7 @@
     }
    ],
    "node": "amino_acids",
-   "builtValue": null,
+   "builtValue": 48300.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4490,7 +4490,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C3H7NO2S",
    "how": "reaction",
@@ -4507,7 +4507,7 @@
     }
    ],
    "node": "amino_acids",
-   "builtValue": null,
+   "builtValue": 77000.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4517,7 +4517,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C5H10O5",
    "how": "reaction",
@@ -4530,7 +4530,7 @@
     }
    ],
    "node": "sugars",
-   "builtValue": null,
+   "builtValue": 31500.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4553,7 +4553,7 @@
     }
    ],
    "node": "sugars",
-   "builtValue": 12500.0,
+   "builtValue": 23500.0,
    "craft": 45.0,
    "outQ": 1
   },
@@ -4563,7 +4563,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C5H5N5",
    "how": "reaction",
@@ -4576,7 +4576,7 @@
     }
    ],
    "node": "nucleobases",
-   "builtValue": null,
+   "builtValue": 44000.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4586,7 +4586,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C5H5N5O",
    "how": "reaction",
@@ -4603,7 +4603,7 @@
     }
    ],
    "node": "nucleobases",
-   "builtValue": null,
+   "builtValue": 45500.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4613,7 +4613,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C4H5N3O",
    "how": "reaction",
@@ -4630,7 +4630,7 @@
     }
    ],
    "node": "nucleobases",
-   "builtValue": null,
+   "builtValue": 39900.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4640,7 +4640,7 @@
    "world": "world_chemistry",
    "phase": "c5",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C16H32O2",
    "how": "reaction",
@@ -4657,7 +4657,7 @@
     }
    ],
    "node": "fatty_acids",
-   "builtValue": null,
+   "builtValue": 103000.0,
    "craft": 90,
    "outQ": 1
   },
@@ -4667,7 +4667,7 @@
    "world": "world_chemistry",
    "phase": "c6",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C5H10N2O3",
    "how": "reaction",
@@ -4684,7 +4684,7 @@
     }
    ],
    "node": "peptides",
-   "builtValue": null,
+   "builtValue": 134000.0,
    "craft": 150,
    "outQ": 1
   },
@@ -4694,7 +4694,7 @@
    "world": "world_chemistry",
    "phase": "c6",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C10H14N5O7P",
    "how": "reaction",
@@ -4715,7 +4715,7 @@
     }
    ],
    "node": "nucleotides",
-   "builtValue": null,
+   "builtValue": 166000.0,
    "craft": 150,
    "outQ": 1
   },
@@ -4725,7 +4725,7 @@
    "world": "world_chemistry",
    "phase": "c6",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C35H69O8P",
    "how": "reaction",
@@ -4742,7 +4742,7 @@
     }
    ],
    "node": "membranes",
-   "builtValue": null,
+   "builtValue": 320000.0,
    "craft": 150,
    "outQ": 1
   },
@@ -4752,7 +4752,7 @@
    "world": "world_chemistry",
    "phase": "c6",
    "status": "new",
-   "builtDays": null,
+   "builtDays": 6.6,
    "pinDay": null,
    "formula": "C10H16N5O13P3",
    "how": "reaction",
@@ -4769,50 +4769,8 @@
     }
    ],
    "node": "energy_currency",
-   "builtValue": null,
+   "builtValue": 357000.0,
    "craft": 150,
-   "outQ": 1
-  },
-  {
-   "id": "octane",
-   "name": "Octane",
-   "world": "world_chemistry",
-   "phase": "retired",
-   "status": "retire",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "fuel, not life chemistry",
-   "builtValue": 21000.0,
-   "inputs": [
-    {
-     "item": "ethane",
-     "q": 4
-    }
-   ],
-   "craft": 40.0,
-   "outQ": 1
-  },
-  {
-   "id": "polymer_precursor",
-   "name": "Polymer Precursor",
-   "world": "world_chemistry",
-   "phase": "retired",
-   "status": "retire",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "replaced by real monomers (ethylene, acetylene)",
-   "builtValue": 651000.0,
-   "inputs": [
-    {
-     "item": "octane",
-     "q": 1
-    },
-    {
-     "item": "catalyst",
-     "q": 1
-    }
-   ],
-   "craft": 50.0,
    "outQ": 1
   },
   {
@@ -4824,7 +4782,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "split into glycine, alanine, serine, cysteine",
-   "builtValue": 6360.0,
+   "builtValue": 3360.0,
    "inputs": [
     {
      "item": "graphite",
@@ -4855,14 +4813,10 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "now palmitic acid",
-   "builtValue": 52800.0,
+   "builtValue": 109000.0,
    "inputs": [
     {
-     "item": "octane",
-     "q": 2
-    },
-    {
-     "item": "oxygen_gas",
+     "item": "palmitic_acid",
      "q": 1
     }
    ],
@@ -4878,7 +4832,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "now AMP (and ATP)",
-   "builtValue": 26400.0,
+   "builtValue": 31800.0,
    "inputs": [
     {
      "item": "glucose",
@@ -4889,81 +4843,12 @@
      "q": 1
     },
     {
-     "item": "phosphorus",
+     "item": "red_phosphorus",
      "q": 1
     }
    ],
    "craft": 60.0,
    "outQ": 1
-  },
-  {
-   "id": "catalyst",
-   "name": "Catalyst",
-   "world": "world_chemistry",
-   "phase": "retired",
-   "status": "retire",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "metal catalysts belong to Metallurgy",
-   "builtValue": 624000.0,
-   "inputs": [
-    {
-     "item": "nickel",
-     "q": 1
-    },
-    {
-     "item": "iron",
-     "q": 1
-    }
-   ],
-   "craft": 45.0,
-   "outQ": 1
-  },
-  {
-   "id": "chlorine_gas",
-   "name": "Chlorine Gas",
-   "world": "world_chemistry",
-   "phase": "retired",
-   "status": "retire",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "industrial; drop",
-   "builtValue": 7000.0,
-   "inputs": [
-    {
-     "item": "chlorine",
-     "q": 2
-    }
-   ],
-   "craft": 20.0,
-   "outQ": 1
-  },
-  {
-   "id": "sodium_hydroxide",
-   "name": "Sodium Hydroxide",
-   "world": "world_chemistry",
-   "phase": "retired",
-   "status": "retire",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "industrial; drop",
-   "builtValue": 2280.0,
-   "inputs": [
-    {
-     "item": "sodium",
-     "q": 2
-    },
-    {
-     "item": "oxygen_gas",
-     "q": 1
-    },
-    {
-     "item": "hydrogen_gas",
-     "q": 1
-    }
-   ],
-   "craft": 25.0,
-   "outQ": 2
   },
   {
    "id": "uranium_hexafluoride",
@@ -4974,7 +4859,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "nuclear fuel processing; drop",
-   "builtValue": 29100.0,
+   "builtValue": 20000.0,
    "inputs": [
     {
      "item": "uranium",
@@ -4989,29 +4874,6 @@
    "outQ": 1
   },
   {
-   "id": "table_salt",
-   "name": "Table Salt",
-   "world": "world_chemistry",
-   "phase": "retired",
-   "status": "retire",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "now mined halite",
-   "builtValue": 6300.0,
-   "inputs": [
-    {
-     "item": "sodium",
-     "q": 1
-    },
-    {
-     "item": "chlorine",
-     "q": 1
-    }
-   ],
-   "craft": 30.0,
-   "outQ": 1
-  },
-  {
    "id": "protein",
    "name": "Protein",
    "world": "world_biology",
@@ -5020,7 +4882,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "dipeptides -> protein",
-   "builtValue": 32300.0,
+   "node": "biology_lab",
+   "builtValue": 16900.0,
    "inputs": [
     {
      "item": "dipeptide",
@@ -5039,7 +4902,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "glucose chains",
-   "builtValue": 56900.0,
+   "node": "biology_lab",
+   "builtValue": 97500.0,
    "inputs": [
     {
      "item": "glucose",
@@ -5058,7 +4922,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "phospholipid bilayer",
-   "builtValue": 219000.0,
+   "node": "biology_lab",
+   "builtValue": 440000.0,
    "inputs": [
     {
      "item": "phospholipid",
@@ -5077,7 +4942,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "AMP / nucleotides -> strand",
-   "builtValue": 114000.0,
+   "node": "biology_lab",
+   "builtValue": 132000.0,
    "inputs": [
     {
      "item": "amp",
@@ -5100,7 +4966,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "protein + nucleic acid",
-   "builtValue": 190000.0,
+   "node": "cell_biology",
+   "builtValue": 172000.0,
    "inputs": [
     {
      "item": "protein",
@@ -5123,7 +4990,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "membrane + protein",
-   "builtValue": 480000.0,
+   "node": "cell_biology",
+   "builtValue": 902000.0,
    "inputs": [
     {
      "item": "lipid_membrane",
@@ -5146,7 +5014,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "protein + membrane + ATP",
-   "builtValue": 295000.0,
+   "node": "cell_biology",
+   "builtValue": 480000.0,
    "inputs": [
     {
      "item": "protein",
@@ -5173,7 +5042,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "first cell",
-   "builtValue": 982000.0,
+   "node": "cell_biology",
+   "builtValue": 1570000.0,
    "inputs": [
     {
      "item": "ribosome",
@@ -5200,7 +5070,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "cell + mitochondria",
-   "builtValue": 1300000.0,
+   "node": "multicellular_life",
+   "builtValue": 2060000.0,
    "inputs": [
     {
      "item": "prokaryotic_cell",
@@ -5223,7 +5094,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "cells",
-   "builtValue": 5230000.0,
+   "node": "multicellular_life",
+   "builtValue": 8260000.0,
    "inputs": [
     {
      "item": "eukaryotic_cell",
@@ -5242,7 +5114,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "tissues",
-   "builtValue": 21000000.0,
+   "node": "multicellular_life",
+   "builtValue": 33100000.0,
    "inputs": [
     {
      "item": "tissue",
@@ -5261,7 +5134,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "organs",
-   "builtValue": 84100000.0,
+   "node": "ecosystems",
+   "builtValue": 133000000.0,
    "inputs": [
     {
      "item": "organ",
@@ -5280,7 +5154,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "organisms",
-   "builtValue": 421000000.0,
+   "node": "ecosystems",
+   "builtValue": 666000000.0,
    "inputs": [
     {
      "item": "organism",
@@ -5299,7 +5174,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "Biology capstone",
-   "builtValue": 2110000000.0,
+   "node": "ecosystems",
+   "builtValue": 3340000000.0,
    "inputs": [
     {
      "item": "population",
@@ -5318,6 +5194,37 @@
    "builtDays": null,
    "pinDay": null,
    "how": "mined ore, Fe2O3",
+   "node": "ore_prospecting",
+   "builtValue": null,
+   "inputs": [],
+   "craft": 60,
+   "outQ": 1
+  },
+  {
+   "id": "silica",
+   "name": "Silica",
+   "world": "world_metallurgy",
+   "phase": "m1",
+   "status": "moved",
+   "builtDays": 6.6,
+   "pinDay": null,
+   "how": "quartz sand",
+   "node": "ore_prospecting",
+   "builtValue": 2970.0,
+   "inputs": [],
+   "craft": 45,
+   "outQ": 1
+  },
+  {
+   "id": "coal",
+   "name": "Coal",
+   "world": "world_metallurgy",
+   "phase": "m1",
+   "status": "new",
+   "builtDays": null,
+   "pinDay": null,
+   "how": "mined, carbon for steel and fibre",
+   "node": "ore_prospecting",
    "builtValue": null,
    "inputs": [],
    "craft": 60,
@@ -5332,6 +5239,7 @@
    "builtDays": null,
    "pinDay": null,
    "how": "mined ore",
+   "node": "base_metals",
    "builtValue": null,
    "inputs": [],
    "craft": 75,
@@ -5346,6 +5254,7 @@
    "builtDays": null,
    "pinDay": null,
    "how": "mined ore, CuFeS2",
+   "node": "base_metals",
    "builtValue": null,
    "inputs": [],
    "craft": 90,
@@ -5360,37 +5269,10 @@
    "builtDays": null,
    "pinDay": null,
    "how": "mined ore, TiO2",
+   "node": "base_metals",
    "builtValue": null,
    "inputs": [],
    "craft": 120,
-   "outQ": 1
-  },
-  {
-   "id": "silica",
-   "name": "Silica",
-   "world": "world_metallurgy",
-   "phase": "m1",
-   "status": "moved",
-   "builtDays": 6.6,
-   "pinDay": null,
-   "how": "quartz sand",
-   "builtValue": 4010.0,
-   "inputs": [],
-   "craft": 45,
-   "outQ": 1
-  },
-  {
-   "id": "coal",
-   "name": "Coal",
-   "world": "world_metallurgy",
-   "phase": "m1",
-   "status": "new",
-   "builtDays": null,
-   "pinDay": null,
-   "how": "mined, carbon for steel and fibre",
-   "builtValue": null,
-   "inputs": [],
-   "craft": 60,
    "outQ": 1
   },
   {
@@ -5402,7 +5284,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "roasted ore",
-   "builtValue": 671000.0,
+   "node": "roasting",
+   "builtValue": 669000.0,
    "inputs": [
     {
      "item": "hematite",
@@ -5421,7 +5304,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "iron + carbon",
-   "builtValue": 3410000.0,
+   "node": "steelmaking",
+   "builtValue": 3370000.0,
    "inputs": [
     {
      "item": "iron_oxide",
@@ -5444,6 +5328,7 @@
    "builtDays": null,
    "pinDay": null,
    "how": "electrolysis of bauxite",
+   "node": "electrolysis",
    "builtValue": null,
    "inputs": [
     {
@@ -5463,6 +5348,7 @@
    "builtDays": null,
    "pinDay": null,
    "how": "smelted chalcopyrite",
+   "node": "electrolysis",
    "builtValue": null,
    "inputs": [
     {
@@ -5482,7 +5368,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "Kroll process",
-   "builtValue": 2770000.0,
+   "node": "light_alloys",
+   "builtValue": 2720000.0,
    "inputs": [
     {
      "item": "rutile",
@@ -5505,7 +5392,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "graphite fibre",
-   "builtValue": 78300.0,
+   "node": "light_alloys",
+   "builtValue": 43300.0,
    "inputs": [
     {
      "item": "coal",
@@ -5524,7 +5412,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "silica + hydrogen gas",
-   "builtValue": 118000.0,
+   "node": "semiconductors",
+   "builtValue": 63700.0,
    "inputs": [
     {
      "item": "silica",
@@ -5543,7 +5432,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "silica gel, dried",
-   "builtValue": 129000.0,
+   "node": "semiconductors",
+   "builtValue": 67100.0,
    "inputs": [
     {
      "item": "silica",
@@ -5562,7 +5452,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "alloy + cooling",
-   "builtValue": 475000.0,
+   "node": "superconductors",
+   "builtValue": 259000.0,
    "inputs": [
     {
      "item": "copper_wire",
@@ -5585,7 +5476,8 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "Metallurgy capstone",
-   "builtValue": 1350000.0,
+   "node": "metamaterials",
+   "builtValue": 726000.0,
    "inputs": [
     {
      "item": "superconductor",
@@ -5631,7 +5523,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "circuit + superconductor",
-   "builtValue": 2410000.0,
+   "builtValue": 1260000.0,
    "inputs": [
     {
      "item": "circuit_board",
@@ -5654,7 +5546,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "superconducting magnet",
-   "builtValue": 12400000.0,
+   "builtValue": 9040000.0,
    "inputs": [
     {
      "item": "superconductor",
@@ -5677,7 +5569,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "titanium + carbon fiber",
-   "builtValue": 78500000.0,
+   "builtValue": 55000000.0,
    "inputs": [
     {
      "item": "titanium_alloy",
@@ -5704,7 +5596,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "containment + deep physics",
-   "builtValue": 6150000.0,
+   "builtValue": 3230000.0,
    "inputs": [
     {
      "item": "plasma_containment_ring",
@@ -5727,7 +5619,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "metamaterial + processor",
-   "builtValue": 175000000.0,
+   "builtValue": 120000000.0,
    "inputs": [
     {
      "item": "metamaterial",
@@ -5750,7 +5642,7 @@
    "builtDays": 6.6,
    "pinDay": null,
    "how": "every world's capstone",
-   "builtValue": 32900000.0,
+   "builtValue": 22300000.0,
    "inputs": [
     {
      "item": "graviton_lens",

@@ -36,6 +36,6 @@ MonoBehaviour:
     alloy and carbon fibre into a tensegrity lattice strong enough to encircle a
     star.
   codexUnlocked: 0
-  baseSellValue: 55000000
+  baseSellValue: 5.26e+10
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

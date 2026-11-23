@@ -37,10 +37,11 @@ MonoBehaviour:
   isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
+  - {fileID: 11400000, guid: a06984686dc99294d84c99330ffdfcac, type: 2}
+  - {fileID: 11400000, guid: 441961860dc6c9348a47d0c13c44b5e5, type: 2}
+  - {fileID: 11400000, guid: 86271783cbdb4de4292d73ccffdb5ea9, type: 2}
+  - {fileID: 11400000, guid: 207eefd1e5cb6174bad50c83b3338bdf, type: 2}
   - {fileID: 11400000, guid: 8a937314ba664414097a020f5613e2b4, type: 2}
-  - {fileID: 11400000, guid: fe0e94040e80312418b902ee519d4cc2, type: 2}
-  - {fileID: 11400000, guid: ffd86a28a84901147a2c8f335941d89f, type: 2}
-  - {fileID: 11400000, guid: a071d933ad3e25e4eb3ad7266b7cad42, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0

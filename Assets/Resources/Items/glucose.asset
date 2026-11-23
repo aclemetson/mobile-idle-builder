@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ItemSO
   id: glucose
   displayName: Glucose
-  symbol: Glc
+  symbol: "C\u2086H\u2081\u2082O\u2086"
   icon: {fileID: 21300000, guid: 7d828eb33fa73fe48ab234e95a784ab4, type: 3}
   itemId: 150
   tier: 3

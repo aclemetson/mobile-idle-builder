@@ -46,7 +46,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
   - {fileID: 11400000, guid: d1176c02af836e24eb1d9b3db713a16f, type: 2}
   resetsOnPrestige: 1
   codexEntry: 'Spallation: Mercury to Osmium'

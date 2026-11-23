@@ -41,9 +41,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 189d6e03b4e9d894ea5d855a0884a6de, type: 2}
   - {fileID: 11400000, guid: ed637f9e67f419d45a9e785cfe8d41b6, type: 2}
   - {fileID: 11400000, guid: 419cb6fafa94fd54eae5d89981cd3100, type: 2}
-  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
-  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
-  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
   - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
   - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
@@ -76,12 +73,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
   - {fileID: 11400000, guid: 6199c33eeb368504aad500f9a8c4851b, type: 2}
   - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
-  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
-  - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
   - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   - {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
   - {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
+  - {fileID: 11400000, guid: 46e1ca7bf7bba7a479096fb48bb6ead8, type: 2}
+  - {fileID: 11400000, guid: 828849a49214dc7408020c77c903ef80, type: 2}
+  - {fileID: 11400000, guid: d972fab1d135c7f4694979b3619e3406, type: 2}
+  - {fileID: 11400000, guid: 6eeac5569bd9dd04f86b51a6807ba544, type: 2}
+  - {fileID: 11400000, guid: cb2a1a0069313204aa80255a12b3e9ac, type: 2}
+  - {fileID: 11400000, guid: 57aa8ecd6478e5047b3ccbf84fa1775c, type: 2}
+  - {fileID: 11400000, guid: 2241ab6a31db69c4c8406bb90be00668, type: 2}
+  - {fileID: 11400000, guid: 0350dd279371d6c42b78f4a0a4e9f284, type: 2}
+  - {fileID: 11400000, guid: 82a63f39ed765ee46b77823300765c11, type: 2}
   - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
   - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
   blocks:
@@ -380,37 +384,39 @@ MonoBehaviour:
     - salvage_protocols:2
     - turnkey_builder:1
     startSites: []
-  - id: chemistry_world
-    displayName: Chemistry World
+  - id: bio_biomolecules
+    displayName: Biomolecules
     order: 15
-    targetHours: 20
+    targetHours: 10
     anchor: 0
-    description: Molecules, the Chemistry world and engineered materials.
-    startPrestigeCount: 8
-    startPrestigeCurrencyEarned: 2000
-    startEntropy: 53300000
+    description: Proteins, carbohydrates, membranes and nucleic acids from the molecules
+      of life.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
     startPermanentUpgrades:
-    - assembly_line:3
-    - memory_resonance:3
-    - entropy_headstart:4
-    - quantum_yield:3
-    - idle_time_cap:3
-    - research_overdrive:2
-    - idle_collection_rate:3
-    - efficient_layouts:3
-    - surplus_resale:3
-    - expanded_vault:3
-    - field_cooldown:3
-    - salvage_protocols:3
-    - turnkey_builder:1
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
     startSites:
     - site_actinide_vein
-  - id: biology_world
-    displayName: Biology World
+  - id: bio_cells
+    displayName: Cells
     order: 16
-    targetHours: 40
+    targetHours: 14
     anchor: 0
-    description: Biochemistry to cells, organisms and ecosystems.
+    description: Ribosomes, mitochondria and membranes, then the first cell.
     startPrestigeCount: 25
     startPrestigeCurrencyEarned: 11000
     startEntropy: 523000000
@@ -457,9 +463,141 @@ MonoBehaviour:
     - entropy_echo:2
     startSites:
     - site_actinide_vein
+  - id: bio_multicellular
+    displayName: Multicellular Life
+    order: 18
+    targetHours: 16
+    anchor: 0
+    description: Cells into tissues, tissues into organs.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
+  - id: bio_ecosystems
+    displayName: Ecosystems
+    order: 19
+    targetHours: 16
+    anchor: 0
+    description: 'Organisms, populations and a whole ecosystem: the Biology capstone.'
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
+  - id: metallurgy_ores
+    displayName: Ores
+    order: 20
+    targetHours: 8
+    anchor: 0
+    description: Mine iron, aluminium, copper and titanium ores, coal and quartz;
+      roast the first oxide.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
+  - id: metallurgy_alloys
+    displayName: Smelting & Alloys
+    order: 21
+    targetHours: 16
+    anchor: 0
+    description: Steel, aluminium, copper wire, titanium alloy and carbon fibre.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
+  - id: metallurgy_advanced
+    displayName: Advanced Materials
+    order: 22
+    targetHours: 16
+    anchor: 0
+    description: 'Wafers, aerogel, superconductors and metamaterial: the Metallurgy
+      capstone.'
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites:
+    - site_actinide_vein
   - id: synthetic_frontier
     displayName: Synthetic Frontier
-    order: 18
+    order: 23
     targetHours: 30
     anchor: 0
     description: Elements past Uranium, components and the megastructure.

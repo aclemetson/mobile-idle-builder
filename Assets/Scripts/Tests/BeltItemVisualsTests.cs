@@ -179,7 +179,7 @@ namespace MobileIdleBuilder.Tests
                 }
                 finally { Object.DestroyImmediate(go); }
             }
-            Assert.AreEqual(42, count, "38 molecules + 4 organic compounds (2026-11-23: life chemistry added 27, retired 6)");
+            Assert.AreEqual(38, count, "37 molecules + glucose (2026-11-23: life chemistry added 27; 6 industrial products, the generic precursors and UF6 retired)");
         }
 
         [Test]

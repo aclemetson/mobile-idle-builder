@@ -261,7 +261,16 @@ namespace MobileIdleBuilder
         public static long CreditDemonDeliveries(SaveData save, IDictionary<int, long> deliveries, string source)
         {
             if (save == null || deliveries == null || deliveries.Count == 0) return 0;
-            var finished = WorldTasks.CreditAll(save, WorldTasks.Data, deliveries, out long counted);
+            // The sets delivered in the world those deliveries came from (the live world's Demon).
+            string here = WorldRules.ActiveWorld(save)?.id;
+            var finished = new List<WorldTaskStage>();
+            long counted = 0;
+            foreach (var tasks in WorldTasks.All)
+            {
+                if (tasks == null || !WorldTasks.ShownIn(tasks, here) || WorldTasks.IsComplete(save, tasks)) continue;
+                finished.AddRange(WorldTasks.CreditAll(save, tasks, deliveries, out long c));
+                counted += c;
+            }
             GameLogger.Info($"[WorldTasks] {source}: {counted} item(s) counted toward the tasks.");
             foreach (var stage in finished)
                 GameLogger.Info($"[WorldTasks] Stage '{stage.id}' completed by {source}.");

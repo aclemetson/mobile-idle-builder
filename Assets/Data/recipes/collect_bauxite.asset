@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: collect_bauxite
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: collect_bauxite
+  displayName: Bauxite
+  methodLabel: 
+  recipeId: 388
+  tier: 4
+  category: 3
+  inputs: []
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: 08a42bc6878841e45b2c34dc6d240484, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 75
+  manualCraftTime: 75
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 0
+  validBuildings:
+  - {fileID: 11400000, guid: ff09fcfa870f5744db4f8099de5adc32, type: 2}
+  canCraftManually: 1
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 828849a49214dc7408020c77c903ef80, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: 

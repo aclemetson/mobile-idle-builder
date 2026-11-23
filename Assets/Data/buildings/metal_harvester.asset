@@ -37,10 +37,12 @@ MonoBehaviour:
   isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: bc8242727f23e9f4680a80515e744290, type: 2}
-  - {fileID: 11400000, guid: da4bd91a8e9ec8044a0077d480140321, type: 2}
-  - {fileID: 11400000, guid: 2da8ee24759b4bd4c973d86c65292d97, type: 2}
-  - {fileID: 11400000, guid: 3d176a030bd3d254bb6344f8e2cfc1ca, type: 2}
+  - {fileID: 11400000, guid: 8c04ac48b1120ca44bf25f20f4065bcf, type: 2}
+  - {fileID: 11400000, guid: 2c307a31d229c884a93adf0d206ed1b8, type: 2}
+  - {fileID: 11400000, guid: d546cb1fdaf565c4e87b08033a197b54, type: 2}
+  - {fileID: 11400000, guid: 9401a9ef9e037714289f3a0801b4a992, type: 2}
+  - {fileID: 11400000, guid: f0f145f7c5df3b84a87efcfb4b34bbe5, type: 2}
+  - {fileID: 11400000, guid: 45dd5aa3f9b978a4eb6f7db9fb9feb71, type: 2}
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0
@@ -55,8 +57,8 @@ MonoBehaviour:
   placementRule: 1
   compatibleAdjacentCategories: 
   compatibleFields:
-  - ElementMetal
-  world: world_chemistry
+  - Ore
+  world: world_metallurgy
   entropyCost: 20000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 0
@@ -101,7 +103,7 @@ MonoBehaviour:
   inputUpgradeLevels: []
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 46e1ca7bf7bba7a479096fb48bb6ead8, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

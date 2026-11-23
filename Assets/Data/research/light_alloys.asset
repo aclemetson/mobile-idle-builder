@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: light_alloys
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: light_alloys
+  displayName: Light Alloys
+  description: 'Light Alloys: Titanium Alloy, Carbon Fiber.'
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: cb2a1a0069313204aa80255a12b3e9ac, type: 2}
+  depthInTree: 8
+  block: metallurgy_alloys
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_metallurgy
+  world: world_metallurgy
+  costBaseCurrency: 70700000000
+  costPrestigeCurrency: 0
+  durationSeconds: 2400
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 24398ca4d86eb704b8b607716a77000c, type: 2}
+  - {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 4a4f782d9a14f8a49801706630a8ca81, type: 2}
+  - {fileID: 11400000, guid: eaf3cd13e4f877f4bac45df8e3ad7352, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 2241ab6a31db69c4c8406bb90be00668, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Light Alloys

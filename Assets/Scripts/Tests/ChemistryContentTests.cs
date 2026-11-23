@@ -20,7 +20,7 @@ namespace MobileIdleBuilder.Tests
             var items = Resources.LoadAll<ItemSO>("Items");
             Assert.IsNotEmpty(items, "No ItemSO assets found in Resources/Items/");
 
-            foreach (var id in new[] { "glucose", "amino_acid", "fatty_acid", "nucleotide" })
+            foreach (var id in new[] { "glucose" })   // the generic precursors retired 2026-11-23 (phase 3)
             {
                 var item = items.FirstOrDefault(i => i.id == id);
                 Assert.IsNotNull(item, $"OrganicCompound item '{id}' missing");
@@ -60,8 +60,6 @@ namespace MobileIdleBuilder.Tests
                 ("oxygen_gas_field",      "Element",      false, "chemistry_lab"),
                 ("graphite_field",        "Element",      false, "molecular_synthesis"),
                 ("nitrogen_gas_field",    "Element",      false, "nitrogen_fixation"),
-                ("element_field_mineral", "Element",      false, "reaction_engineering"),
-                ("element_field_metal",   "ElementMetal", false, "reaction_engineering"),
                 // 2026-11-23 life chemistry (Item Timeline phase 2): the last elements of life and the salts.
                 ("sulfur_vent_field",     "Element",      false, "sulfur_chemistry"),
                 ("phosphate_rock_field",  "Element",      false, "phosphorus_chemistry"),
@@ -86,6 +84,8 @@ namespace MobileIdleBuilder.Tests
                 foreach (var d in field.drops) Assert.IsNotNull(d.item, $"{ef} has an unresolved drop");
             }
             Assert.IsFalse(byField.ContainsKey("element_field_light"), "the atom seam is retired");
+            Assert.IsFalse(byField.ContainsKey("element_field_metal"), "metals are mined in Metallurgy now");
+            Assert.IsFalse(byField.ContainsKey("element_field_mineral"), "silica is quartz sand in Metallurgy now");
         }
 
         [Test]
@@ -174,8 +174,7 @@ namespace MobileIdleBuilder.Tests
             var chain = new[] { "chemistry_lab", "molecular_synthesis", "nitrogen_fixation", "syngas", "carbonyl_chemistry",
                                 "prebiotic_nitrogen", "hydrocarbons", "alcohols_and_acids", "sulfur_chemistry",
                                 "phosphorus_chemistry", "mineral_salts", "amino_acids", "sugars", "nucleobases",
-                                "fatty_acids", "peptides", "nucleotides", "membranes", "energy_currency",
-                                "biochem_precursors" };
+                                "fatty_acids", "peptides", "nucleotides", "membranes", "energy_currency" };
             for (int i = 1; i < chain.Length; i++)
             {
                 var node = Find(chain[i]);
@@ -188,6 +187,7 @@ namespace MobileIdleBuilder.Tests
                     $"{chain[i - 1]} must unlock {chain[i]}");
             }
             Assert.IsNull(Find("organic_chemistry"), "merged into Hydrocarbons");
+            Assert.IsNull(Find("biochem_precursors"), "Biology follows ATP directly (phase 3)");
         }
 
         [Test]
@@ -198,35 +198,15 @@ namespace MobileIdleBuilder.Tests
 
             BuildingSO Find(string id) => System.Array.Find(bdb.allBuildings, b => b != null && b.id == id);
 
+            // 2026-11-23 phase 3: the Metal Harvester mines ores in Metallurgy.
             var metal = Find("metal_harvester");
             Assert.IsNotNull(metal, "metal_harvester missing");
-            CollectionAssert.Contains(metal.compatibleFields, "ElementMetal",
-                "metal_harvester places on ElementMetal fields");
-            Assert.AreEqual("reaction_engineering", metal.requiredResearch?.id, "metal_harvester gated by reaction_engineering");
+            CollectionAssert.Contains(metal.compatibleFields, "Ore", "metal_harvester places on Ore fields");
+            Assert.AreEqual("ore_prospecting", metal.requiredResearch?.id, "metal_harvester gated by Ore Prospecting");
+            Assert.AreEqual(WorldGate.Metallurgy, metal.world);
 
             Assert.AreEqual("carbonyl_chemistry", Find("catalytic_reactor")?.requiredResearch?.id, "the Catalytic Reactor opens with formaldehyde");
             Assert.AreEqual("hydrocarbons", Find("organic_synthesizer")?.requiredResearch?.id, "the Organic Synthesizer opens with ethylene");
-        }
-
-        [Test]
-        public void C4Recipes_ProduceOrganicCompounds_GatedByBiochemPrecursors()
-        {
-            var bdb = Resources.Load<BuildingDatabaseSO>("BuildingDatabase");
-            var organic = System.Array.Find(bdb.allBuildings, b => b != null && b.id == "organic_synthesizer");
-            Assert.IsNotNull(organic, "organic_synthesizer missing");
-
-            // Biology's three generic precursors stay on biochem_precursors until phase 3 rewires Biology;
-            // Glucose is a life-chemistry sugar now (Sugars, six formaldehyde).
-            foreach (var outId in new[] { "amino_acid", "fatty_acid", "nucleotide" })
-            {
-                var recipe = System.Array.Find(organic.supportedRecipes,
-                    r => r != null && r.outputItem != null && r.outputItem.id == outId);
-                Assert.IsNotNull(recipe, $"organic_synthesizer must make {outId}");
-                Assert.AreEqual("biochem_precursors", recipe.requiredResearch?.id,
-                    $"{outId} recipe gated by biochem_precursors");
-                Assert.AreEqual(ItemCategory.OrganicCompound, recipe.outputItem.category,
-                    $"{outId} is an OrganicCompound");
-            }
         }
     }
 }

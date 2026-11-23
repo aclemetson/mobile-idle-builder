@@ -41,20 +41,6 @@
       "pubchem": "nitric acid",
       "formula": "HNO3"
     },
-    "amino_acid": {
-      "pubchem": "glycine",
-      "formula": "C2H5NO2",
-      "_why": "The recipe's inputs are exactly glycine: 2C 5H 1N 2O."
-    },
-    "fatty_acid": {
-      "pubchem": "octanoic acid",
-      "formula": "C8H16O2",
-      "hide_h": true,
-      "chunk": 1.6,
-      "bond_chunk": 1.9,
-      "diagonal": true,
-      "_why": "The recipe implies a C16 chain, but 16 carbons is a hairline at icon size; C8 keeps the chain and acid head readable."
-    },
     "glucose": {
       "pubchem": "glucose",
       "formula": "C6H12O6",

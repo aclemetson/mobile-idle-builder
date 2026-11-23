@@ -137,9 +137,6 @@ namespace MobileIdleBuilder.Tests
         // (2 H2 + O2 -> 2 H2O); ChemistryFeedstockTests checks the atoms balance.
         [TestCase("water",                "hydrogen_gas", 2, "oxygen_gas",   1, 15f)]
         [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 36f)]
-        [TestCase("silica",               "silicon",      1, "oxygen_gas",   1, 30f)]
-        [TestCase("iron_oxide",           "iron",         4, "oxygen_gas",   3, 100f)]
-        [TestCase("uranium_hexafluoride", "uranium",  1, "fluorine", 6, 280f)]
         public void Molecule_MatchesItsFormula(string id, string a, int qa, string b, int qb, float seconds)
         {
             var r = RequireRecipe(id);

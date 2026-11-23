@@ -472,10 +472,12 @@ def phase2(gd_json, apply):
     out = []
 
     # items
-    new_items, item_updates = [], {}
+    new_items, item_updates, symbols = [], {}, {}
     for iid, r in rows.items():
         if iid in items:
             item_updates[iid] = float(r["value"])
+            if iid == "glucose":      # its symbol was "Glc"; the balance check reads formulas from symbols
+                symbols[iid] = chem[iid][2].translate(SUB)
             continue
         name, formula = (src[iid][1], src[iid][2]) if iid in src else (chem[iid][1], chem[iid][2])
         raw = iid in src
@@ -564,7 +566,7 @@ def phase2(gd_json, apply):
         gd.insert_after("items", last, it)
         last = it["id"]
     for iid, v in item_updates.items():
-        gd.update("items", iid, base_sell_value=v, planned=True)
+        gd.update("items", iid, base_sell_value=v, planned=True, **({"symbol": symbols[iid]} if iid in symbols else {}))
     for rid, body in recipe_updates.items():
         gd.update("recipes", rid, **body)
     last = max((r for r in gd_json["recipes"] if r["id"] not in RETIRE_P2_RECIPES), key=lambda r: r["recipe_id"])["id"]
@@ -671,9 +673,373 @@ def finish_phase2(plan, entries):
     gd.save()
 
 
+# ── Phase 3: Biology on the life chemicals, and the Metallurgy world ─────────────────────────────────────
+RETIRE_P3_ITEMS = ["amino_acid", "fatty_acid", "nucleotide", "uranium_hexafluoride"]
+REMOVED_RESEARCH_P3 = {"biochem_precursors": "energy_currency", "reaction_engineering": "ore_prospecting",
+                       "advanced_molecules": "roasting", "materials_science": "steelmaking",
+                       "advanced_materials": "metamaterials"}
+RETIRED_FIELDS_P3 = ["element_field_metal", "element_field_mineral"]
+SHARED_LIFE = ["dipeptide", "glucose", "phospholipid", "amp", "atp"]       # made in Chemistry, used in Biology
+BIO_FIELDS = {  # field: (display, drop, field id kept?)
+    "sugar_field": ("Sugar Pool", "glucose"), "amino_acid_field": ("Peptide Pool", "dipeptide"),
+    "lipid_field": ("Lipid Film", "phospholipid"), "nucleotide_field": ("Nucleotide Pool", "amp"),
+    "atp_field": ("ATP Spring", "atp"),
+}
+BIO_PHASE_BLOCK = {"b1": "bio_biomolecules", "b2": "bio_cells", "b3": "bio_multicellular", "b4": "bio_ecosystems"}
+METAL_PHASE_BLOCK = {"m1": "metallurgy_ores", "m2": "metallurgy_alloys", "m3": "metallurgy_advanced"}
+P3_BLOCK_TEXT = {
+    "bio_biomolecules": ("Biomolecules", "Proteins, carbohydrates, membranes and nucleic acids from the molecules of life."),
+    "bio_cells": ("Cells", "Ribosomes, mitochondria and membranes, then the first cell."),
+    "bio_multicellular": ("Multicellular Life", "Cells into tissues, tissues into organs."),
+    "bio_ecosystems": ("Ecosystems", "Organisms, populations and a whole ecosystem: the Biology capstone."),
+    "metallurgy_ores": ("Ores", "Mine iron, aluminium, copper and titanium ores, coal and quartz; roast the first oxide."),
+    "metallurgy_alloys": ("Smelting & Alloys", "Steel, aluminium, copper wire, titanium alloy and carbon fibre."),
+    "metallurgy_advanced": ("Advanced Materials", "Wafers, aerogel, superconductors and metamaterial: the Metallurgy capstone."),
+}
+ORE_FIELDS = {  # id: (display, drop, colour, codex)
+    "hematite_field": ("Hematite Seam", "hematite", "#8E3B2E", "Red iron ore, Fe2O3, the ore most of the world's iron comes from."),
+    "coal_field": ("Coal Seam", "coal", "#2E2E33", "Carbon laid down by ancient forests: the fuel and the carbon in steel."),
+    "quartz_sand_field": ("Quartz Sand", "silica", "#E6DCC3", "Silica sand, SiO2: glass, wafers and aerogel start here."),
+    "bauxite_field": ("Bauxite Bed", "bauxite", "#C27B4A", "Aluminium ore, smelted by electrolysis."),
+    "chalcopyrite_field": ("Chalcopyrite Vein", "chalcopyrite", "#B8963A", "Copper iron sulfide: brassy gold, and the copper in every wire."),
+    "rutile_field": ("Rutile Sands", "rutile", "#5A3E36", "Titanium dioxide crystals, reduced to titanium by the Kroll process."),
+}
+METAL_ITEMS = {  # new items: (display, symbol, category, raw)
+    "hematite": ("Hematite", "Fe₂O₃", "RawResource", True), "bauxite": ("Bauxite", "Al(OH)₃", "RawResource", True),
+    "chalcopyrite": ("Chalcopyrite", "CuFeS₂", "RawResource", True), "rutile": ("Rutile", "TiO₂", "RawResource", True),
+    "coal": ("Coal", "C", "RawResource", True), "aluminium_ingot": ("Aluminium Ingot", "Al", "Alloy", False),
+    "copper_wire": ("Copper Wire", "Cu", "Alloy", False),
+}
+METAL_CODEX = {
+    "hematite": "Iron ore. Roasted, then reduced with carbon into steel.",
+    "bauxite": "The ore of aluminium, a metal too reactive to find free.",
+    "chalcopyrite": "The most common copper ore.",
+    "rutile": "Titanium dioxide: strong, light titanium is locked inside.",
+    "coal": "Nearly pure carbon. Steel needs it; so does carbon fibre.",
+    "aluminium_ingot": "Aluminium won by electrolysis: light, and it never rusts through.",
+    "copper_wire": "Drawn copper, the conductor of every circuit.",
+}
+METAL_TASKS = {
+    "world": "world_metallurgy", "deliver_in": "world_biology", "display_name": "Path to Metallurgy",
+    "stages": [
+        {"id": "metal_task_1", "display_name": "Building Blocks", "description": "Life is built from proteins, sugars and membranes. Send them to Maxwell's Demon.",
+         "items": [{"item": "protein", "quantity": 200}, {"item": "carbohydrate", "quantity": 200}, {"item": "lipid_membrane", "quantity": 150}], "dialogue": ""},
+        {"id": "metal_task_2", "display_name": "First Cells", "description": "A cell copies itself. Send the first ones.",
+         "items": [{"item": "prokaryotic_cell", "quantity": 40}], "dialogue": ""},
+        {"id": "metal_task_3", "display_name": "Bodies", "description": "Tissues and organs: life gets large.",
+         "items": [{"item": "tissue", "quantity": 20}, {"item": "organ", "quantity": 10}], "dialogue": ""},
+        {"id": "metal_task_4", "display_name": "A Living World", "description": "One ecosystem, whole. Life is done; now build with metal.",
+         "items": [{"item": "ecosystem", "quantity": 1}], "dialogue": ""},
+    ]}
+MET_DIALOGUES = [
+    {"id": "intro_world_metallurgy", "lines": [
+        {"speaker_name": "The Architect", "text": "Life is complete, and it needs tools. Deep in the crust the elements you forged lie as ores: iron in hematite, copper in chalcopyrite, aluminium in bauxite, titanium in rutile.", "portrait_path": "TODO", "pause_game": True, "highlight_target": "", "action": ""},
+        {"speaker_name": "The Architect", "text": "Metallurgy is open. Travel there from the Worlds panel. Smelt ores into steel and alloys, and the alloys into the materials a megastructure needs.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "met_tut_welcome", "lines": [
+        {"speaker_name": "The Architect", "text": "Welcome to the foundry. Here ores are mined, not made, and Maxwell's Demon is back to turn what you smelt into entropy.", "portrait_path": "TODO", "pause_game": True, "highlight_target": "", "action": ""},
+        {"speaker_name": "The Architect", "text": "I have set aside enough entropy to open your first seam. Study Ore Prospecting first.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "met_tut_ore", "lines": [
+        {"speaker_name": "The Architect", "text": "Hematite, red iron ore. Place a seam anywhere on the map.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "met_tut_harvester", "lines": [
+        {"speaker_name": "The Architect", "text": "A Metal Harvester on the seam digs the ore out. Point its output at the Demon.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+    {"id": "met_tut_next", "lines": [
+        {"speaker_name": "The Architect", "text": "Ore reaches the Demon. Next, Roasting opens the Materials Forge: two hematite make iron oxide, and iron oxide with coal makes steel.", "portrait_path": "TODO", "pause_game": False, "highlight_target": "", "action": ""}]},
+]
+
+
+def phase3(gd_json, apply):
+    plan = ep.build(ep.load())
+    rows = {r["id"]: r for r in plan["proposal"] if r["world"] in ("world_biology", "world_metallurgy") and r.get("d") is not None}
+    prices = {r["id"]: r for r in plan["proposal"] if r.get("value") is not None}
+    items = {i["id"]: i for i in gd_json["items"]}
+    recipes = {r["id"]: r for r in gd_json["recipes"]}
+    research = {r["id"]: r for r in gd_json["research"]}
+    next_item = max(i["item_id"] for i in gd_json["items"]) + 1
+    next_recipe = max(r["recipe_id"] for r in gd_json["recipes"]) + 1
+    nodes = tl.BIO_NODES + tl.METAL_NODES
+    node_of = {iid: n[0] for n in nodes for iid in n[3]}
+    phase_of_node = {n[0]: n[2] for n in nodes}
+    out = []
+    bio_wage = ep.wage_at(plan["prices"], 30 * plan["activeHoursPerDay"])
+
+    # items
+    new_items, updates = [], {}
+    for iid, r in rows.items():
+        world = r["world"]
+        if iid in items:
+            updates[iid] = {"base_sell_value": float(r["value"]), "planned": True, "world": world}
+            if world == "world_metallurgy" and iid == "silica":
+                updates[iid].update({"is_harvested": True, "field_type": "Ore"})
+            continue
+        name, symbol, cat, raw = METAL_ITEMS[iid]
+        new_items.append({
+            "id": iid, "display_name": name, "symbol": symbol, "icon_path": "TODO", "item_id": next_item, "tier": 4,
+            "tier_ref": "tier_4", "category": cat, "atomic_number": 0, "atomic_mass": 0, "charge": "0",
+            "is_radioactive": False, "decay_type": "None", "half_life_note": "", "is_fissile": False,
+            "is_harvested": raw, "field_type": "Ore" if raw else "None", "is_secondary_particle": False,
+            "particle_uses": 0, "codex_entry": METAL_CODEX[iid], "base_sell_value": float(r["value"]),
+            "isotope_sell_multiplier": 1.0, "world": world, "planned": True})
+        next_item += 1
+    retired = {i: (items[i]["item_id"], int(items[i]["base_sell_value"])) for i in RETIRE_P3_ITEMS if i in items}
+    out.append(f"items: {len(new_items)} new, {len(updates)} repriced/moved, retire {sorted(retired)}")
+
+    # recipes: Biology crafts, Metallurgy crafts and mines, Biology field collects
+    new_recipes, recipe_updates = [], {}
+    forge = "materials_forge"
+    bio_building = {r["output_item"]: (r.get("valid_buildings") or [None])[0] for r in gd_json["recipes"]}
+    for iid, r in rows.items():
+        node = node_of[iid]
+        ins = [{"item": i["item"], "quantity": i["q"]} for i in r.get("inputs") or []]
+        if not ins:       # a Metallurgy mine
+            rid = "collect_" + iid
+            body = {"display_name": METAL_ITEMS[iid][0] if iid in METAL_ITEMS else items[iid]["display_name"],
+                    "tier": 4, "category": "Element", "inputs": [], "neutron_adjustment": [],
+                    "output_item": iid, "output_quantity": 1, "byproducts": [], "base_craft_time": float(r["craft"]),
+                    "manual_craft_time": float(r["craft"]), "power_cost_is_dynamic": False, "fixed_power_cost_ev": 0.0,
+                    "valid_buildings": ["metal_harvester"], "can_craft_manually": True, "known_from_start": False,
+                    "required_research": node, "unlocks_research": None, "is_simplified": False,
+                    "simplification_note": "", "planned": True}
+        else:
+            rid = iid
+            building = bio_building.get(iid) if r["world"] == "world_biology" else forge
+            body = {"display_name": r["name"], "tier": 4, "category": "Alloy" if r["world"] == "world_metallurgy" else "Molecule",
+                    "inputs": ins, "neutron_adjustment": [], "output_item": iid, "output_quantity": int(r.get("outQ") or 1),
+                    "byproducts": [], "base_craft_time": float(r["craft"]), "manual_craft_time": 0.0,
+                    "power_cost_is_dynamic": False, "fixed_power_cost_ev": 0.0, "valid_buildings": [building],
+                    "can_craft_manually": False, "known_from_start": False, "required_research": node,
+                    "unlocks_research": None, "is_simplified": True, "simplification_note": r.get("how") or "",
+                    "planned": True}
+        if rid in recipes:
+            recipe_updates[rid] = body
+        else:
+            new_recipes.append(dict({"id": rid, "recipe_id": next_recipe}, **body))
+            next_recipe += 1
+    for fid, (name, drop) in BIO_FIELDS.items():
+        rid = "collect_" + drop
+        t = float(max(10, round(prices[drop]["value"] / bio_wage)))
+        body = {"display_name": items.get(drop, {}).get("display_name", drop), "tier": 4, "category": "Element",
+                "inputs": [], "neutron_adjustment": [], "output_item": drop, "output_quantity": 1, "byproducts": [],
+                "base_craft_time": t, "manual_craft_time": t, "power_cost_is_dynamic": False, "fixed_power_cost_ev": 0.0,
+                "valid_buildings": ["organic_harvester"], "can_craft_manually": True, "known_from_start": False,
+                "required_research": "biology_lab", "unlocks_research": None, "is_simplified": False,
+                "simplification_note": "", "planned": True}
+        if rid in recipes:
+            recipe_updates[rid] = body
+        else:
+            new_recipes.append(dict({"id": rid, "recipe_id": next_recipe}, **body))
+            next_recipe += 1
+    # silica was made from Silicon in Chemistry; it is mined as quartz sand now (collect_silica)
+    removed_recipes = sorted({*RETIRE_P3_ITEMS, "collect_amino_acid", "collect_fatty_acid", "collect_nucleotide",
+                              "collect_iron", "collect_copper", "collect_aluminum", "collect_nickel", "collect_silicon",
+                              "silica"} & set(recipes))
+    out.append(f"recipes: {len(new_recipes)} new, {len(recipe_updates)} rewritten, remove {removed_recipes}")
+
+    # research: two chains, costs summed and pooled
+    entries = []
+    for chain in (tl.BIO_NODES, tl.METAL_NODES):
+        prev = "energy_currency" if chain is tl.BIO_NODES else None
+        part = []
+        for node, name, ph, iids, buildings, fields in chain:
+            base = dict(research.get(node) or {})
+            bio = ph.startswith("b")
+            e = {"id": node, "display_name": name,
+                 "description": base.get("description") or f"{name}: " + ", ".join(rows[i]["name"] for i in iids) + ".",
+                 "branch": "Biology" if bio else "Materials", "prerequisites": [prev] if prev else [],
+                 "depth_in_tree": base.get("depth_in_tree", 3 + len(part)),
+                 "cost_base_currency": int(sum(rows[i]["research"] or 0 for i in iids)), "cost_prestige_currency": 0,
+                 "duration_seconds": 1800 if bio else 2400, "unlocks_items": iids,
+                 "unlocks_recipes": [("collect_" + i) if not rows[i].get("inputs") else i for i in iids],
+                 "unlocks_buildings": buildings, "unlocks_grid_expansion": False, "unlocks_research": [],
+                 "resets_on_prestige": True, "codex_entry": base.get("codex_entry") or name,
+                 "icon_path": base.get("icon_path") or "TODO",
+                 "block": (BIO_PHASE_BLOCK if bio else METAL_PHASE_BLOCK)[ph],
+                 "world": "world_biology" if bio else "world_metallurgy", "planned": True}
+            if not bio:
+                e["required_world"] = "world_metallurgy"
+            elif base.get("required_world"):
+                e["required_world"] = base["required_world"]
+            if node == "biology_lab":
+                e["unlocks_recipes"] = e["unlocks_recipes"] + ["collect_" + d for _, d in BIO_FIELDS.values()]
+            if "_comment" in base:
+                e["_comment"] = base["_comment"]
+            part.append(e)
+            prev = node
+        for e, c in zip(part, pav([e["cost_base_currency"] for e in part])):
+            e["cost_base_currency"] = int(ep.nice(c))
+        entries += part
+    out.append("research: " + " > ".join(f"{e['id']}({e['cost_base_currency']:,})" for e in entries))
+    if not apply:
+        print("\n".join(out))
+        print("C# RetiredItems lines:")
+        for iid, (num, price) in retired.items():
+            print(f"            {{ {num}, {price} }},  // {iid}")
+        return
+
+    gd = GameData()
+    for rid in removed_recipes:
+        gd.delete("recipes", rid)
+    for iid in RETIRE_P3_ITEMS:
+        if gd.has("items", iid):
+            gd.delete("items", iid)
+    last = json.loads(gd.text)["items"][-1]["id"]
+    for it in new_items:
+        gd.insert_after("items", last, it)
+        last = it["id"]
+    for iid, ch in updates.items():
+        gd.update("items", iid, **ch)
+    for iid in SHARED_LIFE:
+        it = gd.get("items", iid)
+        it.pop("world", None)
+        gd.put("items", it)
+    for rid, body in recipe_updates.items():
+        gd.update("recipes", rid, **body)
+    last = max(json.loads(gd.text)["recipes"], key=lambda r: r["recipe_id"])["id"]
+    for rec in new_recipes:
+        gd.insert_after("recipes", last, rec)
+        last = rec["id"]
+    for rid in REMOVED_RESEARCH_P3:
+        if gd.has("research", rid):
+            gd.delete("research", rid)
+    for e in entries:
+        if gd.has("research", e["id"]):
+            gd.put("research", e)
+        else:
+            gd.insert_after("research", "ecosystems" if e["id"] == "ore_prospecting" else entries[entries.index(e) - 1]["id"], e)
+    gd.save()
+    finish_phase3(plan, entries)
+
+
+def finish_phase3(plan, entries):
+    gd = GameData()
+    data = json.loads(gd.text)
+    recipes = data["recipes"]
+    rec_ids = {r["id"] for r in recipes}
+    for r in data["research"]:
+        pre = [REMOVED_RESEARCH_P3.get(p, p) for p in r.get("prerequisites") or []]
+        pre = list(dict.fromkeys(pre))
+        if pre != (r.get("prerequisites") or []):
+            gd.update("research", r["id"], prerequisites=pre)
+            r["prerequisites"] = pre
+    children = {r["id"]: [] for r in data["research"]}
+    for r in data["research"]:
+        for p in r.get("prerequisites") or []:
+            if p in children:
+                children[p].append(r["id"])
+    for r in data["research"]:
+        if (r.get("unlocks_research") or []) != children[r["id"]]:
+            gd.update("research", r["id"], unlocks_research=children[r["id"]])
+    # buildings: Metallurgy's two move worlds; Biology and Metallurgy run without power (generators are Physics-only)
+    gd.update("buildings", "metal_harvester", world="world_metallurgy", compatible_fields=["Ore"],
+              required_research="ore_prospecting", requires_power=False,
+              supported_recipes=[r["id"] for r in recipes if "metal_harvester" in (r.get("valid_buildings") or [])])
+    gd.update("buildings", "materials_forge", world="world_metallurgy", required_research="roasting", requires_power=False,
+              supported_recipes=[r["id"] for r in recipes if "materials_forge" in (r.get("valid_buildings") or [])])
+    for bid in ("organic_harvester", "biosynthesizer", "cell_assembler", "tissue_culture", "bioreactor"):
+        gd.update("buildings", bid, requires_power=False,
+                  supported_recipes=[r["id"] for r in recipes if bid in (r.get("valid_buildings") or [])])
+    for bid in ("element_harvester", "molecular_synthesizer", "organic_synthesizer", "catalytic_reactor",
+                "compound_synthesizer"):
+        gd.update("buildings", bid, supported_recipes=[r["id"] for r in recipes if bid in (r.get("valid_buildings") or [])])
+    # fields: Chemistry's metal and mineral beds go; Biology's pools drop the life chemicals; Metallurgy's ores
+    for fid in RETIRED_FIELDS_P3:
+        if gd.has("fields", fid):
+            gd.delete("fields", fid)
+    for fid, (name, drop) in BIO_FIELDS.items():
+        if gd.has("fields", fid):
+            gd.update("fields", fid, display_name=name, drops=[{"item": drop, "weight": 1.0}])
+        else:
+            base = gd.get("fields", "nucleotide_field")
+            gd.insert_after("fields", "nucleotide_field", dict(base, id=fid, display_name=name,
+                            drops=[{"item": drop, "weight": 1.0}], field_color="#F2C14E",
+                            codex_entry="ATP welling up from a vent of living chemistry: energy, ready to spend."))
+    costs = {e["id"]: e["cost_base_currency"] for e in entries}
+    node_of_field = {f: n[0] for n in tl.METAL_NODES for f in n[5]}
+    last = "atp_field"
+    for fid, (name, drop, colour, codex) in ORE_FIELDS.items():
+        node = node_of_field[fid]
+        base_cost = 1000 if node == "ore_prospecting" else int(ep.nice(costs[node] * 0.02))
+        f = {"id": fid, "display_name": name, "field_type": "Ore", "world": "world_metallurgy",
+             "drops": [{"item": drop, "weight": 1.0}], "tap_cooldown_seconds": 3.0, "field_color": colour,
+             "field_icon_path": "TODO", "purchase_research": node, "purchase_cost_base": base_cost,
+             "purchase_cost_multiplier": 2.0, "purchase_group_size": 1, "codex_entry": codex, "planned": True}
+        gd.insert_after("fields", last, f)
+        last = fid
+    chem = next(s for s in data["sites"] if s["id"] == "site_chem_lab")
+    gd.update("sites", "site_chem_lab", field_overrides=[f for f in chem["field_overrides"] if f["field"] not in RETIRED_FIELDS_P3])
+    bio = next(s for s in data["sites"] if s["id"] == "site_bio_lab")
+    if not any(f["field"] == "atp_field" for f in bio["field_overrides"]):
+        gd.update("sites", "site_bio_lab", field_overrides=bio["field_overrides"] + [{"field": "atp_field", "density_multiplier": 2.0}])
+    gd.insert_after("sites", "site_bio_lab", {
+        "id": "site_foundry", "display_name": "Foundry", "unlock_cost": 0,
+        "_note_metal": "First Metallurgy-world site (Item Timeline phase 3, 2026-11-23). Ore fields are listed at density 0 and bought after their research; the Demon is back.",
+        "field_overrides": [{"field": "quark_field", "density_multiplier": 0.0}, {"field": "electron_field", "density_multiplier": 0.0}]
+                           + [{"field": f, "density_multiplier": 0.0} for f in ORE_FIELDS]})
+    gd.insert_after("worlds", "world_biology", {
+        "id": "world_metallurgy", "display_name": "Metallurgy", "unlock_cost": 0,
+        "_note_gate": "Item Timeline phase 3 (2026-11-23): delivery stages made in Biology (more_world_tasks) unlock it.",
+        "prereq_unlock_ids": [], "unlock_by_tasks": True, "site_ids": ["site_foundry"],
+        "theme": {"background_color": "#170f0a", "tile_color": "#33231a", "field_tint": "#ffd2a8"}})
+    # Metallurgy's tutorial and dialogues
+    grant = int(ep.nice(costs["ore_prospecting"] + 1000 + 2 * float(gd.get("buildings", "metal_harvester").get("entropy_cost") or 0) + 50000))
+    gd.insert_after("world_tutorials", "tutorial_chemistry", {
+        "id": "tutorial_metallurgy", "world": "world_metallurgy", "completion_message": "Metallurgy tutorial complete. The foundry is yours.",
+        "steps": [
+            {"id": "met_welcome", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "met_tut_welcome"}},
+            {"id": "met_grant", "hint": "", "advance_condition": {"type": "Auto"}, "on_enter": {}, "reward_entropy": grant},
+            {"id": "met_research", "hint": "Open Research and study Ore Prospecting.", "advance_condition": {"type": "ResearchUnlocked", "research_id": "ore_prospecting"}, "on_enter": {"pulse_button_id": "btn-research"}},
+            {"id": "met_place_ore", "hint": "Place a Hematite Seam from the Build menu.", "advance_condition": {"type": "FieldPurchasedMin", "field_id": "hematite_field", "min_count": 1}, "on_enter": {"dialogue_id": "met_tut_ore", "pulse_button_id": "btn-place-hematite_field"}},
+            {"id": "met_place_harvester", "hint": "Place a Metal Harvester on the Hematite Seam.", "advance_condition": {"type": "BuildingMin", "building_id": "metal_harvester", "min_count": 1}, "on_enter": {"dialogue_id": "met_tut_harvester", "pulse_button_id": "btn-place-metal_harvester", "highlight_target": "hematite_field", "highlight_mode": "Full"}},
+            {"id": "met_to_demon", "hint": "Belt the Harvester's output to Maxwell's Demon.", "advance_condition": {"type": "ConveyorLinked", "from_building_id": "metal_harvester", "building_id": "maxwells_demon", "min_count": 1}, "on_enter": {"pulse_button_id": "btn-place-conveyor"}},
+            {"id": "met_next", "hint": "", "advance_condition": {"type": "UiEvent", "ui_event_id": "dialogue_complete"}, "on_enter": {"dialogue_id": "met_tut_next"}},
+        ]})
+    last = "intro_world_biology"
+    for d in MET_DIALOGUES:
+        if not gd.has("dialogues", d["id"]):
+            gd.insert_after("dialogues", last, d)
+        last = d["id"]
+    # Metallurgy's delivery tasks (made in Biology): a new top-level list before world_tasks
+    if '"more_world_tasks"' not in gd.text:
+        from gamedata_edit import fmt_obj
+        key = '\n  "world_tasks": {'
+        i = gd.text.index(key)
+        gd.text = gd.text[:i] + '\n  "more_world_tasks": [\n' + fmt_obj(METAL_TASKS) + '\n  ],' + gd.text[i:]
+    # research blocks
+    old = {b["id"]: b for b in data["research_blocks"]}
+    order = ["ignition", "foundations", "first_fusion", "stellar_forge", "chemistry_entry", "deep_burning",
+             "chem_small_molecules", "actinide_descent", "chem_organics", "chem_sulfur_phosphorus", "metal_descent",
+             "chem_building_blocks", "iron_age", "chem_molecules_of_life", "bio_biomolecules", "bio_cells",
+             "deep_physics", "bio_multicellular", "bio_ecosystems", "metallurgy_ores", "metallurgy_alloys",
+             "metallurgy_advanced", "synthetic_frontier"]
+    phase_of = {v: k for k, v in {**BIO_PHASE_BLOCK, **METAL_PHASE_BLOCK}.items()}
+    blocks = []
+    for n, bid in enumerate(order, start=1):
+        if bid in phase_of:
+            ph = next(p for p in plan["phases"] if p["id"] == phase_of[bid])
+            name, desc = P3_BLOCK_TEXT[bid]
+            src = old.get("biology_world") or blocks[-1]
+            b = {"id": bid, "name": name, "order": n,
+                 "target_hours": round((ph["end"] - ph["start"]) * plan["activeHoursPerDay"], 2),
+                 "anchor": False, "planned": True, "description": desc}
+            for k in ("start_prestige_count", "start_prestige_currency_earned", "start_permanent_upgrades",
+                      "start_entropy", "start_sites"):
+                b[k] = src.get(k, [] if k in ("start_permanent_upgrades", "start_sites") else 0)
+        else:
+            b = dict(old[bid], order=n)
+        blocks.append(b)
+    preset_keys = ("start_prestige_count", "start_prestige_currency_earned", "start_permanent_upgrades", "start_entropy")
+    for prev, b in zip(blocks, blocks[1:]):
+        if (b.get("start_prestige_currency_earned") or 0) < (prev.get("start_prestige_currency_earned") or 0):
+            for k in preset_keys:
+                b[k] = prev.get(k)
+        if (b.get("start_entropy") or 0) < (prev.get("start_entropy") or 0):
+            b["start_entropy"] = prev.get("start_entropy")
+    _replace_blocks(gd, data["research_blocks"], blocks)
+    gd.save()
+
+
 if __name__ == "__main__":
-    # Phases build on each other: start from a clean game_data.json (git checkout) and apply 1, 2, ... in order,
+    # Phases build on each other: start from release/0.6's game_data.json (git show origin/release/0.6:...), apply 1, 2, ... in order,
     # then run scripts/rebalance_curve.py --apply for the content not planned yet.
     phase = int(sys.argv[sys.argv.index("--phase") + 1]) if "--phase" in sys.argv else 1
     gd_json = json.loads((ep.ROOT / "Assets" / "Data" / "game_data.json").read_text(encoding="utf-8"))
-    {1: phase1, 2: phase2}[phase](gd_json, "--apply" in sys.argv)
+    {1: phase1, 2: phase2, 3: phase3}[phase](gd_json, "--apply" in sys.argv)

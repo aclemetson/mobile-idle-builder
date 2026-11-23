@@ -21,7 +21,7 @@ MonoBehaviour:
   tapCooldownSeconds: 3
   world: world_physics
   purchaseResearchId: heavy_elements
-  purchaseCostBase: 113000
+  purchaseCostBase: 117000
   purchaseCostMultiplier: 1.5
   purchaseGroupSize: 1
   fieldColor: {r: 0.49803922, g: 0.72156864, b: 0, a: 1}

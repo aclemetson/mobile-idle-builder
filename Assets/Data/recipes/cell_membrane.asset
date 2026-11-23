@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Cell Membrane
   methodLabel: 
   recipeId: 199
-  tier: 3
+  tier: 4
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: 322f1bf46d44c09488ddc3ac803ed97c, type: 2}
@@ -27,15 +27,15 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: 224ea2c98f090e14192df9575c0335c7, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 35
+  baseCraftTime: 90
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 400
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: a0de88d3e739b624194a8e1ca9275fb9, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: membrane + protein

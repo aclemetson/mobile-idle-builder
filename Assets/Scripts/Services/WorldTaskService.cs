@@ -40,7 +40,8 @@ namespace MobileIdleBuilder
         float _notifyTimer;
         int _seenRevision;
 
-        public WorldTaskSO Data => WorldTasks.Data;
+        /// <summary>The tasks in focus: the unfinished set delivered in the live world (else the Chemistry gate).</summary>
+        public WorldTaskSO Data => WorldTasks.Focus(SaveManager.Instance?.Current, WorldGate.ActiveWorldId());
         public bool IsComplete => WorldTasks.IsComplete(SaveManager.Instance?.Current, Data);
         public WorldTaskStage CurrentStage => WorldTasks.CurrentStage(SaveManager.Instance?.Current, Data);
         public int CompletedStages => WorldTasks.CompletedStages(SaveManager.Instance?.Current, Data);
@@ -96,12 +97,18 @@ namespace MobileIdleBuilder
             var buffer = em.GetBuffer<DemonDelivery>(_logQuery.GetSingletonEntity());
             if (buffer.Length == 0) return;
 
-            bool active = !WorldTasks.IsComplete(save, Data);
-            for (int i = 0; active && i < buffer.Length; i++)
+            // Every unfinished task set delivered in this world counts what reaches its Demon (Physics feeds the
+            // Chemistry gate, Biology feeds Metallurgy's, Metallurgy feeds Engineering's).
+            string here = WorldGate.ActiveWorldId();
+            foreach (var tasks in WorldTasks.All)
             {
-                int counted = WorldTasks.Credit(save, Data, buffer[i].ItemID, buffer[i].Quantity, out var finished);
-                if (counted > 0) _dirty = true;
-                if (finished != null) StageFinished(finished);
+                if (tasks == null || !WorldTasks.ShownIn(tasks, here) || WorldTasks.IsComplete(save, tasks)) continue;
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    int counted = WorldTasks.Credit(save, tasks, buffer[i].ItemID, buffer[i].Quantity, out var finished);
+                    if (counted > 0) _dirty = true;
+                    if (finished != null) StageFinished(finished);
+                }
             }
             buffer.Clear();
         }
@@ -130,12 +137,15 @@ namespace MobileIdleBuilder
 
         void UnlockWorldIfComplete(SaveData save)
         {
-            if (!WorldTasks.IsComplete(save, Data)) return;
-            if (save.unlockedWorlds != null && save.unlockedWorlds.Contains(Data.worldId)) return;
-            var ws = WorldService.Instance;
-            if (ws == null || !ws.UnlockWorld(Data.worldId)) return;
-            _dirty = true;
-            FindAnyObjectByType<WorldsSubController>()?.PlayWorldIntro(Data.worldId);
+            foreach (var tasks in WorldTasks.All)
+            {
+                if (tasks == null || !WorldTasks.IsComplete(save, tasks)) continue;
+                if (save.unlockedWorlds != null && save.unlockedWorlds.Contains(tasks.worldId)) continue;
+                var ws = WorldService.Instance;
+                if (ws == null || !ws.UnlockWorld(tasks.worldId)) continue;
+                _dirty = true;
+                FindAnyObjectByType<WorldsSubController>()?.PlayWorldIntro(tasks.worldId);
+            }
         }
 
         static void PlayDialogue(string dialogueId)
@@ -164,9 +174,7 @@ namespace MobileIdleBuilder
         {
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
-            save.worldTaskStage = Mathf.Clamp(completedStages, 0, StageCount);
-            save.worldTaskProgressKeys?.Clear();
-            save.worldTaskProgressValues?.Clear();
+            WorldTasks.SetStage(save, Data, completedStages);
             SaveManager.Instance.SaveLocal();
             _dirty = true;
         }

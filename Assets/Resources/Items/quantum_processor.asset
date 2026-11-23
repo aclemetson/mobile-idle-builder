@@ -36,6 +36,6 @@ MonoBehaviour:
     Factorises problems in polynomial time that classical computers cannot solve
     in the lifetime of the universe.
   codexUnlocked: 0
-  baseSellValue: 1260000
+  baseSellValue: 1.78e+9
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

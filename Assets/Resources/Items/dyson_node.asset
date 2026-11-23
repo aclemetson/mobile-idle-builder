@@ -36,6 +36,6 @@ MonoBehaviour:
     gravitational tension of thousands of square kilometres of solar-collecting surface.
     Built to last a million years.
   codexUnlocked: 0
-  baseSellValue: 22300000
+  baseSellValue: 2.6e+10
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

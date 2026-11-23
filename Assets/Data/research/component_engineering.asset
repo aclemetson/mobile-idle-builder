@@ -19,7 +19,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 3
   prerequisites:
-  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  - {fileID: 11400000, guid: 82a63f39ed765ee46b77823300765c11, type: 2}
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   depthInTree: 7
   block: synthetic_frontier
@@ -27,7 +27,7 @@ MonoBehaviour:
   treeY: -1
   requiredWorld: world_chemistry
   world: world_physics
-  costBaseCurrency: 20500000000
+  costBaseCurrency: 745000000000
   costPrestigeCurrency: 0
   durationSeconds: 10800
   fieldCooldownMult: 1

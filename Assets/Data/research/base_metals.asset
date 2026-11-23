@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: base_metals
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: base_metals
+  displayName: Base Metal Ores
+  description: 'Base Metal Ores: Bauxite (aluminium ore), Chalcopyrite (copper ore),
+    Rutile (titanium ore).'
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: 46e1ca7bf7bba7a479096fb48bb6ead8, type: 2}
+  depthInTree: 4
+  block: metallurgy_ores
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_metallurgy
+  world: world_metallurgy
+  costBaseCurrency: 14600000000
+  costPrestigeCurrency: 0
+  durationSeconds: 2400
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 08a42bc6878841e45b2c34dc6d240484, type: 2}
+  - {fileID: 11400000, guid: ecfdff4d481641549b76b7a93a753176, type: 2}
+  - {fileID: 11400000, guid: 481dc7a64c564ed4a83a24b1660ad5fa, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 9401a9ef9e037714289f3a0801b4a992, type: 2}
+  - {fileID: 11400000, guid: f0f145f7c5df3b84a87efcfb4b34bbe5, type: 2}
+  - {fileID: 11400000, guid: 45dd5aa3f9b978a4eb6f7db9fb9feb71, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: d972fab1d135c7f4694979b3619e3406, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Base Metal Ores

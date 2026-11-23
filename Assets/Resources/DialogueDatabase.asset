@@ -135,6 +135,16 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: f9604ebf0d69d2a49908e094f4073f82, type: 2}
   - id: intro_world_biology
     dialogue: {fileID: 11400000, guid: de01fe572e8254a48a1dff034e904cde, type: 2}
+  - id: intro_world_metallurgy
+    dialogue: {fileID: 11400000, guid: 0b7a869a29d5f0b4fa53dd87ed907f11, type: 2}
+  - id: met_tut_welcome
+    dialogue: {fileID: 11400000, guid: 06cc16fd6a7dc1147ae63b396cd06329, type: 2}
+  - id: met_tut_ore
+    dialogue: {fileID: 11400000, guid: 9a29e402f7b01f646adfcd97465ab253, type: 2}
+  - id: met_tut_harvester
+    dialogue: {fileID: 11400000, guid: 8b78d7108e7c3ea428a0df61700a6adf, type: 2}
+  - id: met_tut_next
+    dialogue: {fileID: 11400000, guid: ac67672704dc98a4ead7b1d32fafe92a, type: 2}
   - id: upgrade_complete_context
     dialogue: {fileID: 11400000, guid: 2c2556e84dcc14546a4eba82264a32cc, type: 2}
   - id: post_tutorial_intro
