@@ -27,6 +27,7 @@ namespace MobileIdleBuilder
         private EntropySurgeOfferController         _surgeOffer;
         private PlayerNamePromptController          _namePrompt;
         private TournamentPanelController           _tournament;
+        private TournamentIntroController           _tournamentIntro;
         private MenuReminderController              _reminders;
         private TestAdOverlayController             _testAd;
         private CyclotronController                 _cyclotron;
@@ -205,6 +206,7 @@ namespace MobileIdleBuilder
             _cyclotron    = GetComponent<CyclotronController>() ?? gameObject.AddComponent<CyclotronController>();
             _namePrompt   = GetComponent<PlayerNamePromptController>() ?? gameObject.AddComponent<PlayerNamePromptController>();
             _tournament   = GetComponent<TournamentPanelController>() ?? gameObject.AddComponent<TournamentPanelController>();
+            _tournamentIntro = GetComponent<TournamentIntroController>() ?? gameObject.AddComponent<TournamentIntroController>();
         }
 
         void OnEnable()
@@ -534,6 +536,7 @@ namespace MobileIdleBuilder
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)
             _namePrompt?.Init(root, this);  // "Choose your name" card (PvE leaderboards): after the tutorial + Settings
             _tournament?.Init(root, this);  // Tournament panel (pve-panel): status, join, leaderboard, rewards
+            _tournamentIntro?.Init(root, this); // "Tournament open" dialogue once per entry window + pulse to the button
             InitReminders(root);            // red dots: achievements to claim (drawer row, its tabs, the ≡ handle)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer

@@ -862,6 +862,12 @@ namespace MobileIdleBuilder.Dev
                     return "Chemistry tutorial marked done: tournaments unlocked.";
                 });
 
+            _registry.Register("tournament intro", "Show this week's tournament message again (when entry is open)",
+                _ => TournamentIntroController.DevReset(full: false));
+
+            _registry.Register("tournament intro full", "Reset the first-time tournament explainer so it plays again",
+                _ => TournamentIntroController.DevReset(full: true));
+
             _registry.Register("tournament forget", "Clear this device's tournament entry (the server keeps its copy)",
                 _ =>
                 {

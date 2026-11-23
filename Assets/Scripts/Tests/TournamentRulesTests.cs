@@ -285,6 +285,78 @@ namespace MobileIdleBuilder.Tests
             StringAssert.Contains("★ Oxygen: now ★1 (+20% value)", reveal);
         }
 
+        // ── Onboarding (phase 6) ──────────────────────────────────────────────
+
+        static SaveData Unlocked()
+        {
+            var save = new SaveData();
+            save.tutorial.isActive = false;
+            TutorialFlows.Slot(save, TournamentRules.UnlockWorld, create: true).done = true;
+            return save;
+        }
+
+        [Test]
+        public void Intro_OncePerEntryWindow_OnlyWhenUnlockedCalmAndNotEntered()
+        {
+            var save = Unlocked();
+            var fri = Start;                                  // entry open
+            Assert.IsTrue(TournamentIntroController.ShouldShow(true, save, fri, calm: true));
+            Assert.IsFalse(TournamentIntroController.ShouldShow(false, save, fri, true), "pve.enabled off");
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, save, fri, calm: false), "waits for a calm moment");
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, new SaveData(), fri, true), "locked before the Chemistry tutorial");
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, save, fri.AddDays(1), true), "entry closed (Saturday)");
+
+            save.tournamentIntroWeek = "2026-11-27";
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, save, fri.AddHours(3), true), "already shown this window");
+            Assert.IsTrue(TournamentIntroController.ShouldShow(true, save, fri.AddDays(7), true), "next Friday: shown again");
+
+            var entered = Unlocked();
+            entered.tournament = Entry();
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, entered, fri.AddHours(1), true), "already entered this week");
+        }
+
+        [Test]
+        public void Intro_FullExplainerFirst_ThenTheShortOne()
+        {
+            var save = Unlocked();
+            Assert.AreEqual(TournamentIntroController.FullIntroId, TournamentIntroController.DialogueFor(save));
+            save.tournamentIntroSeen = true;
+            Assert.AreEqual(TournamentIntroController.WeeklyIntroId, TournamentIntroController.DialogueFor(save));
+        }
+
+        [Test]
+        public void Intro_WaitsForAnyTutorial_IncludingAWorldFlowInProgress()
+        {
+            var save = Unlocked();
+            Assert.IsFalse(TournamentIntroController.AnyTutorialRunning(save, null));
+            Assert.IsFalse(TournamentIntroController.AnyTutorialRunning(save, TournamentRules.UnlockWorld), "Chemistry's is done");
+            TutorialFlows.Slot(save, "world_biology", create: true).done = false;
+            Assert.IsTrue(TournamentIntroController.AnyTutorialRunning(save, "world_biology"));
+            save.tutorial.isActive = true;
+            Assert.IsTrue(TournamentIntroController.AnyTutorialRunning(save, null));
+        }
+
+        [Test]
+        public void Intro_DialoguesAreImported()
+        {
+            var db = Resources.Load<DialogueDatabaseSO>("DialogueDatabase");
+            Assert.IsNotNull(db);
+            foreach (var id in new[] { TournamentIntroController.FullIntroId, TournamentIntroController.WeeklyIntroId })
+            {
+                var d = db.Get(id);
+                Assert.IsNotNull(d, $"{id} missing: run Import Game Data");
+                Assert.Greater(d.lines.Length, 0, id);
+            }
+        }
+
+        [Test]
+        public void Save_IntroFieldsDefaultToNeverShown()
+        {
+            var save = JsonUtility.FromJson<SaveData>("{\"prestigeCount\":4}");
+            Assert.IsFalse(save.tournamentIntroSeen);
+            Assert.IsTrue(string.IsNullOrEmpty(save.tournamentIntroWeek));
+        }
+
         // ── Save + HUD ────────────────────────────────────────────────────────
 
         [Test]

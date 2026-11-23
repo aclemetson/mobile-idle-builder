@@ -73,6 +73,10 @@ Covered by `TutorialSellPolicyTests`.
 
 `name-prompt` (GameHUD.uxml, z-index 101, `confirm-prompt` card classes plus a `TextField` `name-prompt__input` and a `name-prompt__error` line) is owned by `PlayerNamePromptController` (added in `HUDController.Awake` with `GetComponent ?? AddComponent`, `Init` next to `ConfirmPrompt.Init`). It validates as you type (`PlayerNameRules` + `game_config.name_filter_patterns`) and saves through `PlayerNameService` (UGS player names). It opens by itself once per launch after the tutorial (pure `ShouldAutoPrompt`; **Later** stops that for good) and from Settings > Account (`btn-player-name`, **Cancel**). Android back shares the ConfirmPrompt layer. The notification opt-in waits while it is open. Covered by `PlayerNameTests`.
 
+## Tournament panel and intro (PvE)
+
+`pve-panel` is owned by `TournamentPanelController` (status, league badge, result banner, Start, leaderboard, Claim); `TournamentIntroController` plays the once-per-entry-window dialogue and then pulses the way to `btn-tournament` with the tutorial's `panel-btn--highlight` class via `TutorialPulseResolver` (`pve-panel` maps to `btn-tournament` there). Both are added in `HUDController.Awake` with `GetComponent ?? AddComponent`. Pure text and rules: `TournamentPanelText`, `TournamentRules`, `TournamentIntroController.ShouldShow`; tests `TournamentRulesTests`.
+
 ## Chemistry task strip (world delivery tasks)
 
 `task-status` (GameHUD.uxml, under the craft strip; `.task-status` teal) reads "⚗ Chemistry  Stage 2/5: Light Elements  43%" and opens the Worlds panel on tap. `WorldsSubController` drives it (0.5 s refresh; hidden during the tutorial, once the tasks are done, or before the save loads), refreshes the Worlds panel live on `WorldTaskService.OnChanged`, and shows a notification on `OnStageCompleted`. The locked Chemistry row in the Worlds panel lists the stage's items with `progress-bar` (components.uss) bars instead of required research.

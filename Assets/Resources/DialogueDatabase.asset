@@ -193,3 +193,7 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: a5540aeff9bc6ae4b9ffec407e63040c, type: 2}
   - id: intro_cyclotron
     dialogue: {fileID: 11400000, guid: c8010d473d24e3f41bd40323248be0c9, type: 2}
+  - id: pve_intro
+    dialogue: {fileID: 11400000, guid: 8ef996e5c833b8f4598e578d99e2234f, type: 2}
+  - id: pve_intro_weekly
+    dialogue: {fileID: 11400000, guid: be826a57f58e48d49a2fbdc9e2d32e61, type: 2}
