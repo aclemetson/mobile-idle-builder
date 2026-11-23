@@ -36,9 +36,9 @@ Cloud Save data the module writes:
 
 Needs the .NET 8 SDK installed (the module targets .NET 6, and the SDK fetches that targeting pack on first build).
 
-1. In the Editor: **Window → Services → Deployment** (package `com.unity.services.deployment`).
+1. In the Unity Editor menu bar: **Services → Deployment** (a top-level menu next to Window; package `com.unity.services.deployment`). It opens a dockable **Deployment** window.
 2. Select the environment at the top.
-3. Find `Assets/CloudCode/PveModule.ccmr` in the list, tick it, **Deploy Selected**. The window builds `CloudCode/PveModule/PveModule.sln` with `dotnet publish` and uploads the result.
+3. The window lists deployable files found in the project. Find **PveModule.ccmr** (`Assets/CloudCode/PveModule.ccmr`; you can also right-click that file in the Project window), tick it, then **Deploy Selected**. The window builds `CloudCode/PveModule/PveModule.sln` with `dotnet publish` and uploads the result.
 4. Dashboard → Cloud Code → Modules should now list **PveModule** with the functions `Status`, `Join`, `Snapshot`, `Board`, `Claim`, `SettleWeek`.
 
 **Redeploy whenever** you change `game_config.pve`, `game_config.name_filter_patterns`, the shared rules or the module code. The module's copy of game_data.json is fixed at build time.
