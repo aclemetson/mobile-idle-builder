@@ -27,7 +27,7 @@ MonoBehaviour:
   treeY: -1
   requiredWorld: world_chemistry
   world: world_physics
-  costBaseCurrency: 10300000000
+  costBaseCurrency: 20500000000
   costPrestigeCurrency: 0
   durationSeconds: 10800
   fieldCooldownMult: 1

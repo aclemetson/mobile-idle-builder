@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: 'Carbon as it is mined: sheets of hexagonal rings, soft enough to write
     with. The backbone of every organic molecule.'
   codexUnlocked: 0
-  baseSellValue: 341
+  baseSellValue: 201
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

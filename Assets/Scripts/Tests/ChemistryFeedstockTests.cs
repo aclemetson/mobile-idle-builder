@@ -50,30 +50,47 @@ namespace MobileIdleBuilder.Tests
             }
         }
 
-        // H, C, N, O atoms per unit of each feedstock or product the balance check knows.
-        static readonly Dictionary<string, (int h, int c, int n, int o)> Formula = new()
+        /// <summary>Atom counts from an item's symbol ("C₁₀H₁₆N₅O₁₃P₃"); null when it is not a plain formula.</summary>
+        static Dictionary<string, int> Atoms(string symbol)
         {
-            ["hydrogen_gas"] = (2, 0, 0, 0), ["oxygen_gas"] = (0, 0, 0, 2), ["nitrogen_gas"] = (0, 0, 2, 0),
-            ["graphite"] = (0, 1, 0, 0),
-            ["water"] = (2, 0, 0, 1), ["methane"] = (4, 1, 0, 0), ["ammonia"] = (3, 0, 1, 0),
-            ["carbon_dioxide"] = (0, 1, 0, 2), ["ethane"] = (6, 2, 0, 0), ["ethanol"] = (6, 2, 0, 1),
-            ["glucose"] = (12, 6, 0, 6), ["nitric_acid"] = (1, 0, 1, 3),
-        };
-
-        [TestCase("water")] [TestCase("methane")] [TestCase("ammonia")] [TestCase("carbon_dioxide")]
-        [TestCase("ethane")] [TestCase("ethanol")] [TestCase("glucose")] [TestCase("nitric_acid")]
-        public void FirstReactions_AreBalanced(string recipeId)
-        {
-            var r = _recipes.Single(x => x.id == recipeId);
-            (int h, int c, int n, int o) sum = default;
-            foreach (var i in r.inputs)
+            if (string.IsNullOrEmpty(symbol)) return null;
+            var plain = new string(symbol.Select(ch => ch >= '₀' && ch <= '₉' ? (char)('0' + (ch - '₀')) : ch).ToArray());
+            if (!System.Text.RegularExpressions.Regex.IsMatch(plain, @"^([A-Z][a-z]?\d*)+$")) return null;
+            var counts = new Dictionary<string, int>();
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(plain, @"([A-Z][a-z]?)(\d*)"))
             {
-                var f = Formula[i.item.id];
-                sum = (sum.h + f.h * i.quantity, sum.c + f.c * i.quantity, sum.n + f.n * i.quantity, sum.o + f.o * i.quantity);
+                int n = m.Groups[2].Value.Length > 0 ? int.Parse(m.Groups[2].Value) : 1;
+                counts[m.Groups[1].Value] = (counts.TryGetValue(m.Groups[1].Value, out var c) ? c : 0) + n;
             }
-            var p = Formula[r.outputItem.id];
-            int q = Mathf.Max(1, r.outputQuantity);
-            Assert.AreEqual((p.h * q, p.c * q, p.n * q, p.o * q), sum, $"{recipeId}: inputs and outputs don't balance");
+            return counts;
+        }
+
+        /// <summary>
+        /// Every Chemistry reaction that makes a molecule balances atom for atom, byproducts included (2026-11-23
+        /// life chemistry: 36 real equations, scripts/item_timeline.py CHEM). Formulas come from the item symbols.
+        /// </summary>
+        [Test]
+        public void EveryChemistryReaction_Balances()
+        {
+            int checkedCount = 0;
+            foreach (var r in MadeIn(WorldGate.Chemistry).Where(r => r.outputItem != null
+                         && r.outputItem.category == ItemCategory.Molecule && r.inputs != null && r.inputs.Length > 0))
+            {
+                var left = new Dictionary<string, int>();
+                var right = new Dictionary<string, int>();
+                void Add(Dictionary<string, int> side, ItemSO item, int q)
+                {
+                    var f = Atoms(item.symbol);
+                    Assert.IsNotNull(f, $"{r.id}: {item.id} has no plain formula symbol ('{item.symbol}')");
+                    foreach (var kv in f) side[kv.Key] = (side.TryGetValue(kv.Key, out var c) ? c : 0) + kv.Value * q;
+                }
+                foreach (var i in r.inputs) Add(left, i.item, i.quantity);
+                Add(right, r.outputItem, Mathf.Max(1, r.outputQuantity));
+                foreach (var b in r.byproducts ?? new RecipeIngredient[0]) Add(right, b.item, b.quantity);
+                CollectionAssert.AreEquivalent(left, right, $"{r.id}: inputs and outputs don't balance");
+                checkedCount++;
+            }
+            Assert.GreaterOrEqual(checkedCount, 36, "the life-chemistry reactions are all checked");
         }
 
         [Test]

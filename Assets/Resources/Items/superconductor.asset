@@ -36,6 +36,6 @@ MonoBehaviour:
     Enables MRI machines, maglev trains, and the magnetic confinement coils of fusion
     reactors.
   codexUnlocked: 0
-  baseSellValue: 475000
+  baseSellValue: 259000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

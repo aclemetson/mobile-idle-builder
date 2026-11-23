@@ -440,6 +440,8 @@ namespace MobileIdleBuilder
             { "rapid_neutron_capture",        "spallation_4" },
             { "slow_neutron_capture",         "spallation_7" },
             { "fissile_extraction",           "heavy_elements" },
+            // Phase 2: Organic Chemistry became Hydrocarbons (and Alcohols and Acids after it).
+            { "organic_chemistry",            "hydrocarbons" },
         };
 
         /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>

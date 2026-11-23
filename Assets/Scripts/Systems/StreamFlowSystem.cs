@@ -52,6 +52,8 @@ namespace MobileIdleBuilder
             }
 
             var buildingMap = BuildCellMap();
+            // Spring Pressure (prestige shop, Chemistry track): every Spring pours this much more.
+            float springMult = SystemAPI.TryGetSingleton<ActiveWorldRules>(out var wr) && wr.FlowMult > 0f ? wr.FlowMult : 1f;
 
             // Every consumer starts "not beside a stream"; segments below overwrite that.
             var status = new Dictionary<Entity, StreamStatus>(consumers.Length);
@@ -76,7 +78,7 @@ namespace MobileIdleBuilder
                     if (!buildingMap.TryGetValue(cell, out var b)) continue;
                     if (!EntityManager.HasComponent<StreamSource>(b)) continue;
                     if (!HasPort(b, cell, Opposite(dir), PortType.Output)) continue;
-                    float f = EntityManager.GetComponentData<StreamSource>(b).Flow;
+                    float f = EntityManager.GetComponentData<StreamSource>(b).Flow * springMult;
                     left   += f;
                     supply += f;
                     source  = true;

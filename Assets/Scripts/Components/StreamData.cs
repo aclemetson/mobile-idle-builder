@@ -15,6 +15,8 @@ namespace MobileIdleBuilder
         public float SpeedMult;
         /// <summary>The live world's prestige-shop track (e.g. Fission Yield in Physics): output x. 0 = 1.</summary>
         public float OutputMult;
+        /// <summary>The live world's Spring flow track (Spring Pressure in Chemistry): flow x. 0 = 1.</summary>
+        public float FlowMult;
     }
 
     /// <summary>

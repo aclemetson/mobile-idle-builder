@@ -156,7 +156,7 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 
 ### Planned content: the Item Timeline economy (2026-11-23)
 
-Content marked `"planned": true` in `game_data.json` (items, recipes, research, blocks) is priced by `scripts/economy_plan.py`, the model the Item Timeline page shows (https://claude.ai/artifact/68WpPYX6DBZiXku4sES1Dd), and `rebalance_curve.py` leaves it alone (it treats planned research as off-curve and planned items as already priced). Phase 1 covers Physics from `light_elements` to `iron_convergence`; Chemistry, Biology, components and Deep Physics are still on the derived curve above until their phases.
+Content marked `"planned": true` in `game_data.json` (items, recipes, research, blocks) is priced by `scripts/economy_plan.py`, the model the Item Timeline page shows (https://claude.ai/artifact/68WpPYX6DBZiXku4sES1Dd), and `rebalance_curve.py` leaves it alone (it treats planned research as off-curve and planned items as already priced). Phase 1 covers Physics from `light_elements` to `iron_convergence`; phase 2 the life-chemistry chain from `chemistry_lab` to `energy_currency`. Biology, components, the metal chain and Deep Physics are still on the derived curve above until their phases.
 
 - **Wage on time, not research count:** wage(H) = 20 x 2^((H - 1) / 10) entropy per building-second at active hour H (2 active hours a day). Value = (inputs + wage x craft) / output quantity, as before.
 - **Research** = 5 buildings x wage x (1.15 ^ walls cleared) x the active seconds since the previous unlock in any world (one wallet). Walls (`walls` in the plan) are where the timeline makes the player prestige several times at one spot; the 1.15 per wall is what the prestige shop's tracks are assumed to add.

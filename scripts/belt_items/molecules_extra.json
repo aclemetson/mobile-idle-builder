@@ -3,46 +3,820 @@
   "element_colors": {
     "Si": "f0b67f",
     "Fe": "e07a3f",
-    "U":  "58a6ff",
+    "U": "58a6ff",
     "Na": "a371f7",
     "Cl": "7ee787",
-    "S":  "ff9e64",
-    "F":  "a5f3fc",
-    "P":  "ff7b72",
+    "S": "ff9e64",
+    "F": "a5f3fc",
+    "P": "ff7b72",
     "Ni": "aeb8c2"
   },
   "element_radii": {
-    "Si": 0.85, "Fe": 0.85, "U": 0.95, "Na": 0.9, "Cl": 0.8, "S": 0.8, "F": 0.55, "P": 0.8, "Ni": 0.8
+    "Si": 0.85,
+    "Fe": 0.85,
+    "U": 0.95,
+    "Na": 0.9,
+    "Cl": 0.8,
+    "S": 0.8,
+    "F": 0.55,
+    "P": 0.8,
+    "Ni": 0.8
   },
   "molecules": {
-    "sulfuric_acid": { "pubchem": "sulfuric acid", "formula": "H2O4S" },
-    "nucleotide": { "pubchem": "adenosine monophosphate", "formula": "C10H14N5O7P", "hide_h": true,
-                    "_why": "Representative nucleotide (AMP): sugar ring, base and phosphate all read at belt size with H hidden." },
-    "silica": { "formula": "O2Si", "_why": "Molecular SiO2, linear O=Si=O (1.52 A).",
-                "structure": { "atoms": [["Si", 0, 0, 0], ["O", -1.52, 0, 0], ["O", 1.52, 0, 0]],
-                               "bonds": [[0, 1, 2], [0, 2, 2]] } },
-    "iron_oxide": { "formula": "Fe2O3", "_why": "One Fe2O3 unit: O=Fe-O-Fe=O, bent at the bridging oxygen.",
-                    "structure": { "atoms": [["Fe", -1.6, 0, 0], ["Fe", 1.6, 0, 0], ["O", 0, 0.95, 0],
-                                             ["O", -2.55, -1.05, 0], ["O", 2.55, -1.05, 0]],
-                                   "bonds": [[0, 2, 1], [1, 2, 1], [0, 3, 2], [1, 4, 2]] } },
-    "uranium_hexafluoride": { "formula": "F6U", "_why": "Octahedral UF6, U-F 2.0 A.",
-                              "structure": { "atoms": [["U", 0, 0, 0], ["F", 2, 0, 0], ["F", -2, 0, 0], ["F", 0, 2, 0],
-                                                       ["F", 0, -2, 0], ["F", 0, 0, 2], ["F", 0, 0, -2]],
-                                             "bonds": [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1], [0, 5, 1], [0, 6, 1]] } },
-    "table_salt": { "formula": "Cl4Na4", "_why": "A 2x2x2 rock-salt cube (4 Na, 4 Cl = four NaCl units, Na-Cl 2.82 A): salt is a crystal, not a molecule.",
-                    "structure": { "atoms": [["Na", -1.41, -1.41, -1.41], ["Cl", 1.41, -1.41, -1.41], ["Cl", -1.41, 1.41, -1.41],
-                                             ["Na", 1.41, 1.41, -1.41], ["Cl", -1.41, -1.41, 1.41], ["Na", 1.41, -1.41, 1.41],
-                                             ["Na", -1.41, 1.41, 1.41], ["Cl", 1.41, 1.41, 1.41]],
-                                   "bonds": [[0, 1, 1], [0, 2, 1], [0, 4, 1], [1, 3, 1], [1, 5, 1], [2, 3, 1],
-                                             [2, 6, 1], [3, 7, 1], [4, 5, 1], [4, 6, 1], [5, 7, 1], [6, 7, 1]] } },
-    "chlorine_gas": { "formula": "Cl2", "_why": "Cl-Cl 1.99 A.",
-                      "structure": { "atoms": [["Cl", -0.995, 0, 0], ["Cl", 0.995, 0, 0]], "bonds": [[0, 1, 1]] } },
-    "sodium_hydroxide": { "formula": "HNaO", "_why": "Linear Na-O-H (1.95 A, 0.96 A).",
-                          "structure": { "atoms": [["Na", -1.95, 0, 0], ["O", 0, 0, 0], ["H", 0.96, 0, 0]],
-                                         "bonds": [[0, 1, 1], [1, 2, 1]] } },
-    "catalyst": { "formula": "Fe2Ni2", "_why": "The recipe is nickel + iron: a tetrahedral Ni2Fe2 metal cluster (2.5 A).",
-                  "structure": { "atoms": [["Ni", 1.25, 0.72, -0.51], ["Ni", -1.25, 0.72, -0.51], ["Fe", 0, -1.44, -0.51],
-                                           ["Fe", 0, 0, 1.53]],
-                                 "bonds": [[0, 1, 1], [0, 2, 1], [1, 2, 1], [0, 3, 1], [1, 3, 1], [2, 3, 1]] } }
+    "sulfuric_acid": {
+      "pubchem": "sulfuric acid",
+      "formula": "H2O4S"
+    },
+    "nucleotide": {
+      "pubchem": "adenosine monophosphate",
+      "formula": "C10H14N5O7P",
+      "hide_h": true,
+      "_why": "Representative nucleotide (AMP): sugar ring, base and phosphate all read at belt size with H hidden."
+    },
+    "silica": {
+      "formula": "O2Si",
+      "_why": "Molecular SiO2, linear O=Si=O (1.52 A).",
+      "structure": {
+        "atoms": [
+          [
+            "Si",
+            0,
+            0,
+            0
+          ],
+          [
+            "O",
+            -1.52,
+            0,
+            0
+          ],
+          [
+            "O",
+            1.52,
+            0,
+            0
+          ]
+        ],
+        "bonds": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            0,
+            2,
+            2
+          ]
+        ]
+      }
+    },
+    "iron_oxide": {
+      "formula": "Fe2O3",
+      "_why": "One Fe2O3 unit: O=Fe-O-Fe=O, bent at the bridging oxygen.",
+      "structure": {
+        "atoms": [
+          [
+            "Fe",
+            -1.6,
+            0,
+            0
+          ],
+          [
+            "Fe",
+            1.6,
+            0,
+            0
+          ],
+          [
+            "O",
+            0,
+            0.95,
+            0
+          ],
+          [
+            "O",
+            -2.55,
+            -1.05,
+            0
+          ],
+          [
+            "O",
+            2.55,
+            -1.05,
+            0
+          ]
+        ],
+        "bonds": [
+          [
+            0,
+            2,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            0,
+            3,
+            2
+          ],
+          [
+            1,
+            4,
+            2
+          ]
+        ]
+      }
+    },
+    "uranium_hexafluoride": {
+      "formula": "F6U",
+      "_why": "Octahedral UF6, U-F 2.0 A.",
+      "structure": {
+        "atoms": [
+          [
+            "U",
+            0,
+            0,
+            0
+          ],
+          [
+            "F",
+            2,
+            0,
+            0
+          ],
+          [
+            "F",
+            -2,
+            0,
+            0
+          ],
+          [
+            "F",
+            0,
+            2,
+            0
+          ],
+          [
+            "F",
+            0,
+            -2,
+            0
+          ],
+          [
+            "F",
+            0,
+            0,
+            2
+          ],
+          [
+            "F",
+            0,
+            0,
+            -2
+          ]
+        ],
+        "bonds": [
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            3,
+            1
+          ],
+          [
+            0,
+            4,
+            1
+          ],
+          [
+            0,
+            5,
+            1
+          ],
+          [
+            0,
+            6,
+            1
+          ]
+        ]
+      }
+    },
+    "carbon_monoxide": {
+      "pubchem": "carbon monoxide",
+      "formula": "CO"
+    },
+    "hydrogen_peroxide": {
+      "pubchem": "hydrogen peroxide",
+      "formula": "H2O2"
+    },
+    "formaldehyde": {
+      "pubchem": "formaldehyde",
+      "formula": "CH2O"
+    },
+    "methanol": {
+      "pubchem": "methanol",
+      "formula": "CH4O"
+    },
+    "formic_acid": {
+      "pubchem": "formic acid",
+      "formula": "CH2O2"
+    },
+    "hydrogen_cyanide": {
+      "pubchem": "hydrogen cyanide",
+      "formula": "CHN"
+    },
+    "urea": {
+      "pubchem": "urea",
+      "formula": "CH4N2O"
+    },
+    "ethylene": {
+      "pubchem": "ethylene",
+      "formula": "C2H4"
+    },
+    "acetylene": {
+      "pubchem": "acetylene",
+      "formula": "C2H2"
+    },
+    "acetic_acid": {
+      "pubchem": "acetic acid",
+      "formula": "C2H4O2"
+    },
+    "glycerol": {
+      "pubchem": "glycerol",
+      "formula": "C3H8O3"
+    },
+    "hydrogen_sulfide": {
+      "pubchem": "hydrogen sulfide",
+      "formula": "H2S"
+    },
+    "phosphoric_acid": {
+      "pubchem": "phosphoric acid",
+      "formula": "H3O4P"
+    },
+    "glycerol_phosphate": {
+      "pubchem": "glycerol 3-phosphate",
+      "formula": "C3H9O6P",
+      "hide_h": true
+    },
+    "glycine": {
+      "pubchem": "glycine",
+      "formula": "C2H5NO2"
+    },
+    "alanine": {
+      "pubchem": "L-alanine",
+      "formula": "C3H7NO2"
+    },
+    "serine": {
+      "pubchem": "L-serine",
+      "formula": "C3H7NO3",
+      "hide_h": true
+    },
+    "cysteine": {
+      "pubchem": "L-cysteine",
+      "formula": "C3H7NO2S",
+      "hide_h": true
+    },
+    "ribose": {
+      "pubchem": "D-ribose",
+      "formula": "C5H10O5",
+      "hide_h": true
+    },
+    "adenine": {
+      "pubchem": "adenine",
+      "formula": "C5H5N5",
+      "hide_h": true
+    },
+    "guanine": {
+      "pubchem": "guanine",
+      "formula": "C5H5N5O",
+      "hide_h": true
+    },
+    "cytosine": {
+      "pubchem": "cytosine",
+      "formula": "C4H5N3O",
+      "hide_h": true
+    },
+    "palmitic_acid": {
+      "pubchem": "palmitic acid",
+      "formula": "C16H32O2",
+      "hide_h": true
+    },
+    "dipeptide": {
+      "pubchem": "glycylalanine",
+      "formula": "C5H10N2O3",
+      "hide_h": true
+    },
+    "amp": {
+      "pubchem": "adenosine monophosphate",
+      "formula": "C10H14N5O7P",
+      "hide_h": true
+    },
+    "phospholipid": {
+      "formula": "C35O8P",
+      "hide_h": true,
+      "_why": "PubChem has no 3D conformer for a phospholipid (too large and flexible). Inline schematic of dipalmitoyl phosphatidic acid, heavy atoms only: phosphate head, glycerol, two 16-carbon tails.",
+      "structure": {
+        "atoms": [
+          [
+            "C",
+            -1.25,
+            0.4,
+            0.0
+          ],
+          [
+            "C",
+            0,
+            -0.3,
+            0.0
+          ],
+          [
+            "C",
+            1.25,
+            0.4,
+            0.0
+          ],
+          [
+            "O",
+            1.25,
+            1.8,
+            0.0
+          ],
+          [
+            "P",
+            1.25,
+            3.2,
+            0.0
+          ],
+          [
+            "O",
+            1.25,
+            4.7,
+            0.0
+          ],
+          [
+            "O",
+            2.7,
+            3.2,
+            0.0
+          ],
+          [
+            "O",
+            -0.2,
+            3.2,
+            0.0
+          ],
+          [
+            "O",
+            0.0,
+            -1.7,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -3.0,
+            0.0
+          ],
+          [
+            "O",
+            1.2,
+            -3.6,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -4.1,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -5.2,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -6.3,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -7.4,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -8.5,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -9.6,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -10.7,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -11.8,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -12.9,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -14.0,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -15.1,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -16.2,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -17.3,
+            0.0
+          ],
+          [
+            "C",
+            0.0,
+            -18.4,
+            0.0
+          ],
+          [
+            "C",
+            -0.65,
+            -19.5,
+            0.0
+          ],
+          [
+            "O",
+            -2.5,
+            -0.3,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -1.6,
+            0.0
+          ],
+          [
+            "O",
+            -3.7,
+            -2.2,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -2.7,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -3.8,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -4.9,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -6.0,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -7.1,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -8.2,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -9.3,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -10.4,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -11.5,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -12.6,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -13.7,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -14.8,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -15.9,
+            0.0
+          ],
+          [
+            "C",
+            -2.5,
+            -17.0,
+            0.0
+          ],
+          [
+            "C",
+            -1.85,
+            -18.1,
+            0.0
+          ]
+        ],
+        "bonds": [
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            3,
+            4,
+            1
+          ],
+          [
+            4,
+            5,
+            2
+          ],
+          [
+            4,
+            6,
+            1
+          ],
+          [
+            4,
+            7,
+            1
+          ],
+          [
+            1,
+            8,
+            1
+          ],
+          [
+            8,
+            9,
+            1
+          ],
+          [
+            9,
+            10,
+            2
+          ],
+          [
+            9,
+            11,
+            1
+          ],
+          [
+            11,
+            12,
+            1
+          ],
+          [
+            12,
+            13,
+            1
+          ],
+          [
+            13,
+            14,
+            1
+          ],
+          [
+            14,
+            15,
+            1
+          ],
+          [
+            15,
+            16,
+            1
+          ],
+          [
+            16,
+            17,
+            1
+          ],
+          [
+            17,
+            18,
+            1
+          ],
+          [
+            18,
+            19,
+            1
+          ],
+          [
+            19,
+            20,
+            1
+          ],
+          [
+            20,
+            21,
+            1
+          ],
+          [
+            21,
+            22,
+            1
+          ],
+          [
+            22,
+            23,
+            1
+          ],
+          [
+            23,
+            24,
+            1
+          ],
+          [
+            24,
+            25,
+            1
+          ],
+          [
+            0,
+            26,
+            1
+          ],
+          [
+            26,
+            27,
+            1
+          ],
+          [
+            27,
+            28,
+            2
+          ],
+          [
+            27,
+            29,
+            1
+          ],
+          [
+            29,
+            30,
+            1
+          ],
+          [
+            30,
+            31,
+            1
+          ],
+          [
+            31,
+            32,
+            1
+          ],
+          [
+            32,
+            33,
+            1
+          ],
+          [
+            33,
+            34,
+            1
+          ],
+          [
+            34,
+            35,
+            1
+          ],
+          [
+            35,
+            36,
+            1
+          ],
+          [
+            36,
+            37,
+            1
+          ],
+          [
+            37,
+            38,
+            1
+          ],
+          [
+            38,
+            39,
+            1
+          ],
+          [
+            39,
+            40,
+            1
+          ],
+          [
+            40,
+            41,
+            1
+          ],
+          [
+            41,
+            42,
+            1
+          ],
+          [
+            42,
+            43,
+            1
+          ]
+        ]
+      }
+    },
+    "atp": {
+      "pubchem": "adenosine triphosphate",
+      "formula": "C10H16N5O13P3",
+      "hide_h": true
+    }
   }
 }

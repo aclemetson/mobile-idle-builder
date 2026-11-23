@@ -19,9 +19,7 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 3b1015f7ab166d544b25c573a87307af, type: 2}
-    quantity: 2
-  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
+  - item: {fileID: 11400000, guid: df6159ee3de114642a50f81bf1cb6173, type: 2}
     quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 88b16eecc00db8244a51c8b437db4fe0, type: 2}

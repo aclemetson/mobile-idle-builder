@@ -612,7 +612,7 @@ namespace MobileIdleBuilder
             if (so.isSpring)
             {
                 AddInspectorRow(_inspectorInfo, "—— Stream ——");
-                AddInspectorRow(_inspectorInfo, $"Flow: {so.streamFlow:0.#} L/s, shared by the buildings downstream, nearest first");
+                AddInspectorRow(_inspectorInfo, $"Flow: {so.streamFlow * WorldRules.SpringFlowMultiplier(WorldRules.CurrentWorldId):0.#} L/s, shared by the buildings downstream, nearest first");
             }
             else if (_em.HasComponent<StreamStatus>(_inspectorEntity))
             {

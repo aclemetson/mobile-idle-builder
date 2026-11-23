@@ -179,7 +179,7 @@ namespace MobileIdleBuilder.Tests
                 }
                 finally { Object.DestroyImmediate(go); }
             }
-            Assert.AreEqual(21, count, "17 molecules + 4 organic compounds (liquid hydrogen retired 2026-11-22)");
+            Assert.AreEqual(42, count, "38 molecules + 4 organic compounds (2026-11-23: life chemistry added 27, retired 6)");
         }
 
         [Test]
@@ -188,17 +188,6 @@ namespace MobileIdleBuilder.Tests
             string json = File.ReadAllText(Path.Combine(Application.dataPath, "Data", "game_data.json"));
             foreach (var id in BeltMoleculeData.Ids)
                 StringAssert.Contains($"\"id\": \"{id}\"", json, $"'{id}' is not an item in game_data.json");
-        }
-
-        [Test]
-        public void TheCatalystIsMetal()
-        {
-            var cat = BeltItemVisuals.BuildMolecule(null, "catalyst");
-            try
-            {
-                Assert.Greater(cat.transform.Find("Molecule").GetComponent<MeshRenderer>().sharedMaterial.GetFloat("_Metal"), 0.5f);
-            }
-            finally { Object.DestroyImmediate(cat); }
         }
 
         [Test]

@@ -52,7 +52,7 @@ namespace MobileIdleBuilder
             var rules = new ActiveWorldRules
             {
                 StreamTransport = (byte)(streamTransport ? 1 : 0),
-                SpeedMult = speed, OutputMult = output,
+                SpeedMult = speed, OutputMult = output, FlowMult = SpringFlowMultiplier(CurrentWorldId),
             };
             if (q.IsEmpty) em.CreateEntity(typeof(ActiveWorldRules));
             q.SetSingleton(rules);
@@ -69,6 +69,13 @@ namespace MobileIdleBuilder
             if (ups == null) return (1f, 1f);
             return (1f + ups.GetWorldEffect(UpgradeEffectType.WorldCraftSpeed, worldId),
                     1f + ups.GetWorldEffect(UpgradeEffectType.WorldOutput, worldId));
+        }
+
+        /// <summary>Spring flow multiplier in <paramref name="worldId"/> (Spring Pressure); 1 without the shop.</summary>
+        public static float SpringFlowMultiplier(string worldId)
+        {
+            var ups = PersistentUpgradeService.Instance;
+            return ups == null ? 1f : 1f + ups.GetWorldEffect(UpgradeEffectType.WorldStreamFlow, worldId);
         }
 
         /// <summary>Rewrites the live world's multipliers after a world-track purchase (no-op before ECS is up).</summary>

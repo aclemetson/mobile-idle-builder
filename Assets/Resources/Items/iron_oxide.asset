@@ -36,6 +36,6 @@ MonoBehaviour:
     the precursor ore for steel production. In the Foundry we synthesise it directly
     from pure iron and oxygen."
   codexUnlocked: 0
-  baseSellValue: 671000
+  baseSellValue: 669000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

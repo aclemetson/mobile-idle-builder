@@ -23,7 +23,7 @@ MonoBehaviour:
     quantity: 1
   - item: {fileID: 11400000, guid: d0fea56aa6644c4419ff2c9bd9a53418, type: 2}
     quantity: 1
-  - item: {fileID: 11400000, guid: 1ee670598b76c72439e7169644de8bb6, type: 2}
+  - item: {fileID: 11400000, guid: 497813380e2f1054aaa98239ce8b89bb, type: 2}
     quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 146e721aeca4bb2409be60a74bd7b43f, type: 2}

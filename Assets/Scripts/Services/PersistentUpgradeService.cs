@@ -147,6 +147,17 @@ namespace MobileIdleBuilder
                 UpgradeEffectType.WorldCraftSpeed, 0.10f, 5,
                 new[]{ 130, 180, 250, 340, 480 },
                 new[]{ ("fission_yield", 1) }, WorldGate.Physics),
+            new UpgradeDef(
+                "spring_pressure", "Spring Pressure",
+                "Chemistry Springs pour +20% more water per level, so more buildings run at full speed.",
+                UpgradeEffectType.WorldStreamFlow, 0.20f, 6,
+                new[]{ 89, 130, 180, 250, 340, 480 }, null, WorldGate.Chemistry),
+            new UpgradeDef(
+                "catalysis", "Catalysis",
+                "Chemistry buildings react 15% faster per level.",
+                UpgradeEffectType.WorldCraftSpeed, 0.15f, 8,
+                new[]{ 120, 170, 230, 320, 450, 630, 870, 1300 },
+                new[]{ ("spring_pressure", 1) }, WorldGate.Chemistry),
             // ── Idle collection ───────────────────────────────────────────────
             // A short 30 min base cap brings players back to collect; the first levels are cheap and have
             // no prerequisite so the first prestige (~50✦) buys the first four levels (2.5 h) straight away.
@@ -228,7 +239,8 @@ namespace MobileIdleBuilder
             int cur = GetLevel(id);
             if (cur >= def.maxLevel) return false;
             _levels[id] = cur + 1;
-            if (def.effectType == UpgradeEffectType.WorldCraftSpeed || def.effectType == UpgradeEffectType.WorldOutput)
+            if (def.effectType == UpgradeEffectType.WorldCraftSpeed || def.effectType == UpgradeEffectType.WorldOutput
+                || def.effectType == UpgradeEffectType.WorldStreamFlow)
                 WorldRules.RefreshWorldBonus();
             OnUpgradePurchased?.Invoke();
             return true;

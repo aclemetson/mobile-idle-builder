@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: amino_acids
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: amino_acids
+  displayName: Amino Acids
+  description: 'Amino Acids: Glycine, Alanine, Serine, Cysteine.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: d238da5e193f37444ba3e7afdba207e2, type: 2}
+  depthInTree: 14
+  block: chem_building_blocks
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 9480000
+  costPrestigeCurrency: 0
+  durationSeconds: 1500
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: d5116251558ce72429a913896cb1e11d, type: 2}
+  - {fileID: 11400000, guid: a9184878d4f5d71478f8524cafc82c44, type: 2}
+  - {fileID: 11400000, guid: 147d6ba4b2dabc443ae0528f54c70d9d, type: 2}
+  - {fileID: 11400000, guid: 98934b0a438967f479c0b24620da063c, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: cea6cc691cca36741821755deca17571, type: 2}
+  - {fileID: 11400000, guid: 75af1cd8f9fd77040a4dd41e12dd3b29, type: 2}
+  - {fileID: 11400000, guid: c2b9bfa475383f841be4845ee14d93c0, type: 2}
+  - {fileID: 11400000, guid: 658e6fe63f4814441af3f1f641c4916c, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 6091998ca4dbd32428135e92673ca2a6, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'The amino acid with sulfur: its bridges hold proteins in shape.'

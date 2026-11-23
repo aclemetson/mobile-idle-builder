@@ -1451,6 +1451,7 @@ namespace MobileIdleBuilder.Dev
             var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
             if (db?.blocks == null || db.blocks.Length == 0)
                 return "Error: no research blocks. Run MobileIdleBuilder > Import Game Data.";
+            var worldDb = Resources.Load<WorldDatabaseSO>("WorldDatabase");
             var sb = new StringBuilder("Research blocks (load with 'block load <n|id>'):\n");
             int n = 1;
             foreach (var b in System.Linq.Enumerable.OrderBy(db.blocks, b => b.order))
@@ -1461,8 +1462,10 @@ namespace MobileIdleBuilder.Dev
                 int ups = b.startPermanentUpgrades?.Length ?? 0;
                 sb.AppendLine($"  [{n++}] {b.id,-20} {b.displayName,-20} {b.targetHours,5:0.#}h  {research,2} research  " +
                               $"start: {b.startPrestigeCount} prestiges, {ups} upgrades, {b.startEntropy:N0}e" +
+                              $"  in {BlockStartPresets.BlockWorld(db, b, worldDb)?.displayName ?? "Physics"}" +
                               (captured ? "  [captured save point]" : ""));
             }
+            sb.AppendLine("A block in another world opens that world and starts you on its entry site; 'visit world <id>' enters a world at its tutorial.");
             return sb.ToString().TrimEnd();
         }
 

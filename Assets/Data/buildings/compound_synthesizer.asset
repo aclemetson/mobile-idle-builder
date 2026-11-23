@@ -36,8 +36,9 @@ MonoBehaviour:
   isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: f51cb0c71f77f97419f352abdfb70b19, type: 2}
+  - {fileID: 11400000, guid: b1062b840ab69a048912213d30b2f14d, type: 2}
   - {fileID: 11400000, guid: 881f1447bac3d084e9b4c6b0d5350cb3, type: 2}
+  - {fileID: 11400000, guid: 68e2ac9bc7adf9c41898ac0eaea123e0, type: 2}
   inputSlotCount: 1
   inputSlotLabels:
   - Stream
@@ -116,7 +117,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 3715d00d16193fd4bba40a31aa510d65, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

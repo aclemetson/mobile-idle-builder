@@ -707,7 +707,8 @@ namespace MobileIdleBuilder
                         ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f,
                     getItemSellValue,
                     getRecipeInfo,
-                    id => buildingLookup.TryGetValue(id, out var sp) && sp.building.isSpring ? sp.building.streamFlow : 0f,
+                    id => buildingLookup.TryGetValue(id, out var sp) && sp.building.isSpring
+                        ? sp.building.streamFlow * WorldRules.SpringFlowMultiplier(WorldRules.ActiveWorld(save)?.id) : 0f,
                     id => buildingLookup.TryGetValue(id, out var fd) ? fd.building.flowDraw : 0f,
                     speedMult,
                     DateTime.UtcNow.ToString("O"),

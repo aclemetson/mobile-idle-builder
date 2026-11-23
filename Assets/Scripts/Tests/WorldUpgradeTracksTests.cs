@@ -42,6 +42,41 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(WorldGate.Physics, d.world);
         }
 
+        [TestCase("spring_pressure", UpgradeEffectType.WorldStreamFlow)]
+        [TestCase("catalysis",       UpgradeEffectType.WorldCraftSpeed)]
+        public void ChemistryTracks_ApplyOnlyInChemistry(string id, UpgradeEffectType type)
+        {
+            var d = PersistentUpgradeService.FindDef(id);
+            Assert.IsNotNull(d, id);
+            Assert.AreEqual(type, d.effectType);
+            Assert.AreEqual(WorldGate.Chemistry, d.world);
+        }
+
+        [Test]
+        public void SpringFlow_CountsOnlyInChemistry()
+        {
+            var go  = new UnityEngine.GameObject("ups");
+            var ups = go.AddComponent<PersistentUpgradeService>();
+            try
+            {
+                ups.LoadFromSave(new List<string> { "spring_pressure:3" });
+                Assert.AreEqual(0.60f, ups.GetWorldEffect(UpgradeEffectType.WorldStreamFlow, WorldGate.Chemistry), 1e-5f);
+                Assert.AreEqual(0f, ups.GetWorldEffect(UpgradeEffectType.WorldStreamFlow, WorldGate.Physics), 1e-6f);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
+        [Test]
+        public void RetiredChemistryItems_AreRefundedOnLoad()
+        {
+            // Item Timeline phase 2: industrial products left Chemistry; a save holding them is paid their old price.
+            Assert.AreEqual(6300, ECSLoadBridge.RetiredItems[155], "table_salt");
+            Assert.AreEqual(21000, ECSLoadBridge.RetiredItems[162], "octane");
+            Assert.AreEqual("hydrocarbons", ResearchService.MergedResearch["organic_chemistry"]);
+            Assert.AreEqual("spall_gold", LegacyRecipeIds.Resolve("r_capture_gold"));
+            Assert.AreEqual("iron_convergence", LegacyRecipeIds.Resolve("fuse_iron"));
+        }
+
         [Test]
         public void WorldEffect_CountsOnlyTheMatchingWorld()
         {

@@ -25,6 +25,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
+  - {fileID: 11400000, guid: 8df3263ba828dd242a8e4db2896dc77f, type: 2}
+  - {fileID: 11400000, guid: 3dc8be268dcffa345a79b103092e1b09, type: 2}
+  - {fileID: 11400000, guid: 3715d00d16193fd4bba40a31aa510d65, type: 2}
+  - {fileID: 11400000, guid: 69f886f319651034f9b1ae2eb8053955, type: 2}
+  - {fileID: 11400000, guid: 89fc5926f2437fd4f9105e0a5fb6e653, type: 2}
+  - {fileID: 11400000, guid: 41439204a2889224fa55ada4505d65e8, type: 2}
+  - {fileID: 11400000, guid: 3207e21981d7768419c5d1b1a7793f31, type: 2}
+  - {fileID: 11400000, guid: d238da5e193f37444ba3e7afdba207e2, type: 2}
+  - {fileID: 11400000, guid: bae6289ff3f6496428e5ae371786f222, type: 2}
+  - {fileID: 11400000, guid: 6091998ca4dbd32428135e92673ca2a6, type: 2}
+  - {fileID: 11400000, guid: d52c36fb019a9ae43aedfbee7ae364d1, type: 2}
+  - {fileID: 11400000, guid: f73cdabf86fbef24f844683056d467a2, type: 2}
+  - {fileID: 11400000, guid: 0626b96c592cea04582f0afdd48df07f, type: 2}
+  - {fileID: 11400000, guid: 189d6e03b4e9d894ea5d855a0884a6de, type: 2}
+  - {fileID: 11400000, guid: ed637f9e67f419d45a9e785cfe8d41b6, type: 2}
+  - {fileID: 11400000, guid: 419cb6fafa94fd54eae5d89981cd3100, type: 2}
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
   - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
   - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
@@ -61,7 +77,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6199c33eeb368504aad500f9a8c4851b, type: 2}
   - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
-  - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
   - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
   - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
@@ -126,10 +141,10 @@ MonoBehaviour:
   - id: chemistry_entry
     displayName: First Chemistry
     order: 5
-    targetHours: 2
+    targetHours: 1.2
     anchor: 0
-    description: 'The Chemistry tasks are done: the lab, element harvesting and the
-      first molecules.'
+    description: 'The gate is open: hydrogen, oxygen, carbon and nitrogen into water,
+      CO2, methane and ammonia.'
     startPrestigeCount: 5
     startPrestigeCurrencyEarned: 900
     startEntropy: 1580000
@@ -170,9 +185,33 @@ MonoBehaviour:
     - field_cooldown:2
     - salvage_protocols:2
     startSites: []
+  - id: chem_small_molecules
+    displayName: Small Molecules
+    order: 7
+    targetHours: 6.8
+    anchor: 0
+    description: Syngas, formaldehyde, methanol and the prebiotic nitrogen of HCN
+      and urea.
+    startPrestigeCount: 5
+    startPrestigeCurrencyEarned: 900
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:2
+    - entropy_headstart:2
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    startSites: []
   - id: actinide_descent
     displayName: Actinide Descent
-    order: 7
+    order: 8
     targetHours: 9
     anchor: 0
     description: Mine Uranium and walk it down the decay chain to Lead and Thallium.
@@ -194,9 +233,58 @@ MonoBehaviour:
     - salvage_protocols:2
     - turnkey_builder:1
     startSites: []
+  - id: chem_organics
+    displayName: Organics
+    order: 9
+    targetHours: 8
+    anchor: 0
+    description: Ethylene, acetylene and the alcohols and acids built on them.
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: chem_sulfur_phosphorus
+    displayName: Sulfur & Phosphorus
+    order: 10
+    targetHours: 10
+    anchor: 0
+    description: 'The last two elements of life: sulfur vents and phosphate rock,
+      and their acids.'
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
   - id: metal_descent
     displayName: Metal Descent
-    order: 8
+    order: 11
     targetHours: 20
     anchor: 0
     description: Spallation, one element at a time, from Mercury down to Cobalt.
@@ -218,9 +306,34 @@ MonoBehaviour:
     - salvage_protocols:2
     - turnkey_builder:1
     startSites: []
+  - id: chem_building_blocks
+    displayName: Building Blocks of Life
+    order: 12
+    targetHours: 14
+    anchor: 0
+    description: Amino acids, sugars, nucleobases, a fatty acid and the salts cells
+      need.
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
   - id: iron_age
     displayName: Iron
-    order: 9
+    order: 13
     targetHours: 2
     anchor: 0
     description: 'Both ends meet: Iron from Manganese and Cobalt.'
@@ -242,9 +355,34 @@ MonoBehaviour:
     - salvage_protocols:2
     - turnkey_builder:1
     startSites: []
+  - id: chem_molecules_of_life
+    displayName: Molecules of Life
+    order: 14
+    targetHours: 12
+    anchor: 0
+    description: 'Peptides, nucleotides, membranes and ATP: everything Biology starts
+      from.'
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
   - id: chemistry_world
     displayName: Chemistry World
-    order: 10
+    order: 15
     targetHours: 20
     anchor: 0
     description: Molecules, the Chemistry world and engineered materials.
@@ -269,7 +407,7 @@ MonoBehaviour:
     - site_actinide_vein
   - id: biology_world
     displayName: Biology World
-    order: 11
+    order: 16
     targetHours: 40
     anchor: 0
     description: Biochemistry to cells, organisms and ecosystems.
@@ -295,7 +433,7 @@ MonoBehaviour:
     - site_actinide_vein
   - id: deep_physics
     displayName: Deep Physics
-    order: 12
+    order: 17
     targetHours: 40
     anchor: 0
     description: Fission, the transuranics and the superheavy elements.
@@ -321,7 +459,7 @@ MonoBehaviour:
     - site_actinide_vein
   - id: synthetic_frontier
     displayName: Synthetic Frontier
-    order: 13
+    order: 18
     targetHours: 30
     anchor: 0
     description: Elements past Uranium, components and the megastructure.
