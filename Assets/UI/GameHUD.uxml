@@ -91,7 +91,7 @@
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
                 <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
-                <ui:Button name="btn-pvp"          text="Tournament"   class="drawer-nav-btn" />
+                <ui:Button name="btn-tournament"   text="Tournament"   class="drawer-nav-btn" />
                 <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
@@ -304,28 +304,32 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
-        <!-- ═══ PVP PANEL ═══ -->
-        <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
+        <!-- ═══ TOURNAMENT PANEL (PvE: TournamentPanelController) ═══ -->
+        <ui:VisualElement name="pve-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label name="pvp-title" text="Tournament" class="panel-title" />
-                <ui:Button name="btn-close-pvp" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                <ui:Label name="pve-title" text="Tournament" class="panel-title" />
+                <ui:Label name="pve-league-badge" text="" class="pve-league-badge hidden" />
+                <ui:Button name="btn-close-pve" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 
-            <!-- Status section -->
-            <ui:VisualElement name="pvp-status-section" class="recipe-list">
-                <ui:Label name="pvp-state-label"    text="—"                    class="recipe-name" />
-                <ui:Label name="pvp-timer-label"    text=""                     class="recipe-inputs" />
-                <ui:Label name="pvp-lock-label"     text=""                     class="recipe-inputs" />
-                <ui:Button name="btn-enter-pvp"     text="Start tournament"     class="craft-btn" />
-                <ui:Label name="pvp-completed-label" text=""                    class="recipe-inputs" />
+            <!-- Status. The banner shows the last result (promoted / stayed / moved down). -->
+            <ui:VisualElement name="pve-status-section" class="recipe-list">
+                <ui:Label name="pve-banner"        text=""                 class="pve-banner hidden" />
+                <ui:Label name="pve-state-label"   text="—"                class="recipe-name" />
+                <ui:Label name="pve-timer-label"   text=""                 class="recipe-inputs" />
+                <ui:Label name="pve-info-label"    text=""                 class="recipe-inputs" />
+                <ui:Button name="btn-pve-start"    text="Start tournament" class="craft-btn" />
+                <ui:Label name="pve-result-label"  text=""                 class="recipe-inputs" />
+                <ui:Button name="btn-pve-claim"    text="Claim reward"     class="craft-btn hidden" />
             </ui:VisualElement>
 
             <!-- Leaderboard section -->
-            <ui:VisualElement name="pvp-leaderboard-section" class="panel-header">
+            <ui:VisualElement name="pve-leaderboard-section" class="panel-header">
                 <ui:Label text="Leaderboard" class="panel-title" />
-                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="craft-btn panel-header-action" />
+                <ui:Label name="pve-your-rank" text="" class="pve-your-rank" />
+                <ui:Button name="btn-pve-refresh" text="Refresh" class="craft-btn panel-header-action" />
             </ui:VisualElement>
-            <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
+            <ui:ScrollView name="pve-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>

@@ -57,7 +57,7 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _pvpPanel, _placementOverlay,
+                              _achievementsPanel, _tournamentPanel, _placementOverlay,
                               _shopPanel, _settingsPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
         private VisualElement[] _allPanels;
 
@@ -459,7 +459,7 @@ namespace MobileIdleBuilder
             _megastructurePanel = root.Q("megastructure-panel");
             _rewardsPanel      = root.Q("rewards-panel");
             _achievementsPanel = root.Q("achievements-panel");
-            _pvpPanel          = root.Q("pvp-panel");
+            _tournamentPanel          = root.Q("pve-panel");
             _prestigePanel     = root.Q("prestige-panel");
             _shopPanel         = root.Q("shop-panel");
             _settingsPanel     = root.Q("settings-panel");
@@ -470,7 +470,7 @@ namespace MobileIdleBuilder
             _allPanels = new[]
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
-                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _rewardsPanel, _achievementsPanel, _pvpPanel, _prestigePanel,
+                _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _rewardsPanel, _achievementsPanel, _tournamentPanel, _prestigePanel,
                 _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
             };
 
@@ -533,7 +533,7 @@ namespace MobileIdleBuilder
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)
             _namePrompt?.Init(root, this);  // "Choose your name" card (PvE leaderboards): after the tutorial + Settings
-            _tournament?.Init(root, this);  // Tournament panel (pvp-panel): status, join, leaderboard
+            _tournament?.Init(root, this);  // Tournament panel (pve-panel): status, join, leaderboard, rewards
             InitReminders(root);            // red dots: achievements to claim (drawer row, its tabs, the ≡ handle)
 
             // Tooltip — inner element inside "tooltip-instance" TemplateContainer
@@ -584,7 +584,7 @@ namespace MobileIdleBuilder
             };
             root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
             root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
-            root.Q<Button>("btn-pvp").clicked          += () => TryOpenPanel(OpenTournamentPanel);
+            root.Q<Button>("btn-tournament").clicked   += () => TryOpenPanel(OpenTournamentPanel);
             root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
 
             // Top bar
@@ -612,7 +612,7 @@ namespace MobileIdleBuilder
             var btnCloseRewards = root.Q<Button>("btn-close-rewards");
             if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
-            root.Q<Button>("btn-close-pvp").clicked              += () => SetElementVisible(_pvpPanel,          false);
+            root.Q<Button>("btn-close-pve").clicked              += () => SetElementVisible(_tournamentPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
             root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
             root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
@@ -1299,7 +1299,7 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyFeatureFlagGates(VisualElement root)
         {
-            if (!FeatureFlags.PveEnabled)         SetElementVisible(root.Q<Button>("btn-pvp"),   false);
+            if (!FeatureFlags.PveEnabled)         SetElementVisible(root.Q<Button>("btn-tournament"), false);
             if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
         }
 
@@ -1449,7 +1449,7 @@ namespace MobileIdleBuilder
         private void OnAchievementPeriodReset() => OnAchievementUnlocked(null);
 
         // ============================================================
-        // Tournament panel (PvE; TournamentPanelController owns pvp-panel)
+        // Tournament panel (PvE; TournamentPanelController owns pve-panel)
         // ============================================================
 
         private void OpenTournamentPanel()

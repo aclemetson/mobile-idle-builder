@@ -119,6 +119,42 @@ namespace MobileIdleBuilder
         public static bool ShouldSendPending(TournamentSaveData t, DateTime nowUtc, int prestigeCount) =>
             HasPending(t) && !InRun(t, nowUtc) && !PrestigePending(t, prestigeCount);
 
+        // ── Rewards ──────────────────────────────────────────────────────
+
+        public const int ClaimedWeeksKept = 20;
+
+        /// <summary>This save already received the reward for <paramref name="week"/>.</summary>
+        public static bool RewardApplied(SaveData save, string week) =>
+            save?.pveClaimedWeeks != null && !string.IsNullOrEmpty(week) && save.pveClaimedWeeks.Contains(week);
+
+        /// <summary>
+        /// Applies a tournament reward to the save once: crystals, then stars drawn from
+        /// <paramref name="starPool"/> (discovered items), and records the week. Returns where each star landed;
+        /// empty (and nothing changed) when the week was already applied.
+        /// </summary>
+        public static System.Collections.Generic.List<string> ApplyReward(SaveData save, PveReward reward,
+            System.Collections.Generic.IReadOnlyList<string> starPool, Random rng)
+        {
+            var landed = new System.Collections.Generic.List<string>();
+            if (save == null || reward == null || RewardApplied(save, reward.week)) return landed;
+            if (reward.crystals > 0) save.paidCurrency += reward.crystals;
+            if (reward.stars > 0) landed = ItemStars.Grant(save, reward.stars, starPool, rng);
+            save.pveClaimedWeeks ??= new System.Collections.Generic.List<string>();
+            save.pveClaimedWeeks.Add(reward.week);
+            if (save.pveClaimedWeeks.Count > ClaimedWeeksKept)
+                save.pveClaimedWeeks.RemoveRange(0, save.pveClaimedWeeks.Count - ClaimedWeeksKept);
+            return landed;
+        }
+
+        /// <summary>The first reward still on the server that this save hasn't applied yet, or null.</summary>
+        public static PveReward NextUnappliedReward(PveStatusResponse status, SaveData save)
+        {
+            var list = status?.profile?.pendingRewards;
+            if (list == null) return null;
+            foreach (var r in list) if (r != null && !RewardApplied(save, r.week)) return r;
+            return null;
+        }
+
         /// <summary>Panel state from the flag, the unlock, the last server status and the local copy.</summary>
         public static TournamentPanelState PanelState(bool enabled, bool unlocked, PveStatusResponse status,
                                                       TournamentSaveData t, DateTime nowUtc)

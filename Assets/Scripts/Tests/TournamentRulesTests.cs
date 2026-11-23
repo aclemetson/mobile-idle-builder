@@ -213,6 +213,78 @@ namespace MobileIdleBuilder.Tests
             StringAssert.Contains("player name", TournamentRules.ErrorText(PveErrors.NameRequired));
         }
 
+        // ── Rewards (phase 5) ─────────────────────────────────────────────────
+
+        static PveReward Reward(string week = "2026-11-27", int crystals = 150, int stars = 5) =>
+            new PveReward { week = week, league = "bronze", rank = 1, size = 5, crystals = crystals, stars = stars };
+
+        [Test]
+        public void ApplyReward_GivesCrystalsAndStars_Once()
+        {
+            var save = new SaveData { paidCurrency = 10 };
+            var pool = new[] { "carbon", "oxygen" };
+            var landed = TournamentRules.ApplyReward(save, Reward(), pool, new System.Random(3));
+            Assert.AreEqual(160, save.paidCurrency);
+            Assert.AreEqual(5, landed.Count);
+            Assert.AreEqual(5, ItemStars.Total(save));
+            Assert.IsTrue(TournamentRules.RewardApplied(save, "2026-11-27"));
+
+            var again = TournamentRules.ApplyReward(save, Reward(), pool, new System.Random(3));
+            Assert.AreEqual(0, again.Count, "a retried claim never pays twice");
+            Assert.AreEqual(160, save.paidCurrency);
+            Assert.AreEqual(5, ItemStars.Total(save));
+        }
+
+        [Test]
+        public void ApplyReward_KeepsOnlyTheRecentWeeks()
+        {
+            var save = new SaveData();
+            for (int i = 0; i < TournamentRules.ClaimedWeeksKept + 5; i++)
+                TournamentRules.ApplyReward(save, Reward(week: $"w{i:00}", stars: 0), new string[0], new System.Random(1));
+            Assert.AreEqual(TournamentRules.ClaimedWeeksKept, save.pveClaimedWeeks.Count);
+            Assert.AreEqual($"w{TournamentRules.ClaimedWeeksKept + 4:00}", save.pveClaimedWeeks[save.pveClaimedWeeks.Count - 1]);
+        }
+
+        [Test]
+        public void NextUnappliedReward_SkipsWeeksThisSaveAlreadyHas()
+        {
+            var save = new SaveData();
+            save.pveClaimedWeeks.Add("2026-11-20");
+            var status = new PveStatusResponse { profile = new PveProfile() };
+            status.profile.pendingRewards.Add(Reward(week: "2026-11-20"));
+            status.profile.pendingRewards.Add(Reward(week: "2026-11-27"));
+            Assert.AreEqual("2026-11-27", TournamentRules.NextUnappliedReward(status, save).week);
+            save.pveClaimedWeeks.Add("2026-11-27");
+            Assert.IsNull(TournamentRules.NextUnappliedReward(status, save));
+        }
+
+        [Test]
+        public void Text_BannerClaimRankAndReveal()
+        {
+            var s = Status("Results", joined: true, settled: true);
+            s.profile.history.Add(new PveHistoryEntry { week = "2026-11-27", rank = 1, size = 5, result = "promoted", newLeague = "silver" });
+            Assert.AreEqual(("Promoted to Silver!", "promoted"), TournamentPanelText.Banner(s, Cfg(), TournamentPanelState.Results));
+            Assert.AreEqual(("", ""), TournamentPanelText.Banner(s, Cfg(), TournamentPanelState.Running), "no banner mid-run");
+            s.profile.history[0].result = "demoted"; s.profile.history[0].newLeague = "bronze";
+            Assert.AreEqual(("Moved down to Bronze", "demoted"), TournamentPanelText.Banner(s, Cfg(), TournamentPanelState.Waiting));
+
+            Assert.AreEqual("Claim 150 ◆ + 5 ★", TournamentPanelText.ClaimButtonText(Reward()));
+            Assert.AreEqual("Claim 3 ★", TournamentPanelText.ClaimButtonText(Reward(crystals: 0, stars: 3)));
+
+            var board = new PveBoardResponse();
+            board.rows.Add(new PveBoardRow { rank = 1, name = "a" });
+            board.rows.Add(new PveBoardRow { rank = 2, name = "me", you = true });
+            Assert.AreEqual("You: #2 of 2", TournamentPanelText.YourRank(board, TournamentPanelState.Running));
+            Assert.AreEqual("", TournamentPanelText.YourRank(board, TournamentPanelState.Open));
+
+            string reveal = TournamentPanelText.RevealText(Reward(), new[] { "carbon", "oxygen", "carbon" },
+                id => id == "carbon" ? "Carbon" : "Oxygen", id => id == "carbon" ? 5 : 1, Cfg());
+            StringAssert.StartsWith("Rank 1 of 5 in Bronze.", reveal);
+            StringAssert.Contains("+150 ◆", reveal);
+            StringAssert.Contains("★×2 Carbon: now ★5 (+100% value)", reveal);
+            StringAssert.Contains("★ Oxygen: now ★1 (+20% value)", reveal);
+        }
+
         // ── Save + HUD ────────────────────────────────────────────────────────
 
         [Test]
@@ -223,6 +295,8 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(save.tournament);
             Assert.AreEqual(-1, save.tournament.prestigeCountAtJoin);
             Assert.AreEqual(-1, save.tournament.pendingT, "nothing kept");
+            Assert.IsNotNull(save.pveClaimedWeeks);
+            Assert.AreEqual(0, save.pveClaimedWeeks.Count);
             Assert.IsFalse(TournamentRules.InRun(save.tournament, Start));
         }
 
@@ -248,11 +322,13 @@ namespace MobileIdleBuilder.Tests
         public void Hud_HasTheTournamentPanelElements()
         {
             var root = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/GameHUD.uxml").Instantiate();
-            Assert.AreEqual("Tournament", root.Q<Button>("btn-pvp").text);
-            foreach (var n in new[] { "pvp-panel", "pvp-state-label", "pvp-timer-label", "pvp-lock-label", "pvp-completed-label", "pvp-leaderboard-list" })
+            Assert.AreEqual("Tournament", root.Q<Button>("btn-tournament").text);
+            foreach (var n in new[] { "pve-panel", "pve-league-badge", "pve-banner", "pve-state-label", "pve-timer-label", "pve-info-label", "pve-result-label", "pve-your-rank", "pve-leaderboard-list" })
                 Assert.IsNotNull(root.Q(n), n);
-            Assert.IsNotNull(root.Q<Button>("btn-enter-pvp"));
-            Assert.IsNotNull(root.Q<Button>("btn-refresh-leaderboard"));
+            Assert.IsNotNull(root.Q<Button>("btn-pve-start"));
+            Assert.IsNotNull(root.Q<Button>("btn-pve-claim"));
+            Assert.IsNull(root.Q("pvp-panel"), "renamed to pve-panel");
+            Assert.IsNotNull(root.Q<Button>("btn-pve-refresh"));
         }
 
         [Test]
@@ -387,6 +463,53 @@ namespace MobileIdleBuilder.Tests
             readonly IPveTransport _inner;
             public ArgsCapture(IPveTransport inner) => _inner = inner;
             public Task<string> Call(string function, Dictionary<string, object> args) { Last = args; return _inner.Call(function, args); }
+        }
+
+        static string StatusWithReward(string week) =>
+            "{\"week\":\"2026-12-04\",\"phase\":\"Entry\",\"profile\":{\"league\":\"silver\",\"pendingRewards\":[" +
+            $"{{\"week\":\"{week}\",\"league\":\"bronze\",\"rank\":1,\"size\":5,\"crystals\":150,\"stars\":0}}]}}}}";
+
+        [Test]
+        public void Claim_AppliesLocallyFirst_ThenClearsOnTheServer()
+        {
+            var svc = Spawn(prestigeCount: 3);
+            var save = SaveManager.Instance.Current;
+            long before = save.paidCurrency;
+            var fake = new FakeTransport();
+            fake.Replies["Claim"] = "{\"reward\":{\"week\":\"2026-11-27\"}}";
+            fake.Replies["Status"] = "{\"week\":\"2026-12-04\",\"phase\":\"Entry\",\"profile\":{\"league\":\"silver\"}}";
+            PveApi.Transport = fake;
+
+            var outcome = svc.ClaimAsync(Reward(stars: 0)).GetAwaiter().GetResult();
+            Assert.IsTrue(outcome.applied);
+            Assert.AreEqual(before + 150, save.paidCurrency);
+            Assert.IsTrue(TournamentRules.RewardApplied(save, "2026-11-27"));
+            CollectionAssert.Contains(fake.Calls, "Claim");
+        }
+
+        [Test]
+        public void Claim_ServerStepFails_RewardKept_RetriedLaterWithoutPayingTwice()
+        {
+            var svc = Spawn(prestigeCount: 3);
+            var save = SaveManager.Instance.Current;
+            long before = save.paidCurrency;
+            var fake = new FakeTransport();
+            fake.Replies["Claim"] = "{\"error\":\"network:offline\"}";
+            fake.Replies["Status"] = StatusWithReward("2026-11-27");
+            PveApi.Transport = fake;
+
+            var outcome = svc.ClaimAsync(Reward(stars: 0)).GetAwaiter().GetResult();
+            Assert.IsTrue(outcome.applied);
+            StringAssert.StartsWith("network:", outcome.serverError);
+            Assert.AreEqual(before + 150, save.paidCurrency);
+
+            // Next refresh: the server still lists it; the device only clears it there.
+            fake.Calls.Clear();
+            fake.Replies["Claim"] = "{\"reward\":{\"week\":\"2026-11-27\"}}";
+            svc.RefreshAsync().GetAwaiter().GetResult();
+            CollectionAssert.Contains(fake.Calls, "Claim");
+            Assert.AreEqual(before + 150, save.paidCurrency, "never paid twice");
+            Assert.IsNull(TournamentRules.NextUnappliedReward(svc.LastStatus, save));
         }
 
         [Test]
