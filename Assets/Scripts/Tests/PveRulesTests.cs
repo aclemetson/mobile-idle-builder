@@ -68,7 +68,7 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(PveRules.CanJoin(lastJoin));
             Assert.LessOrEqual(lastJoin.AddSeconds(PveRules.DaySeconds + PveRules.FinalGraceSeconds),
                                PveRules.SettleAfter(PveRules.WeekId(lastJoin)),
-                "the latest run's final snapshot (with grace) lands before settlement
+                "the latest run's final snapshot (with grace) lands before settlement");
         }
 
         [Test]
