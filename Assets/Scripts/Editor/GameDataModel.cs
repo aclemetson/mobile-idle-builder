@@ -104,6 +104,7 @@ namespace MobileIdleBuilder.Editor
         public float  building_purchase_multiplier_t2       = 1.4f;
         public float  building_purchase_multiplier_t3_plus  = 1.3f;
         public string[] name_filter_patterns             = Array.Empty<string>();
+        public PveConfig pve;
     }
 
     [Serializable]
