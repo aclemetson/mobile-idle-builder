@@ -1,4 +1,5 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -341,6 +342,37 @@ namespace MobileIdleBuilder.Dev
             TelemetryService.Instance?.RecordDevConsoleUsed(command);
         }
 
+        // ── PvE helpers ───────────────────────────────────────────────────────
+
+        /// <summary>Starts a PvE call and appends its formatted result to the log when it returns.</summary>
+        private string RunPve<T>(System.Threading.Tasks.Task<T> call, Func<T, string> format)
+        {
+            AwaitPve(call, format);
+            return "PvE request sent...";
+        }
+
+        private async void AwaitPve<T>(System.Threading.Tasks.Task<T> call, Func<T, string> format)
+        {
+            string text;
+            try { text = format(await call); }
+            catch (Exception e) { text = $"PvE error: {e.Message}"; }
+            if (this != null) AppendLog(text);
+        }
+
+        private static string FormatPveStatus(PveStatusResponse r)
+        {
+            if (!string.IsNullOrEmpty(r.error)) return $"PvE: {r.error}";
+            var p = r.profile;
+            var sb = new StringBuilder($"PvE week {r.week}: {r.phase} until {r.phaseEndsUtc} (server {r.serverNowUtc})\n");
+            sb.AppendLine($"  league {p?.league}, last week {p?.lastWeek ?? "-"}, joined this week {r.joinedThisWeek}");
+            if (!string.IsNullOrEmpty(r.startUtc)) sb.AppendLine($"  run {r.startUtc} -> {r.runEndsUtc}, bracket {r.bracketId}{(r.bracketSettled ? " (settled)" : "")}");
+            if (p?.pendingRewards != null)
+                foreach (var w in p.pendingRewards) sb.AppendLine($"  reward {w.week}: rank {w.rank}/{w.size}, {w.crystals} crystals, {w.stars} stars");
+            if (p?.history != null)
+                foreach (var h in p.history) sb.AppendLine($"  {h.week} {h.league}: {h.rank}/{h.size} {h.result} -> {h.newLeague}");
+            return sb.ToString();
+        }
+
         // ── Log ───────────────────────────────────────────────────────────────
 
         private void AppendLog(string text, string cssClass = null)
@@ -437,6 +469,50 @@ namespace MobileIdleBuilder.Dev
                     if (card == null) return "Error: HUD not ready.";
                     card.OpenFromSettings();
                     return "Name card shown.";
+                });
+
+            // ── PvE backend (phase 3; docs/runbooks/pve-backend-setup.md) ────
+            // Results arrive asynchronously and are appended to the log. Using the console marks the save as a
+            // dev save, so these joins land in the separate dev brackets.
+            _registry.Register("pve status", "PvE server status: week, phase, league, joined, pending rewards",
+                _ => RunPve(PveApi.Status(), FormatPveStatus));
+
+            _registry.Register("pve join", "Join this week's tournament on the server (no prestige; phase 4 adds that)",
+                _ => RunPve(PveApi.Join(SaveManager.Instance?.Current?.devConsoleUsed ?? true), FormatPveStatus));
+
+            _registry.Register("pve snap <netWorth> <rate>", "Send a PvE snapshot (net worth, idle net worth/s)",
+                args =>
+                {
+                    if (!double.TryParse(args[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double nw)
+                        || !double.TryParse(args[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double rate))
+                        return "Error: numbers expected, e.g. pve snap 125000 12.5";
+                    return RunPve(PveApi.Snapshot(nw, rate, 1800),
+                        r => string.IsNullOrEmpty(r.error) ? $"Snapshot accepted at t={r.t}s" : $"Snapshot: {r.error} (t={r.t}s)");
+                });
+
+            _registry.Register("pve board", "Show your PvE bracket at your elapsed time (~ = projected)",
+                _ => RunPve(PveApi.Board(), r =>
+                {
+                    if (!string.IsNullOrEmpty(r.error)) return $"Board: {r.error}";
+                    var sb = new StringBuilder($"Week {r.week} {r.league}, at t={r.viewerT}s{(r.settled ? " (final)" : "")}\n");
+                    foreach (var row in r.rows)
+                        sb.AppendLine($"  {row.rank,3}. {(row.you ? ">" : " ")}{row.name,-16} {(row.projected ? "~" : " ")}{row.value:N0}  ({row.elapsed / 3600f:0.0}h played)");
+                    return sb.ToString();
+                }));
+
+            _registry.Register("pve claim <week>", "Claim a pending PvE reward (server side only; phase 5 applies it)",
+                args => RunPve(PveApi.Claim(args[0]), r =>
+                    string.IsNullOrEmpty(r.error) ? $"Claimed {r.reward.week}: rank {r.reward.rank}/{r.reward.size}, {r.reward.crystals} crystals, {r.reward.stars} stars" : $"Claim: {r.error}"));
+
+            _registry.Register("pve time <iso|off>", "Send a fake server time (needs pve_settings.allowDebugTime on the server)",
+                args =>
+                {
+                    if (args[0] == "off") { PveApi.DebugNowUtc = null; return "PvE debug time off."; }
+                    if (!DateTime.TryParse(args[0], System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var t))
+                        return "Error: ISO time expected, e.g. pve time 2026-11-27T10:00:00Z";
+                    PveApi.DebugNowUtc = t;
+                    return $"PvE debug time {PveRules.Iso(t)} ({PveRules.Phase(t)}, week {PveRules.WeekId(t)}).";
                 });
 
             // ── tournament item stars (PvE phase 2) ──────────────────────────

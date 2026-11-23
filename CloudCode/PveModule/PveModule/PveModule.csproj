@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PvE tournaments backend (UGS Cloud Code C# module). See docs/runbooks/pve-backend-setup.md.
+       The rules are shared with the Unity client: PveRules.cs is compiled into both. -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>9.0</LangVersion>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>MobileIdleBuilder.PveModule</RootNamespace>
+    <AssemblyName>PveModule</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.9" />
+    <PackageReference Include="Com.Unity.Services.CloudCode.Apis" Version="0.0.27" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\Assets\Scripts\PvE\PveRules.cs" Link="Shared\PveRules.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\PvE\PveModels.cs" Link="Shared\PveModels.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\Services\PlayerNameRules.cs" Link="Shared\PlayerNameRules.cs" />
+    <EmbeddedResource Include="..\..\..\Assets\Data\game_data.json" LogicalName="game_data.json" Link="Shared\game_data.json" />
+  </ItemGroup>
+
+</Project>

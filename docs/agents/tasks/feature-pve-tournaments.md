@@ -1,6 +1,6 @@
 # Feature: PvE Tournaments (weekly 24h league runs)
 
-**Status:** Phase 1 (nickname) done, PR #492 (`feat/pve-1-nickname`). Phase 2 (item stars) done on `feat/pve-2-item-stars`, stacked on it (2026-11-23). Phases 3-6 pending (3 needs the UGS dashboard set up).
+**Status:** Phase 1 (nickname) PR #492; Phase 2 (item stars) PR #493 (stacked); Phase 3 (backend) done on `feat/pve-3-backend`, stacked on Phase 2 (2026-11-23), deploy + dashboard setup per `docs/runbooks/pve-backend-setup.md`. Phases 4-6 pending.
 **Size:** XL (6 phases, one PR each, stacked where they share files).
 **Required reading:** `architecture.md`, `save-system.md`, `feature-flags.md`, `ui-toolkit.md`, `economy-balance.md` (currencies), `analytics.md` (snapshot loop). Source design: `docs/pve.txt`.
 
@@ -24,7 +24,7 @@ The six side items at the bottom of `docs/pve.txt` are tracked as issues #486-#4
 
 - **Entry window:** Friday 00:00 to Saturday 00:00. A player can join at any moment in the window.
 - **Run:** 24h from the player's own join time. The latest possible finish is Sunday 00:00.
-- **Settlement:** Sunday 00:00. Every run is over by then, so ranks are final. Promotion, demotion and rewards are computed, and players claim on their next login.
+- **Settlement:** Sunday 00:10 at the earliest (00:00 + the final-snapshot grace); the schedule runs at 00:15. Every run is over by then, so ranks are final. Promotion, demotion and rewards are computed, and players claim on their next login.
 - **Week id:** ISO date of the window's Friday, e.g. `2026-11-27`.
 - Every time decision goes through **server time**: the Cloud Code clock on the backend, `ServerClock` on the client (the same pattern achievements use). Never the device clock or `GameClock` (dev builds can fast-forward `GameClock`). The playtest harness gets a server-side override instead (Phase 3).
 
@@ -32,8 +32,8 @@ The six side items at the bottom of `docs/pve.txt` are tracked as issues #486-#4
 
 Answer to "does Unity offer temporary per-league storage": yes.
 - **Cloud Save Custom Items** are game-owned records that clients cannot write directly. Each bracket is one custom item.
-- **Cloud Code** (JavaScript scripts, deployed from the Editor with the `com.unity.services.deployment` window) is the only writer.
-- **Triggers + Scheduler** run settlement on a cron.
+- **Cloud Code** is the only writer. As built (phase 3) it is a **C# module** (`CloudCode/PveModule`, deployed from the Editor's Deployment window via `Assets/CloudCode/PveModule.ccmr`), not JS scripts: JS scripts cannot share code, while the module links the same `PveRules.cs` / `PveModels.cs` / `PlayerNameRules.cs` the client compiles, and embeds game_data.json for the league table and name filter.
+- **Triggers + Scheduler** run settlement weekly (Sunday 00:15 UTC; `SettleAfter` = Sunday 00:00 + the 10 min final-snapshot grace).
 
 UGS Leaderboards was rejected because it keeps only the current score, with no history to read "as of" an elapsed time.
 
@@ -109,10 +109,16 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - Tests: multiplier math, grant draws only discovered items, prestige keeps stars, net worth/sink/idle chain values scale.
 - **Done 2026-11-23** (`ItemStars`, `ItemStarsTests`). As built: one multiplier, `ItemStars.Multiplier(itemId)`, applied at `SurplusSale.DemonPrice`, `EntropySinkSystem`, `NetWorthSystem` (inventory), `GridSaveService` (idle pricing) and `MaxwellsDemonController` (via `ItemStars.StarredBase`); `RecipeSO`/`RecipeDatabase` value totals and byproduct escape entropy stay on base price. Badge text "★3 +60%" on the Recipes worth line and the inspector's first value line (`HUDController.StarBadge`). Dev console: `stars grant <n>`, `stars list`, `stars clear`.
 
-### Phase 3: Backend scripts
-- `Assets/CloudCode/pve_*.js` as above, plus `Assets/CloudCode/pve_core.js` (pure functions: window math, value-at-t, settle ranking) mirrored by a C# `PveRules` for unit tests and client display. Both get the same fixture tests (`PveRulesTests` in C#; the JS uses the identical fixture JSON).
-- Server time override for testing: `pve_status`/`pve_join` accept `debugNow` only when the Remote Config key `pve.debug_time` is on (off in production).
-- Manual setup (runbook `docs/runbooks/pve-backend-setup.md`): enable Cloud Code + Cloud Save in the dashboard, deploy scripts from the Deployment window, create the Sunday 00:00 UTC schedule + trigger for `pve_settle`, set Remote Config keys.
+### Phase 3: Backend (done 2026-11-23, as built)
+- C# Cloud Code module `PveModule` (`CloudCode/PveModule/PveModule/`): functions `Status`, `Join(dev)`, `Snapshot(netWorth, rate, cap)`, `Board`, `Claim(week)`, `SettleWeek(week?)` (refuses player calls; the Sunday schedule's trigger calls it). Each returns a JSON string of a shared response model (`Assets/Scripts/PvE/PveModels.cs`), parsed on the client with JsonUtility.
+- Shared pure rules `Assets/Scripts/PvE/PveRules.cs` (week/phase/window, `AddSnap` validation + 10-min thinning, `ValueAt`, `Rank`, `Moves`, `NextLeague`, `RewardFor`, ids), compiled into both the game and the module.
+- Storage changed from the table above: a bracket is one private custom item with a `meta` key plus **one key per member** (`m_<playerId>`), so snapshot writes never contend; joins take a seat through the week index `pve_<week>/index`. Every read-modify-write uses Cloud Save write locks with retry. Dev-console saves get `_dev` brackets.
+- Config: `game_config.pve` (run hours, test bracket size, snapshot bucket, the six leagues with sizes, promote/demote and reward bands; first-pass rewards, revisit in phase 5) → `GameConfigSO.pve`; the module embeds game_data.json.
+- Test switches live in the private custom item `pve_settings/settings` (`smallBrackets`, `allowDebugTime`), not Remote Config. `Join` re-checks the UGS player name with the same filter; no name means `name_required`.
+- Lazy settlement: `Status` settles the caller's finished bracket if the schedule hasn't yet. Settlement is idempotent (history per week, `meta.settled`).
+- Client: `PveApi` (`IPveTransport`, Cloud Code `CallModuleEndpointAsync<string>`), dev console `pve status|join|snap|board|claim|time`. Packages `com.unity.services.cloudcode` 2.10.4 + `com.unity.services.deployment` 1.7.2 (the newest that run on 6000.3 with Core 1.16).
+- Tests: Unity `PveRulesTests`; .NET `CloudCode/PveModule/PveModule.Tests` (embedded config, JSON field round trip).
+- Manual setup: `docs/runbooks/pve-backend-setup.md` (enable Cloud Code, deploy, schedule + trigger, `pve_settings`).
 
 ### Phase 4: Tournament run
 - `TournamentService` (self-bootstrapped like `WorldService`) replaces `PVPService`; delete `PVPSystem`, `PVPService`, `PVPSystemTests` and the HUD PvP wiring. `FeatureFlags`: `pve.enabled` (default **true**, kill-switch) replaces `pvp.enabled`.
