@@ -4,7 +4,7 @@ Externally-controlled toggles that change behavior **without an app-store rebuil
 environment (dev vs prod). Use these to ship a feature hidden, kill a misbehaving system, or stage a
 rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/Cloud Save, so no new vendor.
 
-> Verified against: `feature/feature-flags`, 2026-06-21.
+> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23.
 
 ## How it works
 
@@ -38,7 +38,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 
 | Key | Type | Default | Gates |
 |---|---|---|---|
-| `pvp.enabled` | bool | `false` | `PVPService.RefreshState` forces Locked; HUD hides `btn-pvp`. Default off — backend not live. |
+| `pve.enabled` | bool | `true` | Weekly PvE tournaments (kill-switch, 2026-11-23). Off: HUD hides `btn-pvp` (the Tournament drawer button), `TournamentService` sends no snapshots and the panel shows Disabled. Replaced `pvp.enabled` (the dead PvP stub). |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
 | `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/runbooks/levelplay-ads-setup.md`). |
 | `ads.test_mode` | bool | `true` | **Dev builds only** (`FeatureFlags.IsDevBuild`: Editor or `DEV_ENVIRONMENT`; production builds ignore the key). On: `AdService.CreateProvider` picks `TestAdProvider`, so no ad network runs and Watch opens the "Test Ad" card (`TestAdOverlayController`, `test-ad-modal` in `GameHUD.uxml`): Finish grants the reward, Skip/back grants nothing. Read once at startup, so a change applies on the next launch. Set `true` in the development environment; never create it in production. |
@@ -124,7 +124,7 @@ Candidates surfaced by the codebase audit — add when the feature lands:
 - `events.enabled` / seasonal content — extends `DailyEventService`.
 - `megastructure.enabled`, `multisite.enabled`, `achievements.enabled` — kill-switches for shipped systems.
 - `managers.rarity.enabled` — gacha/rarity layer over `ManagerService`.
-- PVP expansion behind sub-flags: friend leaderboards, spectating.
+- Tournament expansion behind sub-flags: friend leaderboards, spectating.
 - **Tuning** (use `GetFloat`/`GetInt`): `idle.collectionRate`, `idle.capSeconds`, `prestige.base`, IAP tier
   values — would read remote overrides against `GameConfigSO` / `PremiumShopCalculator` defaults.
 

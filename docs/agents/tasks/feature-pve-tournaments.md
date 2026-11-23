@@ -1,6 +1,6 @@
 # Feature: PvE Tournaments (weekly 24h league runs)
 
-**Status:** Phase 1 (nickname) PR #492; Phase 2 (item stars) PR #493 (stacked); Phase 3 (backend) done on `feat/pve-3-backend`, stacked on Phase 2 (2026-11-23), deploy + dashboard setup per `docs/runbooks/pve-backend-setup.md`. Phases 4-6 pending.
+**Status:** Phases 1-3 merged into `integration/2026-11-23` (PRs #492, #493, #494; module deployed). Phase 4 (tournament run) done on `feat/pve-4-run` (2026-11-23). Phases 5-6 pending.
 **Size:** XL (6 phases, one PR each, stacked where they share files).
 **Required reading:** `architecture.md`, `save-system.md`, `feature-flags.md`, `ui-toolkit.md`, `economy-balance.md` (currencies), `analytics.md` (snapshot loop). Source design: `docs/pve.txt`.
 
@@ -121,6 +121,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - Manual setup: `docs/runbooks/pve-backend-setup.md` (enable Cloud Code, deploy, schedule + trigger, `pve_settings`).
 
 ### Phase 4: Tournament run
+- **Done 2026-11-23 (as built):** `TournamentService` + pure `TournamentRules` (`Assets/Scripts/PvE/`), `TournamentPanelController` on the existing `pvp-panel` (status, timer, Start, leaderboard with promote/demote zones; the server's `Board` now returns the scaled `promote`/`demote`). Join is always allowed (even before the prestige wall; the confirm card shows the prestige currency gained). The join's prestige is tracked by `prestigeCountAtJoin` and finished on the next load if the app died in between; no snapshot before it. Unlock = the Chemistry world tutorial done (`TournamentRules.IsUnlocked`). Dev console: `tournament status|unlock|forget`. `PVPService`/`PVPSystem`/`PVPSystemTests`/`PlayerProgressData.PVPRunRequested` deleted and the component removed from GameScene. Tests: `TournamentRulesTests`.
 - `TournamentService` (self-bootstrapped like `WorldService`) replaces `PVPService`; delete `PVPSystem`, `PVPService`, `PVPSystemTests` and the HUD PvP wiring. `FeatureFlags`: `pve.enabled` (default **true**, kill-switch) replaces `pvp.enabled`.
 - Save (`tournament`, additive, survives prestige): `weekId`, `bracketId`, `startUtc`, `league`, `lastSnapshotT`, `scoreFrozen`.
 - Join flow: `pve_status` checks the window → confirm modal ("This prestiges your current run: +N prestige currency") → `pve_join` → on success, set `PrestigeRequested` (the normal prestige, with currency). The `tournament` block survives `PrestigeRunReset`, and the new run is the tournament run.

@@ -230,6 +230,9 @@ namespace MobileIdleBuilder.PveModule
             int viewerT = over || me == null ? run : PveRules.Elapsed(PveRules.ParseIso(me.startUtc), now, run);
 
             var resp = new PveBoardResponse { week = profile.lastWeek, league = meta?.league, viewerT = viewerT, settled = meta?.settled ?? false };
+            var (up, down) = PveRules.Moves(cfg, PveRules.League(cfg, meta?.league), members.Count, meta?.capacity ?? members.Count);
+            resp.promote = up;
+            resp.demote = down;
             foreach (var r in PveRules.Rank(members, viewerT))
                 resp.rows.Add(new PveBoardRow
                 {

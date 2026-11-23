@@ -100,7 +100,8 @@ namespace MobileIdleBuilder
         public long         megastructureMaterial     = 0;
         public int          megastructureExpansion    = 0;     // Expansion levels bought with material
         public TutorialSaveData tutorial                     = new();
-        public PVPRunData pvpRun                            = new();
+        public PVPRunData pvpRun                            = new();   // LEGACY: the old 48h PvP stub (removed 2026-11-23). Kept so old saves load; never read.
+        public TournamentSaveData tournament                = new();   // PvE tournament this device entered (TournamentService). Survives prestige.
         public CurrentRunData currentRun                    = new();
     }
 
@@ -331,6 +332,30 @@ namespace MobileIdleBuilder
     }
 
     /// <summary>
+    /// The PvE tournament the player entered (PvE phase 4, <c>TournamentService</c>). The server holds the truth
+    /// (docs/runbooks/pve-backend-setup.md); this copy drives the run timer, the prestige lock and when snapshots
+    /// are sent while offline from the server. Root field: survives prestige (the tournament run IS the run that
+    /// starts with the join's prestige).
+    /// </summary>
+    [Serializable]
+    public class TournamentSaveData
+    {
+        public string week;                 // week id (Friday date) of the tournament entered; null = never
+        public string bracketId;
+        public string league;
+        public string startUtc;             // server time the 24h run started (ISO 8601)
+        public string runEndsUtc;           // start + 24h
+        /// <summary>
+        /// prestigeCount when the player joined; the join's prestige is still pending while
+        /// <c>SaveData.prestigeCount</c> has not passed it. No snapshot is sent before then: the old run's
+        /// net worth would make every later (post-reset) snapshot look like a drop. -1 = not pending.
+        /// </summary>
+        public int    prestigeCountAtJoin = -1;
+        public bool   finalSent;            // the snapshot at the 24h mark went through
+    }
+
+    /// <summary>
+    /// LEGACY: state of the removed 48h PvP stub. Never read; kept so saves that have it still load.
     /// Persistent PVP competition state for the current player.
     /// state: "Available" | "InRun" | "Completed"
     /// Locked is derived at runtime from prestigeCount.

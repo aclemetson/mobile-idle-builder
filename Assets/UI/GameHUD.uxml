@@ -91,7 +91,7 @@
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
                 <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
                 <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
-                <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
+                <ui:Button name="btn-pvp"          text="Tournament"   class="drawer-nav-btn" />
                 <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
             </ui:ScrollView>
         </ui:VisualElement>
@@ -307,7 +307,7 @@
         <!-- ═══ PVP PANEL ═══ -->
         <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Weekly Competition" class="panel-title" />
+                <ui:Label name="pvp-title" text="Tournament" class="panel-title" />
                 <ui:Button name="btn-close-pvp" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 
@@ -316,7 +316,7 @@
                 <ui:Label name="pvp-state-label"    text="—"                    class="recipe-name" />
                 <ui:Label name="pvp-timer-label"    text=""                     class="recipe-inputs" />
                 <ui:Label name="pvp-lock-label"     text=""                     class="recipe-inputs" />
-                <ui:Button name="btn-enter-pvp"     text="Enter Competition"    class="craft-btn" />
+                <ui:Button name="btn-enter-pvp"     text="Start tournament"     class="craft-btn" />
                 <ui:Label name="pvp-completed-label" text=""                    class="recipe-inputs" />
             </ui:VisualElement>
 
