@@ -312,6 +312,7 @@ namespace MobileIdleBuilder.Editor
             so.buildingPurchaseMultiplierT1       = data.building_purchase_multiplier_t1;
             so.buildingPurchaseMultiplierT2       = data.building_purchase_multiplier_t2;
             so.buildingPurchaseMultiplierT3Plus   = data.building_purchase_multiplier_t3_plus;
+            so.nameFilterPatterns                 = data.name_filter_patterns ?? System.Array.Empty<string>();
 
             if (TryParseEnum<BuildEnvironment>(data.environment, "GameConfig.environment", out var env))
                 so.environment = env;

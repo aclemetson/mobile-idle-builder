@@ -1383,6 +1383,32 @@
     -unity-text-align: middle-center;
 }
 
+/* Player name card (PlayerNamePromptController): text input + validation line. */
+.name-prompt__input {
+    margin: 0 var(--spacing-md);
+    min-height: 44px;
+}
+
+.name-prompt__input .unity-base-text-field__input {
+    background-color: var(--color-surface-raised);
+    border-color: var(--color-border);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    padding: 0 var(--spacing-sm);
+    -unity-text-align: middle-center;
+}
+
+.name-prompt__error {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    min-height: 20px;
+    margin: var(--spacing-xs) var(--spacing-md) var(--spacing-md);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
 /* Entropy Surge side icon (EntropySurgeOfferController): a round tab on the right edge, just below
    the top bar and its status strips. It used to sit at 38%, which landed on the close button of
    the slide panels (they cover the bottom 65%, so their header starts at 35%). */

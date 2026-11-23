@@ -1,0 +1,25 @@
+PVE Document
+
+PVE should play a lot like Idle Planet Miner. First, we need to have different leagues (something like bronze, silver, gold, champion, etc). This should help players find a league they can compete in. Everyone starts in bronze.
+
+What will happen when you start a tournament (anytime between day reset on Friday to day reset on Saturday, always 0:00 UTC), you will prestige and start the tournament. You will then have 24 hours to maximize your net worth. This will be compared to all other players in that league (it won't be everyone in bronze, for example, but a smaller group of 100 or so eventually. This will be much smaller for testing). League sizes will shrink as you get promoted.
+
+In each league, at the end of the tournament, the top x amount (depending on which league) will get promoted on to earn better rewards. the bottom x amount (other than the lowest league) will get demoted. This will promote healthy competition and people staying in the league the are meant to be in.
+
+Since players will not all start at the same time, we need to find a way to keep track of how well your competitors are doing. I think we should use our snapshot method to keep track of important things during the tournament. This can be done every time a user checks the leaderboard, their position is updated and it is compared to everyone else. Since other players may be at different points in their 24 hours, the current user should be shown the snapshot just before the current time. For example, say our current user is 10 hours in. another user is 14 hours in, but has had multiple snapshots in between their 10 to 14 hour marks. The current user will see other user's snapshot that is directly before that 10 hour mark. Of course, this doesn't have to be even hours, these are just example values. If, however, another user has 6 hours of play, what we can do is show the current user an estimation of their net worth at that 10 hour mark based on if the user stops playing. This will take into account the 6 hour user's most recent snapshot and then add the idle rate times the idle time. Once a user's 24 hours is up, they will have to wait til all users in the PVE game have officially finished. Then, the tournament will officially end and rewards can be claimed.
+
+due to this, we need to find a way to save this information temporarily for each instance of a league game. We should see if unity offers this. In addition, the user needs to create a user-friendly nickname. After the tutorial, let's instruct the user to create their username. Let's also enable checks to make sure it is a friendly name. We can check this against a game config list of regular expressions that is a common check for username and offensive language in the industry.
+
+One thing that I like that idle planet miner does is award stars for their tournaments. rewards are a certain amount of stars, paid currency, and a special currency to the game (we can figure that out later). But the stars are randomly selected for items the user has already unlocked and assigned. The items are then provided an additive 20% boost to their values (so 5 stars will double the value, 10 stars will triple). I think we should have that system and show those stars in the recipes.
+
+PVE should be unlocked once the user is done with the chemistry tutorial. A message telling the user about tournaments should pop up the first login in between that tournament times. If the user finishes the tutorial within those times, allow the last message to close then about 5 seconds. Then, we should direct the user to the PVE in the menu. Let's provide a brief description of how the tournament works, and allow them to start.
+
+Other things to include in other feature branches, writing them down so I don't forget.
+
+- In the menu, let's replace the words for the sub menus with relevant symbols
+- For the building sub menu, let's create tabs to organize the buildings. Let's then allow the user to horizontally scroll through the menu, each sub menu showing an image of the building, its price, and an information icon that the user can open to get more information.
+- Let's do something similar to the recipe menu above, tabs for organization, images of the items, our create buttons, horizontal scroll, and a "drop up" menu if there are different recipes (see helium)
+- Let's fix our surge, to random choose between 10% of the net worth and gems (let's find a reasonable amount). Let's weight it so 80% of the time you get entropy. Let's also not cap it for the day, as long as the user is sees it and the 15 minutes passes. Because of this, lets' remove our entropy boost and keep the surge.
+- If we show something on a menu because it was discovered by the user in a previous run but is currently blocked by research, we show "research required". Let's actually tell the user of the name of the research.
+- let's include in our prestige upgrades "free research" that will allow the user to unlock their first x research for just the cost of the research but no time. let's weight it's prestige currency cost accordingly.
+

@@ -397,6 +397,7 @@
                 </ui:VisualElement>
                 <ui:Label text="ACCOUNT" class="drawer-section-title" />
                 <ui:Label name="settings-account" text="" class="settings-account" />
+                <ui:Button name="btn-player-name" text="Choose a player name" class="drawer-nav-btn" />
                 <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
@@ -747,6 +748,26 @@
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="confirm-prompt__cancel" text="Cancel" class="craft-btn confirm-prompt__btn" />
                     <ui:Button name="confirm-prompt__confirm" text="Remove" class="cancel-placement-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ PLAYER NAME (PlayerNamePromptController.cs) ═══
+             Public name for tournament leaderboards (PvE phase 1). Shown once after the tutorial, and from
+             Settings > Account. Saved to UGS player names; checked against game_config.name_filter_patterns. -->
+        <ui:VisualElement name="name-prompt" class="idle-return-modal blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label name="name-prompt__title" text="Choose your name" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="name-prompt__message" text="" class="game-update-message" />
+                <ui:TextField name="name-prompt__input" max-length="16" class="name-prompt__input" />
+                <ui:Label name="name-prompt__error" text="" class="name-prompt__error" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="name-prompt__skip" text="Later" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="name-prompt__save" text="Save" class="craft-btn confirm-prompt__btn" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
