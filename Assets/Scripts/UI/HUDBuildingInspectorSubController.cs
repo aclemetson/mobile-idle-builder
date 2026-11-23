@@ -1328,7 +1328,8 @@ namespace MobileIdleBuilder
             double perCraft = ItemValue.PerCraft(outs, SurplusSale.DemonPrice, outMult, process.ByproductEntropy);
             float speed = building.ProductionSpeed * powerRatio * globalSpeed;
             double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
-            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f,
+                              ItemStars.Count(outs[0].itemId));
         }
 
         /// <summary>
@@ -1344,7 +1345,8 @@ namespace MobileIdleBuilder
         /// The inspector's value rows for a crafter: price each, value per craft, value per second. Always three
         /// rows so the 0.5s rebuild keeps its layout.
         /// </summary>
-        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower)
+        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower,
+                                            int stars = 0)
         {
             string craft = outMult > 1.001f
                 ? $"×{outMult:0.##} output → {NumberFormat.Entropy(perCraft)} per craft"
@@ -1352,7 +1354,7 @@ namespace MobileIdleBuilder
             string rate = noPower
                 ? "≈ ◈ 0 /s (no power)"
                 : $"≈ {NumberFormat.Entropy(perSecond)} /s at current speed";
-            return new[] { HUDController.WorthEachText(price), craft, rate };
+            return new[] { HUDController.WorthEachText(price, stars), craft, rate };
         }
 
         /// <summary>The collector's value row, e.g. "≈ ◈ 2.5 /s".</summary>

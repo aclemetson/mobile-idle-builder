@@ -29,6 +29,10 @@ namespace MobileIdleBuilder
         // Public player name (PvE phase 1, PlayerNameService). UGS Authentication holds the real one; this caches it
         // for offline display. Full UGS form "Name#1234"; "" = never chosen. Survives prestige.
         public string playerName                    = "";
+        // Tournament item stars (PvE phase 2, ItemStars): +20% value per star, permanent. Parallel lists keyed by item
+        // STRING id (stable across renumbering). Survive prestige and Ascension.
+        public List<string> itemStarIds             = new();
+        public List<int>    itemStarCounts          = new();
         public bool   namePromptSkipped;                   // the post-tutorial "Choose your name" card was skipped; only Settings (and PvE) ask again. Survives prestige.
         public IdleCollectionSnapshot idleSnapshot = new();   // active site's offline chain snapshot (mirrors siteSnapshots[activeSiteIndex])
         public List<IdleCollectionSnapshot> siteSnapshots = new(); // per-site offline snapshots; index = site index. Inactive sites keep producing from these. Cleared on prestige.

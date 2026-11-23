@@ -636,7 +636,7 @@ namespace MobileIdleBuilder
                 buildingLookup.TryGetValue(id, out var e) ? e.building.baseOutputRate : 0f;
 
             float getItemSellValue(int itemId) =>
-                ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
+                ItemStars.StarredBase(ItemDatabase.GetStatic(itemId));   // stars raise offline chains too
 
             // Recipe data for offline synthesizer simulation. Only recipe-crafting buildings qualify —
             // collectors (field taps) and entropy sinks are handled by the collector/sink paths instead.
