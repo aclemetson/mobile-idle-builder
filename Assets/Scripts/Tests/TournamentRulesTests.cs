@@ -336,6 +336,42 @@ namespace MobileIdleBuilder.Tests
             Assert.IsTrue(TournamentIntroController.AnyTutorialRunning(save, null));
         }
 
+        static readonly System.Globalization.CultureInfo EnUs = new System.Globalization.CultureInfo("en-US");
+        static TimeZoneInfo Zone(double hours) =>
+            TimeZoneInfo.CreateCustomTimeZone($"test{hours}", TimeSpan.FromHours(hours), $"test{hours}", $"test{hours}");
+
+        [Test]
+        public void LocalTime_ShowsTheWeekdayAndTimeInThePlayersZone()
+        {
+            // Entry closes Saturday 00:00 UTC: that is Friday evening in the Americas, Saturday morning in Asia.
+            string west = TournamentRules.EntryClosesLocal(Start, Zone(-5), EnUs);
+            StringAssert.StartsWith("Friday ", west);
+            StringAssert.Contains("7:00", west);
+            StringAssert.Contains("PM", west);
+            string east = TournamentRules.EntryClosesLocal(Start, Zone(9), EnUs);
+            StringAssert.StartsWith("Saturday ", east);
+            StringAssert.Contains("9:00", east);
+            StringAssert.StartsWith("Saturday ", TournamentRules.EntryClosesLocal(Start, Zone(0), EnUs), "UTC itself");
+
+            // Sunday: the next entry opens Friday 00:00 UTC = Thursday 7 PM at UTC-5.
+            string next = TournamentRules.NextOpensLocal(Start.AddDays(2), Zone(-5), EnUs);
+            StringAssert.StartsWith("Thursday ", next);
+            StringAssert.Contains("7:00", next);
+        }
+
+        [Test]
+        public void Intro_FillsTheEntryCloseTime_AndTheAssetKeepsItsPlaceholder()
+        {
+            Assert.AreEqual("open until Friday 7:00 PM.",
+                TournamentIntroController.FillTimes("open until " + TournamentIntroController.EntryClosesToken + ".", "Friday 7:00 PM"));
+            Assert.AreEqual("no token", TournamentIntroController.FillTimes("no token", "x"));
+
+            var weekly = Resources.Load<DialogueDatabaseSO>("DialogueDatabase").Get(TournamentIntroController.WeeklyIntroId);
+            StringAssert.Contains(TournamentIntroController.EntryClosesToken, weekly.lines[0].text,
+                "filled in a runtime copy only, so next week shows next week's time");
+            StringAssert.DoesNotContain("UTC", weekly.lines[0].text);
+        }
+
         [Test]
         public void Intro_DialoguesAreImported()
         {

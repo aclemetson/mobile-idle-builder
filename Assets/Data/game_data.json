@@ -18146,12 +18146,12 @@
       ]
     },
     {
-      "_comment": "PvE phase 6: short reminder on the first login inside each later entry window (TournamentIntroController).",
+      "_comment": "PvE phase 6: short reminder on the first login inside each later entry window (TournamentIntroController). {entry_closes} is filled at play time with when entry closes in the player's local time (e.g. Friday 7:00 PM).",
       "id": "pve_intro_weekly",
       "lines": [
         {
           "speaker_name": "The Architect",
-          "text": "This week's tournament is open until Saturday 00:00 UTC. Open Tournament in the menu to start your 24 hours.",
+          "text": "This week's tournament is open until {entry_closes}. Open Tournament in the menu to start your 24 hours.",
           "portrait_path": "TODO",
           "pause_game": true,
           "highlight_target": "",

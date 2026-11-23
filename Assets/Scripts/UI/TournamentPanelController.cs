@@ -292,7 +292,7 @@ namespace MobileIdleBuilder
                     break;
                 case TournamentPanelState.Waiting:
                     d.headline = $"{league} league";
-                    d.timer = $"Next tournament opens in {TournamentRules.FormatSpan(PveRules.NextEntry(now) - now)} (Friday 00:00 UTC).";
+                    d.timer = $"Next tournament opens in {TournamentRules.FormatSpan(PveRules.NextEntry(now) - now)} ({TournamentRules.NextOpensLocal(now)}).";
                     d.result = LastResult(status, cfg);
                     break;
                 case TournamentPanelState.Open:

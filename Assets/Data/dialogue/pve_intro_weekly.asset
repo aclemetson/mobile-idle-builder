@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: This week's tournament is open until Saturday 00:00 UTC. Open Tournament
-      in the menu to start your 24 hours.
+    text: This week's tournament is open until {entry_closes}. Open Tournament in
+      the menu to start your 24 hours.
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 

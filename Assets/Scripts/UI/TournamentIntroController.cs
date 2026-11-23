@@ -19,6 +19,8 @@ namespace MobileIdleBuilder
         public const string WeeklyIntroId = "pve_intro_weekly";
         public const float  CalmSeconds   = 5f;
         public const float  PulseSeconds  = 30f;
+        /// <summary>Placeholder in dialogue text, replaced with when this week's entry closes, in local time.</summary>
+        public const string EntryClosesToken = "{entry_closes}";
         const string TargetButton = "btn-tournament";
         const string PulseClass   = "panel-btn--highlight";
 
@@ -103,7 +105,8 @@ namespace MobileIdleBuilder
             save.tournamentIntroSeen = true;
             SaveManager.Instance.SaveLocal();
 
-            var dialogue = Resources.Load<DialogueDatabaseSO>("DialogueDatabase")?.Get(id);
+            var dialogue = WithLocalTimes(Resources.Load<DialogueDatabaseSO>("DialogueDatabase")?.Get(id),
+                                          TournamentRules.EntryClosesLocal(TournamentService.Now));
             if (dialogue != null && _dialogue != null)
             {
                 GameLogger.Info($"[PvE] Tournament intro: {id}");
@@ -115,6 +118,30 @@ namespace MobileIdleBuilder
                 GameLogger.Warning($"[PvE] Dialogue {id} missing; pointing at the Tournament button only.");
                 _pulseUntil = Time.unscaledTime + PulseSeconds;
             }
+        }
+
+        /// <summary>Text with the time placeholders filled (pure; unit-tested).</summary>
+        public static string FillTimes(string text, string entryCloses) =>
+            string.IsNullOrEmpty(text) ? text : text.Replace(EntryClosesToken, entryCloses);
+
+        /// <summary>
+        /// The dialogue itself when it has no placeholder; otherwise a runtime copy with them filled, so the asset
+        /// keeps its placeholder for the next week.
+        /// </summary>
+        static DialogueSO WithLocalTimes(DialogueSO dialogue, string entryCloses)
+        {
+            if (dialogue?.lines == null) return dialogue;
+            bool any = false;
+            foreach (var l in dialogue.lines) any |= l.text != null && l.text.Contains(EntryClosesToken);
+            if (!any) return dialogue;
+            var copy = Instantiate(dialogue);
+            for (int i = 0; i < copy.lines.Length; i++)
+            {
+                var l = copy.lines[i];
+                l.text = FillTimes(l.text, entryCloses);
+                copy.lines[i] = l;
+            }
+            return copy;
         }
 
         // Same look and path as the tutorial's button pulse (TutorialPulseResolver: drawer handle, then the button),

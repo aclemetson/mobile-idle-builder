@@ -193,6 +193,29 @@ namespace MobileIdleBuilder
         public static string LeagueName(PveConfig cfg, string leagueId) =>
             PveRules.League(cfg, leagueId)?.name ?? (string.IsNullOrEmpty(leagueId) ? "Bronze" : leagueId);
 
+        /// <summary>
+        /// A tournament time in the player's own time zone, with the weekday: "Friday 7:00 PM" (en-US). Tournament
+        /// times are UTC on the server; the player sees them as their local time.
+        /// </summary>
+        public static string LocalTimeText(DateTime utc, TimeZoneInfo zone = null,
+                                           System.Globalization.CultureInfo culture = null)
+        {
+            zone ??= TimeZoneInfo.Local;
+            culture ??= System.Globalization.CultureInfo.CurrentCulture;
+            var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), zone);
+            return local.ToString("dddd", culture) + " " + local.ToString("t", culture);
+        }
+
+        /// <summary>When this week's entry closes, as local time (the weekly reminder dialogue's {entry_closes}).</summary>
+        public static string EntryClosesLocal(DateTime nowUtc, TimeZoneInfo zone = null,
+                                              System.Globalization.CultureInfo culture = null) =>
+            LocalTimeText(PveRules.WeekStart(nowUtc).AddDays(1), zone, culture);
+
+        /// <summary>When the next entry window opens, as local time.</summary>
+        public static string NextOpensLocal(DateTime nowUtc, TimeZoneInfo zone = null,
+                                            System.Globalization.CultureInfo culture = null) =>
+            LocalTimeText(PveRules.NextEntry(nowUtc), zone, culture);
+
         /// <summary>Player-facing text for a server error code.</summary>
         public static string ErrorText(string error)
         {
@@ -200,7 +223,7 @@ namespace MobileIdleBuilder
             if (error.StartsWith("network:")) return "Couldn't reach the tournament server. Check your connection.";
             return error switch
             {
-                PveErrors.OutsideWindow  => "Entry is closed. Tournaments open every Friday (00:00 UTC).",
+                PveErrors.OutsideWindow  => $"Entry is closed. The next tournament opens {NextOpensLocal(TournamentService.Now)}.",
                 PveErrors.AlreadyJoined  => "You've already entered this week's tournament.",
                 PveErrors.NameRequired   => "Choose a player name first (Settings > Account).",
                 PveErrors.NameBlocked    => "Your player name isn't allowed. Change it in Settings > Account.",
