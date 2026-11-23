@@ -759,7 +759,7 @@
         <!-- ═══ PLAYER NAME (PlayerNamePromptController.cs) ═══
              Public name for tournament leaderboards (PvE phase 1). Shown once after the tutorial, and from
              Settings > Account. Saved to UGS player names; checked against game_config.name_filter_patterns. -->
-        <ui:VisualElement name="name-prompt" class="idle-return-modal blocks-world-input hidden"
+        <ui:VisualElement name="name-prompt" class="idle-return-modal name-prompt blocks-world-input hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
             <ui:VisualElement class="idle-return-backdrop" />
             <ui:VisualElement class="idle-return-card">
