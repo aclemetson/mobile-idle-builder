@@ -33,7 +33,7 @@ namespace MobileIdleBuilder.PveModule
         static PveConfig Config() => PveGameConfig.Embedded.Pve;
 
         static async Task<PveSettings> Settings(PveStore store) =>
-            (await store.GetCustom<PveSettings>(PveRules.SettingsId, PveRules.SettingsKey)).Value ?? new PveSettings();
+            await store.GetCustomAnyClass<PveSettings>(PveRules.SettingsId, PveRules.SettingsKey) ?? new PveSettings();
 
         static DateTime Now(PveSettings settings, string debugNow) =>
             settings.allowDebugTime && !string.IsNullOrEmpty(debugNow) ? PveRules.ParseIso(debugNow) : DateTime.UtcNow;

@@ -20,7 +20,7 @@ Cloud Save data the module writes:
 |---|---|---|
 | Private custom item `pve_<week>` | `index` | brackets opened per league this week |
 | Private custom item `pve_<week>_<league>[_dev]_<n>` | `meta`, `m_<playerId>` | bracket members; one key per member with their snapshots |
-| Private custom item `pve_settings` | `settings` | test switches (below) |
+| Custom item `pve_settings` (Game Data, any access class) | `settings` | test switches (below) |
 | Protected player data | `pve_profile` | league, last entry, history, pending rewards |
 
 "Private" custom items can't be read by game clients at all, and protected player data can be read by the player but only written by the server. A client can only change tournament data by calling the module.
@@ -63,7 +63,7 @@ The UGS CLI can do the same from a terminal (`ugs scheduler` / `ugs triggers`) i
 
 ## 4. Test switches (`pve_settings`)
 
-Dashboard → Cloud Save → Custom Items → create the custom ID `pve_settings` (**private** access class), key `settings`, value:
+Dashboard → **Cloud Save → Game Data** (custom items live there; the other tabs are Configure Indexes, Player Data, Player Files) → add an item with ID `pve_settings`, key `settings`, and this value. Either access class works (the module reads private first, then default); clients can't write either:
 
 ```json
 { "smallBrackets": true, "allowDebugTime": true }

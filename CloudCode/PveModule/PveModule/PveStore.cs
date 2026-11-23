@@ -51,6 +51,10 @@ namespace MobileIdleBuilder.PveModule
             return JsonSerializer.Deserialize<T>(json, Json);
         }
 
+        /// <summary>True when Cloud Save reports a custom ID or player with no data.</summary>
+        public static bool IsNotFound(Exception e) =>
+            e is ApiException api && api.Response != null && api.Response.StatusCode == HttpStatusCode.NotFound;
+
         /// <summary>True for the conflict Cloud Save returns when a write lock no longer matches.</summary>
         public static bool IsLockConflict(Exception e) =>
             e is ApiException api && api.Response != null && api.Response.StatusCode == HttpStatusCode.Conflict;
@@ -59,11 +63,36 @@ namespace MobileIdleBuilder.PveModule
 
         public async Task<Locked<T>> GetCustom<T>(string customId, string key) where T : class
         {
-            var res = await _api.CloudSaveData.GetPrivateCustomItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
-                customId, new List<string> { key });
+            ApiResponse<GetItemsResponse> res;
+            try
+            {
+                res = await _api.CloudSaveData.GetPrivateCustomItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
+                    customId, new List<string> { key });
+            }
+            catch (ApiException e) when (IsNotFound(e)) { return new Locked<T>(); }
             foreach (var item in res.Data.Results)
                 if (item.Key == key) return new Locked<T> { Value = Deserialize<T>(item.Value), WriteLock = item.WriteLock };
             return new Locked<T>();
+        }
+
+        /// <summary>
+        /// A custom item key from either access class: private first, then default. Used for pve_settings,
+        /// which is created by hand in the dashboard (Cloud Save > Game Data) where the default class is the
+        /// usual choice. Clients cannot write either class, so reading both is safe.
+        /// </summary>
+        public async Task<T> GetCustomAnyClass<T>(string customId, string key) where T : class
+        {
+            var priv = await GetCustom<T>(customId, key);
+            if (priv.Value != null) return priv.Value;
+            try
+            {
+                var res = await _api.CloudSaveData.GetCustomItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
+                    customId, new List<string> { key });
+                foreach (var item in res.Data.Results)
+                    if (item.Key == key) return Deserialize<T>(item.Value);
+            }
+            catch (ApiException e) when (IsNotFound(e)) { }
+            return null;
         }
 
         /// <summary>Every key of a custom item, following the paging links.</summary>
@@ -73,8 +102,13 @@ namespace MobileIdleBuilder.PveModule
             string after = null;
             for (int page = 0; page < 50; page++)
             {
-                var res = await _api.CloudSaveData.GetPrivateCustomItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
-                    customId, null, after);
+                ApiResponse<GetItemsResponse> res;
+                try
+                {
+                    res = await _api.CloudSaveData.GetPrivateCustomItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
+                        customId, null, after);
+                }
+                catch (ApiException e) when (IsNotFound(e)) { break; }
                 var results = res.Data.Results;
                 if (results == null || results.Count == 0) break;
                 all.AddRange(results);
@@ -93,8 +127,13 @@ namespace MobileIdleBuilder.PveModule
 
         public async Task<Locked<PveProfile>> GetProfile(string playerId)
         {
-            var res = await _api.CloudSaveData.GetProtectedItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
-                playerId, new List<string> { PveRules.ProfileKey });
+            ApiResponse<GetItemsResponse> res;
+            try
+            {
+                res = await _api.CloudSaveData.GetProtectedItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
+                    playerId, new List<string> { PveRules.ProfileKey });
+            }
+            catch (ApiException e) when (IsNotFound(e)) { return new Locked<PveProfile>(); }
             foreach (var item in res.Data.Results)
                 if (item.Key == PveRules.ProfileKey)
                     return new Locked<PveProfile> { Value = Deserialize<PveProfile>(item.Value), WriteLock = item.WriteLock };
