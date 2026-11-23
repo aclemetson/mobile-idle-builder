@@ -285,10 +285,13 @@ def proposal(gd, built):
             add(iid, it["display_name"], "world_chemistry", "retired", "retire", how=why)
 
     # ── Biology, Metallurgy, Engineering: fewer items, each a bigger step ──
-    for iid, name, ph_, st, how in BIOLOGY + METALLURGY_ITEMS + ENGINEERING:
+    order = {iid: (k, n[0]) for k, n in enumerate(BIO_NODES + METAL_NODES) for iid in n[3]}
+    later = sorted(BIOLOGY + METALLURGY_ITEMS, key=lambda x: order[x[0]][0] if x[0] in order else 0) + ENGINEERING
+    for iid, name, ph_, st, how in later:
         world = {"b": "world_biology", "m": "world_metallurgy", "e": "world_engineering"}[ph_[0]]
         it = items.get(iid)
-        add(iid, it["display_name"] if it else name, world, ph_, st, how=how)
+        add(iid, it["display_name"] if it else name, world, ph_, st, how=how,
+            **({"node": order[iid][1]} if iid in order else {}))
     attach_recipes(gd, rows, built)
     return rows
 
@@ -347,6 +350,28 @@ CHEM_NODES = [
     ("nucleotides", "Nucleotides", "c6", ["amp"], [], []),
     ("membranes", "Membranes", "c6", ["phospholipid"], [], []),
     ("energy_currency", "Energy Currency", "c6", ["atp"], [], []),
+]
+
+# Biology and Metallurgy research nodes, in order (same shape as CHEM_NODES). Biology keeps its ids.
+BIO_NODES = [
+    ("biology_lab", "Biology Lab", "b1", ["protein", "carbohydrate", "lipid_membrane", "nucleic_acid"],
+     ["organic_harvester", "biosynthesizer"], ["sugar_field", "amino_acid_field", "lipid_field", "nucleotide_field", "atp_field"]),
+    ("cell_biology", "Cell Biology", "b2", ["ribosome", "cell_membrane", "mitochondria", "prokaryotic_cell"], ["cell_assembler"], []),
+    ("multicellular_life", "Multicellular Life", "b3", ["eukaryotic_cell", "tissue", "organ"], ["tissue_culture"], []),
+    ("ecosystems", "Ecosystems", "b4", ["organism", "population", "ecosystem"], ["bioreactor"], []),
+]
+METAL_NODES = [
+    ("ore_prospecting", "Ore Prospecting", "m1", ["hematite", "coal", "silica"], ["metal_harvester"],
+     ["hematite_field", "coal_field", "quartz_sand_field"]),
+    ("base_metals", "Base Metal Ores", "m1", ["bauxite", "chalcopyrite", "rutile"], [],
+     ["bauxite_field", "chalcopyrite_field", "rutile_field"]),
+    ("roasting", "Roasting", "m1", ["iron_oxide"], ["materials_forge"], []),
+    ("steelmaking", "Steelmaking", "m2", ["steel"], [], []),
+    ("electrolysis", "Electrolysis", "m2", ["aluminium_ingot", "copper_wire"], [], []),
+    ("light_alloys", "Light Alloys", "m2", ["titanium_alloy", "carbon_fiber"], [], []),
+    ("semiconductors", "Semiconductors", "m3", ["semiconductor_wafer", "aerogel"], [], []),
+    ("superconductors", "Superconductors", "m3", ["superconductor"], [], []),
+    ("metamaterials", "Metamaterials", "m3", ["metamaterial"], [], []),
 ]
 
 # Craft seconds for one spallation step (heavier element + neutron -> the next lighter element).

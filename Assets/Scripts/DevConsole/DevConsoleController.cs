@@ -852,12 +852,12 @@ namespace MobileIdleBuilder.Dev
                     if (svc.IsComplete) return $"All {svc.StageCount} stages done; '{svc.Data.worldId}' unlocks from them.";
                     var stage = svc.CurrentStage;
                     var save  = SaveManager.Instance?.Current;
-                    var sb = new StringBuilder($"Stage {svc.CompletedStages + 1}/{svc.StageCount}: {stage.displayName}\n");
+                    var sb = new StringBuilder($"{WorldGate.DisplayName(svc.Data.worldId)} tasks, stage {svc.CompletedStages + 1}/{svc.StageCount}: {stage.displayName}\n");
                     for (int i = 0; i < stage.items.Length; i++)
                     {
                         var it = stage.items[i];
                         if (it == null) continue;
-                        sb.AppendLine($"  {it.id,-12} {WorldTasks.Delivered(save, it.itemId),8} / {WorldTasks.Required(stage, it.itemId)}");
+                        sb.AppendLine($"  {it.id,-12} {WorldTasks.Delivered(save, svc.Data, it.itemId),8} / {WorldTasks.Required(stage, it.itemId)}");
                     }
                     return sb.ToString().TrimEnd();
                 });

@@ -16,15 +16,15 @@ MonoBehaviour:
   displayName: Glucose
   methodLabel: 
   recipeId: 189
-  tier: 3
-  category: 5
+  tier: 4
+  category: 3
   inputs: []
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 56d7d1047f99e5a439dfaf7f3de183d6, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 207
-  manualCraftTime: 207
+  baseCraftTime: 20
+  manualCraftTime: 20
   powerCostIsDynamic: 0
   fixedPowerCostEV: 0
   validBuildings:

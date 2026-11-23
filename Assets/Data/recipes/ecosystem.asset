@@ -16,24 +16,24 @@ MonoBehaviour:
   displayName: Ecosystem
   methodLabel: 
   recipeId: 206
-  tier: 3
+  tier: 4
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: 8ba56f4f09425b24d87600db1bd3f384, type: 2}
-    quantity: 5
+    quantity: 3
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 88e0fca711b528940814ceaa6e48087a, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 120
+  baseCraftTime: 1800
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 1000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 14f9eda2ef5d53a41820907a34d68144, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: Biology capstone

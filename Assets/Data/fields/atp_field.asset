@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f54a4614174f442bde4c9e662ec50f, type: 3}
+  m_Name: atp_field
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
+  id: atp_field
+  displayName: ATP Spring
+  fieldType: Organic
+  drops:
+  - item: {fileID: 11400000, guid: 531af99f9a89ad543b6738321f0e3f0e, type: 2}
+    weight: 1
+  tapCooldownSeconds: 3
+  world: world_biology
+  purchaseResearchId: 
+  purchaseCostBase: 0
+  purchaseCostMultiplier: 10
+  purchaseGroupSize: 1
+  fieldColor: {r: 0.9490196, g: 0.75686276, b: 0.30588236, a: 1}
+  fieldIcon: {fileID: 0}
+  codexEntry: 'ATP welling up from a vent of living chemistry: energy, ready to spend.'

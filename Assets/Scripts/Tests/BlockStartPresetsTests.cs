@@ -87,7 +87,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void LateBlocks_OpenTheWorldsAndSitesTheirEarlierResearchUnlocked()
         {
-            var bio = Build("biology_world");
+            var bio = Build("bio_cells");
             CollectionAssert.Contains(bio.unlockedSites, "site_actinide_vein", "Fissile Extraction is behind the player");
             var chemistry = _worlds.allWorlds.FirstOrDefault(w => w != null && w.id == "world_chemistry");
             Assert.IsNotNull(chemistry);

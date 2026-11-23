@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 219196f5b8d4c39479287d396d9acd2f, type: 3}
+  m_Name: WorldTasks_world_metallurgy
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldTaskSO
+  worldId: world_metallurgy
+  deliverIn: world_biology
+  displayName: Path to Metallurgy
+  stages:
+  - id: metal_task_1
+    displayName: Building Blocks
+    description: Life is built from proteins, sugars and membranes. Send them to
+      Maxwell's Demon.
+    items:
+    - {fileID: 11400000, guid: 5f83ae9a620d1ba4cafcc198b79ab9a2, type: 2}
+    - {fileID: 11400000, guid: 933bfad7e4cfc524288f0b7f1a391b82, type: 2}
+    - {fileID: 11400000, guid: 322f1bf46d44c09488ddc3ac803ed97c, type: 2}
+    quantities: c8000000c800000096000000
+    dialogueId: 
+  - id: metal_task_2
+    displayName: First Cells
+    description: A cell copies itself. Send the first ones.
+    items:
+    - {fileID: 11400000, guid: 3d36bbc3894dfa44e879e5d2118f1130, type: 2}
+    quantities: 28000000
+    dialogueId: 
+  - id: metal_task_3
+    displayName: Bodies
+    description: 'Tissues and organs: life gets large.'
+    items:
+    - {fileID: 11400000, guid: a775b60e267e65748a4383af8c453a13, type: 2}
+    - {fileID: 11400000, guid: 8936ca1bd0c8c174a942ecb26037ece1, type: 2}
+    quantities: 140000000a000000
+    dialogueId: 
+  - id: metal_task_4
+    displayName: A Living World
+    description: One ecosystem, whole. Life is done; now build with metal.
+    items:
+    - {fileID: 11400000, guid: 88e0fca711b528940814ceaa6e48087a, type: 2}
+    quantities: 01000000
+    dialogueId: 

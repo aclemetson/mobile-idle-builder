@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: roasting
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: roasting
+  displayName: Roasting
+  description: 'Roasting: Iron Oxide.'
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: 828849a49214dc7408020c77c903ef80, type: 2}
+  depthInTree: 5
+  block: metallurgy_ores
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_metallurgy
+  world: world_metallurgy
+  costBaseCurrency: 14600000000
+  costPrestigeCurrency: 0
+  durationSeconds: 2400
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: ef6e4abec0fbe844292c2d7f1b3f91bc, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 6eeac5569bd9dd04f86b51a6807ba544, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Roasting

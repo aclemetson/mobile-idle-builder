@@ -27,12 +27,6 @@
       "pubchem": "sulfuric acid",
       "formula": "H2O4S"
     },
-    "nucleotide": {
-      "pubchem": "adenosine monophosphate",
-      "formula": "C10H14N5O7P",
-      "hide_h": true,
-      "_why": "Representative nucleotide (AMP): sugar ring, base and phosphate all read at belt size with H hidden."
-    },
     "silica": {
       "formula": "O2Si",
       "_why": "Molecular SiO2, linear O=Si=O (1.52 A).",
@@ -127,88 +121,6 @@
             1,
             4,
             2
-          ]
-        ]
-      }
-    },
-    "uranium_hexafluoride": {
-      "formula": "F6U",
-      "_why": "Octahedral UF6, U-F 2.0 A.",
-      "structure": {
-        "atoms": [
-          [
-            "U",
-            0,
-            0,
-            0
-          ],
-          [
-            "F",
-            2,
-            0,
-            0
-          ],
-          [
-            "F",
-            -2,
-            0,
-            0
-          ],
-          [
-            "F",
-            0,
-            2,
-            0
-          ],
-          [
-            "F",
-            0,
-            -2,
-            0
-          ],
-          [
-            "F",
-            0,
-            0,
-            2
-          ],
-          [
-            "F",
-            0,
-            0,
-            -2
-          ]
-        ],
-        "bonds": [
-          [
-            0,
-            1,
-            1
-          ],
-          [
-            0,
-            2,
-            1
-          ],
-          [
-            0,
-            3,
-            1
-          ],
-          [
-            0,
-            4,
-            1
-          ],
-          [
-            0,
-            5,
-            1
-          ],
-          [
-            0,
-            6,
-            1
           ]
         ]
       }

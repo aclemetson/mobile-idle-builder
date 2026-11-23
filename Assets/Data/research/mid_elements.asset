@@ -26,7 +26,7 @@ MonoBehaviour:
   treeY: -1
   requiredWorld: 
   world: world_physics
-  costBaseCurrency: 1420000
+  costBaseCurrency: 1480000
   costPrestigeCurrency: 0
   durationSeconds: 300
   fieldCooldownMult: 1
@@ -42,7 +42,6 @@ MonoBehaviour:
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
   - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
   resetsOnPrestige: 1
   codexEntry: Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum

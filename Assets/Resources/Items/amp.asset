@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  world: world_chemistry
+  world: 
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0

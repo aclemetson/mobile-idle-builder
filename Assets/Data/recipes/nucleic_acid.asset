@@ -16,24 +16,26 @@ MonoBehaviour:
   displayName: Nucleic Acid
   methodLabel: 
   recipeId: 196
-  tier: 3
+  tier: 4
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 146e721aeca4bb2409be60a74bd7b43f, type: 2}
-    quantity: 4
+  - item: {fileID: 11400000, guid: ed130169409bbd84b83d5f57dd3e4e24, type: 2}
+    quantity: 3
+  - item: {fileID: 11400000, guid: 531af99f9a89ad543b6738321f0e3f0e, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 299eb3c3033840348a05033f42360df2, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 35
+  baseCraftTime: 75
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 300
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: b85ff890e41307141970afd1c672e695, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: AMP / nucleotides -> strand

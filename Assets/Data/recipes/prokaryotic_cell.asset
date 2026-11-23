@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Prokaryotic Cell
   methodLabel: 
   recipeId: 200
-  tier: 3
+  tier: 4
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: cd21ebcd2c1475648b6fe7a01febb0ed, type: 2}
@@ -29,15 +29,15 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: 3d36bbc3894dfa44e879e5d2118f1130, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 60
+  baseCraftTime: 120
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 500
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: a0de88d3e739b624194a8e1ca9275fb9, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: first cell

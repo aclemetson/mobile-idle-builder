@@ -158,6 +158,16 @@ namespace MobileIdleBuilder
                 UpgradeEffectType.WorldCraftSpeed, 0.15f, 8,
                 new[]{ 120, 170, 230, 320, 450, 630, 870, 1300 },
                 new[]{ ("spring_pressure", 1) }, WorldGate.Chemistry),
+            new UpgradeDef(
+                "growth_media", "Growth Media",
+                "Biology buildings produce +15% more output per level.",
+                UpgradeEffectType.WorldOutput, 0.15f, 8,
+                new[]{ 180, 250, 350, 480, 680, 940, 1400, 1900 }, null, WorldGate.Biology),
+            new UpgradeDef(
+                "furnace_heat", "Furnace Heat",
+                "Metallurgy buildings smelt 15% faster per level.",
+                UpgradeEffectType.WorldCraftSpeed, 0.15f, 8,
+                new[]{ 220, 310, 440, 610, 850, 1200, 1700, 2400 }, null, WorldGate.Metallurgy),
             // ── Idle collection ───────────────────────────────────────────────
             // A short 30 min base cap brings players back to collect; the first levels are cheap and have
             // no prerequisite so the first prestige (~50✦) buys the first four levels (2.5 h) straight away.

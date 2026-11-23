@@ -16,24 +16,24 @@ MonoBehaviour:
   displayName: Protein
   methodLabel: 
   recipeId: 193
-  tier: 3
+  tier: 4
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 5a7f8e0ea59460a46a008208dd7c527d, type: 2}
-    quantity: 4
+  - item: {fileID: 11400000, guid: afe7834b40b46cb46908397c9c43c652, type: 2}
+    quantity: 3
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 5f83ae9a620d1ba4cafcc198b79ab9a2, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 30
+  baseCraftTime: 60
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 250
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: b85ff890e41307141970afd1c672e695, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: dipeptides -> protein

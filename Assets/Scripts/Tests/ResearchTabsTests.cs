@@ -36,7 +36,7 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(WorldGate.Physics, Tab("recombination_i"));
             Assert.AreEqual(WorldGate.Physics, Tab("heavy_elements"), "gated by Chemistry, but Physics research");
             Assert.AreEqual(WorldGate.Chemistry, Tab("chemistry_lab"));
-            Assert.AreEqual(WorldGate.Chemistry, Tab("materials_science"), "unlocks the Chemistry-only Materials Forge");
+            Assert.AreEqual(WorldGate.Metallurgy, Tab("roasting"), "unlocks the Metallurgy-only Materials Forge (2026-11-23)");
             Assert.AreEqual("world_biology", Tab("biology_lab"));
         }
 

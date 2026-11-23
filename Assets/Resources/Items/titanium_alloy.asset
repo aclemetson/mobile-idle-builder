@@ -28,7 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
-  world: world_chemistry
+  world: world_metallurgy
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -36,6 +36,6 @@ MonoBehaviour:
     standard. Survives re-entry temperatures, resists saltwater corrosion, and biocompatible
     enough for implants."
   codexUnlocked: 0
-  baseSellValue: 2720000
+  baseSellValue: 177000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

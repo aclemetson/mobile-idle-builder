@@ -28,10 +28,6 @@ MonoBehaviour:
     densityMultiplier: 0
   - field: {fileID: 11400000, guid: fd1eb9035739ff7409597cadba1bf82e, type: 2}
     densityMultiplier: 0
-  - field: {fileID: 11400000, guid: 2410fc0ec4146e947a11b1a0c9048c89, type: 2}
-    densityMultiplier: 0
-  - field: {fileID: 11400000, guid: 7f21bc40551e3bc49b69d917d4e3afe3, type: 2}
-    densityMultiplier: 0
   - field: {fileID: 11400000, guid: 056ae3db86b7506428d86d588ed96c80, type: 2}
     densityMultiplier: 0
   - field: {fileID: 11400000, guid: f9c0a39232c7e3349a310613cea7dfd5, type: 2}

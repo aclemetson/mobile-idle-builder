@@ -33,11 +33,12 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(rdb, "ResearchDatabase missing — run Import Game Data");
             var lab = System.Array.Find(rdb.allResearch, r => r != null && r.id == "biology_lab");
             Assert.IsNotNull(lab, "biology_lab research missing");
-            var pre = System.Array.Find(rdb.allResearch, r => r != null && r.id == "biochem_precursors");
-            Assert.Greater(lab.costBaseCurrency, pre.costBaseCurrency, "biology_lab costs more than its prerequisite (values: scripts/rebalance_curve.py)");
+            // 2026-11-23 (Item Timeline phase 3): Biology starts after ATP, the end of life chemistry.
+            var pre = System.Array.Find(rdb.allResearch, r => r != null && r.id == "energy_currency");
+            Assert.GreaterOrEqual(lab.costBaseCurrency, pre.costBaseCurrency, "biology_lab never costs less than its prerequisite");
             Assert.AreEqual(ResearchBranch.Biology, lab.branch, "biology_lab is on the Biology branch");
-            Assert.IsNotNull(System.Array.Find(lab.prerequisites, p => p != null && p.id == "biochem_precursors"),
-                "biology_lab requires biochem_precursors (Chemistry C4)");
+            Assert.IsNotNull(System.Array.Find(lab.prerequisites, p => p != null && p.id == "energy_currency"),
+                "biology_lab requires energy_currency (ATP)");
 
             var wdb = Resources.Load<WorldDatabaseSO>("WorldDatabase");
             var bio = System.Array.Find(wdb.allWorlds, w => w != null && w.id == "world_biology");
@@ -69,13 +70,15 @@ namespace MobileIdleBuilder.Tests
                 Assert.AreEqual(0f, byField[removed].densityMultiplier, $"{removed} should be removed (0)");
             }
 
-            // Organic fields introduced with type "Organic", each dropping its OrganicCompound.
+            // Organic fields introduced with type "Organic", each dropping one of the molecules of life
+            // (2026-11-23: dipeptides, glucose, phospholipids, AMP and ATP replaced the generic precursors).
             var expectedDrop = new Dictionary<string, string>
             {
                 { "sugar_field",      "glucose" },
-                { "amino_acid_field", "amino_acid" },
-                { "lipid_field",      "fatty_acid" },
-                { "nucleotide_field", "nucleotide" },
+                { "amino_acid_field", "dipeptide" },
+                { "lipid_field",      "phospholipid" },
+                { "nucleotide_field", "amp" },
+                { "atp_field",        "atp" },
             };
             foreach (var kvp in expectedDrop)
             {
@@ -89,8 +92,9 @@ namespace MobileIdleBuilder.Tests
                 foreach (var d in field.drops)
                 {
                     Assert.IsNotNull(d.item, $"{fid} has an unresolved drop");
-                    Assert.AreEqual(ItemCategory.OrganicCompound, d.item.category,
-                        $"{fid} should drop OrganicCompound items (got {d.item.id})");
+                    Assert.IsTrue(d.item.category == ItemCategory.OrganicCompound || d.item.category == ItemCategory.Molecule,
+                        $"{fid} should drop a molecule of life (got {d.item.id})");
+                    Assert.IsTrue(string.IsNullOrEmpty(d.item.world), $"{d.item.id} is shared by Chemistry and Biology");
                     if (d.item.id == kvp.Value) dropsExpected = true;
                 }
                 Assert.IsTrue(dropsExpected, $"{fid} should drop {kvp.Value}");
@@ -156,7 +160,7 @@ namespace MobileIdleBuilder.Tests
                 var node = Find(id);
                 Assert.IsNotNull(node, $"{id} research missing");
                 Assert.AreEqual(ResearchBranch.Biology, node.branch, $"{id} is on the Biology branch");
-                Assert.Greater(node.costBaseCurrency, Find(prereq).costBaseCurrency, $"{id} costs more than {prereq}");
+                Assert.GreaterOrEqual(node.costBaseCurrency, Find(prereq).costBaseCurrency, $"{id} never costs less than {prereq}");
                 Assert.IsNotNull(System.Array.Find(node.prerequisites, p => p != null && p.id == prereq),
                     $"{id} must require {prereq}");
             }

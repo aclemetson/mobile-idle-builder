@@ -97,11 +97,12 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void EarningRate_ClimbsAfterTheTutorial_NoRecipeOutEarnsItsUnlock()
         {
-            // The derived economy (scripts/rebalance_curve.py): a raw collect recipe earns at most the wage of the
-            // research that unlocks it, so a Chemistry mine cannot out-earn the whole physics chain (#332).
+            // A raw collect recipe earns about the wage of its research, so a mine cannot out-earn the chain it opens
+            // (#332). Since 2026-11-23 metals are mined as ores in Metallurgy (scripts/economy_plan.py prices them).
             var byId = _gd.recipes.ToDictionary(r => r.id);
-            foreach (var id in new[] { "collect_iron", "collect_nickel", "collect_copper" })
-                Assert.GreaterOrEqual(byId[id].base_craft_time, 10f, $"{id} must not mine a metal every couple of seconds");
+            Assert.IsFalse(byId.ContainsKey("collect_iron"), "Chemistry no longer mines Physics metals");
+            foreach (var id in new[] { "collect_hematite", "collect_chalcopyrite", "collect_bauxite" })
+                Assert.GreaterOrEqual(byId[id].base_craft_time, 10f, $"{id} must not mine an ore every couple of seconds");
         }
 
         [Test]

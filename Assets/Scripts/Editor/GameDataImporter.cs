@@ -270,6 +270,9 @@ namespace MobileIdleBuilder.Editor
 
             // ── Step 15: WorldTaskSO (Chemistry gate delivery stages; needs itemLookup) ──
             GenerateWorldTasks(data.world_tasks, itemLookup);
+            // The other worlds' tasks (Metallurgy, Engineering): one asset each under Resources/WorldTaskSets.
+            foreach (var more in data.more_world_tasks)
+                GenerateWorldTasks(more, itemLookup, $"{ResourcesDir}/WorldTaskSets", $"WorldTasks_{more?.world}");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -1053,12 +1056,14 @@ namespace MobileIdleBuilder.Editor
             EditorUtility.SetDirty(so);
         }
 
-        private static void GenerateWorldTasks(WorldTasksJson data, Dictionary<string, ItemSO> itemLookup)
+        private static void GenerateWorldTasks(WorldTasksJson data, Dictionary<string, ItemSO> itemLookup,
+            string dir = null, string fileName = "WorldTasks")
         {
             if (data == null || string.IsNullOrEmpty(data.world)) return;
 
-            EnsureDirectory(ResourcesDir);
-            var so = LoadOrCreate<WorldTaskSO>($"{ResourcesDir}/WorldTasks.asset");
+            dir ??= ResourcesDir;
+            EnsureDirectory(dir);
+            var so = LoadOrCreate<WorldTaskSO>($"{dir}/{fileName}.asset");
             so.worldId     = data.world;
             so.deliverIn   = string.IsNullOrEmpty(data.deliver_in) ? WorldGate.Physics : data.deliver_in;
             so.displayName = data.display_name;

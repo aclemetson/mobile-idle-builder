@@ -84,6 +84,9 @@ namespace MobileIdleBuilder
         public List<string> worldTaskProgressKeys     = new(); // item ids (string numeric), toward the current stage
         public List<int>    worldTaskProgressValues   = new(); // delivered counts, parallel to worldTaskProgressKeys
         public int          worldTaskVersion          = 0;     // 0 = not yet migrated (start stage from prestigeCount)
+        // Delivery tasks of the other worlds (Metallurgy, Engineering: 2026-11-23), one entry per world. The Chemistry
+        // gate keeps the fields above. Survive prestige the same way.
+        public List<WorldTaskProgressData> worldTaskSets = new();
         public TutorialSaveData tutorial                     = new();
         public PVPRunData pvpRun                            = new();
         public CurrentRunData currentRun                    = new();
@@ -245,6 +248,16 @@ namespace MobileIdleBuilder
         public string currentStepId       = "";
         public bool   isActive            = true;
         public bool   hasCompletedFirstRun = false;
+    }
+
+    /// <summary>Delivery-task progress toward unlocking one world (all but the Chemistry gate). Survives prestige.</summary>
+    [Serializable]
+    public class WorldTaskProgressData
+    {
+        public string       worldId = "";
+        public int          stage;                 // completed stage count
+        public List<string> keys   = new();        // item ids (string numeric), toward the current stage
+        public List<int>    values = new();        // delivered counts, parallel to keys
     }
 
     /// <summary>Progress through one world's own tutorial (WorldSO.tutorialFlow). Survives prestige.</summary>

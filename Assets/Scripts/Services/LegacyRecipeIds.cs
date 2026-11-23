@@ -68,6 +68,10 @@ namespace MobileIdleBuilder
             { "r_capture_gold", "spall_gold" },
             { "collect_plutonium", "breed_plutonium" },
             { "methane_combustion", "carbon_dioxide" },
+            // Phase 3: Biology's pools give the life chemicals.
+            { "collect_amino_acid", "collect_dipeptide" },
+            { "collect_fatty_acid", "collect_phospholipid" },
+            { "collect_nucleotide", "collect_amp" },
         };
 
         /// <summary>The current id for <paramref name="id"/>: the mapped id when it is a legacy one, else unchanged.</summary>

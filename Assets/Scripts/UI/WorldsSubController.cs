@@ -109,10 +109,11 @@ namespace MobileIdleBuilder
 
         private void OnTaskStageCompleted(WorldTaskStage stage)
         {
-            var tasks = WorldTasks.Data;
             var save  = SaveManager.Instance?.Current;
+            var tasks = System.Array.Find(WorldTasks.All, t => t != null && t.stages != null && System.Array.IndexOf(t.stages, stage) >= 0)
+                        ?? WorldTasks.Data;
             string text = WorldTasks.IsComplete(save, tasks)
-                ? "Chemistry is open! Travel there from Worlds."
+                ? $"{WorldGate.DisplayName(tasks.worldId)} is open! Travel there from Worlds."
                 : $"{stage.displayName} delivered. Next: {WorldTasks.CurrentStage(save, tasks)?.displayName}.";
             _hud?.ShowNotification("⚗", text);
             OnTasksChanged();
@@ -125,15 +126,15 @@ namespace MobileIdleBuilder
         private void RefreshTaskStrip()
         {
             if (_taskStrip == null) return;
-            var tasks = WorldTasks.Data;
             var save  = SaveManager.Instance?.Current;
+            var tasks = WorldTasks.Focus(save, WorldGate.ActiveWorldId());
             var stage = WorldTasks.CurrentStage(save, tasks);
             bool loaded = ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded;
             bool show = loaded && stage != null && save != null && !(save.tutorial?.isActive ?? false)
                         && WorldTasks.ShownIn(tasks, WorldGate.ActiveWorldId());   // only where they are delivered
             HUDController.SetElementVisible(_taskStrip, show);
             if (!show || _taskLabel == null) return;
-            int pct = Mathf.FloorToInt(WorldTasks.StageFraction(save, stage) * 100f);
+            int pct = Mathf.FloorToInt(WorldTasks.StageFraction(save, tasks, stage) * 100f);
             _taskLabel.text = $"⚗ {WorldGate.DisplayName(tasks.worldId)}  " +
                               $"{TaskStageTitle(WorldTasks.CompletedStages(save, tasks), WorldTasks.StageCount(tasks), stage.displayName)}  {pct}%";
         }

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2ac6ddf8ef533a41a1ddb3508cfbf90, type: 3}
+  m_Name: site_foundry
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.SiteSO
+  id: site_foundry
+  displayName: Foundry
+  unlockCost: 0
+  fieldOverrides:
+  - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: 7ecbcc1b18fc593479b92cf7ce8b6b26, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: 3e8ee90d944f38e49b091330300ffead, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: a921d0c298f8c424db695fdf86c4c92c, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: cd29fb70b9f446a4a802cfd9b1fe5d6f, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: f14bf245c0227f745a0f86a65cf8ef09, type: 2}
+    densityMultiplier: 0
+  - field: {fileID: 11400000, guid: 29c59e17040c6ac44a423d0dccf6daf5, type: 2}
+    densityMultiplier: 0
+  startingBuildings: []
