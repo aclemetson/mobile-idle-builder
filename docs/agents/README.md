@@ -35,7 +35,7 @@ Each task file opens with its own Required-reading line and a Status line; updat
 | Task | Status | Size |
 |---|---|---|
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
-| `tasks/feature-pve-tournaments.md` — weekly 24h league tournaments (UGS Cloud Code), nicknames, item stars | phases 1-4 merged (#492-#495), phase 5 on feat/pve-5-rewards; 6 pending | XL (6 phases) |
+| `tasks/feature-pve-tournaments.md` — weekly 24h league tournaments (UGS Cloud Code), nicknames, item stars | phases 1-5 merged (#492-#496), phase 6 on feat/pve-6-onboarding | XL (6 phases) |
 
 ### Done (`tasks/archive/`)
 

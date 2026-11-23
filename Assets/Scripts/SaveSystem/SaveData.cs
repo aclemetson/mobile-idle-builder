@@ -106,6 +106,10 @@ namespace MobileIdleBuilder
         // cleared on the server; this list stops a retry of the server step from granting it twice. Newest last,
         // trimmed to TournamentRules.ClaimedWeeksKept. Survives prestige.
         public List<string> pveClaimedWeeks                 = new();
+        // PvE onboarding (TournamentIntroController): the full intro has been shown once; tournamentIntroWeek = the
+        // week id whose "tournament open" message was last shown (one per entry window). Survive prestige.
+        public bool   tournamentIntroSeen;
+        public string tournamentIntroWeek;
         public CurrentRunData currentRun                    = new();
     }
 

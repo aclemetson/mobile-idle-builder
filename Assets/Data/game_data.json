@@ -18098,6 +18098,66 @@
           "action": ""
         }
       ]
+    },
+    {
+      "_comment": "PvE phase 6 (2026-11-23): first-time tournament explainer, played by TournamentIntroController on the first login inside an entry window (Friday 00:00-Saturday 00:00 UTC) once the Chemistry tutorial is done; after it, the Tournament button pulses. Later weeks play pve_intro_weekly.",
+      "id": "pve_intro",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "Your lab is ready for something new: tournaments. One opens every Friday, and this week's is open now.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Start it any time before entry closes. Starting prestiges your run, then you have 24 hours to build the highest net worth you can.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "You race a small bracket of players in your league. Everyone is compared at the same point in their own 24 hours, so it doesn't matter when you start.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Finish near the top to move up a league; higher leagues pay more. Rewards are crystals and stars, and every star makes one of your items worth 20% more, for good.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "Open Tournament in the menu to start yours.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
+    },
+    {
+      "_comment": "PvE phase 6: short reminder on the first login inside each later entry window (TournamentIntroController). {entry_closes} is filled at play time with when entry closes in the player's local time (e.g. Friday 7:00 PM).",
+      "id": "pve_intro_weekly",
+      "lines": [
+        {
+          "speaker_name": "The Architect",
+          "text": "This week's tournament is open until {entry_closes}. Open Tournament in the menu to start your 24 hours.",
+          "portrait_path": "TODO",
+          "pause_game": true,
+          "highlight_target": "",
+          "action": ""
+        }
+      ]
     }
   ],
 

@@ -1,6 +1,6 @@
 # Feature: PvE Tournaments (weekly 24h league runs)
 
-**Status:** Phases 1-4 merged into `integration/2026-11-23` (PRs #492-#495; module deployed). Phase 5 (results + rewards) done on `feat/pve-5-rewards` (2026-11-23). Phase 6 (onboarding) pending.
+**Status:** all six phases built. Phases 1-5 merged into `integration/2026-11-23` (PRs #492-#496; module deployed). Phase 6 (onboarding) on `feat/pve-6-onboarding` (2026-11-23). Remaining: the open items at the bottom.
 **Size:** XL (6 phases, one PR each, stacked where they share files).
 **Required reading:** `architecture.md`, `save-system.md`, `feature-flags.md`, `ui-toolkit.md`, `economy-balance.md` (currencies), `analytics.md` (snapshot loop). Source design: `docs/pve.txt`.
 
@@ -137,6 +137,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - Claim: crystals via `paidCurrency` write-through; stars via `ItemStars.Grant`, then a reveal list ("★ Carbon +20%").
 
 ### Phase 6: Unlock + onboarding
+- **Done 2026-11-23 (as built):** `TournamentIntroController` (added to the HUD at runtime). Once per entry window (`SaveData.tournamentIntroWeek`), when unlocked and not entered this week, after the game has been calm for 5 s (no tutorial, including a world flow in progress; no dialogue, modal or open Tournament panel), it plays `pve_intro` the first time (`tournamentIntroSeen`) and `pve_intro_weekly` after, then pulses the way to `btn-tournament` (TutorialPulseResolver: drawer handle, then the button) for up to 30 s or until the panel opens; the panel's Open screen is the explainer with Start. Finishing the Chemistry tutorial inside the window therefore shows its last message, then this ~5 s later. Dev console: `tournament intro`, `tournament intro full`. **Player-facing times are local** (2026-11-23): `pve_intro_weekly` says "open until {entry_closes}", filled at play time in a runtime copy of the dialogue with `TournamentRules.EntryClosesLocal` ("Friday 7:00 PM" at UTC-5); the panel's next-opening line and the entry-closed error use `NextOpensLocal`. The schedule itself stays UTC on the server.
 - Unlock when the Chemistry world tutorial is complete (`TutorialFlows` / `SaveData.worldTutorials` for `world_chemistry` done).
 - First login inside an entry window after unlock: one-shot popup (`tournamentIntroSeenWeek`).
 - If the Chemistry tutorial finishes inside a window: after its last message closes, wait ~5 s, pulse the drawer's Tournament button (`TutorialPulseResolver`), open the panel on the explainer, and allow Start.

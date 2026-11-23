@@ -285,6 +285,114 @@ namespace MobileIdleBuilder.Tests
             StringAssert.Contains("★ Oxygen: now ★1 (+20% value)", reveal);
         }
 
+        // ── Onboarding (phase 6) ──────────────────────────────────────────────
+
+        static SaveData Unlocked()
+        {
+            var save = new SaveData();
+            save.tutorial.isActive = false;
+            TutorialFlows.Slot(save, TournamentRules.UnlockWorld, create: true).done = true;
+            return save;
+        }
+
+        [Test]
+        public void Intro_OncePerEntryWindow_OnlyWhenUnlockedCalmAndNotEntered()
+        {
+            var save = Unlocked();
+            var fri = Start;                                  // entry open
+            Assert.IsTrue(TournamentIntroController.ShouldShow(true, save, fri, calm: true));
+            Assert.IsFalse(TournamentIntroController.ShouldShow(false, save, fri, true), "pve.enabled off");
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, save, fri, calm: false), "waits for a calm moment");
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, new SaveData(), fri, true), "locked before the Chemistry tutorial");
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, save, fri.AddDays(1), true), "entry closed (Saturday)");
+
+            save.tournamentIntroWeek = "2026-11-27";
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, save, fri.AddHours(3), true), "already shown this window");
+            Assert.IsTrue(TournamentIntroController.ShouldShow(true, save, fri.AddDays(7), true), "next Friday: shown again");
+
+            var entered = Unlocked();
+            entered.tournament = Entry();
+            Assert.IsFalse(TournamentIntroController.ShouldShow(true, entered, fri.AddHours(1), true), "already entered this week");
+        }
+
+        [Test]
+        public void Intro_FullExplainerFirst_ThenTheShortOne()
+        {
+            var save = Unlocked();
+            Assert.AreEqual(TournamentIntroController.FullIntroId, TournamentIntroController.DialogueFor(save));
+            save.tournamentIntroSeen = true;
+            Assert.AreEqual(TournamentIntroController.WeeklyIntroId, TournamentIntroController.DialogueFor(save));
+        }
+
+        [Test]
+        public void Intro_WaitsForAnyTutorial_IncludingAWorldFlowInProgress()
+        {
+            var save = Unlocked();
+            Assert.IsFalse(TournamentIntroController.AnyTutorialRunning(save, null));
+            Assert.IsFalse(TournamentIntroController.AnyTutorialRunning(save, TournamentRules.UnlockWorld), "Chemistry's is done");
+            TutorialFlows.Slot(save, "world_biology", create: true).done = false;
+            Assert.IsTrue(TournamentIntroController.AnyTutorialRunning(save, "world_biology"));
+            save.tutorial.isActive = true;
+            Assert.IsTrue(TournamentIntroController.AnyTutorialRunning(save, null));
+        }
+
+        static readonly System.Globalization.CultureInfo EnUs = new System.Globalization.CultureInfo("en-US");
+        static TimeZoneInfo Zone(double hours) =>
+            TimeZoneInfo.CreateCustomTimeZone($"test{hours}", TimeSpan.FromHours(hours), $"test{hours}", $"test{hours}");
+
+        [Test]
+        public void LocalTime_ShowsTheWeekdayAndTimeInThePlayersZone()
+        {
+            // Entry closes Saturday 00:00 UTC: that is Friday evening in the Americas, Saturday morning in Asia.
+            string west = TournamentRules.EntryClosesLocal(Start, Zone(-5), EnUs);
+            StringAssert.StartsWith("Friday ", west);
+            StringAssert.Contains("7:00", west);
+            StringAssert.Contains("PM", west);
+            string east = TournamentRules.EntryClosesLocal(Start, Zone(9), EnUs);
+            StringAssert.StartsWith("Saturday ", east);
+            StringAssert.Contains("9:00", east);
+            StringAssert.StartsWith("Saturday ", TournamentRules.EntryClosesLocal(Start, Zone(0), EnUs), "UTC itself");
+
+            // Sunday: the next entry opens Friday 00:00 UTC = Thursday 7 PM at UTC-5.
+            string next = TournamentRules.NextOpensLocal(Start.AddDays(2), Zone(-5), EnUs);
+            StringAssert.StartsWith("Thursday ", next);
+            StringAssert.Contains("7:00", next);
+        }
+
+        [Test]
+        public void Intro_FillsTheEntryCloseTime_AndTheAssetKeepsItsPlaceholder()
+        {
+            Assert.AreEqual("open until Friday 7:00 PM.",
+                TournamentIntroController.FillTimes("open until " + TournamentIntroController.EntryClosesToken + ".", "Friday 7:00 PM"));
+            Assert.AreEqual("no token", TournamentIntroController.FillTimes("no token", "x"));
+
+            var weekly = Resources.Load<DialogueDatabaseSO>("DialogueDatabase").Get(TournamentIntroController.WeeklyIntroId);
+            StringAssert.Contains(TournamentIntroController.EntryClosesToken, weekly.lines[0].text,
+                "filled in a runtime copy only, so next week shows next week's time");
+            StringAssert.DoesNotContain("UTC", weekly.lines[0].text);
+        }
+
+        [Test]
+        public void Intro_DialoguesAreImported()
+        {
+            var db = Resources.Load<DialogueDatabaseSO>("DialogueDatabase");
+            Assert.IsNotNull(db);
+            foreach (var id in new[] { TournamentIntroController.FullIntroId, TournamentIntroController.WeeklyIntroId })
+            {
+                var d = db.Get(id);
+                Assert.IsNotNull(d, $"{id} missing: run Import Game Data");
+                Assert.Greater(d.lines.Length, 0, id);
+            }
+        }
+
+        [Test]
+        public void Save_IntroFieldsDefaultToNeverShown()
+        {
+            var save = JsonUtility.FromJson<SaveData>("{\"prestigeCount\":4}");
+            Assert.IsFalse(save.tournamentIntroSeen);
+            Assert.IsTrue(string.IsNullOrEmpty(save.tournamentIntroWeek));
+        }
+
         // ── Save + HUD ────────────────────────────────────────────────────────
 
         [Test]
