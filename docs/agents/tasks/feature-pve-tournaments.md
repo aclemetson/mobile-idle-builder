@@ -1,6 +1,6 @@
 # Feature: PvE Tournaments (weekly 24h league runs)
 
-**Status:** Phase 1 (nickname) done on `feat/pve-1-nickname` (2026-11-23); Phase 2 (item stars) next on `feat/pve-2-item-stars`, stacked on it. Phases 3-6 pending.
+**Status:** Phase 1 (nickname) done, PR #492 (`feat/pve-1-nickname`). Phase 2 (item stars) done on `feat/pve-2-item-stars`, stacked on it (2026-11-23). Phases 3-6 pending (3 needs the UGS dashboard set up).
 **Size:** XL (6 phases, one PR each, stacked where they share files).
 **Required reading:** `architecture.md`, `save-system.md`, `feature-flags.md`, `ui-toolkit.md`, `economy-balance.md` (currencies), `analytics.md` (snapshot loop). Source design: `docs/pve.txt`.
 
@@ -107,6 +107,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - UI: star badge (`★ n`, +x%) on Recipes rows and the building inspector's item value line.
 - Dev console: `stars grant <n>`, `stars list`, `stars clear`.
 - Tests: multiplier math, grant draws only discovered items, prestige keeps stars, net worth/sink/idle chain values scale.
+- **Done 2026-11-23** (`ItemStars`, `ItemStarsTests`). As built: one multiplier, `ItemStars.Multiplier(itemId)`, applied at `SurplusSale.DemonPrice`, `EntropySinkSystem`, `NetWorthSystem` (inventory), `GridSaveService` (idle pricing) and `MaxwellsDemonController` (via `ItemStars.StarredBase`); `RecipeSO`/`RecipeDatabase` value totals and byproduct escape entropy stay on base price. Badge text "★3 +60%" on the Recipes worth line and the inspector's first value line (`HUDController.StarBadge`). Dev console: `stars grant <n>`, `stars list`, `stars clear`.
 
 ### Phase 3: Backend scripts
 - `Assets/CloudCode/pve_*.js` as above, plus `Assets/CloudCode/pve_core.js` (pure functions: window math, value-at-t, settle ranking) mirrored by a C# `PveRules` for unit tests and client display. Both get the same fixture tests (`PveRulesTests` in C#; the JS uses the identical fixture JSON).

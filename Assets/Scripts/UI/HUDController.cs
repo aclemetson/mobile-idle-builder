@@ -1805,7 +1805,7 @@ namespace MobileIdleBuilder
             // What one item sells for. Shown once per row (the group's row), not on each method row.
             if (outputItem != null)
             {
-                var worthLabel = new Label(WorthEachText(ItemValue.PricePerItem(outputItem)));
+                var worthLabel = new Label(WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId)));
                 worthLabel.style.fontSize = 11;
                 worthLabel.AddToClassList("recipe-bonus-hint");
                 info.Add(worthLabel);
@@ -1895,8 +1895,14 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Recipe-row / inspector line for what one item sells for, e.g. "Worth ◈ 2.5 each".</summary>
-        internal static string WorthEachText(float price) =>
-            $"Worth {NumberFormat.Entropy(price)} each";
+        internal static string WorthEachText(float price, int stars = 0) =>
+            stars > 0
+                ? $"Worth {NumberFormat.Entropy(price)} each · {StarBadge(stars)}"
+                : $"Worth {NumberFormat.Entropy(price)} each";
+
+        /// <summary>Tournament stars on an item, e.g. "★3 +60%" (PvE phase 2, <see cref="ItemStars"/>).</summary>
+        internal static string StarBadge(int stars) =>
+            stars <= 0 ? "" : $"★{stars} +{Mathf.RoundToInt(stars * ItemStars.BonusPerStar * 100f)}%";
 
         /// <summary>Recipe-row / inspector line for fusion byproducts that escape as entropy.</summary>
         internal static string EscapeBonusText(float entropyPerCraft) =>

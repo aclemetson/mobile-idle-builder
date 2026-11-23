@@ -439,6 +439,36 @@ namespace MobileIdleBuilder.Dev
                     return "Name card shown.";
                 });
 
+            // ── tournament item stars (PvE phase 2) ──────────────────────────
+            _registry.Register("stars grant <n>", "Grant N tournament stars on random discovered items (+20% value each)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n <= 0 || n > 1000)
+                        return "Error: <n> must be an integer 1..1000.";
+                    var landed = ItemStars.GrantLive(n);
+                    if (landed.Count == 0) return "No stars granted: no save, or no discovered items yet.";
+                    var counts = new Dictionary<string, int>();
+                    foreach (var id in landed) counts[id] = counts.TryGetValue(id, out int c) ? c + 1 : 1;
+                    var sb = new StringBuilder($"Granted {landed.Count} star(s):\n");
+                    foreach (var kv in counts) sb.AppendLine($"  {kv.Key} +{kv.Value}");
+                    return sb.ToString();
+                });
+
+            _registry.Register("stars list", "List every item with tournament stars and its value multiplier",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: no save.";
+                    if (ItemStars.Total(save) == 0) return "No stars.";
+                    var sb = new StringBuilder($"{ItemStars.Total(save)} star(s):\n");
+                    for (int i = 0; i < save.itemStarIds.Count && i < save.itemStarCounts.Count; i++)
+                        sb.AppendLine($"  {save.itemStarIds[i],-24} ★{save.itemStarCounts[i]}  x{ItemStars.MultiplierFor(save.itemStarCounts[i]):0.0#}");
+                    return sb.ToString();
+                });
+
+            _registry.Register("stars clear", "Remove every tournament star",
+                _ => { ItemStars.ClearLive(); return "Stars cleared."; });
+
             // ── item listing ─────────────────────────────────────────────────
             _registry.Register("list items", "List all items with their string IDs",
                 _ =>
