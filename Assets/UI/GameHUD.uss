@@ -1383,6 +1383,61 @@
     -unity-text-align: middle-center;
 }
 
+/* Tournament leaderboard rows (TournamentPanelController). Projected values (players behind you) are italic with "~". */
+.tournament-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 32px;
+    padding: 2px var(--spacing-sm);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+}
+
+.tournament-row--you {
+    background-color: var(--color-surface-raised);
+}
+
+.tournament-row--promote .tournament-row__rank {
+    color: var(--color-success);
+}
+
+.tournament-row--demote .tournament-row__rank {
+    color: var(--color-danger);
+}
+
+.tournament-row__rank {
+    width: 40px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+}
+
+.tournament-row__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tournament-row__value {
+    color: var(--color-currency-entropy);
+    font-size: var(--font-size-md);
+    -unity-text-align: middle-right;
+}
+
+.tournament-row__played {
+    width: 56px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-right;
+}
+
+.tournament-row--projected .tournament-row__value {
+    -unity-font-style: italic;
+    color: var(--color-text-secondary);
+}
+
 /* Player name card (PlayerNamePromptController): text input + validation line. */
 .name-prompt__input {
     margin: 0 var(--spacing-md);

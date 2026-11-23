@@ -10,7 +10,7 @@ namespace MobileIdleBuilder
     /// Results: Sun 00:00 until the next Friday (settled, rewards claimable).</summary>
     public enum PvePhase { Entry, Running, Results }
 
-    public enum SnapCheck { Accepted, Stale, NetWorthDropped, BadValue, RunOver }
+    public enum SnapCheck { Accepted, Stale, NetWorthDropped, BadValue, RunOver, Future }
 
     /// <summary>
     /// The PvE tournament rules (docs/agents/tasks/feature-pve-tournaments.md): the weekly schedule,
@@ -90,6 +90,25 @@ namespace MobileIdleBuilder
             DateTime.Parse(iso, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
 
         // ── Snapshots ────────────────────────────────────────────────────────
+
+        /// <summary>How far a snapshot's own time may run ahead of the server's (clock drift between the two).</summary>
+        public const int BackdateSkewSeconds = 120;
+
+        /// <summary>
+        /// The elapsed time a snapshot counts at. Normally the server's (<paramref name="serverT"/>). A snapshot
+        /// the device took earlier and could only deliver now (the app was suspended before it went out)
+        /// carries its own time <paramref name="atT"/> (>= 0): it counts at that time, which may not be later
+        /// than the server's by more than <see cref="BackdateSkewSeconds"/> (Future). The device only keeps
+        /// snapshots taken before its 24h mark, so a late delivery can't add play from after the run.
+        /// </summary>
+        public static SnapCheck SnapshotTime(int serverT, int atT, out int rawT)
+        {
+            rawT = serverT;
+            if (atT < 0) return SnapCheck.Accepted;
+            if (atT > serverT + BackdateSkewSeconds) return SnapCheck.Future;
+            rawT = Math.Min(atT, serverT);
+            return SnapCheck.Accepted;
+        }
 
         /// <summary>
         /// Checks a new snapshot at raw elapsed time <paramref name="rawT"/> against the member's history and,

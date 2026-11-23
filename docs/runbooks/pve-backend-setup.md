@@ -97,6 +97,8 @@ pve time off
 
 To see the 10h/14h/6h comparison from the design doc, join with two or three accounts (a second device, or another Editor sign-in) at different debug times.
 
+**Offline at the 24h mark.** The final score is the player's last snapshot plus idle earnings up to their idle cap. A snapshot the device took but couldn't deliver (the app was suspended) is kept on the device and sent on the next launch with its own time, as long as the week isn't settled yet (Sunday 00:10 UTC). `tournament status` shows it as `keptSnapshot`.
+
 Errors the module returns: `outside_window`, `already_joined`, `name_required`, `name_blocked`, `not_joined`, `run_over`, `snapshot_rejected:<reason>`, `nothing_to_claim`, `config_missing`. A `network:` prefix means the call itself failed: the module isn't deployed, Cloud Code is off, or the device is offline.
 
 ## Limits and costs

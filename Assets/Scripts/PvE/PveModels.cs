@@ -168,6 +168,8 @@ namespace MobileIdleBuilder
         public string league;
         public int viewerT;
         public bool settled;
+        public int promote;             // top N move up at settlement (scaled for this bracket's size)
+        public int demote;              // bottom N move down
         public List<PveBoardRow> rows = new List<PveBoardRow>();
     }
 

@@ -216,12 +216,22 @@ namespace MobileIdleBuilder
             return text;
         }
 
+        private const string PrestigeButtonText = "⬆ Prestige";
+        private string _lastPrestigeText;
+
         private void RefreshPrestigeButton()
         {
             if (_btnPrestige == null) return;
             var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-            if (progress.PrestigeAvailable == _lastPrestigeAvailable) return;
+            // During a tournament run the button stays (tapping it explains the lock) but shows the countdown.
+            var tournament = TournamentService.Instance;
+            string text = tournament != null && tournament.PrestigeLocked
+                ? TournamentRules.PrestigeLockText(tournament.RunRemaining)
+                : PrestigeButtonText;
+            if (progress.PrestigeAvailable == _lastPrestigeAvailable && text == _lastPrestigeText) return;
             _lastPrestigeAvailable         = progress.PrestigeAvailable;
+            _lastPrestigeText              = text;
+            _btnPrestige.text              = text;
             _btnPrestige.style.display = progress.PrestigeAvailable
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;

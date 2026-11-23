@@ -24,7 +24,7 @@ namespace MobileIdleBuilder
     public static class FeatureFlags
     {
         // ── Keys ──────────────────────────────────────────────────────────────
-        public const string PvpEnabledKey         = "pvp.enabled";
+        public const string PveEnabledKey         = "pve.enabled";
         public const string IapEnabledKey         = "iap.enabled";
         public const string AdsEnabledKey         = "ads.enabled";
         public const string AdsTestModeKey        = "ads.test_mode";
@@ -55,7 +55,7 @@ namespace MobileIdleBuilder
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
-        public const bool PvpEnabledDefault         = false; // server backend not live yet
+        public const bool PveEnabledDefault         = true;  // weekly PvE tournaments (kill-switch; backend: docs/runbooks/pve-backend-setup.md)
         public const bool IapEnabledDefault         = true;
         public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
         // Test ads: no ad network, a "test ad" card instead, reward still granted. Defaults ON so a dev
@@ -94,7 +94,7 @@ namespace MobileIdleBuilder
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
         {
-            new FlagDef(PvpEnabledKey,         FlagType.Bool),
+            new FlagDef(PveEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
             new FlagDef(AdsEnabledKey,         FlagType.Bool),
             new FlagDef(AdsTestModeKey,        FlagType.Bool),
@@ -125,7 +125,7 @@ namespace MobileIdleBuilder
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
-        public static bool PvpEnabled         => GetBool(PvpEnabledKey,         PvpEnabledDefault);
+        public static bool PveEnabled         => GetBool(PveEnabledKey,         PveEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
         public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
 

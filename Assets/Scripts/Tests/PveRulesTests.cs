@@ -130,6 +130,27 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(PveRules.MaxIdleCapSeconds, s[1].cap);
         }
 
+        [Test]
+        public void SnapshotTime_DelayedDeliveryCountsAtItsOwnTime_NotInTheFuture()
+        {
+            Assert.AreEqual(SnapCheck.Accepted, PveRules.SnapshotTime(5000, -1, out int now));
+            Assert.AreEqual(5000, now, "no own time: counts at the server's");
+            Assert.AreEqual(SnapCheck.Accepted, PveRules.SnapshotTime(90000, 86000, out int late));
+            Assert.AreEqual(86000, late, "taken before the 24h mark, delivered later");
+            Assert.AreEqual(SnapCheck.Accepted, PveRules.SnapshotTime(5000, 5100, out int skew));
+            Assert.AreEqual(5000, skew, "a little device clock drift is clamped to the server's time");
+            Assert.AreEqual(SnapCheck.Future, PveRules.SnapshotTime(5000, 5000 + PveRules.BackdateSkewSeconds + 1, out _));
+        }
+
+        [Test]
+        public void DelayedSnapshot_OlderThanTheLastIsStale()
+        {
+            var s = Start();
+            PveRules.AddSnap(s, 6000, 500, 1, 1800, Run, Bucket);
+            PveRules.SnapshotTime(90000, 5000, out int rawT);
+            Assert.AreEqual(SnapCheck.Stale, PveRules.AddSnap(s, rawT, 450, 1, 1800, Run, Bucket));
+        }
+
         // ── Value at time t (the docs/pve.txt example) ────────────────────────
 
         static List<PveSnap> Snaps(params (double hours, double nw, double rate, int cap)[] pts) =>

@@ -847,22 +847,29 @@ namespace MobileIdleBuilder.Dev
                     return $"Megastructure material: {save.megastructureMaterial:N0}.";
                 });
 
-            // ── PVP ───────────────────────────────────────────────────────────
-            _registry.Register("unlock pvp", "Override PVP prestige lock",
+            // ── Tournament (PvE phase 4) ─────────────────────────────────────
+            _registry.Register("tournament status", "Local tournament state: entry, run timer, prestige lock, pending join prestige",
+                _ => TournamentService.Instance?.DevStatus() ?? "Error: TournamentService not running.");
+
+            _registry.Register("tournament unlock", "Mark the Chemistry tutorial done so tournaments unlock",
                 _ =>
                 {
-                    if (SaveManager.Instance?.Current == null)
-                        return "Error: SaveManager not ready.";
-                    SaveManager.Instance.Current.prestigeCount = PVPService.PvpPrestigeUnlockCount;
-                    PVPService.Instance?.ResetForNewWeek();
-                    return $"PVP unlocked (prestigeCount set to {PVPService.PvpPrestigeUnlockCount}).";
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: SaveManager not ready.";
+                    var slot = TutorialFlows.Slot(save, TournamentRules.UnlockWorld, create: true);
+                    slot.done = true;
+                    SaveManager.Instance.SaveLocal();
+                    return "Chemistry tutorial marked done: tournaments unlocked.";
                 });
 
-            _registry.Register("reset pvp", "Reset PVP run state",
+            _registry.Register("tournament forget", "Clear this device's tournament entry (the server keeps its copy)",
                 _ =>
                 {
-                    PVPService.Instance?.ResetForNewWeek();
-                    return "PVP run reset.";
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: SaveManager not ready.";
+                    save.tournament = new TournamentSaveData();
+                    SaveManager.Instance.SaveLocal();
+                    return "Local tournament entry cleared (prestige unlocked).";
                 });
 
             _registry.Register("win pvp", "Notify achievement service of a PVP win",

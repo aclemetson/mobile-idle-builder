@@ -2,7 +2,7 @@
 
 **Scope:** How the runtime UI is structured and how to add a panel without falling into the known traps. Read before any UI/UXML/USS work.
 
-> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17; Statistics stored-value row 2026-11-19; landscape side sheets + PanelDock 2026-11-19; player name card 2026-11-23. If code contradicts this doc, trust the code and update this doc.
+> Verified against: `deea0a4`, 2026-06-11; back-button rule 2026-10-31 (#205); Recipes tab groups by output item 2026-11-07 (#336); Entropy Surge offer 2026-11-11; building edit mode 2026-11-17; conveyor tracing + `TapGesture` 2026-11-17; Statistics stored-value row 2026-11-19; landscape side sheets + PanelDock 2026-11-19; player name card 2026-11-23; PvE tournaments (TournamentService) 2026-11-23. If code contradicts this doc, trust the code and update this doc.
 
 ## The one true document
 
@@ -10,7 +10,7 @@
 
 ### Verified element inventory in GameHUD.uxml (by `name=`)
 
-`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pvp-panel` (:165), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
+`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pvp-panel` (the Tournament panel: `TournamentPanelController`, drawer button `btn-pvp` "Tournament"), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
 
 Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by adding/removing `hidden`.
 
