@@ -3,12 +3,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* Layout: a control strip, a horizontally scrolling timeline (lanes per world, hours below, days above),
-   then the pacing table and the item ledger. Lab-notebook palette: graphite ground, phosphor accents. */
+/* Control strip, a horizontally scrolling timeline (one lane per world; days below, active hours above),
+   then the editable plan: phases, walls, upgrades, Ascension, items. Lab-notebook palette. */
 :root {
   --bg: #f4f6f7; --panel: #ffffff; --ink: #142026; --muted: #5b6b73; --line: #d5dde1; --grid: #e7ecee;
   --accent: #0b7a8f; --accent-ink: #ffffff; --warn: #b5521b; --good: #2f7d4f;
-  --phys: #c9741a; --phys2: #e0a14a; --chem: #127e98; --chem2: #4bb3c9; --bio: #3f8f52; --metal: #7c8790;
+  --phys: #c9741a; --chem: #127e98; --bio: #3f8f52; --metal: #6f7b85; --eng: #7a4fb0;
   --chip: #eef2f3; --sel: #ffe9a8;
   --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
   --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -17,88 +17,82 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f1518; --panel: #151e22; --ink: #e3ebee; --muted: #8fa1a9; --line: #26343a; --grid: #1b262b;
   --accent: #39b8cf; --accent-ink: #061215; --warn: #f08a4b; --good: #5cc07f;
-  --phys: #e8963a; --phys2: #f4c27a; --chem: #3cc0dc; --chem2: #8ee0f0; --bio: #6cc47f; --metal: #95a2ab;
+  --phys: #e8963a; --chem: #3cc0dc; --bio: #6cc47f; --metal: #a3afb8; --eng: #b48cf0;
   --chip: #1c272c; --sel: #5a4a12; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0f1518; --panel: #151e22; --ink: #e3ebee; --muted: #8fa1a9; --line: #26343a; --grid: #1b262b;
   --accent: #39b8cf; --accent-ink: #061215; --warn: #f08a4b; --good: #5cc07f;
-  --phys: #e8963a; --phys2: #f4c27a; --chem: #3cc0dc; --chem2: #8ee0f0; --bio: #6cc47f; --metal: #95a2ab;
+  --phys: #e8963a; --chem: #3cc0dc; --bio: #6cc47f; --metal: #a3afb8; --eng: #b48cf0;
   --chip: #1c272c; --sel: #5a4a12; color-scheme: dark; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; }
 .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 20px 48px; display: flex; flex-direction: column; gap: 18px; max-width: 1400px; margin: 0 auto; }
 h1 { font-family: var(--display); font-size: 1.9rem; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
 h2 { font-family: var(--display); font-size: 1.15rem; margin: 0; text-wrap: balance; }
-.lede { color: var(--muted); max-width: 72ch; margin: 4px 0 0; line-height: 1.5; }
+.lede { color: var(--muted); max-width: 76ch; margin: 4px 0 0; line-height: 1.5; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+.panel > .row:first-child { justify-content: space-between; margin-bottom: 8px; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: transparent; color: var(--ink); padding: 7px 12px; font: 500 13px var(--body); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
-.btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 7px 12px;
-  font: 500 13px var(--body); cursor: pointer; }
+.btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 7px 12px; font: 500 13px var(--body); cursor: pointer; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn:disabled { opacity: .5; cursor: default; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 label.ctl { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+label.ctl input[type=number] { width: 64px; font: 13px var(--mono); padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
 .status { color: var(--muted); font-size: 13px; }
 .status.ok { color: var(--good); } .status.err { color: var(--warn); }
-
-.callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-.callout h3 { margin: 0 0 6px; font: 600 13px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.callout h3 { margin: 0 0 6px; font: 600 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .big { font-family: var(--display); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; font-variant-numeric: tabular-nums; margin: 6px 0 0; }
 .kv dt { color: var(--muted); } .kv dd { margin: 0; font-family: var(--mono); font-size: 12.5px; }
-.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.vs .tag { font: 600 11px var(--body); letter-spacing: .06em; text-transform: uppercase; }
-.tag.chem { color: var(--chem); } .tag.phys { color: var(--phys); }
-
-.tl-scroll { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
-  touch-action: pan-x pan-y; }
-#tl { display: block; }
-#tl text { fill: var(--ink); font-family: var(--body); }
-#tl .axis text { fill: var(--muted); font-size: 11px; font-family: var(--mono); }
-#tl .lane-label { font: 600 12px var(--body); fill: var(--muted); letter-spacing: .05em; }
+.tl-scroll { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+svg text { fill: var(--ink); font-family: var(--body); }
+svg .axis text { fill: var(--muted); font-size: 11px; font-family: var(--mono); }
+svg .lane-label { font: 600 12px var(--body); fill: var(--muted); letter-spacing: .05em; }
 #tl .dot { cursor: pointer; stroke: var(--panel); stroke-width: 1.2; }
 #tl .dot.drag { cursor: ew-resize; }
 #tl .dot.sel { stroke: var(--ink); stroke-width: 2.2; }
-#tl .ghost { opacity: .35; }
-#tl .label { font-size: 10.5px; fill: var(--ink); pointer-events: none; }
+#tl .ghost { opacity: .3; }
+#tl .label { font-size: 10.5px; pointer-events: none; }
+#tl .wall { font: 600 10px var(--mono); fill: var(--warn); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
-
 .detail { display: grid; gap: 6px; }
 .detail .name { font-family: var(--display); font-size: 1.2rem; }
 .detail .eq { font-family: var(--mono); font-size: 13px; background: var(--chip); border-radius: 6px; padding: 6px 8px; overflow-x: auto; }
 .pill { display: inline-block; font: 600 11px var(--body); letter-spacing: .04em; padding: 2px 8px; border-radius: 99px; background: var(--chip); color: var(--muted); }
-.pill.new { color: var(--good); } .pill.moved { color: var(--accent); } .pill.parked, .pill.retire { color: var(--warn); }
-
+.pill.new { color: var(--good); } .pill.moved { color: var(--accent); } .pill.retire, .pill.wall { color: var(--warn); }
 .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: left; white-space: nowrap; }
-th { position: sticky; top: 0; background: var(--panel); font: 600 12px var(--body); color: var(--muted); letter-spacing: .03em; }
+th { position: sticky; top: 0; background: var(--panel); font: 600 12px var(--body); color: var(--muted); letter-spacing: .03em; z-index: 1; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
 td input, td select { font: 13px var(--body); color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 3px 5px; width: 100%; min-width: 60px; }
 td input:hover, td select:hover { border-color: var(--line); }
-td input.num { text-align: right; font-family: var(--mono); width: 80px; }
+td input.num { text-align: right; font-family: var(--mono); width: 76px; }
 tr.sel td { background: var(--sel); }
 .mini { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 2px 5px; font-size: 13px; }
 .mini:hover { color: var(--ink); }
 .filters { display: flex; flex-wrap: wrap; gap: 10px; }
 select.f, input.f { font: 13px var(--body); padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
 .empty { color: var(--muted); padding: 10px 0; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chips span { background: var(--chip); border-radius: 6px; padding: 3px 8px; font-size: 12.5px; }
-@media (max-width: 600px) { .vs { grid-template-columns: 1fr; } h1 { font-size: 1.5rem; } }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.note { color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 80ch; margin: 0 0 10px; }
+.asc-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.asc-params { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+@media (max-width: 600px) { h1 { font-size: 1.5rem; } }
 </style>
 
 <div class="wrap">
   <header>
     <h1>Item Timeline</h1>
-    <p class="lede">When a player reaches each item in Physics, Chemistry and Biology: the game as built, and the proposed
-      restructure (fusion up to manganese, Uranium mined and walked down to Iron, life chemistry in Chemistry, metals parked in
-      Metallurgy). Drag a dot or edit the tables, then save; Claude applies the saved version to the game.</p>
+    <p class="lede">When an engaged daily player reaches each item across five worlds, ending in the first Ascension at about three months.
+      Walls make you prestige at the same spot several times, buying upgrades until a run breaks through. After the first
+      clear, each Ascension pays megastructure material, and the loops repeat for years. Drag a dot or edit any table, then save;
+      Claude applies the saved version to the game.</p>
   </header>
 
   <section class="row" aria-label="View">
@@ -107,9 +101,10 @@ select.f, input.f { font: 13px var(--body); padding: 6px 8px; border: 1px solid 
       <button id="v-built" aria-pressed="false">As built</button>
       <button id="v-both" aria-pressed="false">Overlay</button>
     </div>
-    <label class="ctl" for="ads"><input type="checkbox" id="ads" checked> Days with rewarded ads</label>
-    <label class="ctl" for="zoom">Zoom <input type="range" id="zoom" min="8" max="120" value="22"></label>
-    <label class="ctl" for="labels"><input type="checkbox" id="labels"> Names on dots</label>
+    <label class="ctl" for="ahpd">Active h / day <input type="number" id="ahpd" min="0.25" max="12" step="0.25"></label>
+    <label class="ctl" for="ads"><input type="checkbox" id="ads" checked> As built with rewarded ads</label>
+    <label class="ctl" for="zoom">Zoom <input type="range" id="zoom" min="6" max="140" value="16"></label>
+    <label class="ctl" for="labels"><input type="checkbox" id="labels"> Names</label>
     <span style="flex:1"></span>
     <button class="btn" id="export">Export JSON</button>
     <select class="f" id="versions" aria-label="Saved versions"><option value="">Versions</option></select>
@@ -117,30 +112,55 @@ select.f, input.f { font: 13px var(--body); padding: 6px 8px; border: 1px solid 
     <span class="status" id="status">Loading saved version...</span>
   </section>
 
-  <section class="callouts" id="callouts" aria-label="Where Chemistry starts"></section>
+  <section class="callouts" id="callouts" aria-label="Summary"></section>
 
   <section aria-label="Timeline">
-    <div class="tl-scroll" id="scroller"><svg id="tl" role="img" aria-label="Items on a timeline of active play hours"></svg></div>
+    <div class="tl-scroll" id="scroller"><svg id="tl" role="img" aria-label="Items on a timeline of calendar days"></svg></div>
     <div class="row" style="margin-top:8px; justify-content:space-between">
       <div class="legend" id="legend"></div>
-      <span class="status">Bottom axis: active play hours. Top axis: calendar days. Dashed lines: prestiges.</span>
+      <span class="status">Bottom: calendar days. Top: active play hours. Orange ↻N: a wall, N prestiges at the same spot.</span>
     </div>
   </section>
 
   <section class="panel detail" id="detail" aria-live="polite">
-    <div class="empty">Tap a dot or a table row to see the item. In Restructure, drag a dot sideways to pin its time.</div>
+    <div class="empty">Tap a dot or a table row to see the item. In Restructure, drag a dot sideways to pin its day.</div>
   </section>
 
   <section class="panel" aria-label="Phases and pacing">
-    <div class="row" style="justify-content:space-between; margin-bottom:8px">
-      <h2>Phases and pacing</h2>
-      <span class="status">Each phase spaces its items between start and end: a burst of quick items first, then gaps that grow, with a long finale.</span>
-    </div>
+    <div class="row"><h2>Phases and pacing</h2></div>
+    <p class="note">Each phase spaces its items between its start and end day: a burst of quick items first (gap in active hours),
+      then gaps that grow by "Gap growth" per item, with a longer finale. A wall stretches the gap before its item by its repeats.</p>
     <div class="tablewrap"><table id="phases"></table></div>
   </section>
 
+  <section class="panel" aria-label="Walls">
+    <div class="row"><h2>Walls: prestige at the same spot</h2><button class="btn" id="addWall">Add wall</button></div>
+    <p class="note">Like Idle Planet Miner: the research for the item costs more than one run earns. The player prestiges here
+      "Repeats" times, and the listed upgrades are what make the next run break through. Upgrade prices below are set to match.</p>
+    <div class="tablewrap"><table id="walls"></table></div>
+  </section>
+
+  <section class="panel" aria-label="Prestige upgrades">
+    <div class="row"><h2>Prestige upgrades</h2><button class="btn" id="addUpg">Add upgrade</button></div>
+    <p class="note">Today's shop, extended, plus one track per world. Each track's top levels are what the later walls need,
+      so a player always has an upgrade to aim at.</p>
+    <div class="tablewrap"><table id="upgrades"></table></div>
+  </section>
+
+  <section class="panel" aria-label="Ascension">
+    <div class="row"><h2>Ascension and the megastructure</h2><span class="status" id="ascSummary"></span></div>
+    <p class="note">Once every item is unlocked, Ascend: worlds lock again; items, research and prestige currency reset; shop upgrades
+      stay. Each Ascension pays megastructure material. Each megastructure stage costs more material than the last and adds a permanent
+      production bonus, so the next loop is faster (down to a floor). This projects the stages over the years.</p>
+    <div class="asc-grid">
+      <div class="asc-params" id="ascParams"></div>
+      <div class="tl-scroll"><svg id="asc" role="img" aria-label="Megastructure stages completed over years"></svg></div>
+      <div class="tablewrap"><table id="ascTable"></table></div>
+    </div>
+  </section>
+
   <section class="panel" aria-label="Items">
-    <div class="row" style="justify-content:space-between; margin-bottom:8px">
+    <div class="row">
       <h2>Items</h2>
       <div class="filters">
         <select class="f" id="fWorld" aria-label="Filter by world"></select>
@@ -151,183 +171,146 @@ select.f, input.f { font: 13px var(--body); padding: 6px 8px; border: 1px solid 
     </div>
     <div class="tablewrap" style="max-height:560px; overflow-y:auto"><table id="items"></table></div>
   </section>
-
-  <section class="panel" aria-label="Metallurgy">
-    <h2 style="margin-bottom:8px">Parked for Metallurgy</h2>
-    <div class="chips" id="parked"></div>
-  </section>
 </div>
 
 <script>
 const SEED = /*DATA*/null;
-const WORLD_COLORS = { world_physics: "--phys", world_chemistry: "--chem", world_biology: "--bio", world_metallurgy: "--metal" };
+const SCHEMA = 2;
+const WORLD_COLORS = { world_physics: "--phys", world_chemistry: "--chem", world_biology: "--bio", world_metallurgy: "--metal", world_engineering: "--eng" };
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const fmtH = h => h == null ? "" : (h < 1 ? Math.round(h * 60) + " min" : (h < 10 ? h.toFixed(1) : Math.round(h)) + " h");
-const fmtD = d => d == null ? "" : (d < 1 ? (d * 24).toFixed(1) + " h" : d.toFixed(1) + " d");
+const fmtD = d => d == null ? "" : d < 1 ? (d * 24).toFixed(1) + " h in" : d < 10 ? "day " + d.toFixed(1) : "day " + Math.round(d);
+const fmtH = h => h == null ? "" : h < 1 ? Math.round(h * 60) + " min" : (h < 10 ? h.toFixed(1) : Math.round(h)) + " h";
 const fmtN = n => n == null ? "" : n >= 1e9 ? (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e4 ? (n / 1e3).toFixed(1) + "k" : Math.round(n).toLocaleString();
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const worldName = id => SEED.worlds.find(w => w.id === id)?.name || id;
 
-// ── State ────────────────────────────────────────────────────────────────────────────────────────
-let state = { phases: structuredClone(SEED.phases), proposal: structuredClone(SEED.proposal) };
+// ── State ────────────────────────────────────────────────────────────────────────────────────
+const fresh = () => ({ phases: structuredClone(SEED.phases), proposal: structuredClone(SEED.proposal), walls: structuredClone(SEED.walls),
+  upgrades: structuredClone(SEED.upgrades), ascension: structuredClone(SEED.ascension), activeHoursPerDay: SEED.activeHoursPerDay });
+let state = fresh();
 let view = "prop", useAds = true, selected = null, dirty = false, db = null, userNs = null;
 
-// ── Pacing: space each phase's items inside its window ────────────────────────────────────────────
+// ── Pacing ──────────────────────────────────────────────────────────────────────────────────
 function placeProposal() {
+  const ahpd = state.activeHoursPerDay || 2, wallBy = Object.fromEntries(state.walls.map(w => [w.before, w]));
   const byPhase = {};
   state.proposal.forEach(r => (byPhase[r.phase] ??= []).push(r));
   for (const ph of state.phases) {
     const rows = byPhase[ph.id] || [];
-    if (ph.start == null || ph.end == null || !rows.length) { rows.forEach(r => r.h = null); continue; }
-    const burst = Math.min(rows.length, Math.max(0, ph.burst | 0));
-    const bg = (ph.burstGapMin || 0) / 60;
+    if (ph.start == null || ph.end == null) { rows.forEach(r => r.d = null); continue; }
+    const burst = Math.min(rows.length, Math.max(0, ph.burst | 0)), bg = (ph.burstGapH || 0) / ahpd;
     let t = ph.start;
-    rows.slice(0, burst).forEach((r, i) => { r.h = ph.start + i * bg; t = r.h; });
+    rows.slice(0, burst).forEach((r, i) => { r.d = ph.start + i * bg; t = r.d; });
     const rest = rows.slice(burst);
-    if (rest.length) {
-      const w = rest.map((_, i) => Math.pow(ph.growth || 1, i));
-      w[w.length - 1] *= ph.finale || 1;
-      const span = Math.max(0, ph.end - t), g = span / w.reduce((a, b) => a + b, 0);
-      rest.forEach((r, i) => { t += g * w[i]; r.h = t; });
-    }
+    if (!rest.length) continue;
+    const w = rest.map((r, i) => Math.pow(ph.growth || 1, i) * (1 + (+wallBy[r.id]?.repeats || 0)));
+    w[w.length - 1] *= ph.finale || 1;
+    const g = Math.max(0, ph.end - t) / w.reduce((a, b) => a + b, 0);
+    rest.forEach((r, i) => { t += g * w[i]; r.d = t; });
   }
-  state.proposal.forEach(r => { if (r.pinH != null && r.pinH !== "") r.h = +r.pinH; });
+  state.proposal.forEach(r => { if (r.pinDay != null && r.pinDay !== "") r.d = +r.pinDay; });
 }
+const builtDay = b => useAds ? b.daysAds : b.days;
 
-// Active hours -> calendar days, piecewise from the prestige runs, extended at the last run's pace.
-function toDays(h) {
-  if (h == null) return null;
-  const pts = [{ h: 0, d: 0 }, ...SEED.runs.map(r => ({ h: r.h, d: useAds ? r.daysAds : r.days }))];
-  for (let i = 1; i < pts.length; i++) if (h <= pts[i].h) {
-    const a = pts[i - 1], b = pts[i]; return a.d + (h - a.h) / (b.h - a.h) * (b.d - a.d);
-  }
-  const a = pts[pts.length - 2], b = pts[pts.length - 1];
-  return b.d + (h - b.h) * (b.d - a.d) / (b.h - a.h);
-}
-
-// ── Timeline (SVG) ───────────────────────────────────────────────────────────────────────────────
-const LANES = SEED.worlds.filter(w => w.id !== "world_metallurgy");
-const LANE_H = 104, TOP = 46, LEFT = 96, SUBROWS = 5;
-function maxHour() {
-  const hs = [...state.proposal.map(r => r.h || 0), ...SEED.asBuilt.map(b => b.h)];
-  return Math.ceil(Math.max(30, ...hs) / 10) * 10 + 5;
+// ── Timeline ────────────────────────────────────────────────────────────────────────────────
+const LANE_H = 96, TOP = 46, LEFT = 104, SUBROWS = 5;
+const lanes = () => SEED.worlds;
+function maxDay() {
+  const ds = view === "built" ? SEED.asBuilt.map(builtDay) : state.proposal.map(r => r.d || 0);
+  if (view === "both") ds.push(...SEED.asBuilt.map(builtDay));
+  return Math.ceil(Math.max(10, ...ds) / 5) * 5 + 3;
 }
 function render() {
   placeProposal();
-  const svg = document.getElementById("tl");
-  const pxh = +document.getElementById("zoom").value;
-  const H = maxHour(), W = LEFT + H * pxh + 40, Ht = TOP + LANES.length * LANE_H + 34;
+  const svg = document.getElementById("tl"), pxd = +document.getElementById("zoom").value, L = lanes();
+  const D = maxDay(), W = LEFT + D * pxd + 40, Ht = TOP + L.length * LANE_H + 34, ahpd = state.activeHoursPerDay || 2;
   svg.setAttribute("width", W); svg.setAttribute("height", Ht); svg.setAttribute("viewBox", `0 0 ${W} ${Ht}`);
-  const x = h => LEFT + h * pxh;
-  const laneY = id => TOP + LANES.findIndex(l => l.id === id) * LANE_H;
-  let s = "";
-  // grid + axes
-  const step = pxh >= 60 ? 1 : pxh >= 25 ? 2 : pxh >= 12 ? 5 : 10;
-  s += `<g class="axis">`;
-  for (let h = 0; h <= H; h += step) {
-    s += `<line x1="${x(h)}" x2="${x(h)}" y1="${TOP}" y2="${Ht - 30}" stroke="${cssVar("--grid")}" stroke-width="1"/>`;
-    s += `<text x="${x(h)}" y="${Ht - 12}" text-anchor="middle">${h}h</text>`;
-  }
-  const dMax = toDays(H), dStep = dMax > 40 ? 5 : dMax > 15 ? 2 : 1;
-  for (let d = 0; d <= dMax; d += dStep) {
-    let lo = 0, hi = H; for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; (toDays(m) < d ? lo = m : hi = m); }
-    s += `<line x1="${x(lo)}" x2="${x(lo)}" y1="${TOP - 10}" y2="${TOP}" stroke="${cssVar("--muted")}"/>`;
-    s += `<text x="${x(lo)}" y="${TOP - 16}" text-anchor="middle">day ${d}</text>`;
+  const x = d => LEFT + d * pxd, laneY = id => TOP + L.findIndex(l => l.id === id) * LANE_H;
+  let s = `<g class="axis">`;
+  const step = pxd >= 70 ? 1 : pxd >= 30 ? 2 : pxd >= 14 ? 5 : 10;
+  for (let d = 0; d <= D; d += step) {
+    s += `<line x1="${x(d)}" x2="${x(d)}" y1="${TOP}" y2="${Ht - 30}" stroke="${cssVar("--grid")}"/>`;
+    s += `<text x="${x(d)}" y="${Ht - 12}" text-anchor="middle">d${d}</text>`;
+    s += `<text x="${x(d)}" y="${TOP - 14}" text-anchor="middle">${Math.round(d * ahpd)}h</text>`;
   }
   s += `</g>`;
-  // lanes
-  LANES.forEach((l, i) => {
+  L.forEach((l, i) => {
     const y = TOP + i * LANE_H;
-    s += `<rect x="0" y="${y}" width="${W}" height="${LANE_H}" fill="${i % 2 ? cssVar("--bg") : cssVar("--panel")}" opacity=".55"/>`;
+    s += `<rect x="0" y="${y}" width="${W}" height="${LANE_H}" fill="${i % 2 ? cssVar("--bg") : cssVar("--panel")}" opacity=".6"/>`;
     s += `<text class="lane-label" x="10" y="${y + 18}">${esc(l.name.toUpperCase())}</text>`;
   });
-  // phase bands (proposal)
   if (view !== "built") state.phases.forEach((ph, i) => {
-    if (ph.start == null || !LANES.find(l => l.id === ph.world)) return;
-    const y = laneY(ph.world), c = cssVar(WORLD_COLORS[ph.world] || "--metal");
-    s += `<rect x="${x(ph.start)}" y="${y + LANE_H - 14}" width="${Math.max(2, x(ph.end) - x(ph.start))}" height="6" rx="3" fill="${c}" opacity="${i % 2 ? .35 : .6}"><title>${esc(ph.name)}</title></rect>`;
+    if (ph.start == null) return;
+    const y = laneY(ph.world); if (y < TOP) return;
+    s += `<rect x="${x(ph.start)}" y="${y + LANE_H - 12}" width="${Math.max(2, x(ph.end) - x(ph.start))}" height="5" rx="2.5" fill="${cssVar(WORLD_COLORS[ph.world])}" opacity="${i % 2 ? .35 : .65}"><title>${esc(ph.name)}: day ${ph.start} to ${ph.end}</title></rect>`;
   });
-  // prestiges + Chemistry opens
-  SEED.runs.forEach(r => {
-    s += `<line x1="${x(r.h)}" x2="${x(r.h)}" y1="${TOP}" y2="${Ht - 30}" stroke="${cssVar("--muted")}" stroke-dasharray="3 4" opacity=".7"/>`;
-    s += `<text x="${x(r.h) + 3}" y="${TOP + 11}" font-size="10" fill="${cssVar("--muted")}">P${r.n}</text>`;
+  if (view !== "prop") SEED.runs.forEach(r => {
+    const d = useAds ? r.daysAds : r.days;
+    s += `<line x1="${x(d)}" x2="${x(d)}" y1="${TOP}" y2="${Ht - 30}" stroke="${cssVar("--muted")}" stroke-dasharray="3 4" opacity=".6"/>`;
+    s += `<text x="${x(d) + 3}" y="${TOP + 11}" font-size="10" fill="${cssVar("--muted")}">P${r.n}</text>`;
   });
-  const cs = SEED.chemStart, chemH = view === "built" ? cs.h : (state.phases.find(p => p.id === "c1")?.start ?? cs.h);
-  const cy = laneY("world_chemistry");
-  s += `<line x1="${x(chemH)}" x2="${x(chemH)}" y1="${cy}" y2="${cy + LANE_H}" stroke="${cssVar("--chem")}" stroke-width="2.5"/>`;
-  s += `<text x="${x(chemH) + 5}" y="${cy + 30}" font-size="11" font-weight="600" fill="${cssVar("--chem")}">Chemistry opens · ${fmtH(chemH)} · ${fmtD(toDays(chemH))}</text>`;
-  // overlay moves
-  const builtById = Object.fromEntries(SEED.asBuilt.map(b => [b.id, b]));
-  if (view === "both") state.proposal.forEach(r => {
-    const b = builtById[r.id]; if (!b || r.h == null || !LANES.find(l => l.id === r.world)) return;
-    if (Math.abs(b.h - r.h) < 0.5) return;
-    const y = laneY(r.world) + 40;
-    s += `<line x1="${x(b.h)}" x2="${x(r.h)}" y1="${y}" y2="${y}" stroke="${cssVar("--muted")}" opacity=".25"/>`;
+  const opens = view === "built" ? [["world_chemistry", useAds ? SEED.chemStart.daysAds : SEED.chemStart.days]]
+    : L.map(l => [l.id, Math.min(...state.phases.filter(p => p.world === l.id && p.start != null).map(p => p.start))])
+        .filter(o => o[0] !== "world_physics" && isFinite(o[1]));
+  opens.forEach(([id, d]) => {
+    const y = laneY(id), c = cssVar(WORLD_COLORS[id]);
+    s += `<line x1="${x(d)}" x2="${x(d)}" y1="${y}" y2="${y + LANE_H}" stroke="${c}" stroke-width="2.5"/>`;
+    s += `<text x="${x(d) + 5}" y="${y + 18}" font-size="11" font-weight="600" fill="${c}">${esc(worldName(id))} opens · ${fmtD(d)}</text>`;
   });
-  // dots
-  const showLabels = document.getElementById("labels").checked;
-  const dots = (rows, ghost, draggable, key) => {
+  const showLabels = document.getElementById("labels").checked, wallBy = Object.fromEntries(state.walls.map(w => [w.before, w]));
+  const dots = (rows, ghost, key, getD) => {
     const counter = {};
     rows.forEach(r => {
-      if (r.h == null || !LANES.find(l => l.id === r.world)) return;
-      const lane = r.world, k = (counter[lane] = (counter[lane] || 0) + 1) - 1;
-      const y = laneY(lane) + 30 + (k % SUBROWS) * 13;
-      const c = cssVar(WORLD_COLORS[lane] || "--metal");
-      const isSel = selected && selected.key === key && selected.id === r.id;
-      s += `<circle class="dot${draggable ? " drag" : ""}${isSel ? " sel" : ""}${ghost ? " ghost" : ""}" data-key="${key}" data-id="${esc(r.id)}" cx="${x(r.h)}" cy="${y}" r="${r.status === "new" ? 5.5 : 5}" fill="${c}"${r.pinH != null && r.pinH !== "" ? ` stroke-dasharray="2 1"` : ""}><title>${esc(r.name)} · ${fmtH(r.h)}</title></circle>`;
-      if (showLabels && !ghost) s += `<text class="label" x="${x(r.h) + 7}" y="${y + 3.5}">${esc(r.name)}</text>`;
+      const d = getD(r); if (d == null || laneY(r.world) < TOP) return;
+      const k = (counter[r.world] = (counter[r.world] || 0) + 1) - 1, y = laneY(r.world) + 30 + (k % SUBROWS) * 11;
+      const isSel = selected && selected.key === key && selected.id === r.id, pinned = r.pinDay != null && r.pinDay !== "";
+      s += `<circle class="dot${key === "prop" ? " drag" : ""}${isSel ? " sel" : ""}${ghost ? " ghost" : ""}" data-key="${key}" data-id="${esc(r.id)}" cx="${x(d)}" cy="${y}" r="${r.status === "new" ? 5.5 : 4.5}" fill="${cssVar(WORLD_COLORS[r.world] || "--metal")}"${pinned ? ` stroke-dasharray="2 1"` : ""}><title>${esc(r.name)} · ${fmtD(d)}</title></circle>`;
+      if (key === "prop" && wallBy[r.id]) s += `<text class="wall" x="${x(d) - 6}" y="${laneY(r.world) + 27}" text-anchor="end">↻${wallBy[r.id].repeats}</text>`;
+      if (showLabels && !ghost) s += `<text class="label" x="${x(d) + 7}" y="${y + 3.5}">${esc(r.name)}</text>`;
     });
   };
-  if (view !== "prop") dots(SEED.asBuilt, view === "both", false, "built");
-  if (view !== "built") dots(state.proposal, false, true, "prop");
+  if (view !== "prop") dots(SEED.asBuilt, view === "both", "built", builtDay);
+  if (view !== "built") dots(state.proposal.filter(r => r.phase !== "retired"), false, "prop", r => r.d);
   svg.innerHTML = s;
-  renderLegend();
+  document.getElementById("legend").innerHTML = SEED.worlds.map(w => `<span><i style="background:${cssVar(WORLD_COLORS[w.id])}"></i>${esc(w.name)}</span>`).join("")
+    + `<span>Bigger dot: new item · Dashed ring: pinned by hand${view !== "prop" ? " · P: as-built prestiges" : ""}</span>`;
 }
-function renderLegend() {
-  document.getElementById("legend").innerHTML = SEED.worlds.map(w =>
-    `<span><i style="background:${cssVar(WORLD_COLORS[w.id])}"></i>${esc(w.name)}</span>`).join("") +
-    `<span>Bigger dot: new item · Dashed ring: time pinned by hand</span>`;
-}
-
-// drag + select
 (function wireTimeline() {
-  const svg = document.getElementById("tl");
-  let drag = null;
+  const svg = document.getElementById("tl"); let drag = null;
   svg.addEventListener("pointerdown", e => {
     const t = e.target.closest(".dot"); if (!t) return;
     select(t.dataset.key, t.dataset.id);
     if (t.dataset.key === "prop") { drag = { id: t.dataset.id, x0: e.clientX, moved: false }; svg.setPointerCapture(e.pointerId); }
   });
   svg.addEventListener("pointermove", e => {
-    if (!drag) return;
-    if (Math.abs(e.clientX - drag.x0) < 3 && !drag.moved) return;
+    if (!drag || (!drag.moved && Math.abs(e.clientX - drag.x0) < 3)) return;
     drag.moved = true;
     const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
     const p = pt.matrixTransform(svg.getScreenCTM().inverse());
-    const h = Math.max(0, (p.x - LEFT) / +document.getElementById("zoom").value);
     const r = state.proposal.find(r => r.id === drag.id); if (!r) return;
-    r.pinH = Math.round(h * 100) / 100; markDirty(); render();
+    r.pinDay = Math.round(Math.max(0, (p.x - LEFT) / +document.getElementById("zoom").value) * 100) / 100;
+    markDirty(); render();
   });
-  const end = () => { if (drag?.moved) { renderItems(); showDetail(); } drag = null; };
+  const end = () => { if (drag?.moved) { renderItems(); showDetail(); renderCallouts(); } drag = null; };
   svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
 })();
 
 function select(key, id) { selected = { key, id }; render(); renderItems(); showDetail(); }
 function showDetail() {
-  const el = document.getElementById("detail");
-  if (!selected) return;
+  const el = document.getElementById("detail"); if (!selected) return;
   const r = selected.key === "built" ? SEED.asBuilt.find(b => b.id === selected.id) : state.proposal.find(p => p.id === selected.id);
   if (!r) { el.innerHTML = `<div class="empty">Item not found.</div>`; return; }
-  const built = SEED.asBuilt.find(b => b.id === r.id);
-  const ph = state.phases.find(p => p.id === r.phase);
-  const inputs = (r.inputs || []).map(i => `${i.q} ${i.item}`).join(", ");
+  const built = SEED.asBuilt.find(b => b.id === r.id), ph = state.phases.find(p => p.id === r.phase), wall = state.walls.find(w => w.before === r.id);
+  const inputs = (r.inputs || []).map(i => `${i.q} ${i.item}`).join(", "), ahpd = state.activeHoursPerDay || 2;
   el.innerHTML = `
     <div class="row"><span class="name">${esc(r.name)}</span>${r.status ? `<span class="pill ${esc(r.status)}">${esc(r.status)}</span>` : ""}
-      <span class="pill">${esc(SEED.worlds.find(w => w.id === r.world)?.name || r.world)}</span>${ph ? `<span class="pill">${esc(ph.name)}</span>` : ""}</div>
+      <span class="pill">${esc(worldName(r.world))}</span>${ph ? `<span class="pill">${esc(ph.name)}</span>` : ""}${wall ? `<span class="pill wall">wall ↻${wall.repeats}</span>` : ""}</div>
     ${r.equation ? `<div class="eq">${esc(r.equation)}</div>` : ""}
     <dl class="kv">
-      ${selected.key === "prop" ? `<dt>Proposed</dt><dd>${fmtH(r.h)} active · ${fmtD(toDays(r.h))}${r.pinH != null && r.pinH !== "" ? " (pinned)" : ""}</dd>` : ""}
-      ${built ? `<dt>As built</dt><dd>${fmtH(built.h)} active · ${fmtD(useAds ? built.daysAds : built.days)} · run ${built.run} · ${esc(built.research)}</dd>` : `<dt>As built</dt><dd>not in the game yet</dd>`}
+      ${selected.key === "prop" ? `<dt>Proposed</dt><dd>${r.d == null ? "no date" : fmtD(r.d) + " · ~" + fmtH(r.d * ahpd) + " active"}${r.pinDay != null && r.pinDay !== "" ? " (pinned)" : ""}</dd>` : ""}
+      ${built ? `<dt>As built</dt><dd>${fmtD(builtDay(built))} · ${fmtH(built.h)} active · run ${built.run} · ${esc(built.research)}</dd>` : `<dt>As built</dt><dd>not in the game yet</dd>`}
       ${built ? `<dt>Value</dt><dd>${fmtN(built.value)} e · craft ${built.craft}s${built.outQ > 1 ? " · makes " + built.outQ : ""}</dd>` : ""}
+      ${wall ? `<dt>Wall</dt><dd>${wall.repeats} prestiges here · breaks with ${esc(wall.breaks)}</dd>` : ""}
       ${inputs ? `<dt>Inputs</dt><dd>${esc(inputs)}</dd>` : ""}
       ${r.how ? `<dt>How</dt><dd>${esc(r.how)}</dd>` : ""}
       ${r.building ? `<dt>Building</dt><dd>${esc(r.building)}</dd>` : ""}
@@ -335,74 +318,167 @@ function showDetail() {
     </dl>`;
 }
 
-// ── Callouts: where Chemistry starts ────────────────────────────────────────────────────────────
+// ── Summary callouts ─────────────────────────────────────────────────────────────────────────
 function renderCallouts() {
-  const c = SEED.chemStart, f = c.first, p = c.physics;
-  const prop = state.phases.find(ph => ph.id === "c1");
+  const c = SEED.chemStart, f = c.first, p = c.physics, ahpd = state.activeHoursPerDay || 2;
+  const si = state.proposal.find(r => r.id === "silicon"), c1 = state.phases.find(ph => ph.id === "c1");
+  const live = state.proposal.filter(r => r.d != null && r.phase !== "retired");
+  const end = Math.max(...live.map(r => r.d)), prestiges = state.walls.reduce((a, w) => a + (+w.repeats || 0), 0);
+  const perWorld = SEED.worlds.map(w => [w.name, live.filter(r => r.world === w.id).length]);
   document.getElementById("callouts").innerHTML = `
     <div class="panel callout"><h3>Chemistry opens</h3>
-      <div class="big">${fmtH(c.h)} · ${fmtD(useAds ? c.daysAds : c.days)}</div>
-      <dl class="kv"><dt>When</dt><dd>run ${c.afterRun + 1}, after ${c.afterRun} prestiges (delivery stages)</dd>
-        <dt>Gate research</dt><dd>${esc(c.research)} · ${fmtN(c.researchCost)} e (${Math.round(c.payback_min)} building-min)</dd>
-        ${prop ? `<dt>Restructure</dt><dd>${fmtH(prop.start)} · ${fmtD(toDays(prop.start))}</dd>` : ""}</dl></div>
-    <div class="panel callout"><h3>First Chemistry item vs Physics at that moment</h3>
-      <div class="vs">
-        <div><div class="tag chem">${esc(f.name)}</div><dl class="kv"><dt>Equation</dt><dd>${esc(f.equation)}</dd>
-          <dt>Value</dt><dd>${fmtN(f.value)} e × ${f.outQ}</dd><dt>Craft</dt><dd>${f.craft} s</dd>
-          <dt>Per building</dt><dd>${f.rate.toFixed(1)} e/s</dd></dl></div>
-        <div><div class="tag phys">${esc(p.name)} (best Physics)</div><dl class="kv"><dt>Value</dt><dd>${fmtN(p.value)} e</dd>
-          <dt>Craft</dt><dd>${p.craft} s</dd><dt>Per building</dt><dd>${p.rate.toFixed(1)} e/s</dd>
-          <dt>Ratio</dt><dd>Water earns ${(f.rate / p.rate).toFixed(2)}× per building</dd></dl></div>
-      </div></div>`;
+      <div class="big">${c1 ? fmtD(c1.start) : "?"}</div>
+      <dl class="kv"><dt>Silicon</dt><dd>${si?.d != null ? fmtD(si.d) : "?"} (delivery stage 5)</dd>
+        <dt>As built</dt><dd>${fmtD(useAds ? c.daysAds : c.days)} · ${fmtH(c.h)} active · run ${c.afterRun + 1}</dd>
+        <dt>Gate research</dt><dd>${esc(c.research)} · ${fmtN(c.researchCost)} e</dd></dl></div>
+    <div class="panel callout"><h3>First Chemistry item</h3>
+      <div class="big">${esc(f.name)}</div>
+      <dl class="kv"><dt>Equation</dt><dd>${esc(f.equation)}</dd>
+        <dt>Per building</dt><dd>${f.rate.toFixed(1)} e/s (${f.craft}s craft)</dd>
+        <dt>Best Physics</dt><dd>${esc(p.name)} ${p.rate.toFixed(1)} e/s</dd>
+        <dt>Ratio</dt><dd>${(f.rate / p.rate).toFixed(2)}× per building</dd></dl></div>
+    <div class="panel callout"><h3>First clear and Ascension</h3>
+      <div class="big">${fmtD(end)}</div>
+      <dl class="kv"><dt>Active play</dt><dd>~${fmtH(end * ahpd)} at ${ahpd} h/day</dd>
+        <dt>Wall prestiges</dt><dd>${prestiges} across ${state.walls.length} walls</dd>
+        <dt>Items</dt><dd>${perWorld.map(([n, k]) => n + " " + k).join(" · ")}</dd></dl></div>`;
 }
 
-// ── Phases table ──────────────────────────────────────────────────────────────────────────────
-function renderPhases() {
-  const cols = [["start", "Start h"], ["end", "End h"], ["burst", "Burst items"], ["burstGapMin", "Burst gap min"], ["growth", "Gap growth"], ["finale", "Finale ×"]];
-  const count = {}; state.proposal.forEach(r => count[r.phase] = (count[r.phase] || 0) + 1);
-  document.getElementById("phases").innerHTML = `<thead><tr><th>Phase</th><th>World</th><th class="num">Items</th>${cols.map(c => `<th class="num">${c[1]}</th>`).join("")}<th class="num">Avg gap</th></tr></thead><tbody>` +
-    state.phases.map((ph, i) => {
-      const n = count[ph.id] || 0, avg = ph.start != null && n ? (ph.end - ph.start) * 60 / n : null;
-      return `<tr><td><input id="ph-${i}-name" data-ph="${i}" data-k="name" value="${esc(ph.name)}" style="min-width:220px"></td>
-        <td>${esc(SEED.worlds.find(w => w.id === ph.world)?.name || "")}</td><td class="num">${n}</td>` +
-        cols.map(([k]) => `<td class="num">${ph.start == null ? "" : `<input class="num" id="ph-${i}-${k}" data-ph="${i}" data-k="${k}" type="number" step="any" value="${ph[k] ?? ""}">`}</td>`).join("") +
-        `<td class="num">${avg == null ? "" : avg.toFixed(0) + " min"}</td></tr>`;
-    }).join("") + `</tbody>`;
+// ── Generic editable table ───────────────────────────────────────────────────────────────────
+// cols: [key, label, kind, minWidth]; kind is "text" | "num" | "ro" | {select: [[value,label]...]} | fn(row) -> html
+function editTable(id, rows, cols, opts = {}) {
+  const el = document.getElementById(id);
+  el.innerHTML = `<thead><tr>${cols.map(([k, l, kind]) => `<th class="${kind === "num" ? "num" : ""}">${esc(l)}</th>`).join("")}${opts.del ? "<th></th>" : ""}</tr></thead><tbody>` +
+    (rows.length ? rows.map((r, i) => `<tr data-i="${i}">` + cols.map(([k, l, kind, w]) => {
+      const v = r[k], fid = `${id}-${i}-${k}`;
+      if (typeof kind === "function") return `<td class="num">${kind(r)}</td>`;
+      if (kind === "ro") return `<td>${esc(v)}</td>`;
+      if (kind === "num") return `<td class="num">${opts.skip?.(r) ? "" : `<input class="num" id="${fid}" data-k="${k}" type="number" step="any" value="${v ?? ""}">`}</td>`;
+      if (kind?.select) return `<td><select id="${fid}" data-k="${k}">${kind.select.map(([val, lab]) => `<option value="${esc(val)}"${val === v ? " selected" : ""}>${esc(lab)}</option>`).join("")}</select></td>`;
+      return `<td><input id="${fid}" data-k="${k}" value="${esc(v)}" style="min-width:${w || 120}px"></td>`;
+    }).join("") + (opts.del ? `<td><button class="mini" data-act="del" aria-label="Delete row">✕</button></td>` : "") + `</tr>`).join("")
+    : `<tr><td colspan="${cols.length + 1}" class="empty">Nothing here yet.</td></tr>`) + `</tbody>`;
 }
-document.getElementById("phases").addEventListener("change", e => {
-  const t = e.target; if (t.dataset.ph == null) return;
-  const ph = state.phases[+t.dataset.ph], k = t.dataset.k;
-  ph[k] = k === "name" ? t.value : (t.value === "" ? null : +t.value);
-  markDirty(); render(); renderPhases(); renderCallouts();
+function wireTable(id, getRows, after) {
+  const el = document.getElementById(id);
+  el.addEventListener("change", e => {
+    const tr = e.target.closest("tr[data-i]"), k = e.target.dataset.k; if (!tr || !k) return;
+    const r = getRows()[+tr.dataset.i];
+    r[k] = e.target.type === "number" ? (e.target.value === "" ? null : +e.target.value) : e.target.value;
+    markDirty(); after();
+  });
+  el.addEventListener("click", e => {
+    if (e.target.closest("[data-act]")?.dataset.act !== "del") return;
+    const tr = e.target.closest("tr[data-i]"); getRows().splice(+tr.dataset.i, 1); markDirty(); after();
+  });
+}
+
+function renderPhases() {
+  const count = {}; state.proposal.forEach(r => count[r.phase] = (count[r.phase] || 0) + 1);
+  const ahpd = state.activeHoursPerDay || 2;
+  editTable("phases", state.phases, [
+    ["name", "Phase", "text", 240], ["world", "World", r => esc(worldName(r.world))], ["n", "Items", r => count[r.id] || 0],
+    ["start", "Start day", "num"], ["end", "End day", "num"], ["burst", "Burst items", "num"], ["burstGapH", "Burst gap (active h)", "num"],
+    ["growth", "Gap growth", "num"], ["finale", "Finale ×", "num"],
+    ["avg", "Avg gap", r => r.start == null || !count[r.id] ? "" : fmtH((r.end - r.start) * ahpd / count[r.id]) + " active"],
+  ], { skip: r => r.start == null && r.end == null });
+}
+const itemOptions = () => state.proposal.filter(r => r.phase !== "retired").map(r => [r.id, r.name + " (" + worldName(r.world) + ")"]);
+function renderWalls() {
+  const day = id => state.proposal.find(r => r.id === id)?.d;
+  editTable("walls", state.walls, [
+    ["before", "Before item", { select: itemOptions() }], ["day", "Day", r => fmtD(day(r.before))],
+    ["repeats", "Repeats", "num"], ["breaks", "Upgrades that break it", "text", 260], ["note", "Note", "text", 220],
+  ], { del: true });
+}
+function renderUpgrades() {
+  editTable("upgrades", state.upgrades, [
+    ["name", "Upgrade", "text", 150], ["world", "World", { select: [["All", "All"], ...SEED.worlds.map(w => [w.name, w.name])] }],
+    ["effect", "Effect", "text", 230], ["levels", "Levels", "num"], ["costs", "Costs per level", "text", 210],
+    ["walls", "Key for walls", "text", 190], ["status", "Status", "text", 110],
+  ], { del: true });
+}
+wireTable("phases", () => state.phases, () => { render(); renderPhases(); renderWalls(); renderCallouts(); });
+wireTable("walls", () => state.walls, () => { render(); renderWalls(); renderCallouts(); });
+wireTable("upgrades", () => state.upgrades, renderUpgrades);
+document.getElementById("addWall").onclick = () => { state.walls.push({ before: itemOptions()[0][0], repeats: 3, breaks: "", note: "" }); markDirty(); renderWalls(); render(); renderCallouts(); };
+document.getElementById("addUpg").onclick = () => { state.upgrades.push({ id: "upg_" + Date.now().toString(36), name: "New upgrade", world: "All", effect: "", levels: 5, costs: "", walls: "", status: "new" }); markDirty(); renderUpgrades(); };
+
+// ── Ascension projection ─────────────────────────────────────────────────────────────────────
+const ASC_FIELDS = [["firstLoopDays", "First clear (days)"], ["loopShrink", "Next loop ×"], ["floorDays", "Shortest loop (days)"],
+  ["materialFirst", "Material, 1st Ascension"], ["materialGrowth", "Material growth ×"], ["stageCostFirst", "Stage 1 cost"],
+  ["stageCostGrowth", "Stage cost growth ×"], ["stageBonusPct", "Bonus per stage %"], ["years", "Years shown"]];
+function projectAscension() {
+  const a = state.ascension, out = [];
+  let t = 0, mat = 0, stage = 0, bonus = 1, k = 0;
+  const cost = s => a.stageCostFirst * Math.pow(a.stageCostGrowth, s);
+  while (t < a.years * 365 && k < 500) {
+    const len = Math.max(a.floorDays, a.firstLoopDays * Math.pow(a.loopShrink, k) / bonus);
+    t += len; const gain = a.materialFirst * Math.pow(a.materialGrowth, k); mat += gain; k++;
+    const before = stage;
+    while (mat >= cost(stage)) { mat -= cost(stage); stage++; bonus *= 1 + a.stageBonusPct / 100; }
+    out.push({ k, t, len, gain, stage, built: stage - before, left: mat, next: cost(stage) });
+  }
+  return out;
+}
+function renderAscension() {
+  const a = state.ascension;
+  document.getElementById("ascParams").innerHTML = ASC_FIELDS.map(([k, l]) =>
+    `<label class="ctl" for="asc-${k}">${esc(l)} <input type="number" step="any" id="asc-${k}" data-k="${k}" value="${a[k]}"></label>`).join("");
+  const rows = projectAscension(), svg = document.getElementById("asc");
+  const W = Math.max(640, a.years * 220), H = 200, L = 44, B = 28, maxS = Math.max(1, ...rows.map(r => r.stage));
+  const x = d => L + d / (a.years * 365) * (W - L - 16), y = s => H - B - s / maxS * (H - B - 16);
+  let s = `<g class="axis">`;
+  for (let yr = 0; yr <= a.years; yr++) s += `<line x1="${x(yr * 365)}" x2="${x(yr * 365)}" y1="10" y2="${H - B}" stroke="${cssVar("--grid")}"/><text x="${x(yr * 365)}" y="${H - 10}" text-anchor="middle">year ${yr}</text>`;
+  for (let st = 0; st <= maxS; st += Math.max(1, Math.ceil(maxS / 5))) s += `<text x="${L - 8}" y="${y(st) + 4}" text-anchor="end">${st}</text>`;
+  s += `</g>`;
+  let path = `M${x(0)},${y(0)}`; rows.forEach(r => path += ` H${x(Math.min(r.t, a.years * 365))} V${y(r.stage)}`);
+  s += `<path d="${path}" fill="none" stroke="${cssVar("--eng")}" stroke-width="2"/>`;
+  rows.filter(r => r.t <= a.years * 365).forEach(r => s += `<circle cx="${x(r.t)}" cy="${y(r.stage)}" r="3" fill="${cssVar("--eng")}"><title>Ascension ${r.k} · day ${Math.round(r.t)} · stage ${r.stage}</title></circle>`);
+  s += `<text x="${L}" y="12" font-size="11" fill="${cssVar("--muted")}">Megastructure stages completed</text>`;
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = s;
+  const byYear = [];
+  for (let yr = 1; yr <= a.years; yr++) {
+    const inYr = rows.filter(r => r.t > (yr - 1) * 365 && r.t <= yr * 365), last = rows.filter(r => r.t <= yr * 365).pop();
+    const built = inYr.reduce((q, r) => q + r.built, 0);
+    byYear.push({ yr, asc: inYr.length, stages: last?.stage ?? 0, built, loop: inYr.length ? inYr[inYr.length - 1].len : null });
+  }
+  document.getElementById("ascTable").innerHTML = `<thead><tr><th>Year</th><th class="num">Ascensions</th><th class="num">Stages built</th><th class="num">Total stages</th><th class="num">Loop length at year end</th><th class="num">Days per new stage</th></tr></thead><tbody>` +
+    byYear.map(b => `<tr><td>Year ${b.yr}</td><td class="num">${b.asc}</td><td class="num">${b.built}</td><td class="num">${b.stages}</td><td class="num">${b.loop == null ? "" : Math.round(b.loop) + " d"}</td><td class="num">${b.built ? Math.round(365 / b.built) + " d" : "none"}</td></tr>`).join("") + `</tbody>`;
+  const inRange = rows.filter(r => r.t <= a.years * 365), quiet = byYear.filter(b => !b.built).length;
+  document.getElementById("ascSummary").textContent = `${inRange.length} Ascensions and ${inRange.at(-1)?.stage ?? 0} stages in ${a.years} years` + (quiet ? ` · ${quiet} year(s) with no new stage` : "");
+}
+document.getElementById("ascParams").addEventListener("change", e => {
+  const k = e.target.dataset.k; if (!k || e.target.value === "") return;
+  state.ascension[k] = +e.target.value; markDirty(); renderAscension();
 });
 
-// ── Items table ───────────────────────────────────────────────────────────────────────────────
-const STATUSES = ["keep", "new", "moved", "parked", "retire"];
-function phaseOptions(sel) { return state.phases.map(p => `<option value="${p.id}"${p.id === sel ? " selected" : ""}>${esc(p.name)}</option>`).join(""); }
+// ── Items table ──────────────────────────────────────────────────────────────────────────────
+const STATUSES = ["keep", "new", "moved", "retire"];
 function renderFilters() {
-  const fw = document.getElementById("fWorld"), fp = document.getElementById("fPhase");
-  const w0 = fw.value, p0 = fp.value;
+  const fw = document.getElementById("fWorld"), fp = document.getElementById("fPhase"), w0 = fw.value, p0 = fp.value;
   fw.innerHTML = `<option value="">All worlds</option>` + SEED.worlds.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join("");
   fp.innerHTML = `<option value="">All phases</option>` + state.phases.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
   fw.value = w0; fp.value = p0;
 }
 function renderItems() {
   const fw = document.getElementById("fWorld").value, fp = document.getElementById("fPhase").value, ft = document.getElementById("fText").value.toLowerCase();
-  const built = Object.fromEntries(SEED.asBuilt.map(b => [b.id, b]));
-  const rows = state.proposal.map((r, i) => ({ r, i })).filter(({ r }) =>
-    (!fw || r.world === fw) && (!fp || r.phase === fp) && (!ft || (r.name + " " + r.id + " " + (r.equation || "")).toLowerCase().includes(ft)));
-  document.getElementById("items").innerHTML = `<thead><tr><th></th><th>Item</th><th>Phase</th><th>Status</th><th>Equation / how</th><th class="num">Proposed</th><th class="num">Pin h</th><th class="num">As built</th><th>Notes</th><th></th></tr></thead><tbody>` +
+  const built = Object.fromEntries(SEED.asBuilt.map(b => [b.id, b])), wallBy = Object.fromEntries(state.walls.map(w => [w.before, w]));
+  const rows = state.proposal.map((r, i) => ({ r, i })).filter(({ r }) => (!fw || r.world === fw) && (!fp || r.phase === fp)
+    && (!ft || (r.name + " " + r.id + " " + (r.equation || "")).toLowerCase().includes(ft)));
+  const phOpts = sel => state.phases.map(p => `<option value="${p.id}"${p.id === sel ? " selected" : ""}>${esc(p.name)}</option>`).join("");
+  document.getElementById("items").innerHTML = `<thead><tr><th></th><th>Item</th><th>Phase</th><th>Status</th><th>Equation / how</th><th class="num">Proposed</th><th class="num">Pin day</th><th class="num">As built</th><th>Notes</th><th></th></tr></thead><tbody>` +
     (rows.length ? rows.map(({ r, i }) => {
       const b = built[r.id], isSel = selected?.key === "prop" && selected.id === r.id;
       return `<tr class="${isSel ? "sel" : ""}" data-i="${i}">
         <td><button class="mini" data-act="up" aria-label="Move up">▲</button><button class="mini" data-act="down" aria-label="Move down">▼</button></td>
         <td><input id="it-${i}-name" data-k="name" value="${esc(r.name)}" style="min-width:170px"></td>
-        <td><select id="it-${i}-phase" data-k="phase">${phaseOptions(r.phase)}</select></td>
+        <td><select id="it-${i}-phase" data-k="phase">${phOpts(r.phase)}</select></td>
         <td><select id="it-${i}-status" data-k="status">${STATUSES.map(s => `<option${s === r.status ? " selected" : ""}>${s}</option>`).join("")}</select></td>
         <td><input id="it-${i}-eq" data-k="${r.equation != null ? "equation" : "how"}" value="${esc(r.equation ?? r.how ?? "")}" style="min-width:230px; font-family:var(--mono); font-size:12px"></td>
-        <td class="num">${fmtH(r.h)}</td>
-        <td class="num"><input class="num" id="it-${i}-pin" data-k="pinH" type="number" step="any" value="${r.pinH ?? ""}" placeholder="auto"></td>
-        <td class="num">${b ? fmtH(b.h) : "—"}</td>
+        <td class="num">${r.d == null ? "" : fmtD(r.d)}${wallBy[r.id] ? ` <span class="pill wall">↻${wallBy[r.id].repeats}</span>` : ""}</td>
+        <td class="num"><input class="num" id="it-${i}-pin" data-k="pinDay" type="number" step="any" value="${r.pinDay ?? ""}" placeholder="auto"></td>
+        <td class="num">${b ? fmtD(builtDay(b)) : "none"}</td>
         <td><input id="it-${i}-notes" data-k="notes" value="${esc(r.notes ?? "")}" style="min-width:160px"></td>
         <td><button class="mini" data-act="del" aria-label="Delete ${esc(r.name)}">✕</button></td></tr>`;
     }).join("") : `<tr><td colspan="10" class="empty">No items match.</td></tr>`) + `</tbody>`;
@@ -411,39 +487,31 @@ const itemsEl = document.getElementById("items");
 itemsEl.addEventListener("change", e => {
   const tr = e.target.closest("tr[data-i]"), k = e.target.dataset.k; if (!tr || !k) return;
   const r = state.proposal[+tr.dataset.i];
-  r[k] = k === "pinH" ? (e.target.value === "" ? null : +e.target.value) : e.target.value;
+  r[k] = k === "pinDay" ? (e.target.value === "" ? null : +e.target.value) : e.target.value;
   if (k === "phase") { const ph = state.phases.find(p => p.id === r.phase); if (ph) r.world = ph.world; }
-  markDirty(); render(); renderItems(); renderPhases();
+  markDirty(); refreshAll();
 });
 itemsEl.addEventListener("click", e => {
   const tr = e.target.closest("tr[data-i]"); if (!tr) return;
-  const i = +tr.dataset.i, act = e.target.closest("[data-act]")?.dataset.act;
-  if (!act) { if (e.target.tagName === "TD") select("prop", state.proposal[i].id); return; }
-  const r = state.proposal[i];
+  const i = +tr.dataset.i, act = e.target.closest("[data-act]")?.dataset.act, r = state.proposal[i];
+  if (!act) { if (e.target.tagName === "TD") select("prop", r.id); return; }
   if (act === "del") { state.proposal.splice(i, 1); if (selected?.id === r.id) selected = null; }
   if (act === "up" || act === "down") {
-    // move within the same phase: order inside a phase sets the spacing order
     const same = state.proposal.map((x, j) => ({ x, j })).filter(o => o.x.phase === r.phase).map(o => o.j);
-    const pos = same.indexOf(i), to = same[pos + (act === "up" ? -1 : 1)];
-    if (to == null) return;
+    const to = same[same.indexOf(i) + (act === "up" ? -1 : 1)]; if (to == null) return;
     [state.proposal[i], state.proposal[to]] = [state.proposal[to], state.proposal[i]];
   }
-  markDirty(); render(); renderItems(); renderPhases();
+  markDirty(); refreshAll();
 });
 ["fWorld", "fPhase", "fText"].forEach(id => document.getElementById(id).addEventListener("input", renderItems));
 document.getElementById("addItem").addEventListener("click", () => {
   const ph = state.phases.find(p => p.id === (document.getElementById("fPhase").value || "c5"));
   const id = "new_item_" + Date.now().toString(36);
-  state.proposal.push({ id, name: "New item", world: ph.world, phase: ph.id, status: "new", equation: "", pinH: null, notes: "" });
-  markDirty(); select("prop", id); renderPhases();
+  state.proposal.push({ id, name: "New item", world: ph.world, phase: ph.id, status: "new", equation: "", pinDay: null, notes: "" });
+  markDirty(); selected = { key: "prop", id }; refreshAll();
 });
 
-function renderParked() {
-  document.getElementById("parked").innerHTML = state.proposal.filter(r => r.world === "world_metallurgy")
-    .map(r => `<span>${esc(r.name)}</span>`).join("") || `<span>Nothing parked.</span>`;
-}
-
-// ── View controls ─────────────────────────────────────────────────────────────────────────────
+// ── View controls ────────────────────────────────────────────────────────────────────────────
 function setView(v) {
   view = v;
   [["prop", "v-prop"], ["built", "v-built"], ["both", "v-both"]].forEach(([k, id]) => document.getElementById(id).setAttribute("aria-pressed", k === v));
@@ -452,21 +520,27 @@ function setView(v) {
 document.getElementById("v-prop").onclick = () => setView("prop");
 document.getElementById("v-built").onclick = () => setView("built");
 document.getElementById("v-both").onclick = () => setView("both");
-document.getElementById("ads").onchange = e => { useAds = e.target.checked; render(); renderCallouts(); showDetail(); };
+document.getElementById("ads").onchange = e => { useAds = e.target.checked; render(); renderCallouts(); renderItems(); showDetail(); };
+document.getElementById("ahpd").onchange = e => { if (+e.target.value > 0) { state.activeHoursPerDay = +e.target.value; markDirty(); refreshAll(); } };
 document.getElementById("zoom").oninput = render;
 document.getElementById("labels").onchange = render;
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", render);
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { render(); renderAscension(); });
 
-// ── Save / load (db) ──────────────────────────────────────────────────────────────────────────
+// ── Save / load ──────────────────────────────────────────────────────────────────────────────
 const statusEl = document.getElementById("status"), saveBtn = document.getElementById("save");
 function setStatus(t, cls = "") { statusEl.textContent = t; statusEl.className = "status " + cls; }
 function markDirty() { dirty = true; setStatus("Unsaved changes"); }
 function snapshot() {
-  return { phases: state.phases, proposal: state.proposal.map(({ h, builtH, ...r }) => r), savedAt: new Date().toISOString(), seedGenerated: SEED.generated };
+  return { schema: SCHEMA, phases: state.phases, proposal: state.proposal.map(({ d, builtDays, ...r }) => r), walls: state.walls,
+    upgrades: state.upgrades, ascension: state.ascension, activeHoursPerDay: state.activeHoursPerDay,
+    savedAt: new Date().toISOString(), seedGenerated: SEED.generated };
 }
 function applySaved(doc) {
-  if (!doc?.proposal || !doc?.phases) return false;
-  state.phases = doc.phases; state.proposal = doc.proposal.map(r => ({ ...r })); return true;
+  if (doc?.schema !== SCHEMA || !doc.proposal || !doc.phases) return false;
+  const base = fresh();
+  state = { phases: doc.phases, proposal: doc.proposal.map(r => ({ ...r })), walls: doc.walls || base.walls, upgrades: doc.upgrades || base.upgrades,
+    ascension: { ...base.ascension, ...(doc.ascension || {}) }, activeHoursPerDay: doc.activeHoursPerDay || base.activeHoursPerDay };
+  return true;
 }
 async function save() {
   if (!db) { setStatus("Saving needs a signed-in viewer with edit access.", "err"); return; }
@@ -485,9 +559,8 @@ async function loadVersions() {
   if (!db) return;
   try {
     const snap = await db.collection("versions").orderBy("savedAt", "desc").limit(8).get();
-    versionRows = snap.docs.map(d => d.data());
-    const sel = document.getElementById("versions");
-    sel.innerHTML = `<option value="">Versions (${versionRows.length})</option>` +
+    versionRows = snap.docs.map(d => d.data()).filter(v => v.schema === SCHEMA);
+    document.getElementById("versions").innerHTML = `<option value="">Versions (${versionRows.length})</option>` +
       versionRows.map((v, i) => `<option value="${i}">${new Date(v.savedAt).toLocaleString()}</option>`).join("");
   } catch (_) {}
 }
@@ -507,7 +580,10 @@ document.getElementById("export").onclick = async () => {
   catch (_) { setStatus("Export is not available in this view", "err"); }
 };
 
-function refreshAll() { renderCallouts(); renderPhases(); renderFilters(); render(); renderItems(); renderParked(); showDetail(); }
+function refreshAll() {
+  document.getElementById("ahpd").value = state.activeHoursPerDay;
+  renderPhases(); renderFilters(); render(); renderCallouts(); renderWalls(); renderUpgrades(); renderAscension(); renderItems(); showDetail();
+}
 refreshAll();
 
 (async function boot() {

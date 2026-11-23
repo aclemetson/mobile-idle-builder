@@ -210,14 +210,6 @@ CHEM = [
 FORMULA = {s[0]: s[2] for s in CHEM_SOURCES}
 FORMULA.update({c[0]: c[2] for c in CHEM})
 
-# Chemistry items today that leave Chemistry: metals and industry go to Metallurgy; retired ones go away.
-METALLURGY = ["silica", "iron_oxide", "steel", "carbon_fiber", "titanium_alloy", "semiconductor_wafer", "aerogel",
-              "superconductor", "metamaterial", "catalyst", "chlorine_gas", "sodium_hydroxide", "uranium_hexafluoride",
-              "table_salt"]
-RETIRED = {"octane": "fuel, not life chemistry", "polymer_precursor": "replaced by real monomers (ethylene, acetylene)",
-           "amino_acid": "split into glycine, alanine, serine, cysteine", "fatty_acid": "now palmitic acid",
-           "nucleotide": "now AMP (and ATP)"}
-
 
 def check_equations():
     bad = []
@@ -241,113 +233,230 @@ def equation(ins, outq, iid, byp):
 
 def proposal(gd, built):
     items = {i["id"]: i for i in gd["items"]}
-    built_h = {b["id"]: b["h"] for b in built}
+    built_d = {b["id"]: b["daysAds"] for b in built}
     rows = []
 
     def add(iid, name, world, phase, status, **kw):
         rows.append({"id": iid, "name": name, "world": world, "phase": phase, "status": status,
-                     "builtH": built_h.get(iid), "pinH": None, **kw})
+                     "builtDays": built_d.get(iid), "pinDay": None, **kw})
 
-    # Physics
-    particles = {"up_quark": "ignition", "down_quark": "ignition", "electron": "ignition", "proton": "ignition",
-                 "neutron": "ignition", "neutrino": "light", "gamma_photon": "light",
-                 "alpha_particle": "descent", "beta_particle": "descent"}
+    # ── Physics: fusion climbs to Mn (Silicon on day 4 opens Chemistry), Uranium walks down to Iron ──
+    particles = {"up_quark": "p_ignition", "down_quark": "p_ignition", "electron": "p_ignition",
+                 "proton": "p_ignition", "neutron": "p_ignition", "neutrino": "p_light1",
+                 "gamma_photon": "p_light1", "alpha_particle": "p_descent", "beta_particle": "p_descent"}
     for iid, ph in particles.items():
         it = items.get(iid)
         if it:
             add(iid, it["display_name"], "world_physics", ph, "keep", z=0, how="particle")
+
+    def phys_phase(z):
+        if z <= 2 or z == 6: return "p_ignition"
+        if z <= 8: return "p_light1"
+        if z <= 14: return "p_light2"
+        if z < 26: return "p_light3"
+        if z == 26: return "p_iron"
+        if 81 <= z <= 92: return "p_descent"
+        if z < 81: return "p_metals"
+        return "p_deep"
+
+    how_by_phase = {"p_ignition": "atom generator / first fusion", "p_light1": "fusion", "p_light2": "fusion",
+                    "p_light3": "fusion", "p_iron": "both ends: fusion and descent", "p_descent": "decay chain",
+                    "p_metals": "fission / neutron capture", "p_deep": "transuranic / superheavy"}
     elements = sorted((i for i in gd["items"] if i.get("category") in ("Element", "Isotope")
                        and (i.get("world") or "world_physics") == "world_physics"),
                       key=lambda i: (i.get("atomic_number") or 0, i["id"]))
     for it in elements:
         z = it.get("atomic_number") or 0
-        iid = it["id"]
-        if z <= 2:
-            add(iid, it["display_name"], "world_physics", "ignition", "keep", z=z, how="atom generator")
-        elif z == 6:
-            add(iid, it["display_name"], "world_physics", "ignition", "keep", z=z, how="fusion (tutorial end)")
-        elif z < 26:
-            add(iid, it["display_name"], "world_physics", "light", "keep", z=z, how="fusion")
-        elif z == 26:
-            add(iid, it["display_name"], "world_physics", "iron", "moved", z=z, how="both ends: fusion and descent")
-        elif z <= 92:
-            how = "mined source" if iid == "uranium" else ("decay chain" if z >= 81 else "fission / neutron capture")
-            add(iid, it["display_name"], "world_physics", "descent" if z >= 81 else "metals_descent", "moved", z=z, how=how)
-        else:
-            add(iid, it["display_name"], "world_physics", "act4", "keep", z=z, how="transuranic / superheavy")
-    for it in gd["items"]:
-        if it.get("category") == "Component":
-            add(it["id"], it["display_name"], "world_physics", "act4", "keep", z=0, how="component")
-    # Descent runs from Uranium (92) down toward Iron: order by Z descending inside those phases.
-    order_key = {"ignition": 0, "light": 1, "descent": 2, "metals_descent": 3, "iron": 4, "act4": 5}
-    phys = sorted([r for r in rows], key=lambda r: (order_key[r["phase"]],
-                  -r["z"] if r["phase"] in ("descent", "metals_descent") else r["z"]))
-    # Uranium first in its phase (the source), then its isotope, then the chain.
-    phys.sort(key=lambda r: (order_key[r["phase"]], 0 if r["id"] == "uranium" else 1,
-                             -r["z"] if r["phase"] in ("descent", "metals_descent") else r["z"]))
-    rows = phys
+        ph_ = phys_phase(z)
+        how = "mined source" if it["id"] == "uranium" else how_by_phase[ph_]
+        add(it["id"], it["display_name"], "world_physics", ph_,
+            "moved" if ph_ in ("p_descent", "p_metals", "p_iron") else "keep", z=z, how=how)
+    order_key = {p["id"]: i for i, p in enumerate(PHASES)}
+    desc = ("p_descent", "p_metals")
+    rows.sort(key=lambda r: (order_key[r["phase"]], 0 if r["id"] == "uranium" else 1,
+                             -r["z"] if r["phase"] in desc else r["z"]))
 
-    # Chemistry
+    # ── Chemistry: life chemistry ──
+    src_phase = {"hydrogen_gas": "c1", "oxygen_gas": "c1", "nitrogen_gas": "c2", "graphite": "c2",
+                 "sulfur": "c4", "phosphorus": "c4", "halite": "c5", "sylvite": "c5", "limestone": "c5"}
     for iid, name, f, st in CHEM_SOURCES:
-        add(iid, name, "world_chemistry", "c1" if iid in ("hydrogen_gas", "oxygen_gas") else
-            ("c4" if iid in ("sulfur", "phosphorus") else ("c2" if iid in ("nitrogen_gas", "graphite") else "c5")),
-            st, formula=f, how="mined source")
-    for iid, name, f, ph, ins, outq, byp, b, st in CHEM:
-        add(iid, name, "world_chemistry", ph, st, formula=f, how="reaction", equation=equation(ins, outq, iid, byp),
-            building=b, inputs=[{"item": x, "q": q} for q, x in ins])
-    # Metallurgy (parked) and retired
-    for iid in METALLURGY:
-        it = items.get(iid)
-        if it:
-            add(iid, it["display_name"], "world_metallurgy", "parked", "parked", how="moves to Metallurgy")
+        add(iid, name, "world_chemistry", src_phase[iid], st, formula=f, how="mined source")
+    for iid, name, f, ph_, ins, outq, byp, b, st in CHEM:
+        add(iid, name, "world_chemistry", ph_, st, formula=f, how="reaction",
+            equation=equation(ins, outq, iid, byp), building=b, inputs=[{"item": x, "q": q} for q, x in ins])
     for iid, why in RETIRED.items():
         it = items.get(iid)
         if it:
             add(iid, it["display_name"], "world_chemistry", "retired", "retire", how=why)
-    # Biology (unchanged)
-    for it in gd["items"]:
-        if (it.get("world") or "") == "world_biology":
-            add(it["id"], it["display_name"], "world_biology", "bio", "keep", how="biology (unchanged)")
+
+    # ── Biology, Metallurgy, Engineering: fewer items, each a bigger step ──
+    for iid, name, ph_, st, how in BIOLOGY + METALLURGY_ITEMS + ENGINEERING:
+        world = {"b": "world_biology", "m": "world_metallurgy", "e": "world_engineering"}[ph_[0]]
+        it = items.get(iid)
+        add(iid, it["display_name"] if it else name, world, ph_, st, how=how)
     return rows
 
 
-# Phases of the proposal: world, name, window in cumulative active hours, pacing. The page re-spaces items
-# inside each window from these numbers; the user edits them there.
+# Biology (fed by the life chemicals), Metallurgy (ores -> metals -> alloys) and Engineering (few, slow parts
+# ending in megastructure material). (id, name, phase, status, how)
+BIOLOGY = [
+    ("protein", "Protein", "b1", "keep", "dipeptides -> protein"),
+    ("carbohydrate", "Carbohydrate", "b1", "keep", "glucose chains"),
+    ("lipid_membrane", "Lipid Membrane", "b1", "keep", "phospholipid bilayer"),
+    ("nucleic_acid", "Nucleic Acid", "b1", "keep", "AMP / nucleotides -> strand"),
+    ("ribosome", "Ribosome", "b2", "keep", "protein + nucleic acid"),
+    ("cell_membrane", "Cell Membrane", "b2", "keep", "membrane + protein"),
+    ("mitochondria", "Mitochondria", "b2", "keep", "protein + membrane + ATP"),
+    ("prokaryotic_cell", "Prokaryotic Cell", "b2", "keep", "first cell"),
+    ("eukaryotic_cell", "Eukaryotic Cell", "b3", "keep", "cell + mitochondria"),
+    ("tissue", "Tissue", "b3", "keep", "cells"),
+    ("organ", "Organ", "b3", "keep", "tissues"),
+    ("organism", "Organism", "b4", "keep", "organs"),
+    ("population", "Population", "b4", "keep", "organisms"),
+    ("ecosystem", "Ecosystem", "b4", "keep", "Biology capstone"),
+]
+METALLURGY_ITEMS = [
+    ("hematite", "Hematite (iron ore)", "m1", "new", "mined ore, Fe2O3"),
+    ("bauxite", "Bauxite (aluminium ore)", "m1", "new", "mined ore"),
+    ("chalcopyrite", "Chalcopyrite (copper ore)", "m1", "new", "mined ore, CuFeS2"),
+    ("rutile", "Rutile (titanium ore)", "m1", "new", "mined ore, TiO2"),
+    ("silica", "Silica", "m1", "moved", "quartz sand"),
+    ("iron_oxide", "Iron Oxide", "m1", "moved", "roasted ore"),
+    ("steel", "Steel", "m2", "moved", "iron + carbon"),
+    ("aluminium_ingot", "Aluminium Ingot", "m2", "new", "electrolysis of bauxite"),
+    ("copper_wire", "Copper Wire", "m2", "new", "smelted chalcopyrite"),
+    ("titanium_alloy", "Titanium Alloy", "m2", "moved", "Kroll process"),
+    ("carbon_fiber", "Carbon Fiber", "m2", "moved", "graphite fibre"),
+    ("semiconductor_wafer", "Semiconductor Wafer", "m3", "moved", "silica + hydrogen gas"),
+    ("aerogel", "Aerogel", "m3", "moved", "silica gel, dried"),
+    ("superconductor", "Superconductor", "m3", "moved", "alloy + cooling"),
+    ("metamaterial", "Metamaterial", "m3", "moved", "Metallurgy capstone"),
+]
+ENGINEERING = [
+    ("circuit_board", "Circuit Board", "e1", "new", "wafer + copper wire"),
+    ("quantum_processor", "Quantum Processor", "e1", "moved", "circuit + superconductor"),
+    ("plasma_containment_ring", "Plasma Containment Ring", "e1", "moved", "superconducting magnet"),
+    ("orbital_frame", "Orbital Frame", "e2", "moved", "titanium + carbon fiber"),
+    ("antimatter_cell", "Antimatter Cell", "e2", "moved", "containment + deep physics"),
+    ("graviton_lens", "Graviton Lens", "e2", "moved", "metamaterial + processor"),
+    ("dyson_node", "Dyson Node", "e3", "moved", "every world's capstone"),
+    ("megastructure_material", "Megastructure Material", "e3", "new",
+     "earned by Ascending once every item is unlocked; builds the megastructure"),
+]
+RETIRED = {"octane": "fuel, not life chemistry", "polymer_precursor": "replaced by real monomers (ethylene, acetylene)",
+           "amino_acid": "split into glycine, alanine, serine, cysteine", "fatty_acid": "now palmitic acid",
+           "nucleotide": "now AMP (and ATP)", "catalyst": "metal catalysts belong to Metallurgy",
+           "chlorine_gas": "industrial; drop", "sodium_hydroxide": "industrial; drop",
+           "uranium_hexafluoride": "nuclear fuel processing; drop", "table_salt": "now mined halite"}
+
+
+# Phases, in calendar DAYS for an engaged daily player (the page converts to active hours with its
+# "active hours per day" setting). Physics is spread so Silicon lands at the end of day 4, when Chemistry
+# opens. Later worlds have fewer items and longer gaps. burstGapH is in active-play hours.
+def _ph(id_, world, name, start, end, burst=1, burst_gap_h=1.0, growth=1.1, finale=1.6):
+    return {"id": id_, "world": world, "name": name, "start": start, "end": end, "burst": burst,
+            "burstGapH": burst_gap_h, "growth": growth, "finale": finale}
+
+
 PHASES = [
-    {"id": "ignition", "world": "world_physics", "name": "Ignition (tutorial)", "start": 0.0, "end": 1.0, "burst": 5,
-     "burstGapMin": 3, "growth": 1.12, "finale": 1.5},
-    {"id": "light", "world": "world_physics", "name": "Light Elements: fusion to Mn", "start": 1.0, "end": 9.0, "burst": 3,
-     "burstGapMin": 8, "growth": 1.08, "finale": 1.8},
-    {"id": "descent", "world": "world_physics", "name": "Actinide Descent: U to Pb", "start": 9.0, "end": 14.0, "burst": 3,
-     "burstGapMin": 6, "growth": 1.08, "finale": 1.6},
-    {"id": "metals_descent", "world": "world_physics", "name": "Metal Descent: Pb to Co", "start": 14.0, "end": 24.0,
-     "burst": 3, "burstGapMin": 8, "growth": 1.03, "finale": 1.8},
-    {"id": "iron", "world": "world_physics", "name": "Iron: both ends meet", "start": 24.0, "end": 26.0, "burst": 0,
-     "burstGapMin": 0, "growth": 1.0, "finale": 1.0},
-    {"id": "act4", "world": "world_physics", "name": "Act IV: transuranics to megastructure (after Chemistry)",
-     "start": 50.0, "end": 140.0, "burst": 2, "burstGapMin": 30, "growth": 1.03, "finale": 1.8},
-    {"id": "c1", "world": "world_chemistry", "name": "C1 First Water", "start": 13.2, "end": 14.0, "burst": 4,
-     "burstGapMin": 4, "growth": 1.1, "finale": 1.2},
-    {"id": "c2", "world": "world_chemistry", "name": "C2 Small Molecules", "start": 14.0, "end": 19.0, "burst": 3,
-     "burstGapMin": 10, "growth": 1.12, "finale": 1.6},
-    {"id": "c3", "world": "world_chemistry", "name": "C3 Organics", "start": 19.0, "end": 25.0, "burst": 2,
-     "burstGapMin": 15, "growth": 1.12, "finale": 1.6},
-    {"id": "c4", "world": "world_chemistry", "name": "C4 Phosphorus & Sulfur", "start": 25.0, "end": 31.0, "burst": 2,
-     "burstGapMin": 20, "growth": 1.12, "finale": 1.7},
-    {"id": "c5", "world": "world_chemistry", "name": "C5 Building Blocks of Life", "start": 31.0, "end": 42.0, "burst": 2,
-     "burstGapMin": 20, "growth": 1.1, "finale": 1.8},
-    {"id": "c6", "world": "world_chemistry", "name": "C6 Molecules of Life", "start": 42.0, "end": 50.0, "burst": 0,
-     "burstGapMin": 0, "growth": 1.25, "finale": 2.0},
-    {"id": "bio", "world": "world_biology", "name": "Biology (unchanged)", "start": 50.0, "end": 90.0, "burst": 2,
-     "burstGapMin": 30, "growth": 1.08, "finale": 1.6},
-    {"id": "parked", "world": "world_metallurgy", "name": "Metallurgy (future world, not built)", "start": None,
-     "end": None},
-    {"id": "retired", "world": "world_chemistry", "name": "Retired from Chemistry", "start": None, "end": None},
+    _ph("p_ignition", "world_physics", "Ignition (tutorial)", 0.0, 0.45, 6, 0.08, 1.1, 1.3),
+    _ph("p_light1", "world_physics", "First Fusion: Li to O", 0.45, 1.5, 2, 0.5, 1.15, 1.6),
+    _ph("p_light2", "world_physics", "Stellar Forge: F to Si", 1.5, 4.0, 1, 1.0, 1.15, 1.8),
+    _ph("p_light3", "world_physics", "Deep Burning: P to Mn", 4.0, 7.5, 1, 1.0, 1.12, 1.6),
+    _ph("p_descent", "world_physics", "Actinide Descent: U to Pb", 7.5, 12.0, 2, 1.0, 1.08, 1.5),
+    _ph("p_metals", "world_physics", "Metal Descent: Pb to Co", 12.0, 22.0, 2, 1.0, 1.03, 1.8),
+    _ph("p_iron", "world_physics", "Iron: both ends meet", 22.0, 23.0, 0, 0, 1.0, 1.0),
+    _ph("p_deep", "world_physics", "Deep Physics: transuranics (feeds Engineering)", 40.0, 75.0, 1, 4.0, 1.06, 1.8),
+    _ph("c1", "world_chemistry", "C1 First Water", 4.0, 4.6, 3, 0.15, 1.15, 1.3),
+    _ph("c2", "world_chemistry", "C2 Small Molecules", 4.6, 8.0, 2, 1.0, 1.15, 1.6),
+    _ph("c3", "world_chemistry", "C3 Organics", 8.0, 12.0, 1, 1.5, 1.15, 1.6),
+    _ph("c4", "world_chemistry", "C4 Phosphorus & Sulfur", 12.0, 17.0, 1, 2.0, 1.15, 1.7),
+    _ph("c5", "world_chemistry", "C5 Building Blocks of Life", 17.0, 24.0, 1, 2.0, 1.12, 1.8),
+    _ph("c6", "world_chemistry", "C6 Molecules of Life", 24.0, 30.0, 0, 0, 1.3, 2.0),
+    _ph("retired", "world_chemistry", "Retired from Chemistry", None, None),
+    _ph("b1", "world_biology", "B1 Biomolecules", 30.0, 35.0, 1, 3.0, 1.15, 1.5),
+    _ph("b2", "world_biology", "B2 Cells", 35.0, 42.0, 1, 4.0, 1.15, 1.7),
+    _ph("b3", "world_biology", "B3 Multicellular", 42.0, 50.0, 0, 0, 1.2, 1.8),
+    _ph("b4", "world_biology", "B4 Ecosystems", 50.0, 58.0, 0, 0, 1.25, 2.0),
+    _ph("m1", "world_metallurgy", "M1 Ores", 58.0, 62.0, 2, 2.0, 1.1, 1.4),
+    _ph("m2", "world_metallurgy", "M2 Smelting & Alloys", 62.0, 70.0, 1, 4.0, 1.15, 1.7),
+    _ph("m3", "world_metallurgy", "M3 Advanced Materials", 70.0, 78.0, 0, 0, 1.25, 2.0),
+    _ph("e1", "world_engineering", "E1 Components", 78.0, 83.0, 0, 0, 1.2, 1.6),
+    _ph("e2", "world_engineering", "E2 Systems", 83.0, 88.0, 0, 0, 1.25, 1.8),
+    _ph("e3", "world_engineering", "E3 Dyson Node and first Ascension", 88.0, 91.0, 0, 0, 1.0, 1.5),
 ]
 WORLDS = [
     {"id": "world_physics", "name": "Physics"}, {"id": "world_chemistry", "name": "Chemistry"},
-    {"id": "world_metallurgy", "name": "Metallurgy (parked)"}, {"id": "world_biology", "name": "Biology"},
+    {"id": "world_biology", "name": "Biology"}, {"id": "world_metallurgy", "name": "Metallurgy"},
+    {"id": "world_engineering", "name": "Engineering"},
 ]
+
+# Idle-Planet-Miner walls: the next research costs far more than one run earns, so the player prestiges at
+# the same spot several times, buying the named upgrades, until a run breaks through.
+WALLS = [
+    {"before": "oxygen", "repeats": 2, "breaks": "Assembly Line 2, Memory Resonance 1",
+     "note": "first wall: teaches that prestiging is progress"},
+    {"before": "sodium", "repeats": 3, "breaks": "Quantum Yield 2, Entropy Headstart 3",
+     "note": "delivery stages 3-4 land around here"},
+    {"before": "silicon", "repeats": 3, "breaks": "Assembly Line 4, Memory Resonance 3",
+     "note": "Silicon is delivery stage 5: Chemistry opens"},
+    {"before": "titanium", "repeats": 3, "breaks": "Research Overdrive 3, Entropy Echo 1", "note": ""},
+    {"before": "lead", "repeats": 4, "breaks": "Fission Yield 2", "note": "the descent's first big wall"},
+    {"before": "copper", "repeats": 5, "breaks": "Neutron Economy 3, Quantum Yield 5", "note": ""},
+    {"before": "iron", "repeats": 4, "breaks": "Fission Yield 5, Neutron Economy 5", "note": "Physics capstone"},
+    {"before": "hydrogen_cyanide", "repeats": 3, "breaks": "Spring Pressure 2",
+     "note": "Chemistry walls run alongside Physics"},
+    {"before": "phosphoric_acid", "repeats": 4, "breaks": "Catalysis 3", "note": ""},
+    {"before": "palmitic_acid", "repeats": 5, "breaks": "Catalysis 5, Spring Pressure 4", "note": ""},
+    {"before": "atp", "repeats": 4, "breaks": "Catalysis 7", "note": "Chemistry capstone"},
+    {"before": "prokaryotic_cell", "repeats": 5, "breaks": "Growth Media 3", "note": ""},
+    {"before": "ecosystem", "repeats": 6, "breaks": "Growth Media 6, Entropy Echo 4", "note": "Biology capstone"},
+    {"before": "titanium_alloy", "repeats": 5, "breaks": "Furnace Heat 3", "note": ""},
+    {"before": "metamaterial", "repeats": 6, "breaks": "Furnace Heat 6, Precision 1", "note": ""},
+    {"before": "graviton_lens", "repeats": 6, "breaks": "Precision 4", "note": ""},
+    {"before": "dyson_node", "repeats": 8, "breaks": "every track near max",
+     "note": "the last wall before the first Ascension"},
+]
+
+# Prestige shop plan: today's upgrades plus one track per world, each priced so its walls fall at the planned
+# repeats. Costs are prestige currency per level.
+UPGRADES = [
+    {"id": "assembly_line", "name": "Assembly Line", "effect": "+10% craft speed / level", "levels": 5,
+     "costs": "15, 30, 60, 120, 240", "status": "keep", "world": "All", "walls": "Oxygen, Silicon"},
+    {"id": "memory_resonance", "name": "Memory Resonance", "effect": "-5% research cost / level", "levels": 5,
+     "costs": "10, 20, 40, 80, 160", "status": "keep", "world": "All", "walls": "Oxygen, Silicon"},
+    {"id": "quantum_yield", "name": "Quantum Yield", "effect": "+10% output / level", "levels": 10,
+     "costs": "40, 80, 160, 320, 640, 1.3k, 2.6k, 5k, 10k, 20k", "status": "extend (5 -> 10)",
+     "world": "All", "walls": "Sodium, Copper"},
+    {"id": "entropy_headstart", "name": "Entropy Headstart", "effect": "start with more entropy (x4 per level)",
+     "levels": 10, "costs": "5 ... 2.5k", "status": "extend (5 -> 10)", "world": "All", "walls": "Sodium"},
+    {"id": "research_overdrive", "name": "Research Overdrive", "effect": "-5% research timer / level",
+     "levels": 10, "costs": "30 ... 2.8k", "status": "keep", "world": "All", "walls": "Titanium"},
+    {"id": "entropy_echo", "name": "Entropy Echo", "effect": "+5% prestige currency / level", "levels": 8,
+     "costs": "200, 600, 1.8k, 5.4k, 16k, 49k, 146k, 437k", "status": "extend (4 -> 8)", "world": "All",
+     "walls": "Titanium, Ecosystem"},
+    {"id": "fission_yield", "name": "Fission Yield", "effect": "+15% decay and fission output / level",
+     "levels": 6, "costs": "300 ... 10k", "status": "new", "world": "Physics", "walls": "Lead, Iron"},
+    {"id": "neutron_economy", "name": "Neutron Economy", "effect": "-10% neutrons per capture / level",
+     "levels": 5, "costs": "800 ... 13k", "status": "new", "world": "Physics", "walls": "Copper, Iron"},
+    {"id": "spring_pressure", "name": "Spring Pressure", "effect": "+20% Spring flow / level", "levels": 6,
+     "costs": "250 ... 8k", "status": "new", "world": "Chemistry", "walls": "HCN, Palmitic Acid"},
+    {"id": "catalysis", "name": "Catalysis", "effect": "+15% Chemistry craft speed / level", "levels": 8,
+     "costs": "600 ... 40k", "status": "new", "world": "Chemistry", "walls": "Phosphoric Acid, Palmitic Acid, ATP"},
+    {"id": "growth_media", "name": "Growth Media", "effect": "+15% Biology output / level", "levels": 8,
+     "costs": "5k ... 300k", "status": "new", "world": "Biology", "walls": "Prokaryotic Cell, Ecosystem"},
+    {"id": "furnace_heat", "name": "Furnace Heat", "effect": "+15% Metallurgy speed / level", "levels": 8,
+     "costs": "40k ... 2.5M", "status": "new", "world": "Metallurgy", "walls": "Titanium Alloy, Metamaterial"},
+    {"id": "precision", "name": "Precision", "effect": "+10% Engineering output / level", "levels": 8,
+     "costs": "250k ... 16M", "status": "new", "world": "Engineering", "walls": "Metamaterial, Graviton Lens"},
+]
+
+# Ascension: once every item is unlocked, Ascend (worlds lock again; items, research and prestige currency
+# reset; shop upgrades stay) for megastructure material. Each megastructure stage costs more material and
+# adds a permanent production bonus, so each loop is faster. The page projects this over years.
+ASCENSION = {"firstLoopDays": 91, "loopShrink": 0.82, "floorDays": 21, "materialFirst": 10,
+             "materialGrowth": 1.18, "stageCostFirst": 10, "stageCostGrowth": 1.55, "stageBonusPct": 10,
+             "years": 4}
 
 
 def main():
@@ -360,6 +469,7 @@ def main():
     data = {
         "generated": __import__("datetime").date.today().isoformat(),
         "runsSource": runs_source, "runs": runs, "chemStart": chem, "worlds": WORLDS, "phases": PHASES,
+        "walls": WALLS, "upgrades": UPGRADES, "ascension": ASCENSION, "activeHoursPerDay": 2.0,
         "asBuilt": built, "proposal": prop,
     }
     if "--check" in sys.argv:
