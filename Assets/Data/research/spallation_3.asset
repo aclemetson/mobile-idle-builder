@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_3
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_3
+  displayName: 'Spallation: Ytterbium to Dysprosium'
+  description: 'Spallation: Ytterbium to Dysprosium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: d1176c02af836e24eb1d9b3db713a16f, type: 2}
+  depthInTree: 17
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 6270000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 7d178368ea70d6e48b31e036000c77ee, type: 2}
+  - {fileID: 11400000, guid: 84ac4c5dcb5353240a87209cfe9ff3c7, type: 2}
+  - {fileID: 11400000, guid: 2d107c787bc3ed3419df58a5e6eab014, type: 2}
+  - {fileID: 11400000, guid: 7cbf57a91c018df4880885ce83c729d7, type: 2}
+  - {fileID: 11400000, guid: e2ba3301ea3d71c48ae4afa51dc14afb, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: f06d2b56f6fc2fe48b362a221f48a569, type: 2}
+  - {fileID: 11400000, guid: 5da52415c42acf947b12500ca8df3ca8, type: 2}
+  - {fileID: 11400000, guid: 61cd8d435e613b84c86c66179eb4738f, type: 2}
+  - {fileID: 11400000, guid: 28cbaca20db4075489793ed5ef03f40b, type: 2}
+  - {fileID: 11400000, guid: 5ca0e2e36783c4e4595d0c68a396847d, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 40f6f604e8938794ba0efe351cdb00b6, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Ytterbium to Dysprosium'

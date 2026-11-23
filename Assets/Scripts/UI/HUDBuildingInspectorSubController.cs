@@ -1299,6 +1299,15 @@ namespace MobileIdleBuilder
                     globalSpeed = gb.SpeedMult;
                 }
             }
+            using (var wq = _em.CreateEntityQuery(ComponentType.ReadOnly<ActiveWorldRules>()))
+            {
+                if (!wq.IsEmpty)
+                {
+                    var wr = wq.GetSingleton<ActiveWorldRules>();
+                    if (wr.OutputMult > 0f) outMult     *= wr.OutputMult;
+                    if (wr.SpeedMult  > 0f) globalSpeed *= wr.SpeedMult;
+                }
+            }
             using (var pq = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>()))
             {
                 if (pq.IsEmpty) return;

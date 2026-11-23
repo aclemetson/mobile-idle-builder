@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_7
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_7
+  displayName: 'Spallation: Tin to Palladium'
+  description: 'Spallation: Tin to Palladium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 442e9a2d4f4441a43b925dda800457cc, type: 2}
+  depthInTree: 21
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 10600000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: a5023a682df70cc46bb85d9a431dab1c, type: 2}
+  - {fileID: 11400000, guid: 739f2682a5e7a2342a6c603969edf42c, type: 2}
+  - {fileID: 11400000, guid: 036a492c504f104499b967dbe6f05f7b, type: 2}
+  - {fileID: 11400000, guid: 4d06a5ac69529a348ba53b0c7f8f7bb9, type: 2}
+  - {fileID: 11400000, guid: 250a835e60fc5d54598f0179762dba83, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 83797e7990015114983b8c70c56e230a, type: 2}
+  - {fileID: 11400000, guid: 35fe0fde4afa99f4ab5e1487b9374bc8, type: 2}
+  - {fileID: 11400000, guid: 99000c6403025d54e8a5dae00eff1cb5, type: 2}
+  - {fileID: 11400000, guid: 6a781a12f18bf094aa08327b41161da1, type: 2}
+  - {fileID: 11400000, guid: aae8b636027766b4d8e011fc14e60d53, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 2cec6ea9df900004dab0cb69331282cf, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Tin to Palladium'

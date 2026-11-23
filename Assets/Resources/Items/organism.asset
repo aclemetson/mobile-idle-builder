@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: Organs integrated into a single living whole that senses, moves, and
     reproduces. Chemistry has become a creature.
   codexUnlocked: 0
-  baseSellValue: 1.96e+9
+  baseSellValue: 84100000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

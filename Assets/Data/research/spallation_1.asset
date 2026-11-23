@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_1
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_1
+  displayName: 'Spallation: Mercury to Osmium'
+  description: 'Spallation: Mercury to Osmium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: b9331ed30290719499cca9cf3a6c9773, type: 2}
+  depthInTree: 15
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 6270000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 0cf2a132d6616cd46b0b092934a80a1c, type: 2}
+  - {fileID: 11400000, guid: e84d6bf8f3fdf014bb7cea6c09b00bf4, type: 2}
+  - {fileID: 11400000, guid: 6cb9a2eab667f5c40a45639f0dfd5d37, type: 2}
+  - {fileID: 11400000, guid: 4f93fba8dfc82fb47be25558a5b9fa06, type: 2}
+  - {fileID: 11400000, guid: d275487ee1618bd4db239f1eca3ce7e9, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 496c3f45729615d45b600d4239d12776, type: 2}
+  - {fileID: 11400000, guid: 033527108d2d8e64983f872644e3d98f, type: 2}
+  - {fileID: 11400000, guid: b37d21504b437d144acf5fb5b5ce4184, type: 2}
+  - {fileID: 11400000, guid: ba64ad455feed094cafe3a879620f0c7, type: 2}
+  - {fileID: 11400000, guid: ae293cba231bdad4992d2b65a06598dc, type: 2}
+  unlocksBuildings:
+  - {fileID: 11400000, guid: 89772d87e649bbe4e998b5f20469f43d, type: 2}
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
+  - {fileID: 11400000, guid: d1176c02af836e24eb1d9b3db713a16f, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Mercury to Osmium'

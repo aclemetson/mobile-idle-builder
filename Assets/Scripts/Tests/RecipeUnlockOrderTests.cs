@@ -123,18 +123,17 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void NeutronCaptureChain_RunsInInputOrder()
+        public void SpallationChain_RunsInInputOrder()
         {
+            // Item Timeline (2026-11-23): each Spallation node needs the one before, whose last element feeds it.
             var db = _db.allResearch.Where(r => r != null).ToDictionary(r => r.id);
             void Requires(string node, string prereq) =>
                 Assert.IsTrue(db[node].prerequisites.Any(p => p != null && p.id == prereq), $"{node} should require {prereq}");
-            Requires("heavy_transition_metals",      "slow_neutron_capture");   // Samarium from Cerium (fission)
-            Requires("rapid_neutron_capture",        "heavy_transition_metals"); // Europium needs Samarium
-            Requires("lanthanides_and_heavy_metals", "rapid_neutron_capture");  // Gadolinium..Rhenium from Europium
-            Requires("exotic_metals",                "lanthanides_and_heavy_metals"); // Osmium needs Rhenium
-            Requires("precious_metals",              "exotic_metals");          // Platinum needs Iridium
-            Assert.AreEqual("precious_metals", _recipes.First(r => r.id == "s_capture_mercury").requiredResearch?.id,
-                            "Mercury (Gold + neutron) unlocks with Gold");
+            Requires("spallation_1", "decay_branches");      // Mercury from Thallium
+            for (int i = 2; i <= 11; i++) Requires($"spallation_{i}", $"spallation_{i - 1}");
+            Requires("iron_convergence", "spallation_11");   // Iron needs Cobalt
+            Assert.AreEqual("spallation_1", _recipes.First(r => r.id == "spall_mercury").requiredResearch?.id,
+                            "Mercury (Thallium + neutron) opens the metal descent");
         }
 
         [Test]

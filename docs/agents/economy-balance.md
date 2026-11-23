@@ -4,6 +4,8 @@
 
 > Verified against: `b3defb5`, 2026-06-28; prestige multipliers live + research discounts + Entropy Surge 2026-11-11; net worth at list price + stored items 2026-11-19; speed burst as factory clock + one boost at a time 2026-11-19. If code contradicts this doc, trust the code and update this doc.
 
+> Item pacing across worlds (as built and the proposed restructure, with calendar days): `docs/item-timeline.html` / `scripts/item_timeline.py` (see `chemistry-biology.md`).
+
 ## Currencies
 
 | Currency | Earned | Spent | Storage |
@@ -150,6 +152,17 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 **Surplus sales** (`SurplusSale`, #312): items a building can't use never pile up unseen. Sold at `Fraction × Demon price` (base 50%, +10% per level of the `surplus_resale` Surplus Brokerage prestige upgrade, max 100%): **an item the recipe uses that reaches a full input** (full-input autosell, 2026-11-11: the belt keeps moving instead of backing up and stalling its producers), a belt's front item jamming a needed item (`ConveyorSystem` overflow), and inputs a newly set recipe no longer uses (`HUDBuildingInspectorSubController.SetBuildingRecipe`). An item the recipe doesn't use still waits on the belt, and a building with no recipe never sells. A tail beside several inputs prefers one that takes the item (the Demon included, at full price) over selling. Fractions of entropy carry over between belt sales; the inspector's "Selling surplus" row shows the last 5 s per building (`SurplusSaleLog`). Offline, items stuck at a starved building and the excess an over-supplied building can't use at steady state sell at the same rate (`IdleGraphAnalyzer` `surplusSaleFraction`, `ExcessInto`).
 
 **Live wiring:** `assembly_line` (craft speed) and `quantum_yield` (output) flow through `PrestigeData.SpeedMultiplier`/`OutputMultiplier`, which `ProductionSystem` and `CollectorSystem` read live (with the megastructure `GlobalProductionBonus`) and the idle snapshot folds in. Fractional output bonuses carry between crafts (`OutputCarry`). Research is priced by `ResearchCost.Effective`: Memory Resonance on every node. Research discounts come from upgrades only; the per-node "finished on an earlier run" discount (`prestige_memory_discount`) was removed 2026-11-15.
+
+
+### Planned content: the Item Timeline economy (2026-11-23)
+
+Content marked `"planned": true` in `game_data.json` (items, recipes, research, blocks) is priced by `scripts/economy_plan.py`, the model the Item Timeline page shows (https://claude.ai/artifact/68WpPYX6DBZiXku4sES1Dd), and `rebalance_curve.py` leaves it alone (it treats planned research as off-curve and planned items as already priced). Phase 1 covers Physics from `light_elements` to `iron_convergence`; Chemistry, Biology, components and Deep Physics are still on the derived curve above until their phases.
+
+- **Wage on time, not research count:** wage(H) = 20 x 2^((H - 1) / 10) entropy per building-second at active hour H (2 active hours a day). Value = (inputs + wage x craft) / output quantity, as before.
+- **Research** = 5 buildings x wage x (1.15 ^ walls cleared) x the active seconds since the previous unlock in any world (one wallet). Walls (`walls` in the plan) are where the timeline makes the player prestige several times at one spot; the 1.15 per wall is what the prestige shop's tracks are assumed to add.
+- **Smoothing:** costs along the planned chain are pooled (pool adjacent violators) so a node never costs less than its prerequisite; a wall becomes a stretch of dear research.
+- `progression_curve.py --report` has no prestige-upgrade model, so planned blocks read about 1.15^walls slower than their `target_hours`; that is expected.
+- **World tracks** in the prestige shop: `UpgradeEffectType.WorldCraftSpeed` / `WorldOutput` with `UpgradeDef.world` (Physics: Fission Yield +15% output, Neutron Economy +10% speed). `WorldRules` writes them onto the `ActiveWorldRules` singleton (`SpeedMult`, `OutputMult`) on every world load and after a purchase; `ProductionSystem`, `CollectorSystem`, the idle snapshot and the inspector apply them. Quantum Yield now has 10 levels.
 
 ## Managers (prestige-currency sink — `game_data.json` `managers`, `ManagerService.cs`)
 

@@ -27,7 +27,7 @@ MonoBehaviour:
   treeY: -1
   requiredWorld: world_chemistry
   world: world_chemistry
-  costBaseCurrency: 53300000
+  costBaseCurrency: 22500000
   costPrestigeCurrency: 0
   durationSeconds: 1800
   fieldCooldownMult: 1
@@ -42,8 +42,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 07da0090faff46847a007510755cefc2, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch:
-  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  unlocksResearch: []
   resetsOnPrestige: 1
   codexEntry: "Silica is the basis of glass and semiconductors. Iron oxide rusts
     and builds \u2014 it is the ore steel begins from. Uranium hexafluoride enables

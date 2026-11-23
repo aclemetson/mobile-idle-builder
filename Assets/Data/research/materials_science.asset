@@ -19,14 +19,14 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 2
   prerequisites:
-  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  - {fileID: 11400000, guid: 38337d98e2e2d9f4ca28b9331c7e1638, type: 2}
   depthInTree: 5
   block: chemistry_world
   treeX: -1
   treeY: -1
   requiredWorld: world_chemistry
   world: world_chemistry
-  costBaseCurrency: 75700000
+  costBaseCurrency: 74400000
   costPrestigeCurrency: 0
   durationSeconds: 3600
   fieldCooldownMult: 1

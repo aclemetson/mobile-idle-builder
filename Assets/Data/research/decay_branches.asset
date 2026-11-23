@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: decay_branches
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: decay_branches
+  displayName: Decay Branches
+  description: Francium, Astatine, Bismuth and Thallium from the side branches of
+    the chain.
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 202753c68bb8ed344a9718acbf017182, type: 2}
+  depthInTree: 14
+  block: actinide_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 6270000
+  costPrestigeCurrency: 0
+  durationSeconds: 900
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: a40f22af396d0fe48a743926a35c6f85, type: 2}
+  - {fileID: 11400000, guid: 04c6bba37d3513949b42a2a6b343825f, type: 2}
+  - {fileID: 11400000, guid: 0039fef86aba3c5498c59dbd4450c5f5, type: 2}
+  - {fileID: 11400000, guid: 38f2388a64f8a074f928f5415d3e828f, type: 2}
+  - {fileID: 11400000, guid: 9baf610e8f7aec443b194f5e7347c564, type: 2}
+  - {fileID: 11400000, guid: 3726ea5eb5c0cdf43911439e0557e249, type: 2}
+  - {fileID: 11400000, guid: af5d4cc0b91384840abafa94f5593d4f, type: 2}
+  - {fileID: 11400000, guid: a4b71afe142cf464e86e7f896c344a4c, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 0391eec11b827fb4382791ec1fd1b846, type: 2}
+  - {fileID: 11400000, guid: 8aeb67e5e6833c247b314632493b03da, type: 2}
+  - {fileID: 11400000, guid: b3ccdeea14324e64aa912819440eba25, type: 2}
+  - {fileID: 11400000, guid: fda950d3c5d2fe14c991f08b25f7e940, type: 2}
+  - {fileID: 11400000, guid: 75c204f95e4ac5846a85c37473612011, type: 2}
+  - {fileID: 11400000, guid: 30ae2468216d07b4caa5a67ce71d95b2, type: 2}
+  - {fileID: 11400000, guid: 00faaece528abf442861728a2083689a, type: 2}
+  - {fileID: 11400000, guid: 3bf13c90228c0294fbd20e57bc1692c1, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 0cfd34920e495da4782d7cfc42b81da8, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Francium, Astatine, Bismuth and Thallium from the side branches of
+    the chain.

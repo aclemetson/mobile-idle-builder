@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: An eight-carbon chain, dense with stored energy. The archetypal fuel
     and a heavier feedstock for synthesis.
   codexUnlocked: 0
-  baseSellValue: 374000
+  baseSellValue: 21000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_8
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_8
+  displayName: 'Spallation: Rhodium to Niobium'
+  description: 'Spallation: Rhodium to Niobium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 8ff1c81446308d84c91c60340c2f6e81, type: 2}
+  depthInTree: 22
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 11600000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: f13668c429e4b6e48aeb6ad248b56403, type: 2}
+  - {fileID: 11400000, guid: 51eae1268595286478aec2d848b53f87, type: 2}
+  - {fileID: 11400000, guid: d33431e9cab622546bd9ce5c288ab98f, type: 2}
+  - {fileID: 11400000, guid: 963db6353672d4b4990fa12a6dc2a238, type: 2}
+  - {fileID: 11400000, guid: 52b2fc80b709dd34a9e10e068d2714c3, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 0f5af005a4f1c7c4f907d8d2957d4a30, type: 2}
+  - {fileID: 11400000, guid: 5d5f9a475793c03428f6fe76547e6bfe, type: 2}
+  - {fileID: 11400000, guid: fc34203400de27a48b9b7bf8dedc5d5b, type: 2}
+  - {fileID: 11400000, guid: a603e428732b4b8449103c15af9c6274, type: 2}
+  - {fileID: 11400000, guid: f1c49e2b85bd40641b2e712de6807cc5, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 68db96b3a01840542b477e7bf10713ba, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Rhodium to Niobium'

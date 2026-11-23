@@ -56,6 +56,12 @@ namespace MobileIdleBuilder
                 if (pd.SpeedMultiplier  > 0f) globalSpeedMult  *= pd.SpeedMultiplier;
                 if (pd.OutputMultiplier > 0f) globalOutputMult *= pd.OutputMultiplier;
             }
+            // The live world's prestige-shop track (Fission Yield / Neutron Economy in Physics...).
+            if (SystemAPI.TryGetSingleton<ActiveWorldRules>(out var wr))
+            {
+                if (wr.SpeedMult  > 0f) globalSpeedMult  *= wr.SpeedMult;
+                if (wr.OutputMult > 0f) globalOutputMult *= wr.OutputMult;
+            }
 
             foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
                 SystemAPI.Query<

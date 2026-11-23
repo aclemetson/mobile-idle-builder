@@ -62,7 +62,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
   - {fileID: 11400000, guid: b42412ce8930c194f837745e082ac3e6, type: 2}
   - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
-  - {fileID: 11400000, guid: bf10740a158e9dd4b92f0862d6e86d57, type: 2}
+  - {fileID: 11400000, guid: 2e78ee1afda215e4dac306504f792916, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
   - Nucleus A

@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: A long hydrocarbon chain with an acid head. The building block of cell
     membranes.
   codexUnlocked: 0
-  baseSellValue: 1100000
+  baseSellValue: 52800
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

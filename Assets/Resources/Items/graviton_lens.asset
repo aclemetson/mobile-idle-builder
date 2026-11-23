@@ -36,6 +36,6 @@ MonoBehaviour:
     tidal forces across the inner surface of a Dyson sphere, maintaining structural
     integrity against the star's gravity gradient.
   codexUnlocked: 0
-  baseSellValue: 1.11e+9
+  baseSellValue: 175000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

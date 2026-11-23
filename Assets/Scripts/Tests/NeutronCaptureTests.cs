@@ -8,72 +8,81 @@ using UnityEngine;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// #322 phase 3: Neutron Capture. Slow (s-process) climbs one element at a time; Fast (r-process) is the only
-    /// route to the elements neutron-star mergers make. Fast comes later, costs more power and takes longer.
+    /// The descent (Item Timeline, 2026-11-23). Fusion climbs to Manganese; Uranium is mined and decays to
+    /// Lead and Thallium; the Spallation Chamber (the old Neutron Capture building, id kept for saves) knocks
+    /// one proton off at a time from Mercury down to Cobalt; Iron joins Manganese and Cobalt.
     /// </summary>
     [TestFixture]
     public class NeutronCaptureTests
     {
         [Serializable] class GdIng      { public string item; public int quantity; }
         [Serializable] class GdItem     { public string id; public string category; public int atomic_number; }
-        [Serializable] class GdRecipe   { public string id; public string output_item; public List<GdIng> inputs; public List<string> valid_buildings; public string required_research; public float base_craft_time; public float fixed_power_cost_ev; }
-        [Serializable] class GdBuilding { public string id; public bool power_cost_is_dynamic; public List<string> recipe_mode_prefixes; public List<string> recipe_mode_labels; }
-        [Serializable] class GdResearch { public string id; public List<string> prerequisites; }
+        [Serializable] class GdRecipe   { public string id; public string output_item; public List<GdIng> inputs; public List<string> valid_buildings; public string required_research; }
+        [Serializable] class GdBuilding { public string id; public string display_name; public string required_research; public List<string> supported_recipes; public List<string> recipe_mode_prefixes; }
+        [Serializable] class GdResearch { public string id; public List<string> prerequisites; public List<string> unlocks_items; }
         [Serializable] class GameData   { public List<GdItem> items; public List<GdRecipe> recipes; public List<GdBuilding> buildings; public List<GdResearch> research; }
-
-        static readonly string[] ROnly = { "europium", "osmium", "iridium", "platinum", "gold" };
 
         GameData _gd;
         Dictionary<string, GdItem> _items;
-        List<GdRecipe> _slow, _fast;
+        List<GdRecipe> _spall;
 
         [OneTimeSetUp]
         public void Load()
         {
             _gd    = JsonUtility.FromJson<GameData>(File.ReadAllText("Assets/Data/game_data.json"));
             _items = _gd.items.ToDictionary(i => i.id);
-            var capture = _gd.recipes.Where(r => r.valid_buildings.Contains("neutron_capture")).ToList();
-            _slow = capture.Where(r => r.id.StartsWith("s_capture_")).ToList();
-            _fast = capture.Where(r => r.id.StartsWith("r_capture_")).ToList();
+            _spall = _gd.recipes.Where(r => r.valid_buildings.Contains("neutron_capture")).ToList();
         }
 
         [Test]
-        public void EveryCapture_MakesTheNextElementUp()
+        public void EverySpallation_MakesTheNextElementDown_FromMercuryToCobalt()
         {
-            foreach (var r in _slow.Concat(_fast))
+            CollectionAssert.AreEquivalent(Enumerable.Range(27, 54), _spall.Select(r => _items[r.output_item].atomic_number),
+                "one step for every element from Cobalt (27) to Mercury (80)");
+            foreach (var r in _spall)
             {
                 var src = _items[r.inputs.Single(i => i.item != "neutron").item];
-                Assert.AreEqual(src.atomic_number + 1, _items[r.output_item].atomic_number, r.id);
-                Assert.Greater(r.inputs.Single(i => i.item == "neutron").quantity, 0, r.id);
+                Assert.AreEqual(src.atomic_number - 1, _items[r.output_item].atomic_number, r.id);
+                Assert.AreEqual(1, r.inputs.Single(i => i.item == "neutron").quantity, r.id);
             }
         }
 
         [Test]
-        public void FastIsTheOnlyRouteToTheRProcessElements()
+        public void NoRecipeClimbsAboveIron_ExceptTheTutorialAndTheTransuranics()
         {
-            CollectionAssert.AreEquivalent(ROnly, _fast.Select(r => r.output_item));
-            foreach (var el in ROnly)
-                Assert.IsFalse(_slow.Any(r => r.output_item == el), $"{el} must not be reachable by slow capture");
+            // The old s/r-process captures climbed from Iron to Gold; they would lose value under the descent's
+            // prices (Iron is now worth more than Cobalt), so they are gone.
+            Assert.IsFalse(_gd.recipes.Any(r => r.id.StartsWith("s_capture_") || r.id.StartsWith("r_capture_")));
+            Assert.IsFalse(_gd.recipes.Any(r => r.id == "fuse_iron"), "Iron comes from both ends now");
         }
 
         [Test]
-        public void Fast_ComesLater_TakesLonger_AndDrawsMorePower()
+        public void Iron_JoinsManganeseAndCobalt()
         {
-            // Since 2026-11-15 the r-Process sits behind Heavy Transition Metals (Europium needs its Samarium),
-            // which itself requires the s-Process, so fast capture still comes after slow.
-            Assert.IsTrue(Requires("rapid_neutron_capture", "slow_neutron_capture"), "r-Process must come after s-Process");
-            // Capture groups are gated by the old element-group nodes (#322 phase 4); fast ones must still
-            // sit behind the r-Process.
-            foreach (var r in _fast)
-                Assert.IsTrue(Requires(r.required_research, "rapid_neutron_capture"), $"{r.id} ({r.required_research})");
+            var iron = _gd.recipes.Single(r => r.output_item == "iron" && r.valid_buildings.Contains("fusion_reactor"));
+            CollectionAssert.AreEquivalent(new[] { "manganese", "cobalt" }, iron.inputs.Select(i => i.item));
+            Assert.AreEqual("iron_convergence", iron.required_research);
+        }
 
-            Assert.Greater(_fast.Min(r => r.base_craft_time), _slow.Max(r => r.base_craft_time));
-            Assert.Greater(_fast.Min(r => r.fixed_power_cost_ev), _slow.Max(r => r.fixed_power_cost_ev));
+        [Test]
+        public void Uranium_IsMined_AfterManganese()
+        {
+            Assert.IsFalse(_gd.recipes.Any(r => r.output_item == "uranium" && r.inputs.Count > 0), "no assembled Uranium");
+            var mine = _gd.recipes.Single(r => r.id == "collect_uranium");
+            Assert.AreEqual("heavy_elements", mine.required_research);
+            Assert.IsTrue(Requires("heavy_elements", "silicon_burning"), "the descent starts after fusion reaches Manganese");
+            Assert.IsTrue(Requires("spallation_1", "decay_branches"), "spallation starts below Thallium");
+            Assert.IsTrue(Requires("iron_convergence", "spallation_11"), "Iron is last");
+        }
 
+        [Test]
+        public void SpallationChamber_IsTheOldNeutronCaptureBuilding_WithOneMode()
+        {
             var nc = _gd.buildings.Single(b => b.id == "neutron_capture");
-            Assert.IsTrue(nc.power_cost_is_dynamic, "the building's draw follows its recipe");
-            CollectionAssert.AreEqual(new[] { "s_capture_", "r_capture_" }, nc.recipe_mode_prefixes);
-            Assert.AreEqual(2, nc.recipe_mode_labels.Count);
+            Assert.AreEqual("Spallation Chamber", nc.display_name);
+            Assert.AreEqual("spallation_1", nc.required_research);
+            CollectionAssert.AreEquivalent(_spall.Select(r => r.id), nc.supported_recipes);
+            Assert.IsTrue(nc.recipe_mode_prefixes == null || nc.recipe_mode_prefixes.Count == 0, "no Slow / Fast modes");
         }
 
         bool Requires(string research, string ancestor)

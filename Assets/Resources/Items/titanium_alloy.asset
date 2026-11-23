@@ -36,6 +36,6 @@ MonoBehaviour:
     standard. Survives re-entry temperatures, resists saltwater corrosion, and biocompatible
     enough for implants."
   codexUnlocked: 0
-  baseSellValue: 1340000
+  baseSellValue: 2770000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

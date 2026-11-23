@@ -13,38 +13,37 @@ MonoBehaviour:
   m_Name: mid_elements
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: mid_elements
-  displayName: Mid-Period Elements
-  description: 'Fuse a proton onto Carbon, Oxygen, Neon, Magnesium and Silicon: Nitrogen,
-    Fluorine, Sodium, Aluminum and Phosphorus. Hydrogen and Nitrogen now make Ammonia.'
+  displayName: Neon Burning
+  description: Neon burning climbs to Magnesium, Aluminum and Silicon, the last delivery
+    before Chemistry.
   icon: {fileID: 0}
-  branch: 1
+  branch: 4
   prerequisites:
   - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
-  depthInTree: 5
+  depthInTree: 7
   block: stellar_forge
   treeX: -1
   treeY: -1
   requiredWorld: 
   world: world_physics
-  costBaseCurrency: 2260000
+  costBaseCurrency: 1420000
   costPrestigeCurrency: 0
-  durationSeconds: 120
+  durationSeconds: 300
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
-  - {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
-  - {fileID: 11400000, guid: e6ba63c2e5deb7d41b3d61d79e8aaaa5, type: 2}
-  - {fileID: 11400000, guid: 83c568384b6970b47a30de4c7097a7da, type: 2}
+  - {fileID: 11400000, guid: ffbf17ea0335f1f4a95224f9f5aec3ae, type: 2}
   - {fileID: 11400000, guid: 31333edf10e38474c90fafe8f7d578e3, type: 2}
+  - {fileID: 11400000, guid: e9d4fd82ea10f0747bcd10d5cc822c97, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 18d8c24fc0a976944b3b0a238ce26f4a, type: 2}
-  - {fileID: 11400000, guid: 3cc60278fb985db4f8431f14dce466ff, type: 2}
-  - {fileID: 11400000, guid: 63a5048ef762a6940ad1de1bb422d57f, type: 2}
+  - {fileID: 11400000, guid: 3aa75351a59a7df458d9ce4ab5cf936e, type: 2}
+  - {fileID: 11400000, guid: 2bf96794b3af2ae4e93b5eab183e17a0, type: 2}
   - {fileID: 11400000, guid: c216c34d551829b46ac369db8907609c, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
   resetsOnPrestige: 1
   codexEntry: Nitrogen dominates Earth's atmosphere and every protein chain. Aluminum
     is the most abundant metal in the crust. Nickel stabilises steel and powers rechargeable

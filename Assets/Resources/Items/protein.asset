@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: "A folded chain of amino acids. Enzymes, motors, and scaffolds \u2014
     proteins do nearly all the work of a living cell."
   codexUnlocked: 0
-  baseSellValue: 859000
+  baseSellValue: 32300
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0
