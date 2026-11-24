@@ -277,17 +277,6 @@ namespace MobileIdleBuilder
             return counted;
         }
 
-        /// <summary>
-        /// What the Demon receives in <paramref name="seconds"/> of live production at full rate (no idle-rate
-        /// cut), from the latest snapshots. Entropy Surge pays N minutes of live automation income, so the items
-        /// behind that income count toward the tasks too.
-        /// </summary>
-        public static Dictionary<int, long> LiveDemonDeliveries(SaveData save, float seconds)
-        {
-            var result = ComputePayout(Snapshots(save), seconds, 1f);
-            return result.DemonDelivered;
-        }
-
         static List<IdleCollectionSnapshot> Snapshots(SaveData save)
         {
             if (save == null) return new List<IdleCollectionSnapshot>();

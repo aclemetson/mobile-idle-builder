@@ -6,18 +6,18 @@ namespace MobileIdleBuilder
     /// <summary>The rewarded-ad placements. The enum name doubles as the SaveData counter id.</summary>
     public enum AdPlacement
     {
-        EntropyBoost,   // grant a % of net worth in entropy (the core regular-currency placement)
+        EntropyBoost,   // retired 2026-11-24 (#489): folded into the Entropy Surge. Kept so old save counters still parse.
         DoubleOffline,  // re-grant the just-collected offline earnings (offered on the idle-return modal)
         IdleRateBoost,  // +50% offline collection RATE for 4 hours (name kept: it is the save counter id)
         SpeedBoost,     // 2x production for a short window (reuses the speed-boost expiry)
         TimeWarp,       // instantly bank ~1h of offline production
         Crystals,       // small premium-currency drop
-        EntropySurge,   // N minutes of current automation income, on a short cooldown (post-prestige lull)
+        EntropySurge,   // a roll: 10% of net worth in entropy or a few crystals, every 15 min, no daily cap (#489)
         IdleRateBoostShort, // +50% offline collection RATE for 2 hours (2026-11-20: pick 2 h or 4 h by time away)
     }
 
     /// <summary>How a placement's reward is delivered. Drives AdService.GrantReward's switch.</summary>
-    public enum AdRewardKind { Entropy, DoubleOffline, IdleRateBoost, SpeedBoost, TimeWarp, Crystals, IncomeMinutes }
+    public enum AdRewardKind { Entropy, DoubleOffline, IdleRateBoost, SpeedBoost, TimeWarp, Crystals, SurgeRoll }
 
     /// <summary>
     /// One rewarded-ad placement: its display copy, daily cap, and the reward it pays. Reward magnitudes
@@ -33,11 +33,11 @@ namespace MobileIdleBuilder
         public int          DailyCap;
 
         // Reward params (only the fields relevant to Kind are used):
-        public float NetWorthFraction;  // Entropy: fraction of last-known net worth
-        public long  MinimumFloor;      // Entropy: floor so early-game grants are not zero
-        public long  CrystalAmount;     // Crystals
+        public float NetWorthFraction;  // Entropy / SurgeRoll: fraction of live net worth
+        public long  MinimumFloor;      // Entropy / SurgeRoll: floor so early-game grants are not zero
+        public long  CrystalAmount;     // Crystals / SurgeRoll
+        public float CrystalChance;     // SurgeRoll: chance the roll pays crystals instead of entropy
         public float DurationHours;     // IdleRateBoost / TimeWarp window length
-        public float IncomeMinutes;     // IncomeMinutes: minutes of current automation income granted
         public float CooldownMinutes;   // > 0: minimum time between two watches of this placement
 
         /// <summary>Id used as the SaveData daily-counter key (stable across builds).</summary>
@@ -57,17 +57,15 @@ namespace MobileIdleBuilder
         /// <summary>Time between two watches of any placement without its own cooldown (Entropy Surge has 15 min).</summary>
         public const float StandardCooldownMinutes = 5f;
 
+        /// <summary>DailyCap of a placement with no daily limit (the Entropy Surge, #489).</summary>
+        public const int Uncapped = int.MaxValue;
+
         /// <summary>2x production window granted by the SpeedBoost placement (reuses speed-boost expiry).</summary>
         public static readonly TimeSpan SpeedBoostDuration = TimeSpan.FromMinutes(30);
 
         // ── Placement table ───────────────────────────────────────────────────
         public static readonly AdPlacementDef[] Placements =
         {
-            new AdPlacementDef {
-                Placement = AdPlacement.EntropyBoost, Kind = AdRewardKind.Entropy,
-                Name = "Entropy Boost", Description = "Watch an ad for 10% of your net worth in entropy.",
-                DailyCap = 5, NetWorthFraction = 0.10f, MinimumFloor = 500, CooldownMinutes = StandardCooldownMinutes,
-            },
             new AdPlacementDef {
                 Placement = AdPlacement.DoubleOffline, Kind = AdRewardKind.DoubleOffline,
                 Name = "Double Offline", Description = "Watch an ad to double your offline earnings.",
@@ -99,12 +97,14 @@ namespace MobileIdleBuilder
                 Name = "Crystal Drop", Description = "Watch an ad for a few crystals.",
                 DailyCap = 1, CrystalAmount = 25, CooldownMinutes = StandardCooldownMinutes,
             },
-            // Paced for the post-prestige lull (docs/balance/prestige-pacing.xlsx, Ads sheet): pays a fixed
-            // slice of time at every stage instead of a % of net worth, which grows with run length.
+            // #489 (2026-11-24): the only entropy ad. Each watch rolls: 80% pays 10% of net worth in entropy,
+            // 20% pays 10 crystals. No daily cap; the 15-minute cooldown paces it.
             new AdPlacementDef {
-                Placement = AdPlacement.EntropySurge, Kind = AdRewardKind.IncomeMinutes,
-                Name = "Entropy Surge", Description = "Watch an ad for 10 minutes of your automation income.",
-                DailyCap = 8, IncomeMinutes = 10f, CooldownMinutes = 15f, MinimumFloor = 500,
+                Placement = AdPlacement.EntropySurge, Kind = AdRewardKind.SurgeRoll,
+                Name = "Entropy Surge",
+                Description = "Watch an ad: usually 10% of your net worth in entropy, sometimes 10 crystals.",
+                DailyCap = Uncapped, NetWorthFraction = 0.10f, MinimumFloor = 500,
+                CrystalAmount = 10, CrystalChance = 0.20f, CooldownMinutes = 15f,
             },
         };
 
@@ -117,29 +117,28 @@ namespace MobileIdleBuilder
 
         public static int DailyCap(AdPlacement p) => Def(p).DailyCap;
 
+        /// <summary>True when the placement has a daily limit (every one but the Entropy Surge).</summary>
+        public static bool HasDailyCap(AdPlacement p) => DailyCap(p) != Uncapped;
+
         // ── Reward amounts ────────────────────────────────────────────────────
 
-        /// <summary>Entropy granted by the EntropyBoost placement: a % of net worth with a floor.</summary>
-        public static long CalcEntropyReward(double lastKnownNetWorth)
+        /// <summary>Entropy the Entropy Surge's entropy roll pays: a % of net worth with a floor.</summary>
+        public static long CalcEntropyReward(double netWorth)
         {
-            var def = Def(AdPlacement.EntropyBoost);
-            long fromNetWorth = (long)(lastKnownNetWorth * def.NetWorthFraction);
-            return Math.Max(fromNetWorth, def.MinimumFloor);
+            var def = Def(AdPlacement.EntropySurge);
+            double fromNetWorth = netWorth > 0d && !double.IsNaN(netWorth) ? netWorth * AsDouble(def.NetWorthFraction) : 0d;
+            long amount = fromNetWorth >= long.MaxValue ? long.MaxValue : (long)fromNetWorth;
+            return Math.Max(amount, def.MinimumFloor);
         }
 
         /// <summary>
-        /// Entropy granted by an income-minutes placement (Entropy Surge): <paramref name="incomePerSecond"/>
-        /// (IncomeRateTracker.RewardPerSecond: unboosted automation income, 180 s average) x the placement's minutes, never below
-        /// its floor so a player with nothing automated yet still gets something.
+        /// Whether a surge pays crystals: <paramref name="roll01"/> is a uniform value in [0, 1); below the
+        /// placement's crystal chance (20%) it is crystals, otherwise entropy.
         /// </summary>
-        public static long CalcIncomeReward(AdPlacement p, double incomePerSecond)
-        {
-            var def = Def(p);
-            double rate = incomePerSecond > 0d && !double.IsNaN(incomePerSecond) ? incomePerSecond : 0d;
-            double fromIncome = rate * 60d * def.IncomeMinutes;
-            long amount = fromIncome >= long.MaxValue ? long.MaxValue : (long)fromIncome;
-            return Math.Max(amount, def.MinimumFloor);
-        }
+        public static bool SurgeRollsCrystals(double roll01) => roll01 < AsDouble(Def(AdPlacement.EntropySurge).CrystalChance);
+
+        // 0.1f widens to 0.10000000149: round a table fraction back to what was written before using it as a double.
+        static double AsDouble(float fraction) => Math.Round(fraction, 6);
 
         // ── Cooldown bookkeeping (placements with CooldownMinutes > 0) ──────────
 
