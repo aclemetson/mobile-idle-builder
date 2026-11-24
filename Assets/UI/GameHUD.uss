@@ -1429,8 +1429,10 @@
 }
 
 /* Builder cards (#487): a horizontal row per tab. The ScrollView scrolls sideways; each tab page is a row. */
-.builder-cards .unity-scroll-view__content-container {
+.builder-cards .unity-scroll-view__content-container,
+.recipe-cards .unity-scroll-view__content-container {
     flex-direction: row;
+    padding-bottom: 0;
 }
 
 .builder-page {
@@ -1496,6 +1498,114 @@
 }
 
 .building-tile__info > .glyph-icon { width: 16px; height: 16px; }
+
+/* Recipe cards (#488): one per item, in a horizontal row per item-type tab. */
+.recipe-card {
+    flex-direction: column;
+    align-items: stretch;
+    width: 176px;
+    min-height: 300px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.recipe-card__icon {
+    width: 56px;
+    height: 56px;
+    align-self: center;
+    margin-bottom: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+    justify-content: center;
+    align-items: center;
+}
+
+.recipe-card__name {
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 2px;
+}
+
+.recipe-card__inputs {
+    justify-content: center;
+}
+
+.recipe-card__hint {
+    font-size: 11px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-top: 2px;
+}
+
+.recipe-card__meta {
+    color: var(--color-text-secondary);
+}
+
+.recipe-card__method {
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+}
+
+.recipe-card__spacer {
+    flex-grow: 1;
+    min-height: var(--spacing-xs);
+}
+
+.recipe-card__ways {
+    align-self: center;
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.recipe-card__craft {
+    width: 100%;
+    justify-content: center;
+}
+
+.recipe-card--unavailable .recipe-card__icon {
+    opacity: 0.6;
+}
+
+.recipe-card--locked > .recipe-card__icon,
+.recipe-card--locked > .recipe-card__name,
+.recipe-card--locked > .recipe-card__inputs,
+.recipe-card--locked > .recipe-card__meta {
+    opacity: 0.5;
+}
+
+/* The method drop-up: opens upward over the card from just above the toggle. */
+.recipe-dropup {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 108px;
+    padding: 4px;
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-primary);
+    border-radius: var(--border-radius);
+}
+
+.recipe-dropup__option {
+    margin: 2px 0;
+    padding: 4px 6px;
+    white-space: normal;
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-left;
+    background-color: rgba(0, 229, 255, 0.06);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+}
+
+.recipe-dropup__option--selected {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
 
 /* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
 .pve-league-badge {

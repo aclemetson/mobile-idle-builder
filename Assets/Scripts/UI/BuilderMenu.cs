@@ -16,7 +16,8 @@ namespace MobileIdleBuilder
     /// </summary>
     public static class BuilderMenu
     {
-        public const string PageClass = "tab-page";
+        public const string PageClass = MenuTabs.PageClass;
+        const string Prefix = "builder";
 
         public static readonly string[] Tabs = { "harvest", "production", "logistics", "power", "special" };
 
@@ -30,8 +31,8 @@ namespace MobileIdleBuilder
             _            => tab,
         };
 
-        public static string PageName(string tab) => "builder-page-" + tab;
-        public static string TabButtonName(string tab) => "builder-tab-" + tab;
+        public static string PageName(string tab) => MenuTabs.PageName(Prefix, tab);
+        public static string TabButtonName(string tab) => MenuTabs.TabButtonName(Prefix, tab);
 
         /// <summary>
         /// Which tab a building goes under: sinks are Special; splitters, filters and belts Logistics; generators
@@ -63,12 +64,8 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>The tab to show: the remembered one if it has cards, else the first tab that has any.</summary>
-        public static string PickTab(string remembered, ICollection<string> tabsWithCards)
-        {
-            if (!string.IsNullOrEmpty(remembered) && tabsWithCards.Contains(remembered)) return remembered;
-            foreach (var t in Tabs) if (tabsWithCards.Contains(t)) return t;
-            return Tabs[0];
-        }
+        public static string PickTab(string remembered, ICollection<string> tabsWithCards) =>
+            MenuTabs.PickTab(remembered, tabsWithCards, Tabs);
 
         /// <summary>
         /// A building card: picture (sprite, or <paramref name="glyph"/> when there is none), name, cost and the
@@ -116,32 +113,11 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>The tab bar (one button per tab, named for TutorialPulseResolver).</summary>
-        public static VisualElement MakeTabBar(Action<string> onSelect)
-        {
-            var bar = new VisualElement { name = "builder-tabs" };
-            bar.AddToClassList("research-tabs");
-            bar.AddToClassList("menu-tabs");
-            foreach (var tab in Tabs)
-            {
-                string t = tab;
-                var b = new Button(() => onSelect?.Invoke(t)) { text = TabLabel(t), name = TabButtonName(t) };
-                b.AddToClassList("research-tab");
-                bar.Add(b);
-            }
-            return bar;
-        }
+        public static VisualElement MakeTabBar(Action<string> onSelect) =>
+            MenuTabs.MakeTabBar(Prefix, Tabs, TabLabel, onSelect);
 
         /// <summary>Shows <paramref name="tab"/>'s page, marks its button, hides tabs with no cards.</summary>
-        public static void ShowTab(VisualElement bar, IReadOnlyDictionary<string, VisualElement> pages, string tab)
-        {
-            foreach (var kv in pages)
-            {
-                HUDController.SetElementVisible(kv.Value, kv.Key == tab);
-                var btn = bar?.Q<Button>(TabButtonName(kv.Key));
-                if (btn == null) continue;
-                btn.EnableInClassList("research-tab--selected", kv.Key == tab);
-                HUDController.SetElementVisible(btn, kv.Value.childCount > 0);
-            }
-        }
+        public static void ShowTab(VisualElement bar, IReadOnlyDictionary<string, VisualElement> pages, string tab) =>
+            MenuTabs.ShowTab(Prefix, bar, pages, tab);
     }
 }
