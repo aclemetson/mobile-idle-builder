@@ -60,14 +60,15 @@ namespace MobileIdleBuilder
             new UpgradeDef(
                 "memory_resonance", "Memory Resonance",
                 "All research costs are 5% cheaper per level on every run.",
-                UpgradeEffectType.GlobalResearchDiscount, 0.05f, 5,
-                new[]{ 10, 20, 40, 80, 160 }),
+                UpgradeEffectType.GlobalResearchDiscount, 0.05f, 10,
+                new[]{ 10, 20, 40, 80, 160, 230, 330, 480, 700, 1000 }),
 
             new UpgradeDef(
                 "assembly_line", "Assembly Line",
                 "All buildings craft 10% faster per level.",
-                UpgradeEffectType.CraftSpeedMultiplier, 0.10f, 5,
-                new[]{ 15, 30, 60, 120, 240 }),
+                UpgradeEffectType.CraftSpeedMultiplier, 0.10f, 20,
+                new[]{ 15, 30, 60, 120, 240, 310, 400, 520, 680, 880,
+                       1100, 1400, 1800, 2300, 3000, 3900, 5100, 6600, 8600, 11000 }),
 
             new UpgradeDef(
                 "expanded_vault", "Expanded Vault",
@@ -86,8 +87,9 @@ namespace MobileIdleBuilder
             new UpgradeDef(
                 "quantum_yield", "Quantum Yield",
                 "All recipes produce +10% more output per level.",
-                UpgradeEffectType.OutputQuantityMultiplier, 0.10f, 10,
-                new[]{ 40, 80, 160, 320, 640, 960, 1500, 2200, 3300, 4900 },
+                UpgradeEffectType.OutputQuantityMultiplier, 0.10f, 20,
+                new[]{ 40, 80, 160, 320, 640, 960, 1500, 2200, 3300, 4900,
+                       6100, 7600, 9500, 12000, 15000, 19000, 24000, 30000, 38000, 48000 },
                 new[]{ ("assembly_line", 1) }),
 
             new UpgradeDef(
@@ -138,8 +140,8 @@ namespace MobileIdleBuilder
             new UpgradeDef(
                 "entropy_echo", "Entropy Echo",
                 "Earn +5% more prestige currency per run per level.",
-                UpgradeEffectType.PrestigeGainMultiplier, 0.05f, 4,
-                new[]{ 200, 600, 1800, 5400 },
+                UpgradeEffectType.PrestigeGainMultiplier, 0.05f, 10,
+                new[]{ 200, 600, 1800, 5400, 7000, 9100, 12000, 16000, 21000, 27000 },
                 new[]{ ("entropy_headstart", 3), ("memory_resonance", 3) }),
 
             // ── World tracks (Item Timeline, 2026-11-23) ─────────────────────
@@ -149,40 +151,47 @@ namespace MobileIdleBuilder
             new UpgradeDef(
                 "fission_yield", "Fission Yield",
                 "Physics buildings produce +15% more output per level.",
-                UpgradeEffectType.WorldOutput, 0.15f, 6,
-                new[]{ 95, 140, 190, 270, 370, 520 }, null, WorldGate.Physics),
+                UpgradeEffectType.WorldOutput, 0.15f, 15,
+                new[]{ 95, 140, 190, 270, 370, 520, 680, 880, 1100, 1400,
+                       1800, 2300, 3000, 3900, 5100 }, null, WorldGate.Physics),
             new UpgradeDef(
                 "neutron_economy", "Neutron Economy",
                 "Physics buildings craft 10% faster per level.",
-                UpgradeEffectType.WorldCraftSpeed, 0.10f, 5,
-                new[]{ 130, 180, 250, 340, 480 },
+                UpgradeEffectType.WorldCraftSpeed, 0.10f, 15,
+                new[]{ 130, 180, 250, 340, 480, 620, 810, 1100, 1400, 1800,
+                       2300, 3000, 3900, 5100, 6600 },
                 new[]{ ("fission_yield", 1) }, WorldGate.Physics),
             new UpgradeDef(
                 "spring_pressure", "Spring Pressure",
                 "Chemistry Springs pour +20% more water per level, so more buildings run at full speed.",
-                UpgradeEffectType.WorldStreamFlow, 0.20f, 6,
-                new[]{ 89, 130, 180, 250, 340, 480 }, null, WorldGate.Chemistry),
+                UpgradeEffectType.WorldStreamFlow, 0.20f, 12,
+                new[]{ 89, 130, 180, 250, 340, 480, 620, 810, 1100, 1400,
+                       1800, 2300 }, null, WorldGate.Chemistry),
             new UpgradeDef(
                 "catalysis", "Catalysis",
                 "Chemistry buildings react 15% faster per level.",
-                UpgradeEffectType.WorldCraftSpeed, 0.15f, 8,
-                new[]{ 120, 170, 230, 320, 450, 630, 870, 1300 },
+                UpgradeEffectType.WorldCraftSpeed, 0.15f, 15,
+                new[]{ 120, 170, 230, 320, 450, 630, 870, 1300, 1700, 2200,
+                       2900, 3800, 4900, 6400, 8300 },
                 new[]{ ("spring_pressure", 1) }, WorldGate.Chemistry),
             new UpgradeDef(
                 "growth_media", "Growth Media",
                 "Biology buildings produce +15% more output per level.",
-                UpgradeEffectType.WorldOutput, 0.15f, 8,
-                new[]{ 180, 250, 350, 480, 680, 940, 1400, 1900 }, null, WorldGate.Biology),
+                UpgradeEffectType.WorldOutput, 0.15f, 15,
+                new[]{ 180, 250, 350, 480, 680, 940, 1400, 1900, 2500, 3200,
+                       4200, 5500, 7200, 9400, 12000 }, null, WorldGate.Biology),
             new UpgradeDef(
                 "furnace_heat", "Furnace Heat",
                 "Metallurgy buildings smelt 15% faster per level.",
-                UpgradeEffectType.WorldCraftSpeed, 0.15f, 8,
-                new[]{ 220, 310, 440, 610, 850, 1200, 1700, 2400 }, null, WorldGate.Metallurgy),
+                UpgradeEffectType.WorldCraftSpeed, 0.15f, 15,
+                new[]{ 220, 310, 440, 610, 850, 1200, 1700, 2400, 3100, 4000,
+                       5200, 6800, 8800, 11000, 14000 }, null, WorldGate.Metallurgy),
             new UpgradeDef(
                 "precision", "Precision",
                 "Engineering buildings produce +10% more output per level.",
-                UpgradeEffectType.WorldOutput, 0.10f, 8,
-                new[]{ 240, 330, 460, 650, 900, 1300, 1800, 2500 }, null, WorldGate.Engineering),
+                UpgradeEffectType.WorldOutput, 0.10f, 15,
+                new[]{ 240, 330, 460, 650, 900, 1300, 1800, 2500, 3200, 4200,
+                       5500, 7200, 9400, 12000, 16000 }, null, WorldGate.Engineering),
             // ── Idle collection ───────────────────────────────────────────────
             // A short 30 min base cap brings players back to collect; the first levels are cheap and have
             // no prerequisite so the first prestige (~50✦) buys the first four levels (2.5 h) straight away.

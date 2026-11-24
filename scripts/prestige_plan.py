@@ -14,6 +14,7 @@ Re-run after a rebalance (research costs or rates changed). It overwrites the wo
 any plan edits you want to keep into PLAN below first.
 """
 import datetime
+from pathlib import Path
 import json
 import os
 import subprocess
@@ -47,20 +48,32 @@ PLAN = [
     ("radioactive_isotopes",         4, 0, 4, 3, 0, 1, 3, 1, 1.8),
     ("slow_neutron_capture",         5, 0, 4, 3, 0, 1, 3, 1, 2.0),
 ]
-# Upgrades the plan tracks (column order in Plan), with per-level ✦ costs from
-# PersistentUpgradeService.All.
-UPGRADES = [
-    ("memory_resonance",     "Memory Resonance (-5% research cost)",   [10, 20, 40, 80, 160]),
-    ("research_overdrive",   "Research Overdrive (-5% timer)",          [30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800]),
-    ("assembly_line",        "Assembly Line (+10% craft speed)",        [15, 30, 60, 120, 240]),
-    ("quantum_yield",        "Quantum Yield (+10% output)",             [40, 80, 160, 320, 640]),
-    ("entropy_echo",         "Entropy Echo (+5% prestige currency)",    [200, 600, 1800, 5400]),
-    ("entropy_headstart",    "Entropy Headstart (+250e start)",         [5, 10, 20, 40, 80]),
-    ("idle_time_cap",        "Dormant Resonance (+30 min idle cap)",    [5, 10, 15, 20, 25, 30, 40, 50, 60, 75,
-                                                                         90, 110, 130, 155, 185, 220, 260, 305, 360, 425,
-                                                                         500, 590, 700]),
-    ("idle_collection_rate", "Idle Efficiency (+5% idle rate)",         [80, 120, 180, 270, 405, 608, 912, 1368, 2052, 3078]),
+# Upgrades the plan tracks (column order in Plan). Per-level ✦ costs are read from
+# PersistentUpgradeService.All so the plan can't drift from the game (#501).
+_UPGRADE_LABELS = [
+    ("memory_resonance", "Memory Resonance (-5% research cost)"),
+    ("research_overdrive", "Research Overdrive (-5% timer)"),
+    ("assembly_line", "Assembly Line (+10% craft speed)"),
+    ("quantum_yield", "Quantum Yield (+10% output)"),
+    ("entropy_echo", "Entropy Echo (+5% prestige currency)"),
+    ("entropy_headstart", "Entropy Headstart (+250e start)"),
+    ("idle_time_cap", "Dormant Resonance (+30 min idle cap)"),
+    ("idle_collection_rate", "Idle Efficiency (+5% idle rate)"),
 ]
+
+
+def _upgrade_costs():
+    import re as _re
+    src = (Path(__file__).resolve().parent.parent / "Assets" / "Scripts" / "Services"
+           / "PersistentUpgradeService.cs").read_text(encoding="utf-8")
+    found = {}
+    for m in _re.finditer(r'new UpgradeDef\(\s*"(\w+)".*?new\[\]\{([^}]*)\}', src, _re.S):
+        found[m.group(1)] = [int(x) for x in m.group(2).split(",") if x.strip()]
+    return found
+
+
+_COSTS = _upgrade_costs()
+UPGRADES = [(uid, label, _COSTS[uid]) for uid, label in _UPGRADE_LABELS]
 
 # ── Styles ───────────────────────────────────────────────────────────────────────────────
 F = "Arial"
