@@ -1484,7 +1484,15 @@
     color: var(--color-text-secondary);
 }
 
-/* Player name card (PlayerNamePromptController): text input + validation line. */
+/* Player name card (PlayerNamePromptController): text input + validation line.
+   Anchored near the top instead of centred: the on-screen keyboard opens from the bottom and covered the
+   centred card on phones (#504). UI Toolkit can't read the keyboard height reliably on Android, so the
+   card simply stays clear of the lower half, like the dev console does. */
+.name-prompt {
+    justify-content: flex-start;
+    padding-top: 12%;
+}
+
 .name-prompt__input {
     margin: 0 var(--spacing-md);
     min-height: 44px;
