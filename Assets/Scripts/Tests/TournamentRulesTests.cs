@@ -461,7 +461,7 @@ namespace MobileIdleBuilder.Tests
         public void Hud_HasTheTournamentPanelElements()
         {
             var root = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/GameHUD.uxml").Instantiate();
-            Assert.AreEqual("Tournament", root.Q<Button>("btn-tournament").text);
+            Assert.AreEqual("Tourney", DrawerTile.Caption(root.Q<Button>("btn-tournament"))?.text);
             foreach (var n in new[] { "pve-panel", "pve-league-badge", "pve-banner", "pve-state-label", "pve-timer-label", "pve-info-label", "pve-result-label", "pve-your-rank", "pve-leaderboard-list" })
                 Assert.IsNotNull(root.Q(n), n);
             Assert.IsNotNull(root.Q<Button>("btn-pve-start"));

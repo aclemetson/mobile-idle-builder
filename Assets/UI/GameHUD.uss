@@ -439,6 +439,51 @@
     color: var(--color-text-secondary);
 }
 
+/* Drawer menu as a 3-column grid of icon tiles with a small caption (#486). The nav ScrollView's
+   content wraps; the MENU title and the locked hint take a full row. */
+.drawer-grid .unity-scroll-view__content-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.drawer-grid .drawer-section-title,
+.drawer-grid .drawer-locked-hint {
+    width: 100%;
+}
+
+.drawer-tile {
+    width: 31%;
+    margin: 0 1% var(--spacing-sm) 1%;
+    min-height: 72px;
+    padding: var(--spacing-sm) 2px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border-radius);
+    border-color: rgba(0, 229, 255, 0.12);
+}
+
+.drawer-tile > .drawer-tile__icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
+}
+
+.drawer-tile__caption {
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
+
+/* The reminder dot sits on the tile's top-right corner instead of the old row's right edge. */
+.drawer-tile > .reminder-dot {
+    top: 6px;
+    margin-top: 0;
+    right: 6px;
+}
+
 /* Hint shown beneath a locked drawer button */
 .drawer-locked-hint {
     color: var(--color-text-secondary);
