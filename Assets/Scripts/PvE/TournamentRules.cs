@@ -142,6 +142,7 @@ namespace MobileIdleBuilder
             var landed = new System.Collections.Generic.List<string>();
             if (save == null || reward == null || RewardApplied(save, reward.week)) return landed;
             if (reward.crystals > 0) save.paidCurrency += reward.crystals;
+            if (reward.strings > 0)  save.pveStrings   += reward.strings;
             if (reward.stars > 0) landed = ItemStars.Grant(save, reward.stars, starPool, rng);
             save.pveClaimedWeeks ??= new System.Collections.Generic.List<string>();
             save.pveClaimedWeeks.Add(reward.week);

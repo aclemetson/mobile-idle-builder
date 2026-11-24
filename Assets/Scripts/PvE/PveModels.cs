@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
         public int top_percent;
         public int crystals;
         public int stars;
+        public int strings;         // Strings, the tournament currency (#500); spent in the tournament shop
     }
 
     [Serializable]
@@ -111,6 +112,7 @@ namespace MobileIdleBuilder
         public int size;
         public int crystals;
         public int stars;
+        public int strings;         // #500
     }
 
     [Serializable]

@@ -11,6 +11,7 @@
 | Currency | Earned | Spent | Storage |
 |---|---|---|---|
 | **Entropy (e)** — base | Entropy sink consumes items; starting 250/run (`game_config.starting_entropy`) | research, building placement | `PlayerProgressData.BaseCurrency` |
+| **Strings** (tournament currency, #500) | PvE tournament rewards: every band of every league (`game_config.pve.leagues[].rewards[].strings`; Bronze 5 for finishing up to Champion 300 for 1st) | tournament track + cosmetics (parts 2-3 of #500) | `SaveData.pveStrings` (survives prestige and Ascension) |
 | **Prestige currency (✦)** | on prestige: `floor(max(0, log10(netWorth / 5000) × 50))` (`PrestigeSystem.cs:46`; base/scale from `game_config`), modified by Entropy Echo (+5%/lvl) and Stellar Engine megastructure (×2); also achievements, login calendar, and crystal conversion | 12 prestige-shop upgrades (`PersistentUpgradeService.cs:48`, ≈5→5,400✦) + 8 managers (hire + star tiers, 10→4,000✦) | `PrestigeData.PrestigeCurrency` |
 | **Crystals (◆)** — premium | achievements (2–200◆), Daily achievements/login calendar, Crystal Drop ad (25◆/day), IAP packs | premium shop: speed boosts, entropy, prestige currency, time warp, research skip | `SaveData.paidCurrency` |
 

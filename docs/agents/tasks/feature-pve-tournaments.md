@@ -159,6 +159,6 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 
 ## Open items for later
 
-- Special tournament currency (reward slot reserved).
+- ~~Special tournament currency~~: **Strings** (#500, 2026-11-24). Every reward band pays them (`PveRewardBand.strings` → `PveReward.strings`; Bronze 60/35/20/10/5 up to Champion 300/175/100/50/25 for 1st / 2nd-3rd / 4th-10th / top 25% / everyone who finished). Claimed into `SaveData.pveStrings`, with the balance in the panel header. Spent on a tournament track (Star Resonance, Lucky Draw, Surge Luck, Harmonics) and cosmetics (leaderboard name colours and titles, belt themes): parts 2 and 3.
 - Bracket size growth toward 100 as the player base grows (config only).
 - Push notification at Friday 00:00 / when your 24h is nearly up (reuse `NotificationPlanner`).

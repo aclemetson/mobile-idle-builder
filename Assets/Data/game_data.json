@@ -48,31 +48,36 @@
               "rank_to": 1,
               "top_percent": 0,
               "crystals": 150,
-              "stars": 5
+              "stars": 5,
+              "strings": 60
             },
             {
               "rank_to": 3,
               "top_percent": 0,
               "crystals": 100,
-              "stars": 3
+              "stars": 3,
+              "strings": 35
             },
             {
               "rank_to": 10,
               "top_percent": 0,
               "crystals": 60,
-              "stars": 2
+              "stars": 2,
+              "strings": 20
             },
             {
               "rank_to": 0,
               "top_percent": 25,
               "crystals": 30,
-              "stars": 1
+              "stars": 1,
+              "strings": 10
             },
             {
               "rank_to": 0,
               "top_percent": 0,
               "crystals": 10,
-              "stars": 1
+              "stars": 1,
+              "strings": 5
             }
           ]
         },
@@ -87,31 +92,36 @@
               "rank_to": 1,
               "top_percent": 0,
               "crystals": 225,
-              "stars": 8
+              "stars": 8,
+              "strings": 90
             },
             {
               "rank_to": 3,
               "top_percent": 0,
               "crystals": 150,
-              "stars": 5
+              "stars": 5,
+              "strings": 53
             },
             {
               "rank_to": 10,
               "top_percent": 0,
               "crystals": 90,
-              "stars": 3
+              "stars": 3,
+              "strings": 30
             },
             {
               "rank_to": 0,
               "top_percent": 25,
               "crystals": 45,
-              "stars": 2
+              "stars": 2,
+              "strings": 15
             },
             {
               "rank_to": 0,
               "top_percent": 0,
               "crystals": 15,
-              "stars": 1
+              "stars": 1,
+              "strings": 8
             }
           ]
         },
@@ -126,31 +136,36 @@
               "rank_to": 1,
               "top_percent": 0,
               "crystals": 300,
-              "stars": 10
+              "stars": 10,
+              "strings": 120
             },
             {
               "rank_to": 3,
               "top_percent": 0,
               "crystals": 200,
-              "stars": 6
+              "stars": 6,
+              "strings": 70
             },
             {
               "rank_to": 10,
               "top_percent": 0,
               "crystals": 120,
-              "stars": 4
+              "stars": 4,
+              "strings": 40
             },
             {
               "rank_to": 0,
               "top_percent": 25,
               "crystals": 60,
-              "stars": 2
+              "stars": 2,
+              "strings": 20
             },
             {
               "rank_to": 0,
               "top_percent": 0,
               "crystals": 20,
-              "stars": 1
+              "stars": 1,
+              "strings": 10
             }
           ]
         },
@@ -165,31 +180,36 @@
               "rank_to": 1,
               "top_percent": 0,
               "crystals": 375,
-              "stars": 13
+              "stars": 13,
+              "strings": 180
             },
             {
               "rank_to": 3,
               "top_percent": 0,
               "crystals": 250,
-              "stars": 8
+              "stars": 8,
+              "strings": 105
             },
             {
               "rank_to": 10,
               "top_percent": 0,
               "crystals": 150,
-              "stars": 5
+              "stars": 5,
+              "strings": 60
             },
             {
               "rank_to": 0,
               "top_percent": 25,
               "crystals": 75,
-              "stars": 3
+              "stars": 3,
+              "strings": 30
             },
             {
               "rank_to": 0,
               "top_percent": 0,
               "crystals": 25,
-              "stars": 2
+              "stars": 2,
+              "strings": 15
             }
           ]
         },
@@ -204,31 +224,36 @@
               "rank_to": 1,
               "top_percent": 0,
               "crystals": 450,
-              "stars": 15
+              "stars": 15,
+              "strings": 240
             },
             {
               "rank_to": 3,
               "top_percent": 0,
               "crystals": 300,
-              "stars": 9
+              "stars": 9,
+              "strings": 140
             },
             {
               "rank_to": 10,
               "top_percent": 0,
               "crystals": 180,
-              "stars": 6
+              "stars": 6,
+              "strings": 80
             },
             {
               "rank_to": 0,
               "top_percent": 25,
               "crystals": 90,
-              "stars": 3
+              "stars": 3,
+              "strings": 40
             },
             {
               "rank_to": 0,
               "top_percent": 0,
               "crystals": 30,
-              "stars": 2
+              "stars": 2,
+              "strings": 20
             }
           ]
         },
@@ -243,31 +268,36 @@
               "rank_to": 1,
               "top_percent": 0,
               "crystals": 600,
-              "stars": 20
+              "stars": 20,
+              "strings": 300
             },
             {
               "rank_to": 3,
               "top_percent": 0,
               "crystals": 400,
-              "stars": 12
+              "stars": 12,
+              "strings": 175
             },
             {
               "rank_to": 10,
               "top_percent": 0,
               "crystals": 240,
-              "stars": 8
+              "stars": 8,
+              "strings": 100
             },
             {
               "rank_to": 0,
               "top_percent": 25,
               "crystals": 120,
-              "stars": 4
+              "stars": 4,
+              "strings": 50
             },
             {
               "rank_to": 0,
               "top_percent": 0,
               "crystals": 40,
-              "stars": 2
+              "stars": 2,
+              "strings": 25
             }
           ]
         }

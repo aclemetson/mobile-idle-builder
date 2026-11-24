@@ -411,11 +411,11 @@ namespace MobileIdleBuilder.PveModule
                         });
                         if (p.history.Count > 20) p.history.RemoveRange(0, p.history.Count - 20);
                         p.league = next;
-                        if (band != null && (band.crystals > 0 || band.stars > 0))
+                        if (band != null && (band.crystals > 0 || band.stars > 0 || band.strings > 0))
                             p.pendingRewards.Add(new PveReward
                             {
                                 week = meta.week, league = meta.league, rank = r.rank, size = size,
-                                crystals = band.crystals, stars = band.stars,
+                                crystals = band.crystals, stars = band.stars, strings = band.strings,
                             });
                         return p;
                     },
