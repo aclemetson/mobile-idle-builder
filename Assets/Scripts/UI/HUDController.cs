@@ -1634,6 +1634,9 @@ namespace MobileIdleBuilder
             return _buildingNames.TryGetValue(buildingId, out var n) ? n : null;
         }
 
+        /// <summary>The lock line on a recipe known from an earlier run but gated by research now (#490).</summary>
+        internal static string ResearchLockText(string researchName) => $"Research {researchName} to unlock";
+
         private string ResearchNameFor(string researchId)
         {
             if (_researchNames == null)
@@ -1689,7 +1692,7 @@ namespace MobileIdleBuilder
 
             if (isLocked)
             {
-                var lockLabel = new Label($"[Requires research]");
+                var lockLabel = new Label(ResearchLockText(ResearchNameFor(recipe.requires_research)));
                 lockLabel.AddToClassList("recipe-lock-hint");
                 info.Add(lockLabel);
             }
@@ -1786,7 +1789,7 @@ namespace MobileIdleBuilder
 
             if (isLocked)
             {
-                var lockLabel = new Label($"Research {ResearchNameFor(method.requires_research)} to unlock");
+                var lockLabel = new Label(ResearchLockText(ResearchNameFor(method.requires_research)));
                 lockLabel.AddToClassList("recipe-lock-hint");
                 info.Add(lockLabel);
             }
