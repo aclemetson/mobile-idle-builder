@@ -358,6 +358,13 @@
                 <ui:Button name="btn-close-pve" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 
+            <!-- Tabs (#500): the tournament itself, and the Strings shop. Named for MenuTabs / TutorialPulseResolver. -->
+            <ui:VisualElement name="pve-tabs" class="research-tabs menu-tabs">
+                <ui:Button name="pve-tab-tournament" text="Tournament" class="research-tab research-tab--selected" />
+                <ui:Button name="pve-tab-shop" text="Shop" class="research-tab" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="pve-page-tournament" class="tab-page pve-page">
             <!-- Status. The banner shows the last result (promoted / stayed / moved down). -->
             <ui:VisualElement name="pve-status-section" class="recipe-list">
                 <ui:Label name="pve-banner"        text=""                 class="pve-banner hidden" />
@@ -379,6 +386,15 @@
             <ui:ScrollView name="pve-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+            </ui:VisualElement>
+
+            <!-- Strings shop (#500): the tournament track, then cosmetics. Filled by TournamentPanelController. -->
+            <ui:VisualElement name="pve-page-shop" class="tab-page pve-page hidden">
+                <ui:Label name="pve-shop-balance" text="" class="recipe-name pve-shop-balance" />
+                <ui:ScrollView name="pve-shop-list" class="recipe-list"
+                               vertical-scroller-visibility="Auto"
+                               horizontal-scroller-visibility="Hidden" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ PREMIUM SHOP PANEL ═══ -->

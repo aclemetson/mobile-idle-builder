@@ -87,6 +87,8 @@ The drawer's nav ScrollView (`drawer-nav-scroll drawer-grid`) wraps into a 3-col
 
 ## Tournament panel and intro (PvE)
 
+**Tabs (#500):** `pve-tabs` holds **Tournament** (`pve-page-tournament`: status + leaderboard) and **Shop** (`pve-page-shop`: Strings balance + `pve-shop-list`). They use `MenuTabs` naming (prefix `pve`), so `TutorialPulseResolver` leads to a hidden tab's button. `TournamentPanelController.BuildShop` renders the tournament-track rows (upgrade-row layout, Buy through `ListTapRouter`) and rebuilds on `TournamentTrack.Changed`. The header shows `pve-strings` ("Strings: N") once the player has any.
+
 `pve-panel` is owned by `TournamentPanelController` (status, league badge, result banner, Start, leaderboard, Claim); `TournamentIntroController` plays the once-per-entry-window dialogue and then pulses the way to `btn-tournament` with the tutorial's `panel-btn--highlight` class via `TutorialPulseResolver` (`pve-panel` maps to `btn-tournament` there). Both are added in `HUDController.Awake` with `GetComponent ?? AddComponent`. Pure text and rules: `TournamentPanelText`, `TournamentRules`, `TournamentIntroController.ShouldShow`; tests `TournamentRulesTests`.
 
 ## Chemistry task strip (world delivery tasks)

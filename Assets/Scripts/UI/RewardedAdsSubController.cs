@@ -117,6 +117,12 @@ namespace MobileIdleBuilder
                 ApplyLiveText(placement, desc, btn);
         }
 
+        static string SurgeRowText(long entropy, long crystals, float crystalChance)
+        {
+            int pct = Mathf.RoundToInt(crystalChance * 100f);
+            return $"+{NumberFormat.Compact(entropy)} entropy ({100 - pct}%) or {crystals} crystals ({pct}%)";
+        }
+
         static void ApplyLiveText(AdPlacement placement, Label desc, Button btn)
         {
             var ads = AdService.Instance;
@@ -128,7 +134,8 @@ namespace MobileIdleBuilder
             string reward = def.Kind switch
             {
                 AdRewardKind.SurgeRoll when ads != null =>
-                    $"+{NumberFormat.Compact(ads.PreviewEntropyReward())} entropy ({100 - Mathf.RoundToInt(def.CrystalChance * 100f)}%) or {def.CrystalAmount} crystals ({Mathf.RoundToInt(def.CrystalChance * 100f)}%)",
+                    SurgeRowText(ads.PreviewEntropyReward(), def.CrystalAmount,
+                                 AdRewardCalculator.SurgeCrystalChance(SaveManager.Instance?.Current)),
                 AdRewardKind.Entropy when ads != null =>
                     $"+{NumberFormat.Compact(ads.PreviewEntropyReward())} entropy ({def.NetWorthFraction * 100f:0}% of net worth, min {NumberFormat.Compact(def.MinimumFloor)})",
                 _ => def.Description,

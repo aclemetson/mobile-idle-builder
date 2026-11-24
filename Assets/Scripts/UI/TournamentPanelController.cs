@@ -21,7 +21,12 @@ namespace MobileIdleBuilder
         VisualElement _panel;
         Label _state, _timer, _info, _completed, _badge, _banner, _yourRank, _strings;
         Button _start, _refresh, _claim, _retire;
-        ScrollView _list;
+        ScrollView _list, _shopList;
+        Label _shopBalance;
+        VisualElement _tabBar;
+        readonly System.Collections.Generic.Dictionary<string, VisualElement> _pages = new();
+        string _tab = TabTournament;
+        const string TabPrefix = "pve", TabTournament = "tournament", TabShop = "shop";
         IVisualElementScheduledItem _ticker;
 
         bool _busy;
@@ -55,6 +60,20 @@ namespace MobileIdleBuilder
             if (_claim != null)   _claim.clicked   += OnClaimPressed;
             if (_retire != null)  _retire.clicked  += OnRetirePressed;
             if (_refresh != null) _refresh.clicked += () => _ = RefreshAllAsync();
+
+            // Tournament | Shop tabs (#500).
+            _tabBar      = _panel.Q("pve-tabs");
+            _shopList    = _panel.Q<ScrollView>("pve-shop-list");
+            _shopBalance = _panel.Q<Label>("pve-shop-balance");
+            foreach (var t in new[] { TabTournament, TabShop })
+            {
+                var page = _panel.Q(MenuTabs.PageName(TabPrefix, t));
+                if (page != null) _pages[t] = page;
+                string captured = t;
+                var btn = _panel.Q<Button>(MenuTabs.TabButtonName(TabPrefix, t));
+                if (btn != null) btn.clicked += () => SelectTab(captured);
+            }
+            TournamentTrack.Changed += OnTrackChanged;
             foreach (var l in new[] { _info, _completed }) if (l != null) l.style.whiteSpace = WhiteSpace.Normal;
         }
 
@@ -94,6 +113,7 @@ namespace MobileIdleBuilder
         void OnDestroy()
         {
             if (_subscribed && TournamentService.Instance != null) TournamentService.Instance.OnChanged -= OnServiceChanged;
+            TournamentTrack.Changed -= OnTrackChanged;
         }
 
         void OnServiceChanged() { if (IsOpen) Rebuild(); }
@@ -235,6 +255,83 @@ namespace MobileIdleBuilder
                     if (error == null) _hud?.ShowNotification("🏆", "You retired from the tournament. Your score is locked in.");
                     _ = RefreshAllAsync();
                 });
+        }
+
+        // ── Shop (#500) ───────────────────────────────────────────────────
+
+        void SelectTab(string tab)
+        {
+            _tab = tab;
+            MenuTabs.ShowTab(TabPrefix, _tabBar, _pages, tab);
+            if (tab == TabShop) BuildShop();
+        }
+
+        void OnTrackChanged() { if (_tab == TabShop) BuildShop(); }
+
+        /// <summary>The Strings shop: the balance, then one row per tournament-track upgrade.</summary>
+        void BuildShop()
+        {
+            if (_shopList == null) return;
+            var save = SaveManager.Instance?.Current;
+            long strings = save?.pveStrings ?? 0;
+            if (_shopBalance != null)
+                _shopBalance.text = TournamentPanelText.BalanceText(strings);
+            _shopList.Clear();
+            var title = new Label("Tournament track (permanent)");
+            title.AddToClassList("drawer-section-title");
+            _shopList.Add(title);
+            foreach (var def in TournamentTrack.All)
+                _shopList.Add(TrackRow(save, def));
+        }
+
+        VisualElement TrackRow(SaveData save, TrackDef def)
+        {
+            int lvl  = TournamentTrack.Level(save, def.id);
+            int cost = TournamentTrack.NextCost(save, def.id);
+            bool maxed = cost < 0;
+
+            var row = new VisualElement();
+            row.AddToClassList("upgrade-row");
+            if (maxed) row.AddToClassList("upgrade-row--maxed");
+
+            var header = new VisualElement();
+            header.AddToClassList("upgrade-row-header");
+            var name = new Label(def.name);
+            name.AddToClassList("upgrade-row-name");
+            var level = new Label(TournamentPanelText.TrackLevelText(lvl, def.MaxLevel));
+            level.AddToClassList("upgrade-row-level");
+            header.Add(name);
+            header.Add(level);
+            row.Add(header);
+
+            var desc = new Label(def.description);
+            desc.AddToClassList("upgrade-row-desc");
+            row.Add(desc);
+
+            var footer = new VisualElement();
+            footer.AddToClassList("upgrade-row-footer");
+            var costLabel = new Label(maxed ? "—" : TournamentPanelText.StringsText(cost));
+            costLabel.AddToClassList("upgrade-row-cost");
+            bool afford = TournamentTrack.CanBuy(save, def.id);
+            if (!maxed && !afford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+            footer.Add(costLabel);
+
+            var buy = new Button { text = maxed ? "Maxed" : "Buy" };
+            buy.AddToClassList("craft-btn");
+            buy.SetEnabled(afford);
+            string id = def.id;
+            // Routed from the scroll: on touch the ScrollView swallows a Button's own click (ListTapRouter).
+            ListTapRouter.Register(_shopList, buy, () =>
+            {
+                var s = SaveManager.Instance?.Current;
+                if (!TournamentTrack.TryBuy(s, id)) return;
+                SaveManager.Instance.SaveLocal();
+                _hud?.ShowNotification("★", $"{def.name} is now level {TournamentTrack.Level(s, id)}");
+                Rebuild(false);   // header balance
+            });
+            footer.Add(buy);
+            row.Add(footer);
+            return row;
         }
 
         // ── Claim ─────────────────────────────────────────────────────────
@@ -435,6 +532,10 @@ namespace MobileIdleBuilder
 
         /// <summary>"60 Strings" / "1 String".</summary>
         public static string StringsText(long n) => n == 1 ? "1 String" : $"{n:N0} Strings";
+
+        /// <summary>"Lv 2 / 5", or "Lv 5 / 5  MAX".</summary>
+        public static string TrackLevelText(int level, int max) =>
+            level >= max ? $"Lv {max} / {max}  MAX" : $"Lv {level} / {max}";
 
         /// <summary>The balance in the panel header: "Strings: 120".</summary>
         public static string BalanceText(long n) => $"Strings: {n:N0}";

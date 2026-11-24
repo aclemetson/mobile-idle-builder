@@ -16,14 +16,28 @@ namespace MobileIdleBuilder
     /// </summary>
     public static class ItemStars
     {
-        /// <summary>Value added per star, as a fraction of the item's base price.</summary>
-        public const float BonusPerStar = 0.2f;
+        /// <summary>Value added per star before the tournament track, as a fraction of the item's base price.</summary>
+        public const float BaseBonusPerStar = 0.2f;
+
+        /// <summary>
+        /// Value added per star now: 20% plus Star Resonance (+2% a level, <see cref="TournamentTrack"/>, #500).
+        /// Cached with the star lookup; a track purchase calls <see cref="Invalidate"/>.
+        /// </summary>
+        public static float BonusPerStar
+        {
+            get { Sync(LiveSave()); return s_bonusPerStar; }
+        }
+
+        static float s_bonusPerStar = BaseBonusPerStar;
 
         /// <summary>Raised after stars are granted or cleared (main thread).</summary>
         public static event Action OnChanged;
 
-        /// <summary>Value multiplier for <paramref name="stars"/> stars: 1 + 0.2 x stars.</summary>
+        /// <summary>Value multiplier for <paramref name="stars"/> stars: 1 + bonus x stars (0.2 without Star Resonance).</summary>
         public static float MultiplierFor(int stars) => 1f + BonusPerStar * Math.Max(0, stars);
+
+        /// <summary>The same for a given per-star bonus (pure, for tests and previews).</summary>
+        public static float MultiplierFor(int stars, float bonusPerStar) => 1f + bonusPerStar * Math.Max(0, stars);
 
         // ── Live lookups (hot path: every sink payout, every net worth tick) ─────
 
@@ -47,7 +61,7 @@ namespace MobileIdleBuilder
         {
             Sync(LiveSave());
             if (s_byItemId.Count == 0) return 1f;
-            return s_byItemId.TryGetValue(itemId, out int n) ? MultiplierFor(n) : 1f;
+            return s_byItemId.TryGetValue(itemId, out int n) ? MultiplierFor(n, s_bonusPerStar) : 1f;
         }
 
         /// <summary>
@@ -89,6 +103,7 @@ namespace MobileIdleBuilder
                 && count == s_sourceCount && s_version == s_syncedVersion) return;
 
             s_source = save; s_sourceIds = ids; s_sourceCount = count; s_syncedVersion = s_version;
+            s_bonusPerStar = BaseBonusPerStar + TournamentTrack.StarBonus(save);
             s_byItemId.Clear();
             if (save == null || ids == null) return;
             bool unresolved = false;
@@ -108,6 +123,7 @@ namespace MobileIdleBuilder
         public static void Invalidate()
         {
             s_source = null; s_sourceIds = null; s_sourceCount = -1; s_syncedVersion = -1;
+            s_bonusPerStar = BaseBonusPerStar;
             s_byItemId.Clear();
         }
 

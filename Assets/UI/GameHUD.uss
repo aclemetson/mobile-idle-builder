@@ -1614,6 +1614,19 @@
 }
 
 /* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
+/* Tournament panel pages (#500): each fills the panel below the tabs. */
+.pve-page {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.pve-shop-balance {
+    padding: var(--spacing-sm) var(--spacing-md) 0;
+    white-space: normal;
+}
+
 /* Strings balance in the tournament panel header (#500). */
 .pve-strings {
     margin-left: var(--spacing-sm);
