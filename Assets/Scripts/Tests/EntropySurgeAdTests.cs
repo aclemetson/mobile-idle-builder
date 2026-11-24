@@ -5,9 +5,8 @@ using UnityEngine;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// Entropy Surge: a rewarded ad worth N minutes of current automation income, on a cooldown, for the
-    /// post-prestige lull (docs/balance/prestige-pacing.xlsx, Ads + Tests sheets). Pure calculator rules;
-    /// AdService only wires them to the provider and the live income tracker.
+    /// Entropy Surge (#489): one rewarded ad every 15 minutes, no daily cap, that rolls 10% of net worth in
+    /// entropy (80%) or 10 crystals (20%). Pure calculator rules; AdService wires them to the provider.
     /// </summary>
     [TestFixture]
     public class EntropySurgeAdTests
@@ -16,40 +15,62 @@ namespace MobileIdleBuilder.Tests
         static AdPlacementDef Def => AdRewardCalculator.Def(AdPlacement.EntropySurge);
 
         [Test]
-        public void Placement_IsTenMinutesOfIncome_EveryFifteenMinutes_EightPerDay()
+        public void Placement_IsARoll_EveryFifteenMinutes_Uncapped()
         {
-            Assert.AreEqual(AdRewardKind.IncomeMinutes, Def.Kind);
-            Assert.AreEqual(10f, Def.IncomeMinutes);
+            Assert.AreEqual(AdRewardKind.SurgeRoll, Def.Kind);
+            Assert.AreEqual(0.10f, Def.NetWorthFraction);
+            Assert.AreEqual(10, Def.CrystalAmount);
+            Assert.AreEqual(0.20f, Def.CrystalChance, 1e-6);
             Assert.AreEqual(15f, Def.CooldownMinutes);
-            Assert.AreEqual(8, Def.DailyCap);
+            Assert.AreEqual(AdRewardCalculator.Uncapped, Def.DailyCap);
         }
 
         // ── Reward ────────────────────────────────────────────────────────────
 
         [Test]
-        public void Reward_IsIncomeTimesMinutes()
+        public void Entropy_IsTenPercentOfNetWorth()
         {
-            // 100 e/s x 60 s x 10 min = 60,000 e (the Tests sheet's first case).
-            Assert.AreEqual(60_000, AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, 100d));
+            Assert.AreEqual(10_000, AdRewardCalculator.CalcEntropyReward(100_000d));
+            Assert.AreEqual(1_000_000_000_000L, AdRewardCalculator.CalcEntropyReward(1e13));
         }
 
         [Test]
-        public void Reward_NoIncome_PaysTheFloor()
+        public void Entropy_NoNetWorth_PaysTheFloor()
         {
-            Assert.AreEqual(Def.MinimumFloor, AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, 0d));
-            Assert.AreEqual(Def.MinimumFloor, AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, double.NaN));
-            Assert.AreEqual(Def.MinimumFloor, AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, -5d));
+            Assert.AreEqual(Def.MinimumFloor, AdRewardCalculator.CalcEntropyReward(0d));
+            Assert.AreEqual(Def.MinimumFloor, AdRewardCalculator.CalcEntropyReward(double.NaN));
+            Assert.AreEqual(Def.MinimumFloor, AdRewardCalculator.CalcEntropyReward(-5d));
         }
 
         [Test]
-        public void Reward_DoesNotGrowWithNetWorth()
+        public void Entropy_HugeNetWorth_DoesNotOverflow() =>
+            Assert.AreEqual(long.MaxValue, AdRewardCalculator.CalcEntropyReward(1e300));
+
+        [TestCase(0.0, true)]
+        [TestCase(0.1999, true)]
+        [TestCase(0.2, false)]
+        [TestCase(0.9999, false)]
+        public void Roll_BelowTwentyPercent_PaysCrystals(double roll, bool crystals) =>
+            Assert.AreEqual(crystals, AdRewardCalculator.SurgeRollsCrystals(roll));
+
+        [Test]
+        public void Roll_OverManyWatches_IsAboutOneInFiveCrystals()
         {
-            // Unlike Entropy Boost (a % of net worth, which counts everything earned this run), the same
-            // income pays the same reward however long the run has been.
-            long early = AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, 250d);
-            long late  = AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, 250d);
-            Assert.AreEqual(early, late);
-            Assert.AreEqual(150_000, early);
+            var rng = new System.Random(489);
+            int crystals = 0;
+            const int n = 20_000;
+            for (int k = 0; k < n; k++) if (AdRewardCalculator.SurgeRollsCrystals(rng.NextDouble())) crystals++;
+            Assert.AreEqual(0.20, crystals / (double)n, 0.01);
+        }
+
+        [Test]
+        public void NoDailyCap_ManyWatchesNeverReachIt()
+        {
+            var save = new SaveData();
+            AdRewardCalculator.ApplyDailyReset(save, Noon);
+            for (int k = 0; k < 200; k++) AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropySurge);
+            Assert.IsFalse(AdRewardCalculator.IsAtCap(save, AdPlacement.EntropySurge));
+            Assert.Greater(AdRewardCalculator.Remaining(save, AdPlacement.EntropySurge), 0);
         }
 
         // ── Cooldown ──────────────────────────────────────────────────────────
@@ -101,19 +122,19 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void EntropyBoost_IsReadyAgainFiveMinutesAfterAWatch()
+        public void StandardPlacement_IsReadyAgainFiveMinutesAfterAWatch()
         {
             var save = new SaveData();
-            AdRewardCalculator.RecordWatch(save, AdPlacement.EntropyBoost, Noon);
-            Assert.IsTrue(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropyBoost, Noon.AddMinutes(4)));
-            Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropyBoost, Noon.AddMinutes(5)));
+            AdRewardCalculator.RecordWatch(save, AdPlacement.SpeedBoost, Noon);
+            Assert.IsTrue(AdRewardCalculator.IsOnCooldown(save, AdPlacement.SpeedBoost, Noon.AddMinutes(4)));
+            Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.SpeedBoost, Noon.AddMinutes(5)));
         }
 
         [Test]
         public void Cooldowns_ArePerPlacement()
         {
             var save = new SaveData();
-            AdRewardCalculator.RecordWatch(save, AdPlacement.EntropyBoost, Noon);
+            AdRewardCalculator.RecordWatch(save, AdPlacement.SpeedBoost, Noon);
             Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.TimeWarp, Noon));
         }
 
@@ -125,20 +146,6 @@ namespace MobileIdleBuilder.Tests
             AdRewardCalculator.RecordWatch(save, AdPlacement.EntropySurge, Noon.AddMinutes(20));
             Assert.AreEqual(1, save.adLastWatch.Count);
             Assert.IsTrue(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropySurge, Noon.AddMinutes(30)));
-        }
-
-        // ── Daily cap ─────────────────────────────────────────────────────────
-
-        [Test]
-        public void Cap_StopsWatchesUntilTheDailyReset()
-        {
-            var save = new SaveData();
-            AdRewardCalculator.ApplyDailyReset(save, Noon);
-            for (int i = 0; i < Def.DailyCap; i++) AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropySurge);
-            Assert.IsTrue(AdRewardCalculator.IsAtCap(save, AdPlacement.EntropySurge));
-
-            AdRewardCalculator.ApplyDailyReset(save, Noon.AddDays(1));
-            Assert.IsFalse(AdRewardCalculator.IsAtCap(save, AdPlacement.EntropySurge));
         }
 
         // ── Persistence ───────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ namespace MobileIdleBuilder.Tests
 {
     /// <summary>
     /// The Entropy Surge side icon + offer card (EntropySurgeOfferController): when the icon shows, and what
-    /// "No thanks" does to the cooldown and the daily count.
+    /// "No thanks" does to the cooldown.
     /// </summary>
     [TestFixture]
     public class EntropySurgeOfferTests
@@ -13,10 +13,9 @@ namespace MobileIdleBuilder.Tests
         static readonly DateTime Noon = new DateTime(2026, 11, 11, 12, 0, 0, DateTimeKind.Utc);
 
         static bool Show(bool ads = true, bool prestiged = true, bool loaded = true, bool ready = true,
-                         int remaining = 8, double cooldownMin = 0, bool cardOpen = false, bool menuOpen = false,
-                         bool measured = true)
-            => EntropySurgeOfferController.ShouldShowIcon(ads, prestiged, loaded, ready, remaining,
-                                                          TimeSpan.FromMinutes(cooldownMin), cardOpen, menuOpen, measured);
+                         double cooldownMin = 0, bool cardOpen = false, bool menuOpen = false)
+            => EntropySurgeOfferController.ShouldShowIcon(ads, prestiged, loaded, ready,
+                                                          TimeSpan.FromMinutes(cooldownMin), cardOpen, menuOpen);
 
         [Test]
         public void Icon_ShowsWhenEverythingIsReady() => Assert.IsTrue(Show());
@@ -25,16 +24,10 @@ namespace MobileIdleBuilder.Tests
         public void Icon_HiddenWhileAMenuIsOpen() => Assert.IsFalse(Show(menuOpen: true));
 
         [Test]
-        public void Icon_HiddenWhileIncomeIsStillBeingMeasured() => Assert.IsFalse(Show(measured: false));
-
-        [Test]
         public void Icon_HiddenWhileCoolingDown() => Assert.IsFalse(Show(cooldownMin: 3));
 
         [Test]
         public void Icon_HiddenWhileTheCardIsOpen() => Assert.IsFalse(Show(cardOpen: true));
-
-        [Test]
-        public void Icon_HiddenAtTheDailyCap() => Assert.IsFalse(Show(remaining: 0));
 
         [Test]
         public void Icon_HiddenBeforeTheFirstPrestige() => Assert.IsFalse(Show(prestiged: false));
@@ -57,17 +50,15 @@ namespace MobileIdleBuilder.Tests
 
             Assert.AreEqual(TimeSpan.FromMinutes(15),
                 AdRewardCalculator.CooldownRemaining(save, AdPlacement.EntropySurge, Noon));
-            Assert.AreEqual(0, AdRewardCalculator.GetWatchCount(save, AdPlacement.EntropySurge),
-                "Declining must not count toward the daily cap");
             Assert.IsFalse(AdRewardCalculator.IsOnCooldown(save, AdPlacement.EntropySurge, Noon.AddMinutes(15)),
                 "The offer comes back one cooldown after declining");
         }
 
         [Test]
-        public void Message_ShowsTheAmountAndWatchesLeft()
+        public void Message_ShowsBothOutcomesAndTheirOdds()
         {
-            Assert.AreEqual("Watch a short ad for +60,000 ◈ entropy?\n(7 left today)",
-                EntropySurgeOfferController.MessageText(60_000, 7));
+            Assert.AreEqual("Watch a short ad for +60,000 ◈ entropy (80%) or 10 ◆ crystals (20%)?",
+                EntropySurgeOfferController.MessageText(60_000, AdRewardCalculator.Def(AdPlacement.EntropySurge)));
         }
     }
 }

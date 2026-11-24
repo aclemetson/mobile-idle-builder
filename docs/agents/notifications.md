@@ -45,7 +45,7 @@ Both use the same OS permission and the same Settings toggle.
 | `BoostEnded` | boosts | `BoostLock.Remaining` (when every timed boost has ended) | speed burst, Idle ad boost, Cyclotron boost |
 | `DailyReward` | rewards | next UTC midnight if today's reward was claimed, else in 4 h (before the reset) | `lastLoginRewardUtc` |
 | `RewardsExpiring` | rewards | 2 h before the daily/weekly/monthly reset, only if `AchievementService.HasClaimable` for it | achievement resets |
-| `SurgeReady` | boosts | latest of: Entropy Surge cooldown, `BoostLock` (when it blocks the ad), the daily-cap reset (00:00 UTC, only when today's watches are used up), and `SurgeMinAway` (2 h). Only after the first prestige and with `ads.enabled` on | `adLastWatch`, `adWatchCounts` (`NotificationInputs.SurgeReadyDelay`) |
+| `SurgeReady` | boosts | latest of: Entropy Surge cooldown, `BoostLock` (when it blocks the ad) and `SurgeMinAway` (2 h); the surge has no daily cap since #489. Only after the first prestige and with `ads.enabled` on | `adLastWatch`, `adWatchCounts` (`NotificationInputs.SurgeReadyDelay`) |
 | `Comeback24h` / `Comeback72h` | reminders | now + 24 h / 72 h (after the tutorial) | none |
 
 The rules live in `NotificationPlanner` and are covered by the tests:
@@ -53,7 +53,7 @@ The rules live in `NotificationPlanner` and are covered by the tests:
 - Quiet hours run from 22:00 to 08:00 device local time; anything that would land in them moves to 08:00.
 - Production alerts within 15 min of each other merge into one `ProductionCombined` ("Your foundry needs you"), fired at the latest time.
 - At most 3 notifications land in any 24 h, kept in priority order: storage > combined > research > craft > Cyclotron > boost > rewards expiring > daily > surge > comeback.
-- The surge reminder has a 2 h floor so a 15 min cooldown does not ping everyone who closes the app right after a surge. It cannot know whether an ad will be loaded, and the HUD icon waits a few seconds for income to be measured after launch.
+- The surge reminder has a 2 h floor so a 15 min cooldown does not ping everyone who closes the app right after a surge. It cannot know whether an ad will be loaded.
 
 **Clocks:** the delays are measured against `GameClock.UtcNow` (the timers' own clock), and the fire time is
 `DateTime.UtcNow + delay`, because the OS fires on the wall clock. That way a playtest clock offset never

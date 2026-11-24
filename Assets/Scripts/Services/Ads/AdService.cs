@@ -147,21 +147,7 @@ namespace MobileIdleBuilder
             if (_provider == null || !_provider.IsRewardedReady) return false;
             if (CooldownRemaining(p) > TimeSpan.Zero) return false;
             if (BoostLockRemaining(p) > TimeSpan.Zero) return false;
-            if (!IncomeMeasured(p)) return false;
             return Remaining(p) > 0;
-        }
-
-        /// <summary>
-        /// False while an income-minutes placement (Entropy Surge) cannot price itself yet: the run's income
-        /// has under <see cref="IncomeRateTracker.MinRewardSpanSeconds"/> of samples (just launched, just
-        /// prestiged) or a prestige reload is pending. The offer waits rather than showing its floor.
-        /// Always true for other placements.
-        /// </summary>
-        public bool IncomeMeasured(AdPlacement p)
-        {
-            if (AdRewardCalculator.Def(p).Kind != AdRewardKind.IncomeMinutes) return true;
-            if (PrestigeRunReset.ReloadPending) return false;
-            return IncomeRateTracker.Current != null && IncomeRateTracker.Current.HasRewardRate;
         }
 
         /// <summary>Time left on the placement's cooldown (zero when ready or the placement has none).</summary>
@@ -192,20 +178,12 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// What Entropy Boost would pay right now: 10% of the live net worth (the save's snapshot only
-        /// refreshes on save, so it lags and the panel preview would not match the grant).
+        /// What the Entropy Surge's entropy roll would pay right now: 10% of the live net worth (the save's
+        /// snapshot only refreshes on save, so it lags and the preview would not match the grant).
         /// </summary>
         public long PreviewEntropyReward() =>
             AdRewardCalculator.CalcEntropyReward(
                 ECSLoadBridge.Instance?.LiveNetWorth ?? SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f);
-
-        /// <summary>
-        /// What an income-minutes placement (Entropy Surge) would pay right now. Uses only this run's
-        /// income (<see cref="IncomeRateTracker.RewardPerSecond"/>), so right after a prestige it pays the floor.
-        /// </summary>
-        public long PreviewIncomeReward(AdPlacement p) =>
-            AdRewardCalculator.CalcIncomeReward(
-                p, PrestigeRunReset.ReloadPending ? 0d : IncomeRateTracker.Current?.RewardPerSecond ?? 0d);
 
         // ── Show / grant ──────────────────────────────────────────────────────
 
@@ -264,20 +242,14 @@ namespace MobileIdleBuilder
                 Finish(onDone, Fail(p, AdShowOutcome.BoostActive, BoostLock.Message(save, GameClock.UtcNow) + "."));
                 return;
             }
-            if (!IncomeMeasured(p))
-            {
-                Finish(onDone, Fail(p, AdShowOutcome.NotReady, "Measuring your income, try again in a few seconds."));
-                return;
-            }
             if (_provider == null || !_provider.IsRewardedReady)
             {
                 Finish(onDone, Fail(p, AdShowOutcome.NotReady, "No ad available right now."));
                 return;
             }
 
-            // Income-minutes rewards are priced now, before the ad: the ad pauses the app, which restarts
-            // the income measurement, so pricing afterwards would pay the floor. The player gets what was shown.
-            long quotedIncome = AdRewardCalculator.Def(p).Kind == AdRewardKind.IncomeMinutes ? PreviewIncomeReward(p) : 0;
+            // The surge's entropy is priced now, before the ad, so the player gets the amount the card showed.
+            long quoted = AdRewardCalculator.Def(p).Kind == AdRewardKind.SurgeRoll ? PreviewEntropyReward() : 0;
 
             _provider.ShowRewarded(earned =>
             {
@@ -288,7 +260,7 @@ namespace MobileIdleBuilder
                     return;
                 }
 
-                bool granted = GrantReward(save, p, doubleOfflineResult, quotedIncome, out string message);
+                bool granted = GrantReward(save, p, doubleOfflineResult, quoted, out string message);
                 _provider.LoadRewarded();
 
                 if (!granted)
@@ -309,7 +281,7 @@ namespace MobileIdleBuilder
         /// Returns false (with no mutation that counts) when there is nothing to grant — e.g. a Time Warp
         /// while nothing is producing. Out <paramref name="message"/> is a toast-ready summary.
         /// </summary>
-        bool GrantReward(SaveData save, AdPlacement p, IdleCollectionResult doubleOfflineResult, long quotedIncome, out string message)
+        bool GrantReward(SaveData save, AdPlacement p, IdleCollectionResult doubleOfflineResult, long quotedEntropy, out string message)
         {
             var def = AdRewardCalculator.Def(p);
             switch (def.Kind)
@@ -322,17 +294,17 @@ namespace MobileIdleBuilder
                     message = $"+{amount:N0} entropy";
                     return true;
                 }
-                case AdRewardKind.IncomeMinutes:
+                case AdRewardKind.SurgeRoll:
                 {
-                    long amount = quotedIncome;
-                    save.currentRun.baseCurrency += amount;
-                    ApplyEntropyToECS(amount);
-                    // The income is N minutes of what the Demon sells, so those N minutes of items count toward
-                    // the world tasks too (full rate, like the income). Save first so the snapshot is current.
-                    SaveManager.Instance.SaveLocal();
-                    var delivered = OfflineCollectionService.LiveDemonDeliveries(save, def.IncomeMinutes * 60f);
-                    long counted  = OfflineCollectionService.CreditDemonDeliveries(save, delivered, "Entropy Surge");
-                    message = $"+{amount:N0} entropy" + TaskSuffix(counted);
+                    if (AdRewardCalculator.SurgeRollsCrystals(UnityEngine.Random.value))
+                    {
+                        save.paidCurrency += def.CrystalAmount;
+                        message = $"+{def.CrystalAmount} crystals";
+                        return true;
+                    }
+                    save.currentRun.baseCurrency += quotedEntropy;
+                    ApplyEntropyToECS(quotedEntropy);
+                    message = $"+{quotedEntropy:N0} entropy";
                     return true;
                 }
                 case AdRewardKind.Crystals:
