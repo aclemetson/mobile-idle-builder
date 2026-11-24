@@ -59,7 +59,8 @@ namespace MobileIdleBuilder
             }
 
             var save = SaveManager.Instance?.Current;
-            MigrateMergedResearch(save);
+            long refund = MigrateMergedResearch(save);
+            if (refund > 0) RefundRetired(save, refund);
             if (save?.unlockedResearch != null)
                 foreach (var id in save.unlockedResearch) _unlockedIds.Add(id);
 
@@ -471,10 +472,34 @@ namespace MobileIdleBuilder
             { "megastructure_theory",         "dyson_engineering" },
         };
 
-        /// <summary>Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer). Idempotent.</summary>
-        internal static void MigrateMergedResearch(SaveData save)
+        /// <summary>
+        /// Research removed with no replacement: id -> its entropy price. A save that finished one just drops it
+        /// (it already had the benefit); one whose timer was running on it gets the price back.
+        /// </summary>
+        internal static readonly System.Collections.Generic.Dictionary<string, long> RetiredResearch = new()
         {
-            if (save == null) return;
+            // 2026-11-24: field tap-cooldown research. Nobody taps fields once Automation I's harvesters arrive,
+            // so these were dead weight in the tree; Transportation I now follows Automation I.
+            { "rapid_extraction_i",  150 },
+            { "rapid_extraction_ii", 48000 },
+        };
+
+        /// <summary>
+        /// Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer) and drops
+        /// retired ones. Returns the entropy to refund for a retired research whose timer was running. Idempotent.
+        /// </summary>
+        internal static long MigrateMergedResearch(SaveData save)
+        {
+            if (save == null) return 0;
+            long refund = 0;
+            save.unlockedResearch?.RemoveAll(id => id != null && RetiredResearch.ContainsKey(id));
+            if (!string.IsNullOrEmpty(save.activeResearchId)
+                && RetiredResearch.TryGetValue(save.activeResearchId, out long price))
+            {
+                refund = price;
+                save.activeResearchId          = null;
+                save.activeResearchCompleteUtc = null;
+            }
             if (save.unlockedResearch != null)
             {
                 for (int i = save.unlockedResearch.Count - 1; i >= 0; i--)
@@ -495,6 +520,24 @@ namespace MobileIdleBuilder
                 }
                 else save.activeResearchId = active;
             }
+            return refund;
+        }
+
+        // A retired research's running timer: give its price back. Into the live ECS balance when the save has
+        // already been applied, otherwise into the save before it is.
+        void RefundRetired(SaveData save, long amount)
+        {
+            bool live = _effectsReady && ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded
+                        && !_progressQuery.IsEmpty;
+            if (live)
+            {
+                var e = _progressQuery.GetSingletonEntity();
+                var p = _em.GetComponentData<PlayerProgressData>(e);
+                p.BaseCurrency += amount;
+                _em.SetComponentData(e, p);
+            }
+            else if (save?.currentRun != null) save.currentRun.baseCurrency += amount;
+            GameLogger.Info($"[ResearchService] Refunded {amount} entropy for a retired research in progress.");
         }
 
         private ResearchSO FindResearch(string id) =>
