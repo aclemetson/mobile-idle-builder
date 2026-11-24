@@ -117,3 +117,5 @@ Both capacity tracks are research-gated in the UI by `surplus_containment` (Feed
 - Bad string cross-refs fail as importer **warnings**, not errors — grep the Unity console output for `[GameDataImporter]` after importing.
 - Bump `_meta.version` when adding content sections.
 - The prestige-shop upgrade catalogue is NOT in game_data.json — it is hardcoded in `PersistentUpgradeService.cs:48`. Don't look for it in JSON.
+
+**Building icons (#487):** `MobileIdleBuilder/Generate Building Icons` renders each building's 3D model (the bespoke `*Structure`, the Demon torus, the collector spindle) to `Assets/Art/Icons/Buildings/{id}.png`; `GameDataImporter` assigns it to `BuildingSO.icon` while `icon_path` is `TODO` (same convention as element icons). Re-run both after changing a building's model.

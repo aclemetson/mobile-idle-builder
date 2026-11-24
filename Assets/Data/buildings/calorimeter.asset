@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Sits at a stream's mouth and burns whatever reaches it, turning the
     energy stored in its bonds into entropy. Finished compounds pay far more than
     raw gas.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4cca8cd8e25d85c438564275a2b9663e, type: 3}
   prefab: {fileID: 0}
   buildingId: 30
   tier: 1

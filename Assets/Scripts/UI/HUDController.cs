@@ -1939,18 +1939,52 @@ namespace MobileIdleBuilder
         // Buildings list
         // ============================================================
 
+        // Builder (#487): role tabs over a horizontally scrolling row of cards (BuilderMenu).
+        private VisualElement _builderTabs;
+        private readonly Dictionary<string, VisualElement> _builderPages = new();
+        private string _builderTab;
+        private const string BuilderTabPref = "builder_tab";
+
+        private void EnsureBuilderTabs()
+        {
+            if (_builderTabs != null || _buildingsPanel == null || _buildingsList == null) return;
+            _builderTab = PlayerPrefs.GetString(BuilderTabPref, null);
+            _builderTabs = BuilderMenu.MakeTabBar(tab =>
+            {
+                _builderTab = tab;
+                PlayerPrefs.SetString(BuilderTabPref, tab);
+                BuilderMenu.ShowTab(_builderTabs, _builderPages, tab);
+                _buildingsList.scrollOffset = Vector2.zero;
+            });
+            _buildingsPanel.Insert(_buildingsPanel.IndexOf(_buildingsList), _builderTabs);
+            _buildingsList.mode = ScrollViewMode.Horizontal;
+            _buildingsList.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            _buildingsList.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            _buildingsList.AddToClassList("builder-cards");
+        }
+
         private void BuildBuildingsList()
         {
+            EnsureBuilderTabs();
             _buildingsList.Clear();
+            _builderPages.Clear();
             _buildingAffordRows.Clear();
             _lastAffordEntropy = long.MinValue; // force a re-evaluate next Update
+            foreach (var tab in BuilderMenu.Tabs)
+            {
+                var page = new VisualElement { name = BuilderMenu.PageName(tab) };
+                page.AddToClassList(BuilderMenu.PageClass);
+                page.AddToClassList("builder-page");
+                _builderPages[tab] = page;
+                _buildingsList.Add(page);
+            }
 
             long currentEntropy = 0;
             if (_ecsReady && !_progressQuery.IsEmpty)
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
-            // ---- Conveyor Belt entry (always first, always free) ----
+            // ---- Conveyor Belt entry (always first in Logistics, always free) ----
             if (conveyorController != null)
             {
                 // Named so tutorial steps can point at it (TutorialPulseResolver).
@@ -1963,66 +1997,87 @@ namespace MobileIdleBuilder
 
                 // Stream worlds (Chemistry): the same tool draws water channels from a Spring.
                 bool streams = WorldRules.StreamTransport(SaveManager.Instance?.Current);
-                _buildingsList.Add(streams
-                    ? MakeBuildingCard("Channel",
-                        "Draw a stream from a Spring past your buildings; each takes what its reaction needs",
-                        MakeCostLabel(0, true), placeBtn)
-                    : MakeBuildingCard("Conveyor Belt",
-                        "Draw paths to move items between buildings", MakeCostLabel(0, true), placeBtn));
+                string beltName = streams ? "Channel" : "Conveyor Belt";
+                string beltInfo = streams
+                    ? "Draw a stream from a Spring past your buildings; each takes what its reaction needs"
+                    : "Draw paths to move items between buildings";
+                _builderPages["logistics"].Add(BuilderMenu.MakeCard(beltName, null, GlyphIcon.Kind.Flip,
+                    MakeCostLabel(0, true), placeBtn, InfoButton(beltName, beltInfo)));
             }
 
-            if (placementController == null) return;
-
-            AddFieldPurchaseRows(currentEntropy);
-
-            var ws = WorldService.Instance;
-            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
-            foreach (var entry in placementController.availableBuildings)
+            if (placementController != null)
             {
-                // Skip buildings that belong to another world (the Molecular Synthesizer is built in Chemistry)
-                var bso = entry.building;
-                if (bso != null && !WorldGate.BuildingInWorld(bso, activeWorldId)) continue;
+                AddFieldPurchaseRows(currentEntropy);
 
-                // Skip buildings whose required research has not been purchased yet
-                if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
+                var ws = WorldService.Instance;
+                string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
+                foreach (var entry in placementController.availableBuildings)
                 {
-                    if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
-                        continue;
+                    // Skip buildings that belong to another world (the Molecular Synthesizer is built in Chemistry)
+                    var bso = entry.building;
+                    if (bso != null && !WorldGate.BuildingInWorld(bso, activeWorldId)) continue;
+
+                    // Skip buildings whose required research has not been purchased yet
+                    if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
+                    {
+                        if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
+                            continue;
+                    }
+
+                    string detail = entry.defaultRecipe != null
+                        ? $"Produces: {entry.defaultRecipe.displayName}"
+                        : "";
+                    if (!string.IsNullOrEmpty(bso?.description))
+                        detail = string.IsNullOrEmpty(detail) ? bso.description : $"{detail}\n\n{bso.description}";
+                    if (IsObsolete(bso))
+                        detail = $"Obsolete. {bso.obsoleteCondition}\n\n{detail}";
+
+                    int rawCost = entry.building?.entropyCost ?? 0;
+                    float reduction = !_prestigeQuery.IsEmpty
+                        ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                        : 0f;
+                    long cost = EntropyWallet.ReducedCost(rawCost, reduction);
+                    bool canAfford = currentEntropy >= cost;
+
+                    var costLabel = MakeCostLabel(cost, canAfford);
+
+                    var placeBtn = new Button { text = "Place" };
+                    if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
+                    placeBtn.SetEnabled(canAfford);
+
+                    // Track cost rows so Update() can re-enable them the moment entropy catches up.
+                    if (cost > 0)
+                        _buildingAffordRows.Add((placeBtn, costLabel, cost));
+
+                    var captured = entry;
+                    ListTapRouter.Register(_buildingsList, placeBtn, () =>
+                    {
+                        SetElementVisible(_buildingsPanel, false);
+                        placementController.BeginPlacement(captured);
+                    });
+
+                    string name = entry.building?.displayName ?? "Building";
+                    _builderPages[BuilderMenu.TabOf(bso)].Add(BuilderMenu.MakeCard(name,
+                        BuilderMenu.CardSprite(bso, entry.defaultRecipe), GlyphIcon.Kind.Build,
+                        costLabel, placeBtn, InfoButton(name, detail)));
                 }
-
-                string detail = entry.defaultRecipe != null
-                    ? $"Produces: {entry.defaultRecipe.displayName}"
-                    : bso?.description ?? "";
-                if (IsObsolete(bso))
-                    detail = $"Obsolete. {bso.obsoleteCondition}";
-
-                int rawCost = entry.building?.entropyCost ?? 0;
-                float reduction = !_prestigeQuery.IsEmpty
-                    ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
-                    : 0f;
-                long cost = EntropyWallet.ReducedCost(rawCost, reduction);
-                bool canAfford = currentEntropy >= cost;
-
-                var costLabel = MakeCostLabel(cost, canAfford);
-
-                var placeBtn = new Button { text = "Place" };
-                if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
-                placeBtn.SetEnabled(canAfford);
-
-                // Track cost rows so Update() can re-enable them the moment entropy catches up.
-                if (cost > 0)
-                    _buildingAffordRows.Add((placeBtn, costLabel, cost));
-
-                var captured = entry;
-                ListTapRouter.Register(_buildingsList, placeBtn, () =>
-                {
-                    SetElementVisible(_buildingsPanel, false);
-                    placementController.BeginPlacement(captured);
-                });
-
-                _buildingsList.Add(MakeBuildingCard(entry.building?.displayName ?? "Building",
-                    detail, costLabel, placeBtn));
             }
+
+            var withCards = new HashSet<string>();
+            foreach (var kv in _builderPages) if (kv.Value.childCount > 0) withCards.Add(kv.Key);
+            _builderTab = BuilderMenu.PickTab(_builderTab, withCards);
+            BuilderMenu.ShowTab(_builderTabs, _builderPages, _builderTab);
+        }
+
+        // The (i) on a Builder card: the building's details in a card (#487). Routed through ListTapRouter like
+        // the Place button, since the ScrollView swallows a Button's own click on touch.
+        private Button InfoButton(string title, string detail)
+        {
+            if (string.IsNullOrEmpty(detail)) return null;
+            var info = new Button();
+            ListTapRouter.Register(_buildingsList, info, () =>
+                ConfirmPrompt.Show(title, detail, "OK", onConfirm: null, cancelLabel: "Close", destructive: false));
+            return info;
         }
 
         /// <summary>
@@ -2057,8 +2112,12 @@ namespace MobileIdleBuilder
                     placementController.BeginFieldPlacement(captured);
                 });
 
-                _buildingsList.Add(MakeBuildingCard(FieldPurchaseName(field), FieldPurchaseDetail(field),
-                    costLabel, placeBtn));
+                string name = FieldPurchaseName(field);
+                var drops = field.outputItems;
+                var picture = field.fieldIcon != null ? field.fieldIcon
+                            : drops.Count > 0 && drops[0] != null ? drops[0].icon : null;
+                _builderPages["harvest"].Add(BuilderMenu.MakeCard(name, picture, GlyphIcon.Kind.Domains,
+                    costLabel, placeBtn, InfoButton(name, FieldPurchaseDetail(field))));
             }
         }
 
@@ -2071,34 +2130,6 @@ namespace MobileIdleBuilder
                 ? $"{field.purchaseGroupSize} fields side by side"
                 : "One field on an empty tile";
             return $"{what}. Each one costs {field.purchaseCostMultiplier:0.#}x the last.";
-        }
-
-        // Every build-menu row has the same three columns so rows line up whatever the text
-        // length: [name + wrapping detail] [fixed-width cost] [Place button that never shrinks].
-        private static VisualElement MakeBuildingCard(string name, string detail, Label costLabel, Button placeBtn)
-        {
-            var card = new VisualElement();
-            card.AddToClassList("building-card");
-
-            var info = new VisualElement();
-            info.AddToClassList("building-card-info");
-            var nameLabel = new Label(name);
-            nameLabel.AddToClassList("building-card-name");
-            info.Add(nameLabel);
-            if (!string.IsNullOrEmpty(detail))
-            {
-                var detailLabel = new Label(detail);
-                detailLabel.AddToClassList("building-card-recipe");
-                info.Add(detailLabel);
-            }
-
-            placeBtn.AddToClassList("craft-btn");
-            placeBtn.AddToClassList("building-card-place");
-
-            card.Add(info);
-            card.Add(costLabel);
-            card.Add(placeBtn);
-            return card;
         }
 
         // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the

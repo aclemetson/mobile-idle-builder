@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Forks one belt into three. Items come in one side and leave by the
     left, front and right sides in turn, so each branch gets a third. Any item, no
     sorting.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a37f436558b632445b4b4305bda6aa4d, type: 3}
   prefab: {fileID: 0}
   buildingId: 28
   tier: 1

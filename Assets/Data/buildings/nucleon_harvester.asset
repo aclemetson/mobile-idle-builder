@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Spans two quark fields and pulls whole protons or neutrons out of
     them, no Combiner needed. Place it from the Build menu, or merge two neighbouring
     Harvesters (one on Up Quarks, one on Down Quarks) from a Harvester's info panel.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 056df728ee62cc046a0b4beb53b14f83, type: 3}
   prefab: {fileID: 0}
   buildingId: 24
   tier: 1

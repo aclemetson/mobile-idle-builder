@@ -15,7 +15,7 @@ MonoBehaviour:
   id: component_fabricator
   displayName: Component Fabricator
   description: Assembles advanced materials into high-precision megastructure components.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: dbe9009b6c924ff45951fe839607ca71, type: 3}
   prefab: {fileID: 0}
   buildingId: 10
   tier: 5
