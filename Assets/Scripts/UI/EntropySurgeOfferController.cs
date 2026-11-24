@@ -128,7 +128,8 @@ namespace MobileIdleBuilder
 
             // Recalculated on every open: net worth moves, so a card reopened after the X shows today's figure.
             if (_message != null)
-                _message.text = MessageText(ads.PreviewEntropyReward(), AdRewardCalculator.Def(Placement), ads.SkipsAds);
+                _message.text = MessageText(ads.PreviewEntropyReward(), AdRewardCalculator.Def(Placement), ads.SkipsAds,
+                                            AdRewardCalculator.SurgeCrystalChance(SaveManager.Instance?.Current));
             var watch = _card.Q<Button>("surge-offer__watch");
             if (watch != null) watch.text = ads.SkipsAds ? "Claim" : "▶ Watch ad";
 
@@ -139,9 +140,9 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>"Watch a short ad for +60,000 ◈ entropy (80%) or 10 ◆ crystals (20%)?" ("Claim ..." when ad-free).</summary>
-        internal static string MessageText(long entropy, AdPlacementDef def, bool adFree = false)
+        internal static string MessageText(long entropy, AdPlacementDef def, bool adFree = false, float crystalChance = -1f)
         {
-            int crystalPct = UnityEngine.Mathf.RoundToInt(def.CrystalChance * 100f);
+            int crystalPct = UnityEngine.Mathf.RoundToInt((crystalChance >= 0f ? crystalChance : def.CrystalChance) * 100f);
             string amount = entropy.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
             return (adFree ? "Claim" : "Watch a short ad for") + $" +{amount} ◈ entropy ({100 - crystalPct}%)"
                  + $" or {def.CrystalAmount} ◆ crystals ({crystalPct}%)?";

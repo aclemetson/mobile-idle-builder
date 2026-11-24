@@ -306,7 +306,7 @@ namespace MobileIdleBuilder
                 }
                 case AdRewardKind.SurgeRoll:
                 {
-                    if (AdRewardCalculator.SurgeRollsCrystals(UnityEngine.Random.value))
+                    if (AdRewardCalculator.SurgeRollsCrystals(UnityEngine.Random.value, save))
                     {
                         save.paidCurrency += def.CrystalAmount;
                         message = $"+{def.CrystalAmount} crystals";

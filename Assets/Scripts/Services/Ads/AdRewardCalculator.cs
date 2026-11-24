@@ -135,7 +135,11 @@ namespace MobileIdleBuilder
         /// Whether a surge pays crystals: <paramref name="roll01"/> is a uniform value in [0, 1); below the
         /// placement's crystal chance (20%) it is crystals, otherwise entropy.
         /// </summary>
-        public static bool SurgeRollsCrystals(double roll01) => roll01 < AsDouble(Def(AdPlacement.EntropySurge).CrystalChance);
+        public static bool SurgeRollsCrystals(double roll01, SaveData save = null) => roll01 < AsDouble(SurgeCrystalChance(save));
+
+        /// <summary>The surge's crystal chance: 20% plus Surge Luck from the tournament track (#500), at most 1.</summary>
+        public static float SurgeCrystalChance(SaveData save) =>
+            Math.Min(1f, Def(AdPlacement.EntropySurge).CrystalChance + TournamentTrack.SurgeCrystalBonus(save));
 
         // 0.1f widens to 0.10000000149: round a table fraction back to what was written before using it as a double.
         static double AsDouble(float fraction) => Math.Round(fraction, 6);

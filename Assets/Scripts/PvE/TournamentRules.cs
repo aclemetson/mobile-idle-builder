@@ -142,8 +142,10 @@ namespace MobileIdleBuilder
             var landed = new System.Collections.Generic.List<string>();
             if (save == null || reward == null || RewardApplied(save, reward.week)) return landed;
             if (reward.crystals > 0) save.paidCurrency += reward.crystals;
-            if (reward.strings > 0)  save.pveStrings   += reward.strings;
-            if (reward.stars > 0) landed = ItemStars.Grant(save, reward.stars, starPool, rng);
+            // Tournament track (#500): Harmonics scales the Strings, Lucky Draw adds stars.
+            if (reward.strings > 0)  save.pveStrings   += TournamentTrack.StringsAfterHarmonics(save, reward.strings);
+            int stars = reward.stars + TournamentTrack.ExtraStars(save);
+            if (stars > 0) landed = ItemStars.Grant(save, stars, starPool, rng);
             save.pveClaimedWeeks ??= new System.Collections.Generic.List<string>();
             save.pveClaimedWeeks.Add(reward.week);
             if (save.pveClaimedWeeks.Count > ClaimedWeeksKept)
