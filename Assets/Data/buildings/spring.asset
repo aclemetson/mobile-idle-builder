@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Wells up clean water. Draw a channel from it and the stream carries
     whatever you drop in past every building on its banks. Its flow is shared by
     those buildings, upstream first.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f0bdd0419621de94784ff1dc62e51a25, type: 3}
   prefab: {fileID: 0}
   buildingId: 29
   tier: 1

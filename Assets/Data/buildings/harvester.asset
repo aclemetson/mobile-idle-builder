@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Harvester
   description: Extracts fundamental particles from quantum fields. Output depends
     on the field type it is placed on.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 65dfd287c4e974b42b5775e09b745637, type: 3}
   prefab: {fileID: 0}
   buildingId: 1
   tier: 1

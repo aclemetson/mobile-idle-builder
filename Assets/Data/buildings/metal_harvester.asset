@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Metal Harvester
   description: Mines bulk metals from a Metal Lode. Place on a metal seam and pick
     which metal to extract.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 25fadc67d7bb00a4dbfb0fcf53102a57, type: 3}
   prefab: {fileID: 0}
   buildingId: 16
   tier: 3

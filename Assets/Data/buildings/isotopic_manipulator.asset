@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Isotopic Manipulator
   description: 'Adds or removes neutrons: enriches Uranium into Uranium-235 and irradiates
     or strips the decay-chain elements. Slower than the Atom Generator by design.'
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f81b8eeeab8820349b4129348bd1feea, type: 3}
   prefab: {fileID: 0}
   buildingId: 5
   tier: 2

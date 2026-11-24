@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Organic Harvester
   description: Harvests organic compounds from a living field. Place on an organic
     seam and pick which compound to extract.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 17aad20fd51e5cf43b916868219c6158, type: 3}
   prefab: {fileID: 0}
   buildingId: 19
   tier: 3

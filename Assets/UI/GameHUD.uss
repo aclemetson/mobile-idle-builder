@@ -1428,6 +1428,75 @@
     -unity-text-align: middle-center;
 }
 
+/* Builder cards (#487): a horizontal row per tab. The ScrollView scrolls sideways; each tab page is a row. */
+.builder-cards .unity-scroll-view__content-container {
+    flex-direction: row;
+}
+
+.builder-page {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.building-tile {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 148px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+}
+
+.building-tile__picture {
+    width: 84px;
+    height: 84px;
+    margin-bottom: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+    justify-content: center;
+    align-items: center;
+}
+
+.building-tile__glyph {
+    width: 48px;
+    height: 48px;
+    color: var(--color-primary);
+}
+
+.building-tile__name {
+    -unity-text-align: middle-center;
+    font-size: var(--font-size-sm);
+    min-height: 36px;
+    margin-bottom: 2px;
+}
+
+.building-tile__cost {
+    -unity-text-align: middle-center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.building-tile__place {
+    width: 100%;
+    margin: 0;
+}
+
+.building-tile__info {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 15px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.building-tile__info > .glyph-icon { width: 16px; height: 16px; }
+
 /* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
 .pve-league-badge {
     margin-left: var(--spacing-sm);
