@@ -93,6 +93,17 @@
     margin-bottom: var(--spacing-sm);
 }
 
+/* Ad-free (#503): the one-time purchase, first in the Crystals tab. */
+.shop-tier-card--featured {
+    border-color: var(--color-primary);
+    border-width: 2px;
+}
+
+.shop-restore-btn {
+    align-self: center;
+    margin-bottom: var(--spacing-sm);
+}
+
 .shop-tier-card--boost-active {
     border-color: var(--color-success);
     background-color: rgba(0, 230, 118, 0.06);

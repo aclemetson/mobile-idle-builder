@@ -34,6 +34,10 @@ namespace MobileIdleBuilder
         };
 
         public event Action<string, bool> OnPurchaseComplete; // (productId, success)
+
+        /// <summary>True when the store reports the ad-free purchase (#503) as owned on this account.</summary>
+        public bool StoreOwnsAdFree =>
+            IsInitialized && (_controller.products.WithID(AdFree.ProductId)?.hasReceipt ?? false);
         public bool IsInitialized { get; private set; }
 
         private IStoreController   _controller;
@@ -64,6 +68,7 @@ namespace MobileIdleBuilder
             builder.AddProduct(ProductCrystals3200,  ProductType.Consumable);
             builder.AddProduct(ProductCrystals7500,  ProductType.Consumable);
             builder.AddProduct(ProductCrystals20000, ProductType.Consumable);
+            builder.AddProduct(AdFree.ProductId,     ProductType.NonConsumable);
             UnityPurchasing.Initialize(this, builder);
         }
 
@@ -103,6 +108,37 @@ namespace MobileIdleBuilder
             _extensions  = extensions;
             IsInitialized = true;
             GameLogger.Info("[IAP] Store initialized.");
+            RestoreAdFreeFromReceipt();
+        }
+
+        /// <summary>
+        /// A reinstall or a new device: the store still holds the ad-free receipt, so the save gets it back.
+        /// Google redelivers owned non-consumables at init; iOS needs <see cref="RestorePurchases"/>.
+        /// </summary>
+        void RestoreAdFreeFromReceipt()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!StoreOwnsAdFree || !AdFree.Grant(save)) return;
+            SaveManager.Instance.SaveLocal();
+            GameLogger.Info("[IAP] Ad-free restored from the store receipt.");
+            OnPurchaseComplete?.Invoke(AdFree.ProductId, true);
+        }
+
+        /// <summary>iOS "Restore Purchases" (App Store requirement for non-consumables). No-op elsewhere.</summary>
+        public void RestorePurchases(Action<bool> onDone = null)
+        {
+#if UNITY_IOS
+            if (!IsInitialized) { onDone?.Invoke(false); return; }
+            _extensions.GetExtension<IAppleExtensions>().RestoreTransactions((ok, error) =>
+            {
+                if (!ok) GameLogger.Warning($"[IAP] Restore failed: {error}");
+                RestoreAdFreeFromReceipt();
+                onDone?.Invoke(ok);
+            });
+#else
+            RestoreAdFreeFromReceipt();
+            onDone?.Invoke(true);
+#endif
         }
 
         public void OnInitializeFailed(InitializationFailureReason error)
@@ -114,7 +150,15 @@ namespace MobileIdleBuilder
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
         {
             string id = args.purchasedProduct.definition.id;
-            if (CrystalAmounts.TryGetValue(id, out long amount))
+            if (id == AdFree.ProductId)
+            {
+                var save = SaveManager.Instance?.Current;
+                AdFree.Grant(save);
+                SaveManager.Instance?.SaveLocal();
+                GameLogger.Info("[IAP] Ad-free purchased.");
+                OnPurchaseComplete?.Invoke(id, true);
+            }
+            else if (CrystalAmounts.TryGetValue(id, out long amount))
             {
                 PremiumShopService.Instance?.AwardCrystals(amount);
                 GameLogger.Info($"[IAP] Purchase complete: {id} → +{amount}◆");
@@ -146,6 +190,7 @@ namespace MobileIdleBuilder
             ProductCrystals3200  => "$4.99",
             ProductCrystals7500  => "$9.99",
             ProductCrystals20000 => "$19.99",
+            AdFree.ProductId     => AdFree.FallbackPrice,
             _                    => "—",
         };
     }

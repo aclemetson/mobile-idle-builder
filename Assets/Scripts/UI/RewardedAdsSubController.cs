@@ -139,7 +139,7 @@ namespace MobileIdleBuilder
             if (capped && remaining <= 0)        btn.text = "Maxed";
             else if (locked > System.TimeSpan.Zero)   btn.text = $"Boost active {BoostLock.FormatLeft(locked)}";
             else if (cooldown > System.TimeSpan.Zero) btn.text = $"Ready in {AdService.FormatCooldown(cooldown)}";
-            else                                 btn.text = "▶ Watch";
+            else                                 btn.text = ads != null && ads.SkipsAds ? "Claim" : "▶ Watch";
             btn.SetEnabled(ads != null && ads.CanWatch(placement));
         }
 

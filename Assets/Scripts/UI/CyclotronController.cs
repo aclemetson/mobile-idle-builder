@@ -261,8 +261,10 @@ namespace MobileIdleBuilder
         /// Writes the live boost into the <see cref="EntropyIncomeBoost"/> singleton (creating it the first
         /// time) whenever it changes, so the income systems start and stop applying it on the same frame.
         /// </summary>
-        void SyncBoost(float mult)
+        void SyncBoost(float cyclotronMult)
         {
+            // The singleton is the whole live income multiplier: the Cyclotron boost times the ad-free bonus (#503).
+            float mult = AdFree.CombinedIncomeMultiplier(SaveManager.Instance?.Current, cyclotronMult);
             if (!_ecsReady)
             {
                 var world = World.DefaultGameObjectInjectionWorld;

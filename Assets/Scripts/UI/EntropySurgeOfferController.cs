@@ -98,7 +98,7 @@ namespace MobileIdleBuilder
             if (IsOpen && ads.BoostLockRemaining(Placement) > TimeSpan.Zero) CloseCard();
 
             bool show = ShouldShowIcon(
-                FeatureFlags.AdsEnabled,
+                FeatureFlags.AdsEnabled || (ads != null && ads.SkipsAds),   // ad-free keeps the surge (#503)
                 save?.tutorial.hasCompletedFirstRun ?? false,
                 ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded,
                 ads != null && ads.IsReady,
@@ -128,7 +128,9 @@ namespace MobileIdleBuilder
 
             // Recalculated on every open: net worth moves, so a card reopened after the X shows today's figure.
             if (_message != null)
-                _message.text = MessageText(ads.PreviewEntropyReward(), AdRewardCalculator.Def(Placement));
+                _message.text = MessageText(ads.PreviewEntropyReward(), AdRewardCalculator.Def(Placement), ads.SkipsAds);
+            var watch = _card.Q<Button>("surge-offer__watch");
+            if (watch != null) watch.text = ads.SkipsAds ? "Claim" : "▶ Watch ad";
 
             IsOpen = true;
             SetIconVisible(false);
@@ -136,11 +138,12 @@ namespace MobileIdleBuilder
             UIInputBlocker.SetModal(_modalOwner, true);
         }
 
-        /// <summary>"Watch a short ad for +60,000 ◈ entropy (80%) or 10 ◆ crystals (20%)?"</summary>
-        internal static string MessageText(long entropy, AdPlacementDef def)
+        /// <summary>"Watch a short ad for +60,000 ◈ entropy (80%) or 10 ◆ crystals (20%)?" ("Claim ..." when ad-free).</summary>
+        internal static string MessageText(long entropy, AdPlacementDef def, bool adFree = false)
         {
             int crystalPct = UnityEngine.Mathf.RoundToInt(def.CrystalChance * 100f);
-            return $"Watch a short ad for +{entropy.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} ◈ entropy ({100 - crystalPct}%)"
+            string amount = entropy.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+            return (adFree ? "Claim" : "Watch a short ad for") + $" +{amount} ◈ entropy ({100 - crystalPct}%)"
                  + $" or {def.CrystalAmount} ◆ crystals ({crystalPct}%)?";
         }
 
