@@ -137,9 +137,9 @@ namespace MobileIdleBuilder
             {
                 _nextStatus = Time.unscaledTime + 1f;
                 var now = GameClock.UtcNow;
-                _drawerButton.text = DrawerLabel(CyclotronProgress.CooldownLeft(save, now),
+                DrawerTile.SetCaption(_drawerButton, DrawerLabel(CyclotronProgress.CooldownLeft(save, now),
                                                  CyclotronProgress.BoostMultiplier(save, now),
-                                                 CyclotronProgress.BoostLeft(save, now));
+                                                 CyclotronProgress.BoostLeft(save, now)));
                 if (_step == Step.Intro) RefreshIntro(save);
             }
 

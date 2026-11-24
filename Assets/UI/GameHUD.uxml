@@ -73,26 +73,71 @@
             <ui:VisualElement class="drawer-divider" />
 
             <!-- Nav section -->
-            <ui:ScrollView class="drawer-nav-scroll"
+            <ui:ScrollView class="drawer-nav-scroll drawer-grid"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden">
                 <ui:Label text="MENU" class="drawer-section-title" />
-                <ui:Button name="btn-buildings"    text="Builder"      class="drawer-nav-btn" />
-                <ui:Button name="btn-recipes"      text="Recipes"      class="drawer-nav-btn" />
-                <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
-                <ui:Button name="btn-stats"        text="Statistics"   class="drawer-nav-btn" />
-                <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
-                <ui:Button name="btn-cyclotron"    text="Cyclotron"    class="drawer-nav-btn hidden" />
-                <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
-                <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
-                <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
-                <ui:Button name="btn-rewards"      text="▶ Free Rewards" class="drawer-nav-btn" />
-                <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
+                <ui:Button name="btn-buildings" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Build" class="drawer-tile__icon" />
+                    <ui:Label text="Builder" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-recipes" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Recipes" class="drawer-tile__icon" />
+                    <ui:Label text="Recipes" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-codex" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Codex" class="drawer-tile__icon" />
+                    <ui:Label text="Codex" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-stats" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Stats" class="drawer-tile__icon" />
+                    <ui:Label text="Stats" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-research" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Research" class="drawer-tile__icon" />
+                    <ui:Label text="Research" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-cyclotron" text="" class="drawer-nav-btn drawer-tile hidden">
+                    <MobileIdleBuilder.GlyphIcon icon="Cyclotron" class="drawer-tile__icon" />
+                    <ui:Label text="Cyclotron" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-upgrades" text="" class="drawer-nav-btn drawer-tile drawer-nav-btn--prestige">
+                    <MobileIdleBuilder.GlyphIcon icon="Upgrades" class="drawer-tile__icon" />
+                    <ui:Label text="Upgrades" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-managers" text="" class="drawer-nav-btn drawer-tile drawer-nav-btn--prestige">
+                    <MobileIdleBuilder.GlyphIcon icon="Managers" class="drawer-tile__icon" />
+                    <ui:Label text="Managers" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-megastructure" text="" class="drawer-nav-btn drawer-tile drawer-nav-btn--prestige hidden">
+                    <MobileIdleBuilder.GlyphIcon icon="Megastructure" class="drawer-tile__icon" />
+                    <ui:Label text="Mega" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-rewards" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Rewards" class="drawer-tile__icon" />
+                    <ui:Label text="Rewards" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-achievements" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Achievements" class="drawer-tile__icon" />
+                    <ui:Label text="Achieve" class="drawer-tile__caption" />
+                </ui:Button>
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
-                <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
-                <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
-                <ui:Button name="btn-tournament"   text="Tournament"   class="drawer-nav-btn" />
-                <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
+                <ui:Button name="btn-worlds" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Worlds" class="drawer-tile__icon" />
+                    <ui:Label text="Worlds" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-sites" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Domains" class="drawer-tile__icon" />
+                    <ui:Label text="Domains" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-tournament" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Tournament" class="drawer-tile__icon" />
+                    <ui:Label text="Tourney" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-shop" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Shop" class="drawer-tile__icon" />
+                    <ui:Label text="Shop" class="drawer-tile__caption" />
+                </ui:Button>
             </ui:ScrollView>
         </ui:VisualElement>
 

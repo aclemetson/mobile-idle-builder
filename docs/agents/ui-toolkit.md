@@ -73,6 +73,10 @@ Covered by `TutorialSellPolicyTests`.
 
 `name-prompt` (GameHUD.uxml, z-index 101, `confirm-prompt` card classes plus a `TextField` `name-prompt__input` and a `name-prompt__error` line) is owned by `PlayerNamePromptController` (added in `HUDController.Awake` with `GetComponent ?? AddComponent`, `Init` next to `ConfirmPrompt.Init`). It validates as you type (`PlayerNameRules` + `game_config.name_filter_patterns`) and saves through `PlayerNameService` (UGS player names). It opens by itself once per launch after the tutorial (pure `ShouldAutoPrompt`; **Later** stops that for good) and from Settings > Account (`btn-player-name`, **Cancel**). Android back shares the ConfirmPrompt layer. The notification opt-in waits while it is open. Covered by `PlayerNameTests`.
 
+## Side drawer menu (icon grid, #486)
+
+The drawer's nav ScrollView (`drawer-nav-scroll drawer-grid`) wraps into a 3-column grid of `drawer-tile` buttons. Each tile keeps its `btn-*` name (all wiring, `TutorialPulseResolver` and reminder dots are unchanged) and holds a `GlyphIcon` (`drawer-tile__icon`, 28px; the menu kinds Build to Shop, drawn as vectors in `GlyphIcon.cs`) plus a caption label (`drawer-tile__caption`). Set a tile's label with `DrawerTile.SetCaption` (the Cyclotron's live "Cyclotron (42m)" does); never `button.text`, which would draw over the tile. The reminder dot sits on the tile's top-right corner. Covered by `DrawerTilesTests`.
+
 ## Tournament panel and intro (PvE)
 
 `pve-panel` is owned by `TournamentPanelController` (status, league badge, result banner, Start, leaderboard, Claim); `TournamentIntroController` plays the once-per-entry-window dialogue and then pulses the way to `btn-tournament` with the tutorial's `panel-btn--highlight` class via `TutorialPulseResolver` (`pve-panel` maps to `btn-tournament` there). Both are added in `HUDController.Awake` with `GetComponent ?? AddComponent`. Pure text and rules: `TournamentPanelText`, `TournamentRules`, `TournamentIntroController.ShouldShow`; tests `TournamentRulesTests`.
