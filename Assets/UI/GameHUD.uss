@@ -1614,6 +1614,14 @@
 }
 
 /* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
+/* Strings balance in the tournament panel header (#500). */
+.pve-strings {
+    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-left;
+}
+
 .pve-league-badge {
     margin-left: var(--spacing-sm);
     padding: 2px var(--spacing-sm);

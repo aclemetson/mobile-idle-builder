@@ -354,6 +354,7 @@
             <ui:VisualElement name="panel-header" class="panel-header">
                 <ui:Label name="pve-title" text="Tournament" class="panel-title" />
                 <ui:Label name="pve-league-badge" text="" class="pve-league-badge hidden" />
+                <ui:Label name="pve-strings" text="" class="pve-strings hidden" />
                 <ui:Button name="btn-close-pve" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 

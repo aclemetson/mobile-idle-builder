@@ -34,6 +34,20 @@ public class ModuleTests
     }
 
     [Fact]
+    public void EmbeddedRewards_PayStrings_InEveryBand_MoreInHigherLeagues()
+    {
+        var leagues = PveGameConfig.Embedded.Pve.leagues;
+        Assert.All(leagues, l => Assert.All(l.rewards, b => Assert.True(b.strings > 0, l.id)));
+        for (int i = 1; i < leagues.Length; i++)
+            Assert.True(leagues[i].rewards[0].strings > leagues[i - 1].rewards[0].strings, leagues[i].id);
+        Assert.Equal(60, PveRules.RewardFor(leagues[0], 1, 100).strings);
+        Assert.Equal(5, PveRules.RewardFor(leagues[0], 90, 100).strings);   // finished, outside every band
+
+        var back = PveStore.Deserialize<PveReward>(PveStore.Serialize(new PveReward { week = "w", strings = 35 }));
+        Assert.Equal(35, back.strings);
+    }
+
+    [Fact]
     public void Deserialize_AcceptsAStoredStringOrAJsonObjectValue()
     {
         string json = PveStore.Serialize(new PveSettings { smallBrackets = true });

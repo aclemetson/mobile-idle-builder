@@ -48,6 +48,7 @@ namespace MobileIdleBuilder
         public string activeResearchCompleteUtc;            // ISO 8601 UTC — when the active research finishes (same pattern as speedBoostExpiryUtc). Cleared on prestige.
         public List<string> codex                           = new();
         public bool  adFree;                                // Ad-free purchase owned (#503): ad rewards without ads + 20% income. Survives prestige.
+        public long  pveStrings;                            // Strings, the tournament currency (#500). Survives prestige and Ascension.
         public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
         public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
         public double lastKnownNetWorth;                    // Snapshot written by ECSLoadBridge; used by shop entropy scaling

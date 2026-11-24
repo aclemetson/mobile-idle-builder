@@ -183,7 +183,7 @@ namespace MobileIdleBuilder
                 outcome.starsLanded = TournamentRules.ApplyReward(save, reward, pool, new System.Random());
                 outcome.applied = true;
                 SaveManager.Instance.SaveLocal();
-                GameLogger.Info($"[PvE] Reward {reward.week} applied: {reward.crystals} crystals, {outcome.starsLanded.Count} stars.");
+                GameLogger.Info($"[PvE] Reward {reward.week} applied: {reward.crystals} crystals, {outcome.starsLanded.Count} stars, {reward.strings} Strings.");
             }
             var r = await PveApi.Claim(reward.week);
             if (!string.IsNullOrEmpty(r.error) && r.error != PveErrors.NothingToClaim) outcome.serverError = r.error;

@@ -19,7 +19,7 @@ namespace MobileIdleBuilder
     {
         HUDController _hud;
         VisualElement _panel;
-        Label _state, _timer, _info, _completed, _badge, _banner, _yourRank;
+        Label _state, _timer, _info, _completed, _badge, _banner, _yourRank, _strings;
         Button _start, _refresh, _claim, _retire;
         ScrollView _list;
         IVisualElementScheduledItem _ticker;
@@ -43,6 +43,7 @@ namespace MobileIdleBuilder
             _info      = _panel.Q<Label>("pve-info-label");
             _completed = _panel.Q<Label>("pve-result-label");
             _badge     = _panel.Q<Label>("pve-league-badge");
+            _strings   = _panel.Q<Label>("pve-strings");
             _banner    = _panel.Q<Label>("pve-banner");
             _yourRank  = _panel.Q<Label>("pve-your-rank");
             _start     = _panel.Q<Button>("btn-pve-start");
@@ -153,6 +154,13 @@ namespace MobileIdleBuilder
                 _badge.text = TournamentRules.LeagueName(cfg, leagueId);
                 foreach (var l in TournamentPanelText.LeagueIds) _badge.EnableInClassList("pve-league-badge--" + l, l == leagueId);
                 HUDController.SetElementVisible(_badge, live && !string.IsNullOrEmpty(leagueId));
+            }
+            if (_strings != null)
+            {
+                // Strings balance (#500): shown once the player has earned any.
+                long strings = SaveManager.Instance?.Current?.pveStrings ?? 0;
+                _strings.text = TournamentPanelText.BalanceText(strings);
+                HUDController.SetElementVisible(_strings, live && strings > 0);
             }
             var banner = TournamentPanelText.Banner(svc.LastStatus, cfg, state);
             if (_banner != null)
@@ -370,7 +378,7 @@ namespace MobileIdleBuilder
             };
             string text = $"Last tournament: rank {last.rank} of {last.size}{move}.";
             var reward = status.profile.pendingRewards?.FirstOrDefault(r => r.week == last.week);
-            if (reward != null) text += $" Reward waiting: {reward.crystals:N0} ◆ + {reward.stars} ★";
+            if (reward != null) text += " Reward waiting: " + RewardSummary(reward);
             return text;
         }
 
@@ -411,14 +419,25 @@ namespace MobileIdleBuilder
             };
         }
 
-        /// <summary>"Claim 150 ◆ + 5 ★".</summary>
-        public static string ClaimButtonText(PveReward r)
+        /// <summary>"Claim 150 ◆ + 5 ★ + 60 Strings".</summary>
+        public static string ClaimButtonText(PveReward r) => r == null ? "" : "Claim " + RewardSummary(r);
+
+        /// <summary>"150 ◆ + 5 ★ + 60 Strings", leaving out the parts that are zero.</summary>
+        public static string RewardSummary(PveReward r)
         {
             if (r == null) return "";
-            if (r.crystals > 0 && r.stars > 0) return $"Claim {r.crystals:N0} ◆ + {r.stars} ★";
-            if (r.stars > 0) return $"Claim {r.stars} ★";
-            return $"Claim {r.crystals:N0} ◆";
+            var parts = new System.Collections.Generic.List<string>();
+            if (r.crystals > 0) parts.Add($"{r.crystals:N0} ◆");
+            if (r.stars > 0)    parts.Add($"{r.stars} ★");
+            if (r.strings > 0)  parts.Add(StringsText(r.strings));
+            return string.Join(" + ", parts);
         }
+
+        /// <summary>"60 Strings" / "1 String".</summary>
+        public static string StringsText(long n) => n == 1 ? "1 String" : $"{n:N0} Strings";
+
+        /// <summary>The balance in the panel header: "Strings: 120".</summary>
+        public static string BalanceText(long n) => $"Strings: {n:N0}";
 
         /// <summary>"You: #3 of 12" while a board is shown, else "".</summary>
         public static string YourRank(PveBoardResponse b, TournamentPanelState state)
@@ -440,6 +459,7 @@ namespace MobileIdleBuilder
             var sb = new System.Text.StringBuilder();
             sb.Append($"Rank {r.rank} of {r.size} in {TournamentRules.LeagueName(cfg, r.league)}.");
             if (r.crystals > 0) sb.Append($"\n+{r.crystals:N0} ◆");
+            if (r.strings > 0)  sb.Append($"\n+{StringsText(r.strings)}");
             if (starsLanded != null && starsLanded.Count > 0)
             {
                 var order = new System.Collections.Generic.List<string>();
