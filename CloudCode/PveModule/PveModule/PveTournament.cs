@@ -83,6 +83,7 @@ namespace MobileIdleBuilder.PveModule
                 r.bracketSettled = meta?.settled ?? false;
                 if (member != null)
                 {
+                    r.retired    = member.retired;
                     var start = PveRules.ParseIso(member.startUtc);
                     r.startUtc   = member.startUtc;
                     r.runEndsUtc = PveRules.Iso(start.AddSeconds(PveRules.RunSeconds(cfg)));
@@ -151,6 +152,7 @@ namespace MobileIdleBuilder.PveModule
             var member = new PveMember
             {
                 playerId = ctx.PlayerId, name = name, startUtc = PveRules.Iso(now), dev = dev,
+                nameColor = profile.nameColor, title = profile.title,   // the player's leaderboard look (#500)
                 snaps = new List<PveSnap> { new PveSnap { t = 0, nw = 0, rate = 0, cap = 0 } },
             };
             await store.SetCustom(bracketId, PveRules.MemberKey(ctx.PlayerId), member, null);
@@ -193,6 +195,7 @@ namespace MobileIdleBuilder.PveModule
 
             int run = PveRules.RunSeconds(cfg);
             var check = SnapCheck.Accepted;
+            bool retired = false;
             int t = 0;
             string key = PveRules.MemberKey(ctx.PlayerId);
             var written = await PveStore.WithRetry(
@@ -200,6 +203,7 @@ namespace MobileIdleBuilder.PveModule
                 m =>
                 {
                     if (m == null) { check = SnapCheck.Stale; return null; }
+                    if (m.retired) { retired = true; return null; }
                     int serverT = (int)Math.Floor((now - PveRules.ParseIso(m.startUtc)).TotalSeconds);
                     check = PveRules.SnapshotTime(serverT, atT, out int rawT);
                     if (check != SnapCheck.Accepted) { t = Math.Max(0, Math.Min(serverT, run)); return null; }
@@ -209,10 +213,62 @@ namespace MobileIdleBuilder.PveModule
                 },
                 (m, lk) => store.SetCustom(profile.bracketId, key, m, lk));
 
+            if (retired) return Ser(new PveSnapshotResponse { error = PveErrors.Retired });
             if (check == SnapCheck.RunOver) return Ser(new PveSnapshotResponse { error = PveErrors.RunOver, t = t });
             if (check != SnapCheck.Accepted)
                 return Ser(new PveSnapshotResponse { error = $"{PveErrors.Rejected}:{check}", t = t });
             return Ser(new PveSnapshotResponse { accepted = written != null, t = t });
+        }
+
+        // ── Retire (#505) ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Leaves this week's run early: records a last snapshot at the current net worth with idle rate 0, so
+        /// the score stays at that value for the rest of the 24h (ValueAt projects nothing from it), and marks
+        /// the member retired so no later snapshot counts. Used by the Retire button and by prestiging mid-run.
+        /// </summary>
+        [CloudCodeFunction("Retire")]
+        public async Task<string> Retire(IExecutionContext ctx, double netWorth, string debugNow = null)
+        {
+            var cfg = Config();
+            if (cfg?.leagues == null) return Ser(new PveSnapshotResponse { error = PveErrors.Config });
+            var store = new PveStore(_api, ctx);
+            var settings = await Settings(store);
+            var now = Now(settings, debugNow);
+
+            var profile = (await store.GetProfile(ctx.PlayerId)).Value;
+            if (profile == null || string.IsNullOrEmpty(profile.bracketId) || string.IsNullOrEmpty(profile.lastWeek))
+                return Ser(new PveSnapshotResponse { error = PveErrors.NotJoined });
+            if (now >= PveRules.SettleAfter(profile.lastWeek))
+                return Ser(new PveSnapshotResponse { error = PveErrors.RunOver });
+
+            int run = PveRules.RunSeconds(cfg);
+            var check = SnapCheck.Accepted;
+            bool already = false;
+            int t = 0;
+            string key = PveRules.MemberKey(ctx.PlayerId);
+            await PveStore.WithRetry(
+                () => store.GetCustom<PveMember>(profile.bracketId, key),
+                m =>
+                {
+                    if (m == null) { check = SnapCheck.Stale; return null; }
+                    if (m.retired) { already = true; return null; }
+                    int serverT = (int)Math.Floor((now - PveRules.ParseIso(m.startUtc)).TotalSeconds);
+                    if (serverT >= run) { check = SnapCheck.RunOver; return null; }   // the run is over anyway
+                    t = Math.Max(0, serverT);
+                    // The final value: never below what is already recorded (a retire can't lower a score).
+                    double last = m.snaps.Count > 0 ? m.snaps[m.snaps.Count - 1].nw : 0;
+                    check = PveRules.AddSnap(m.snaps, serverT, Math.Max(netWorth, last), 0, 0, run, cfg.snapshot_bucket_minutes * 60);
+                    if (check != SnapCheck.Accepted) return null;
+                    m.retired = true;
+                    return m;
+                },
+                (m, lk) => store.SetCustom(profile.bracketId, key, m, lk));
+
+            if (already) return Ser(new PveSnapshotResponse { error = PveErrors.Retired });
+            if (check == SnapCheck.RunOver) return Ser(new PveSnapshotResponse { error = PveErrors.RunOver });
+            if (check != SnapCheck.Accepted) return Ser(new PveSnapshotResponse { error = $"{PveErrors.Rejected}:{check}", t = t });
+            return Ser(new PveSnapshotResponse { accepted = true, t = t });
         }
 
         // ── Board ─────────────────────────────────────────────────────────
@@ -248,9 +304,61 @@ namespace MobileIdleBuilder.PveModule
                     value = r.value,
                     projected = r.projected,
                     you = r.member.playerId == ctx.PlayerId,
+                    retired = r.member.retired,
                     elapsed = PveRules.Elapsed(PveRules.ParseIso(r.member.startUtc), now, run),
+                    nameColor = PveCosmetics.IsValid(r.member.nameColor, CosmeticKind.NameColor) ? r.member.nameColor : null,
+                    title = PveCosmetics.IsValid(r.member.title, CosmeticKind.Title) ? r.member.title : null,
                 });
             return Ser(resp);
+        }
+
+        // ── Look (#500) ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Sets the player's leaderboard look (name colour + title, PveCosmetics ids; "" = none). Stored on the
+        /// profile so every later tournament carries it, and on this week's member record while it is still open.
+        /// Unknown ids are refused, so no free text ever reaches the board. Ownership is the client's (Strings are
+        /// a client-side balance); the worst a modified client gets is a colour.
+        /// </summary>
+        [CloudCodeFunction("SetLook")]
+        public async Task<string> SetLook(IExecutionContext ctx, string nameColor = "", string title = "", string debugNow = null)
+        {
+            nameColor ??= ""; title ??= "";
+            if (!PveCosmetics.IsValid(nameColor, CosmeticKind.NameColor) || !PveCosmetics.IsValid(title, CosmeticKind.Title))
+                return Ser(new PveStatusResponse { error = PveErrors.BadLook });
+            var cfg = Config();
+            if (cfg?.leagues == null) return Ser(new PveStatusResponse { error = PveErrors.Config });
+            var store = new PveStore(_api, ctx);
+            var settings = await Settings(store);
+            var now = Now(settings, debugNow);
+
+            var profile = await PveStore.WithRetry(
+                () => store.GetProfile(ctx.PlayerId),
+                p =>
+                {
+                    p ??= new PveProfile();
+                    p.nameColor = nameColor;
+                    p.title = title;
+                    return p;
+                },
+                (p, lk) => store.SetProfile(ctx.PlayerId, p, lk));
+
+            if (!string.IsNullOrEmpty(profile?.bracketId) && !string.IsNullOrEmpty(profile.lastWeek)
+                && now < PveRules.SettleAfter(profile.lastWeek))
+            {
+                string key = PveRules.MemberKey(ctx.PlayerId);
+                await PveStore.WithRetry(
+                    () => store.GetCustom<PveMember>(profile.bracketId, key),
+                    m =>
+                    {
+                        if (m == null) return null;
+                        m.nameColor = nameColor;
+                        m.title = title;
+                        return m;
+                    },
+                    (m, lk) => store.SetCustom(profile.bracketId, key, m, lk));
+            }
+            return Ser(await BuildStatus(store, cfg, ctx.PlayerId, profile, now));
         }
 
         // ── Claim ─────────────────────────────────────────────────────────
@@ -355,11 +463,11 @@ namespace MobileIdleBuilder.PveModule
                         });
                         if (p.history.Count > 20) p.history.RemoveRange(0, p.history.Count - 20);
                         p.league = next;
-                        if (band != null && (band.crystals > 0 || band.stars > 0))
+                        if (band != null && (band.crystals > 0 || band.stars > 0 || band.strings > 0))
                             p.pendingRewards.Add(new PveReward
                             {
                                 week = meta.week, league = meta.league, rank = r.rank, size = size,
-                                crystals = band.crystals, stars = band.stars,
+                                crystals = band.crystals, stars = band.stars, strings = band.strings,
                             });
                         return p;
                     },

@@ -27,9 +27,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void QuantumYield_HasTenLevels()
+        public void QuantumYield_HasTwentyLevels()
         {
-            Assert.AreEqual(10, PersistentUpgradeService.FindDef("quantum_yield").maxLevel);
+            // 10 since the Item Timeline (2026-11-23), 20 since #501 (deep-game tail; see UpgradeLevelDepthTests).
+            Assert.AreEqual(20, PersistentUpgradeService.FindDef("quantum_yield").maxLevel);
         }
 
         [TestCase("fission_yield",   UpgradeEffectType.WorldOutput)]

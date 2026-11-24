@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Broadcasts the grid's shared power over a wide radius without generating
     any eV of its own. Place relays to carry power from your generators to distant
     buildings.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 610dab15a0bd48e41a842a765f57963a, type: 3}
   prefab: {fileID: 0}
   buildingId: 13
   tier: 1

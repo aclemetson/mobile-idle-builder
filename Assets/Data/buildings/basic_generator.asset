@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Basic Generator
   description: Generates electron volts (eV) to power nearby buildings. Link multiple
     generators to share power across the grid.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: dfbaba0db0683bd45accb8f2f1f9e8aa, type: 3}
   prefab: {fileID: 0}
   buildingId: 3
   tier: 1

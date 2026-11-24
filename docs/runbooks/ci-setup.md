@@ -22,7 +22,7 @@
 ```mermaid
 flowchart LR
   PR["PR into integration/**, release/**,<br/>develop or main"] --> T["pr-tests.yml<br/>EditMode + PlayMode tests<br/>(self-hosted Windows runner)"]
-  T -->|merge into release/**| A["release-internal.yml<br/>signed .aab -> Google Play internal"]
+  T -->|merge into release/**| A["release-internal.yml<br/>signed .aab -> Google Play internal<br/>+ PvE Cloud Code module -> UGS development"]
   A -->|release/** merged into develop| I["release-ios.yml<br/>.ipa -> TestFlight"]
   I -.->|manual| P["prod-release.yml<br/>.aab -> Play production (draft)"]
 ```
@@ -349,6 +349,8 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
 | `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
+| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | UGS service account | internal: Remote Config update prompt + **Cloud Code deploy** (needs the "Cloud Code Editor" project role) |
+| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy |
 
 ## Local Testing
 

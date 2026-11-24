@@ -101,6 +101,7 @@ namespace MobileIdleBuilder
             GameLogger.Debug($"[Idle] Boost-weighted seconds={weighted:F0} of capped={cappedSeconds:F0}");
 
             var result = ComputePayout(snapshots, (float)weighted, rate);
+            result.EntropyEarned = AdFree.ApplyIncome(save, result.EntropyEarned);   // +20% when ad-free (#503)
             result.ElapsedSeconds = elapsedSeconds;
             result.CappedSeconds  = cappedSeconds;
             result.MaxSeconds     = effectiveCap;
@@ -189,6 +190,7 @@ namespace MobileIdleBuilder
                 : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
             var   result = ComputePayout(snapshots, seconds, 1f);
+            result.EntropyEarned = AdFree.ApplyIncome(save, result.EntropyEarned);   // +20% when ad-free (#503)
             result.ElapsedSeconds = seconds;
             result.CappedSeconds  = seconds;
             return result.HasAnyOutput ? result : null;
@@ -275,17 +277,6 @@ namespace MobileIdleBuilder
             foreach (var stage in finished)
                 GameLogger.Info($"[WorldTasks] Stage '{stage.id}' completed by {source}.");
             return counted;
-        }
-
-        /// <summary>
-        /// What the Demon receives in <paramref name="seconds"/> of live production at full rate (no idle-rate
-        /// cut), from the latest snapshots. Entropy Surge pays N minutes of live automation income, so the items
-        /// behind that income count toward the tasks too.
-        /// </summary>
-        public static Dictionary<int, long> LiveDemonDeliveries(SaveData save, float seconds)
-        {
-            var result = ComputePayout(Snapshots(save), seconds, 1f);
-            return result.DemonDelivered;
         }
 
         static List<IdleCollectionSnapshot> Snapshots(SaveData save)

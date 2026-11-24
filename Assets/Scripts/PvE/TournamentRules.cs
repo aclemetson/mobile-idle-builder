@@ -44,15 +44,19 @@ namespace MobileIdleBuilder
         public static bool PrestigePending(TournamentSaveData t, int prestigeCount) =>
             t != null && t.prestigeCountAtJoin >= 0 && prestigeCount <= t.prestigeCountAtJoin;
 
-        /// <summary>Inside the 24h run (from the join until the run ends).</summary>
+        /// <summary>Inside the 24h run (from the join until the run ends, or until the player retires).</summary>
         public static bool InRun(TournamentSaveData t, DateTime nowUtc)
         {
+            if (t != null && t.retired) return false;
             var end = RunEnds(t);
             return end.HasValue && nowUtc < end.Value;
         }
 
-        /// <summary>Manual prestige (and Ascension) is locked during the run, so net worth can't be reset mid-score.</summary>
-        public static bool PrestigeLocked(TournamentSaveData t, DateTime nowUtc) => InRun(t, nowUtc);
+        /// <summary>
+        /// Prestiging (or Ascending) now would end the tournament run early (#505): the player is asked first and the
+        /// run is retired on the server at the current net worth before the prestige goes through.
+        /// </summary>
+        public static bool PrestigeLeavesRun(TournamentSaveData t, DateTime nowUtc) => InRun(t, nowUtc);
 
         public static TimeSpan Remaining(TournamentSaveData t, DateTime nowUtc)
         {
@@ -70,7 +74,7 @@ namespace MobileIdleBuilder
         public static bool ShouldSnapshot(TournamentSaveData t, DateTime nowUtc, int prestigeCount,
                                           float secondsSinceLast, bool force)
         {
-            if (t == null || PrestigePending(t, prestigeCount)) return false;
+            if (t == null || t.retired || PrestigePending(t, prestigeCount)) return false;
             var end = RunEnds(t);
             if (!end.HasValue) return false;
             if (nowUtc < end.Value) return force || secondsSinceLast >= SnapshotIntervalSeconds;
@@ -138,7 +142,10 @@ namespace MobileIdleBuilder
             var landed = new System.Collections.Generic.List<string>();
             if (save == null || reward == null || RewardApplied(save, reward.week)) return landed;
             if (reward.crystals > 0) save.paidCurrency += reward.crystals;
-            if (reward.stars > 0) landed = ItemStars.Grant(save, reward.stars, starPool, rng);
+            // Tournament track (#500): Harmonics scales the Strings, Lucky Draw adds stars.
+            if (reward.strings > 0)  save.pveStrings   += TournamentTrack.StringsAfterHarmonics(save, reward.strings);
+            int stars = reward.stars + TournamentTrack.ExtraStars(save);
+            if (stars > 0) landed = ItemStars.Grant(save, stars, starPool, rng);
             save.pveClaimedWeeks ??= new System.Collections.Generic.List<string>();
             save.pveClaimedWeeks.Add(reward.week);
             if (save.pveClaimedWeeks.Count > ClaimedWeeksKept)
@@ -181,8 +188,18 @@ namespace MobileIdleBuilder
             return $"{t.Minutes}m {t.Seconds:D2}s";
         }
 
-        /// <summary>The prestige button's text while locked.</summary>
-        public static string PrestigeLockText(TimeSpan remaining) => $"🔒 Tournament {FormatSpan(remaining)}";
+        /// <summary>The prestige button's text during a run: still available, with the run's time left as a reminder.</summary>
+        public static string PrestigeInRunText(TimeSpan remaining) => $"⬆ Prestige · 🏆 {FormatSpan(remaining)}";
+
+        /// <summary>The card shown before a prestige or Ascension ends the run.</summary>
+        public static string PrestigeLeaveMessage(double netWorth, TimeSpan remaining) =>
+            $"You are in a tournament run ({FormatSpan(remaining)} left). Prestiging now ends it early: your score " +
+            $"stays at your current net worth, {NumberFormat.Entropy(netWorth)}, for the rest of the 24 hours.";
+
+        /// <summary>The card shown before retiring from the Tournament panel.</summary>
+        public static string RetireMessage(double netWorth, TimeSpan remaining) =>
+            $"Retire from this tournament with {FormatSpan(remaining)} left? Your score stays at your current net worth, " +
+            $"{NumberFormat.Entropy(netWorth)}, and prestige is yours to use again. Results still come at the end of the week.";
 
         /// <summary>The confirm card's message before joining.</summary>
         public static string JoinConfirmMessage(long prestigeGain, string leagueName) =>
@@ -229,6 +246,8 @@ namespace MobileIdleBuilder
                 PveErrors.NameBlocked    => "Your player name isn't allowed. Change it in Settings > Account.",
                 PveErrors.NotJoined      => "You haven't entered a tournament yet.",
                 PveErrors.Config         => "Tournaments are unavailable right now.",
+                PveErrors.Retired        => "You already left this tournament.",
+                PveErrors.RunOver        => "Your tournament run is already over.",
                 _                        => "Something went wrong. Try again.",
             };
         }

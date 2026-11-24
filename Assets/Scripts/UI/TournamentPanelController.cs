@@ -19,9 +19,14 @@ namespace MobileIdleBuilder
     {
         HUDController _hud;
         VisualElement _panel;
-        Label _state, _timer, _info, _completed, _badge, _banner, _yourRank;
-        Button _start, _refresh, _claim;
-        ScrollView _list;
+        Label _state, _timer, _info, _completed, _badge, _banner, _yourRank, _strings;
+        Button _start, _refresh, _claim, _retire;
+        ScrollView _list, _shopList;
+        Label _shopBalance;
+        VisualElement _tabBar;
+        readonly System.Collections.Generic.Dictionary<string, VisualElement> _pages = new();
+        string _tab = TabTournament;
+        const string TabPrefix = "pve", TabTournament = "tournament", TabShop = "shop";
         IVisualElementScheduledItem _ticker;
 
         bool _busy;
@@ -43,15 +48,33 @@ namespace MobileIdleBuilder
             _info      = _panel.Q<Label>("pve-info-label");
             _completed = _panel.Q<Label>("pve-result-label");
             _badge     = _panel.Q<Label>("pve-league-badge");
+            _strings   = _panel.Q<Label>("pve-strings");
             _banner    = _panel.Q<Label>("pve-banner");
             _yourRank  = _panel.Q<Label>("pve-your-rank");
             _start     = _panel.Q<Button>("btn-pve-start");
             _claim     = _panel.Q<Button>("btn-pve-claim");
+            _retire    = _panel.Q<Button>("btn-pve-retire");
             _refresh   = _panel.Q<Button>("btn-pve-refresh");
             _list      = _panel.Q<ScrollView>("pve-leaderboard-list");
             if (_start != null)   _start.clicked   += OnStartPressed;
             if (_claim != null)   _claim.clicked   += OnClaimPressed;
+            if (_retire != null)  _retire.clicked  += OnRetirePressed;
             if (_refresh != null) _refresh.clicked += () => _ = RefreshAllAsync();
+
+            // Tournament | Shop tabs (#500).
+            _tabBar      = _panel.Q("pve-tabs");
+            _shopList    = _panel.Q<ScrollView>("pve-shop-list");
+            _shopBalance = _panel.Q<Label>("pve-shop-balance");
+            foreach (var t in new[] { TabTournament, TabShop })
+            {
+                var page = _panel.Q(MenuTabs.PageName(TabPrefix, t));
+                if (page != null) _pages[t] = page;
+                string captured = t;
+                var btn = _panel.Q<Button>(MenuTabs.TabButtonName(TabPrefix, t));
+                if (btn != null) btn.clicked += () => SelectTab(captured);
+            }
+            TournamentTrack.Changed += OnTrackChanged;
+            TournamentCosmetics.Changed += OnTrackChanged;
             foreach (var l in new[] { _info, _completed }) if (l != null) l.style.whiteSpace = WhiteSpace.Normal;
         }
 
@@ -91,6 +114,8 @@ namespace MobileIdleBuilder
         void OnDestroy()
         {
             if (_subscribed && TournamentService.Instance != null) TournamentService.Instance.OnChanged -= OnServiceChanged;
+            TournamentTrack.Changed -= OnTrackChanged;
+            TournamentCosmetics.Changed -= OnTrackChanged;
         }
 
         void OnServiceChanged() { if (IsOpen) Rebuild(); }
@@ -137,6 +162,12 @@ namespace MobileIdleBuilder
                 _start.text = _busy && !_claiming ? "Starting..." : "Start tournament";
             }
 
+            if (_retire != null)
+            {
+                HUDController.SetElementVisible(_retire, d.showRetire);
+                _retire.SetEnabled(!_busy);
+            }
+
             // League badge (header), result banner, claim button, your rank.
             bool live = state != TournamentPanelState.Disabled && state != TournamentPanelState.Locked;
             string leagueId = svc.LastStatus?.profile?.league ?? svc.Entry?.league;
@@ -145,6 +176,13 @@ namespace MobileIdleBuilder
                 _badge.text = TournamentRules.LeagueName(cfg, leagueId);
                 foreach (var l in TournamentPanelText.LeagueIds) _badge.EnableInClassList("pve-league-badge--" + l, l == leagueId);
                 HUDController.SetElementVisible(_badge, live && !string.IsNullOrEmpty(leagueId));
+            }
+            if (_strings != null)
+            {
+                // Strings balance (#500): shown once the player has earned any.
+                long strings = SaveManager.Instance?.Current?.pveStrings ?? 0;
+                _strings.text = TournamentPanelText.BalanceText(strings);
+                HUDController.SetElementVisible(_strings, live && strings > 0);
             }
             var banner = TournamentPanelText.Banner(svc.LastStatus, cfg, state);
             if (_banner != null)
@@ -190,12 +228,175 @@ namespace MobileIdleBuilder
 
                 var rank = new Label($"#{r.rank}"); rank.AddToClassList("tournament-row__rank");
                 var name = new Label(r.you ? $"{r.name} (you)" : r.name); name.AddToClassList("tournament-row__name");
+                // The player's look (#500): name colour, and the title under the name.
+                var nameColor = TournamentCosmetics.NameColor(r.nameColor);
+                if (nameColor.HasValue) name.style.color = nameColor.Value;
+                string titleText = PveCosmetics.TitleText(r.title);
+                if (!string.IsNullOrEmpty(titleText)) name.text += "\n" + titleText;
                 var value = new Label(TournamentPanelText.ValueText(r)); value.AddToClassList("tournament-row__value");
+                if (r.retired) row.AddToClassList("tournament-row--retired");
                 var played = new Label(TournamentPanelText.PlayedText(r.elapsed)); played.AddToClassList("tournament-row__played");
                 row.Add(rank); row.Add(name); row.Add(value); row.Add(played);
                 _list.Add(row);
             }
             _list.Add(new Label(TournamentPanelText.BoardFootnote(_board)) { style = { whiteSpace = WhiteSpace.Normal, fontSize = 11, opacity = 0.7f } });
+        }
+
+        // ── Retire (#505) ─────────────────────────────────────────────────
+
+        void OnRetirePressed()
+        {
+            var svc = TournamentService.Instance;
+            if (svc == null || _busy || !svc.InRun) return;
+            var (nw, _, _) = TournamentService.SnapshotValues();
+            ConfirmPrompt.Show("Retire early?", TournamentRules.RetireMessage(nw, svc.RunRemaining), "Retire",
+                onConfirm: async () =>
+                {
+                    _busy = true;
+                    Rebuild(rowsToo: false);
+                    string error;
+                    try { error = await svc.RetireAsync(); }
+                    finally { _busy = false; }
+                    if (this == null) return;
+                    _message = error == null ? null : TournamentRules.ErrorText(error);
+                    if (error == null) _hud?.ShowNotification("🏆", "You retired from the tournament. Your score is locked in.");
+                    _ = RefreshAllAsync();
+                });
+        }
+
+        // ── Shop (#500) ───────────────────────────────────────────────────
+
+        void SelectTab(string tab)
+        {
+            _tab = tab;
+            MenuTabs.ShowTab(TabPrefix, _tabBar, _pages, tab);
+            if (tab == TabShop) BuildShop();
+        }
+
+        void OnTrackChanged() { if (_tab == TabShop) BuildShop(); }
+
+        /// <summary>The Strings shop: the balance, then one row per tournament-track upgrade.</summary>
+        void BuildShop()
+        {
+            if (_shopList == null) return;
+            var save = SaveManager.Instance?.Current;
+            long strings = save?.pveStrings ?? 0;
+            if (_shopBalance != null)
+                _shopBalance.text = TournamentPanelText.BalanceText(strings);
+            _shopList.Clear();
+            var title = new Label("Tournament track (permanent)");
+            title.AddToClassList("drawer-section-title");
+            _shopList.Add(title);
+            foreach (var def in TournamentTrack.All)
+                _shopList.Add(TrackRow(save, def));
+
+            // Cosmetics (#500 part 3): colours and titles show on the leaderboard; belt themes on your own grid.
+            AddCosmeticSection(save, CosmeticKind.NameColor, "Leaderboard name colour");
+            AddCosmeticSection(save, CosmeticKind.Title,     "Leaderboard title");
+            AddCosmeticSection(save, CosmeticKind.BeltTheme, "Belt theme");
+        }
+
+        void AddCosmeticSection(SaveData save, CosmeticKind kind, string heading)
+        {
+            var title = new Label(heading);
+            title.AddToClassList("drawer-section-title");
+            _shopList.Add(title);
+            foreach (var def in PveCosmetics.All)
+                if (def.kind == kind) _shopList.Add(CosmeticRow(save, def));
+        }
+
+        VisualElement CosmeticRow(SaveData save, CosmeticDef def)
+        {
+            bool owned = TournamentCosmetics.Owns(save, def.id);
+            bool on    = TournamentCosmetics.IsEquipped(save, def);
+
+            var row = new VisualElement();
+            row.AddToClassList("pve-cosmetic-row");
+            if (on) row.AddToClassList("pve-cosmetic-row--on");
+
+            var swatch = new VisualElement();
+            swatch.AddToClassList("pve-cosmetic-row__swatch");
+            string hex = def.kind == CosmeticKind.Title ? null : def.value;
+            if (hex != null && ColorUtility.TryParseHtmlString(hex, out var c)) swatch.style.backgroundColor = c;
+            if (def.kind == CosmeticKind.BeltTheme && ColorUtility.TryParseHtmlString(def.value2, out var glow))
+                swatch.style.borderBottomColor = swatch.style.borderTopColor =
+                    swatch.style.borderLeftColor = swatch.style.borderRightColor = glow;
+            if (def.kind == CosmeticKind.Title) HUDController.SetElementVisible(swatch, false);
+            row.Add(swatch);
+
+            var name = new Label(def.kind == CosmeticKind.Title ? $"\"{def.label}\"" : def.label);
+            name.AddToClassList("pve-cosmetic-row__name");
+            if (def.kind == CosmeticKind.NameColor && hex != null && ColorUtility.TryParseHtmlString(hex, out var nc))
+                name.style.color = nc;
+            row.Add(name);
+
+            var btn = new Button { text = TournamentPanelText.CosmeticButtonText(owned, on, def.cost) };
+            btn.AddToClassList("craft-btn");
+            btn.AddToClassList("pve-cosmetic-row__btn");
+            btn.SetEnabled(owned || TournamentCosmetics.CanBuy(save, def));
+            string id = def.id;
+            ListTapRouter.Register(_shopList, btn, () =>
+            {
+                var s = SaveManager.Instance?.Current;
+                bool done = TournamentCosmetics.Owns(s, id) ? TournamentCosmetics.ToggleEquip(s, id)
+                                                           : TournamentCosmetics.TryBuy(s, id);
+                if (!done) return;
+                SaveManager.Instance.SaveLocal();
+                _ = TournamentService.Instance?.SyncLookIfChanged();   // colours and titles reach the leaderboard
+                Rebuild(false);
+            });
+            row.Add(btn);
+            return row;
+        }
+
+        VisualElement TrackRow(SaveData save, TrackDef def)
+        {
+            int lvl  = TournamentTrack.Level(save, def.id);
+            int cost = TournamentTrack.NextCost(save, def.id);
+            bool maxed = cost < 0;
+
+            var row = new VisualElement();
+            row.AddToClassList("upgrade-row");
+            if (maxed) row.AddToClassList("upgrade-row--maxed");
+
+            var header = new VisualElement();
+            header.AddToClassList("upgrade-row-header");
+            var name = new Label(def.name);
+            name.AddToClassList("upgrade-row-name");
+            var level = new Label(TournamentPanelText.TrackLevelText(lvl, def.MaxLevel));
+            level.AddToClassList("upgrade-row-level");
+            header.Add(name);
+            header.Add(level);
+            row.Add(header);
+
+            var desc = new Label(def.description);
+            desc.AddToClassList("upgrade-row-desc");
+            row.Add(desc);
+
+            var footer = new VisualElement();
+            footer.AddToClassList("upgrade-row-footer");
+            var costLabel = new Label(maxed ? "—" : TournamentPanelText.StringsText(cost));
+            costLabel.AddToClassList("upgrade-row-cost");
+            bool afford = TournamentTrack.CanBuy(save, def.id);
+            if (!maxed && !afford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
+            footer.Add(costLabel);
+
+            var buy = new Button { text = maxed ? "Maxed" : "Buy" };
+            buy.AddToClassList("craft-btn");
+            buy.SetEnabled(afford);
+            string id = def.id;
+            // Routed from the scroll: on touch the ScrollView swallows a Button's own click (ListTapRouter).
+            ListTapRouter.Register(_shopList, buy, () =>
+            {
+                var s = SaveManager.Instance?.Current;
+                if (!TournamentTrack.TryBuy(s, id)) return;
+                SaveManager.Instance.SaveLocal();
+                _hud?.ShowNotification("★", $"{def.name} is now level {TournamentTrack.Level(s, id)}");
+                Rebuild(false);   // header balance
+            });
+            footer.Add(buy);
+            row.Add(footer);
+            return row;
         }
 
         // ── Claim ─────────────────────────────────────────────────────────
@@ -268,7 +469,7 @@ namespace MobileIdleBuilder
         public struct Lines
         {
             public string headline, timer, info, result;
-            public bool showStart;
+            public bool showStart, showRetire;
         }
 
         public static Lines Describe(TournamentPanelState state, PveStatusResponse status, TournamentSaveData entry,
@@ -308,9 +509,10 @@ namespace MobileIdleBuilder
                     d.headline = prestigePending ? "Starting your run..." : $"{league} league: run in progress";
                     d.timer = $"{TournamentRules.FormatSpan(TournamentRules.Remaining(entry, now))} left";
                     d.info = "Values are compared at your own elapsed time. ~ marks an estimate for players behind you.";
+                    d.showRetire = !prestigePending;
                     break;
                 case TournamentPanelState.Finished:
-                    d.headline = "Your run is over";
+                    d.headline = entry != null && entry.retired ? "You retired from this tournament" : "Your run is over";
                     var at = status?.week != null ? PveRules.SettleAfter(status.week) : now;
                     d.timer = at > now ? $"Final results in {TournamentRules.FormatSpan(at - now)}." : "Final results are being tallied.";
                     break;
@@ -338,7 +540,7 @@ namespace MobileIdleBuilder
             };
             string text = $"Last tournament: rank {last.rank} of {last.size}{move}.";
             var reward = status.profile.pendingRewards?.FirstOrDefault(r => r.week == last.week);
-            if (reward != null) text += $" Reward waiting: {reward.crystals:N0} ◆ + {reward.stars} ★";
+            if (reward != null) text += " Reward waiting: " + RewardSummary(reward);
             return text;
         }
 
@@ -351,7 +553,8 @@ namespace MobileIdleBuilder
         }
 
         public static string ValueText(PveBoardRow r) =>
-            (r.projected ? "~" : "") + NumberFormat.Entropy(r.value);
+            r.retired ? NumberFormat.Entropy(r.value) + " (retired)"
+                      : (r.projected ? "~" : "") + NumberFormat.Entropy(r.value);
 
         public static string PlayedText(int elapsedSeconds) => $"{elapsedSeconds / 3600f:0.0}h";
 
@@ -378,14 +581,33 @@ namespace MobileIdleBuilder
             };
         }
 
-        /// <summary>"Claim 150 ◆ + 5 ★".</summary>
-        public static string ClaimButtonText(PveReward r)
+        /// <summary>"Claim 150 ◆ + 5 ★ + 60 Strings".</summary>
+        public static string ClaimButtonText(PveReward r) => r == null ? "" : "Claim " + RewardSummary(r);
+
+        /// <summary>"150 ◆ + 5 ★ + 60 Strings", leaving out the parts that are zero.</summary>
+        public static string RewardSummary(PveReward r)
         {
             if (r == null) return "";
-            if (r.crystals > 0 && r.stars > 0) return $"Claim {r.crystals:N0} ◆ + {r.stars} ★";
-            if (r.stars > 0) return $"Claim {r.stars} ★";
-            return $"Claim {r.crystals:N0} ◆";
+            var parts = new System.Collections.Generic.List<string>();
+            if (r.crystals > 0) parts.Add($"{r.crystals:N0} ◆");
+            if (r.stars > 0)    parts.Add($"{r.stars} ★");
+            if (r.strings > 0)  parts.Add(StringsText(r.strings));
+            return string.Join(" + ", parts);
         }
+
+        /// <summary>"60 Strings" / "1 String".</summary>
+        public static string StringsText(long n) => n == 1 ? "1 String" : $"{n:N0} Strings";
+
+        /// <summary>A cosmetic's button: its price, "Equip", or "Equipped" (tap again to take it off).</summary>
+        public static string CosmeticButtonText(bool owned, bool equipped, int cost) =>
+            !owned ? StringsText(cost) : equipped ? "Equipped" : "Equip";
+
+        /// <summary>"Lv 2 / 5", or "Lv 5 / 5  MAX".</summary>
+        public static string TrackLevelText(int level, int max) =>
+            level >= max ? $"Lv {max} / {max}  MAX" : $"Lv {level} / {max}";
+
+        /// <summary>The balance in the panel header: "Strings: 120".</summary>
+        public static string BalanceText(long n) => $"Strings: {n:N0}";
 
         /// <summary>"You: #3 of 12" while a board is shown, else "".</summary>
         public static string YourRank(PveBoardResponse b, TournamentPanelState state)
@@ -407,6 +629,7 @@ namespace MobileIdleBuilder
             var sb = new System.Text.StringBuilder();
             sb.Append($"Rank {r.rank} of {r.size} in {TournamentRules.LeagueName(cfg, r.league)}.");
             if (r.crystals > 0) sb.Append($"\n+{r.crystals:N0} ◆");
+            if (r.strings > 0)  sb.Append($"\n+{StringsText(r.strings)}");
             if (starsLanded != null && starsLanded.Count > 0)
             {
                 var order = new System.Collections.Generic.List<string>();

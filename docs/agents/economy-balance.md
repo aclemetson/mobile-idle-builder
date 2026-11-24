@@ -11,6 +11,7 @@
 | Currency | Earned | Spent | Storage |
 |---|---|---|---|
 | **Entropy (e)** — base | Entropy sink consumes items; starting 250/run (`game_config.starting_entropy`) | research, building placement | `PlayerProgressData.BaseCurrency` |
+| **Strings** (tournament currency, #500) | PvE tournament rewards: every band of every league (`game_config.pve.leagues[].rewards[].strings`; Bronze 5 for finishing up to Champion 300 for 1st) | **tournament track** (`TournamentTrack`, Shop tab of the tournament panel, levels in `SaveData.pveTrack`): Star Resonance +2% value per star per level (5 lv, 20 → 320; `ItemStars.BonusPerStar` = 0.2 + it), Lucky Draw +1 star per reward (3 lv, 50/150/400), Surge Luck +5% surge crystal chance (3 lv, 30/90/270; `AdRewardCalculator.SurgeCrystalChance`), Harmonics +10% Strings per reward (3 lv, 40/120/360); **cosmetics** (`PveCosmetics`, shared with the module): 6 leaderboard name colours (25 each), 6 titles (40 each), 3 belt themes (100 each) | `SaveData.pveStrings` (survives prestige and Ascension) |
 | **Prestige currency (✦)** | on prestige: `floor(max(0, log10(netWorth / 5000) × 50))` (`PrestigeSystem.cs:46`; base/scale from `game_config`), modified by Entropy Echo (+5%/lvl) and Stellar Engine megastructure (×2); also achievements, login calendar, and crystal conversion | 12 prestige-shop upgrades (`PersistentUpgradeService.cs:48`, ≈5→5,400✦) + 8 managers (hire + star tiers, 10→4,000✦) | `PrestigeData.PrestigeCurrency` |
 | **Crystals (◆)** — premium | achievements (2–200◆), Daily achievements/login calendar, Crystal Drop ad (25◆/day), IAP packs | premium shop: speed boosts, entropy, prestige currency, time warp, research skip | `SaveData.paidCurrency` |
 
@@ -29,15 +30,18 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 
 | Placement | Reward | Daily cap |
 |---|---|---|
-| Entropy Boost | 10% of live net worth (`ECSLoadBridge.LiveNetWorth`, floor 500e); the panel previews the amount (`AdService.PreviewEntropyReward`) | 5 |
 | Double Offline | re-grants the just-collected idle run (offered on the idle-return modal) | 3 |
 | +50% Idle (2h) / (4h) | offline collection rate ×1.5 for 2h or 4h, the player picks by time away (2026-11-20; `IdleRateBoostShort` / `IdleRateBoost`, both set `adsIdleBoostExpiryUtc`; offline it counts only for the part of the absence it covered, `OfflineCollectionService.BoostWeightedSeconds`) | 2 each |
 | Production Surge | 2× factory clock for 30 min (reuses `speedBoostExpiryUtc`) | 2 |
 | Time Warp | instantly bank 1h of production (`ComputeForDuration`) | 2 |
 | Crystal Drop | +25◆ | 1 |
-| Entropy Surge | 10 min of current automation income (`IncomeRateTracker.RewardPerSecond`: 180 s avg of `AutomationIncome.Unboosted` (Cyclotron boost excluded), this run only; history restarts on prestige, reload, falling total or a >5 s sample gap (pause); first 10 s after a restart ignored (load backlog); offer held as "Measuring income" until 15 s of settled samples (60 s before 2026-11-18) (side icon hidden, rewards-panel button disabled and labelled "Measuring…", an open card closes if the measurement restarts); amount is quoted before the ad plays and that quote is granted (the ad pauses the app, which restarts the measurement); floor 500e); **15 min cooldown** (`SaveData.adLastWatch`) | 8 |
+| Entropy Surge | **a roll** (#489, 2026-11-24): 80% pays 10% of live net worth in entropy (`AdRewardCalculator.CalcEntropyReward`, floor 500e, quoted before the ad plays), 20% pays 10◆ (`SurgeRollsCrystals`); **15 min cooldown** (`SaveData.adLastWatch`). Replaced Entropy Boost (retired; its enum id stays for old save counters) and the old "10 min of automation income" payout | none |
 
-Every placement except Entropy Surge has a **5 min cooldown** between watches (`AdRewardCalculator.StandardCooldownMinutes`, same `SaveData.adLastWatch` bookkeeping; the panel button shows "Ready in m:ss"). Entropy Surge exists for the post-prestige lull: unlike Entropy Boost (10% of net worth, which counts everything earned this run and so grows with run length) it pays the same slice of time at every stage (`AdRewardCalculator.CalcIncomeReward`; pacing in `docs/balance/prestige-pacing.xlsx`). Counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
+**Ad-free purchase** (#503, `AdFree.cs`, product `ad_free`, ~$9.99 non-consumable, `SaveData.adFree`):
+- Every placement grants its reward without the ad (`AdService.SkipsAds`; it ignores the ads flag and ad availability). Cooldowns and caps still apply, and the buttons read "Claim". The Entropy Surge stays.
+- **+20% entropy income** forever: live, as a factor in the `EntropyIncomeBoost` singleton (`AdFree.CombinedIncomeMultiplier` = Cyclotron boost × 1.2, written by `CyclotronController.SyncBoost`), and offline (`OfflineCollectionService` idle payout + Time Warp, `AdFree.ApplyIncome`).
+
+Every placement except Entropy Surge has a **5 min cooldown** between watches (`AdRewardCalculator.StandardCooldownMinutes`, same `SaveData.adLastWatch` bookkeeping; the panel button shows "Ready in m:ss"). The surge has no daily cap (`AdRewardCalculator.Uncapped`, `HasDailyCap`), so only its cooldown paces it. `IncomeRateTracker.RewardPerSecond` (and `AutomationIncome.Unboosted`) fed the old income-minutes surge and are now unused by ads: a cleanup candidate. Other counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 
 > **Remote balance overrides:** any `game_config` scalar (and many per-entity values) can be overridden at runtime via the `GameDataOverrides` remote-config layer without a rebuild (see `feature-flags.md`). When debugging "the number in game ≠ the number in `game_data.json`", check for an active override before assuming the doc/code is wrong.
 
@@ -68,7 +72,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 | sink | prestige-currency conversion | 500–3,600◆ | `PremiumShopCalculator.cs:36` |
 | sink | research skip | `max(1, ceil(remaining/3600×150))◆` | `PremiumShopCalculator.CalcResearchSkipCost` |
 
-**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Boost & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), field purchases (×10 each, see Core formulas), multi-grid site unlocks (250,000e+), **World unlocks** (each world's `unlock_cost` is 0 — the gate is a research node, see `chemistry-biology.md`). Research gate ladder (first-pass): **Chemistry** `chemistry_lab` 150K → `reaction_engineering` 500K → `organic_chemistry` 2M → `biochem_precursors` 5M; **Biology** `biology_lab` 10M → `cell_biology` 50M → `multicellular_life` 250M → `ecosystems` 1B. Chem/Bio balance is **first-pass** — the real re-tier is Phase 6 (which must also lift the heavy-physics/Megastructure 50M endgame above Biology's 50M–1B, and re-check the flat-log ✦ payout against the ~1B net-worth ceiling).
+**Entropy (e)** — faucets: entropy-sink buildings / collectors (core loop), Entropy Surge & Double/Idle ads, Entropy Headstart upgrade, premium-shop entropy grant. Sinks: research, building placement (`base_cost × mult^(n-1)`), field purchases (×10 each, see Core formulas), multi-grid site unlocks (250,000e+), **World unlocks** (each world's `unlock_cost` is 0 — the gate is a research node, see `chemistry-biology.md`). Research gate ladder (first-pass): **Chemistry** `chemistry_lab` 150K → `reaction_engineering` 500K → `organic_chemistry` 2M → `biochem_precursors` 5M; **Biology** `biology_lab` 10M → `cell_biology` 50M → `multicellular_life` 250M → `ecosystems` 1B. Chem/Bio balance is **first-pass** — the real re-tier is Phase 6 (which must also lift the heavy-physics/Megastructure 50M endgame above Biology's 50M–1B, and re-check the flat-log ✦ payout against the ~1B net-worth ceiling).
 
 **Belt speed tiers (2026-11-12, global research, DSP style):** a belt carries `belt_items_per_tile` (2) x belt speed items/s. Transportation I (`transportation_1`, Foundations, 62,400) adds `ConveyorSpeed` +1.0 (x2, 4/s: Lv3 runs full); Transportation II (`transportation_2`, last in Foundations, 1,090,000, off-curve) adds +2.0 (x4, 8/s: Lv4). Without them Lv3/Lv4 upgrades stay buyable, and the inspector's speed-upgrade row warns "Belts carry 2/s; Lv3 needs 4/s. Research Transportation I." (`BeltCapacity`, busiest input or output vs belt).
 
@@ -76,7 +80,7 @@ Every source/sink for each currency, for balancing as new content is added. Amou
 
 ## Core formulas
 
-- **Net worth** (`NetWorthSystem`, 2026-11-19): entropy held + every purchase this run at its **list price** (buildings, upgrades, research, unlocks; discounts from the prestige cost reduction and Memory Resonance are added back through `TotalEntropyDiscounted`) + inventory at `baseSellValue` + items waiting inside buildings at the Demon price (no timed boosts). Prestige ✦, the prestige wall, Entropy Boost ads and the entropy shop packs all read it.
+- **Net worth** (`NetWorthSystem`, 2026-11-19): entropy held + every purchase this run at its **list price** (buildings, upgrades, research, unlocks; discounts from the prestige cost reduction and Memory Resonance are added back through `TotalEntropyDiscounted`) + inventory at `baseSellValue` + items waiting inside buildings at the Demon price (no timed boosts). Prestige ✦, the prestige wall, the Entropy Surge ad and the entropy shop packs all read it.
 - **Item stars** (PvE phase 2, 2026-11-23, `ItemStars`): tournament rewards put stars on random discovered items (inputs and outputs of known recipes); each star adds **+20%** of the item's base price, additively (5 stars = x2, 10 = x3). Permanent: they survive prestige and Ascension. Applied to every runtime price: Demon/Calorimeter payout, surplus sales and stored-item value (`SurplusSale.DemonPrice`), inventory net worth, offline chains and the Demon panel. Not to escaping byproduct entropy (baked into ECS). So stars raise income and net worth together, which means past stars count toward tournament scores (by design, like Idle Planet Miner).
 - **Prestige wall** (when prestige unlocks): `netWorth ≥ prestige_base_value × prestige_wall_multiplier` = 5,000 × 10 = **50,000e net worth**.
 - **Field purchase (Field Synthesis, 250e after Automation I)**: extra fields bought from the Build menu cost `purchase_cost_base × purchase_cost_multiplier^n`, n = purchases of that field this run (reset on prestige). Quark fields sell as a pair at 300e → 900e → 2,700e → 8,100e…; a lepton field 200e → 600e → 1,800e…. Both ×3, lowered from ×10 on 2026-11-11 so a second hydrogen line (quarks and its electrons) is reachable soon after a prestige. The growth is still exponential so fields never become a repeatable income lever. Prestige `CostReduction` does not apply. Owner: `FieldPurchaseService`.
@@ -134,19 +138,22 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | id | Name | Effect | Levels |
 |---|---|---|---|
 | `entropy_headstart` | Entropy Headstart | +250e starting entropy / run | per-lvl |
-| `memory_resonance` | Memory Resonance | −5% research cost (live: `ResearchService.EffectiveCost`) | per-lvl |
-| `assembly_line` | Assembly Line | +10% craft speed | per-lvl |
+| `memory_resonance` | Memory Resonance | −5% research cost (live: `ResearchService.EffectiveCost`; −50% at max, under `ResearchCost.MaxDiscount` 90%) | 10 |
+| `assembly_line` | Assembly Line | +10% craft speed | 20 |
 | `expanded_vault` | Expanded Vault | +20 inventory slots | per-lvl |
 | `field_cooldown` | Quick Hands | −5% field tap cooldown (max −50%) | per-lvl |
-| `quantum_yield` | Quantum Yield | +10% recipe output | per-lvl |
+| `quantum_yield` | Quantum Yield | +10% recipe output | 20 |
 | `efficient_layouts` | Efficient Layouts | −5% building cost (max −30%) | per-lvl |
 | `turnkey_builder` | Turnkey Builder | +1 pre-placed Harvester / run | per-lvl |
 | `research_overdrive` | Research Overdrive | −5% research timer (max −50%; prereq Memory Resonance 2) | 10 |
-| `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | per-lvl |
+| `free_research` | Free Research | +1 research per run that finishes the moment it starts (entropy still paid; `ResearchService.FreeResearchLeft`, counted in `CurrentRunData.freeResearchUsed`, reset by prestige; research already instant doesn't use one); 25✦ → 1,800✦, prereq Research Overdrive 1 (#491) | 10 |
+| `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | 10 |
 | `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 30 min, max 12h; 23 levels, 5✦ → 700✦, no prereq) | 23 |
 | `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 20%, max 100%) | per-lvl |
 | `salvage_protocols` | Salvage Protocols | +10% removal refund (base 50%, max 100%; prereq Efficient Layouts 1) | 5 |
 | `surplus_resale` | Surplus Brokerage | +10% of the Demon price for auto-sold unused items (base 50%, max 100%) | 5 |
+
+**Deep-game tails (#501, 2026-11-24):** a first pass to the Dyson Node earns about 24k✦ and the 4-year Ascension plan about 700k✦ (`scripts/item_timeline.py` `WALLS` / `ASCENSION`), while the shop held about 86k✦ and its cheap core upgrades maxed by the third wall. The uncapped, live tracks got longer tails, each extra level costing x1.25 (Quantum Yield), x1.3 (Assembly Line, Echo, world tracks) or x1.45 (Memory Resonance) the last: Memory Resonance 5→10, Assembly Line 5→20, Quantum Yield 10→20, Entropy Echo 4→10, Fission Yield 6→15, Neutron Economy 5→15, Spring Pressure 6→12, Catalysis / Growth Media / Furnace Heat / Precision 8→15. The shop now holds about 680k✦, and its priciest level is 48k✦ (Quantum Yield 20, about two loops). Not extended: capped effects (Research Overdrive, idle cap/rate, Salvage, Surplus, Quick Hands, Efficient Layouts), the flat Entropy Headstart, and Expanded Vault / Turnkey Builder, whose effects are not wired yet. `scripts/prestige_plan.py` now reads every cost from `PersistentUpgradeService.cs`. `UpgradeLevelDepthTests` guards this.
 
 **Removal refunds** (`DemolishRefund`, applied by `DeconstructController`): removing a building returns `Fraction × spent`, where spent = placement cost after the prestige discount + every speed/storage/input upgrade bought. The building's whole spent amount leaves `TotalEntropySpent`, so net worth drops by the unrefunded part and place/remove loops can't farm prestige. Belts are free (no refund). The grid's only Maxwell's Demon can't be removed, and every removal asks to confirm (`ConfirmPrompt`).
 

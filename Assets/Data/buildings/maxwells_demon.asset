@@ -17,7 +17,7 @@ MonoBehaviour:
   description: "Sorts raw particles from your inventory and converts their energy
     into base currency. The act of sorting increases local entropy \u2014 a price
     the Demon gladly pays."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 45f8c552af20fb449b3642d6bc7832ac, type: 3}
   prefab: {fileID: 0}
   buildingId: 7
   tier: 1

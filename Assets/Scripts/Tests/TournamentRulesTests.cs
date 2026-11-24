@@ -45,8 +45,8 @@ namespace MobileIdleBuilder.Tests
         {
             var t = Entry();
             Assert.IsTrue(TournamentRules.InRun(t, Start.AddHours(1)));
-            Assert.IsTrue(TournamentRules.PrestigeLocked(t, Start.AddHours(23.9)));
-            Assert.IsFalse(TournamentRules.PrestigeLocked(t, Start.AddHours(24)));
+            Assert.IsTrue(TournamentRules.PrestigeLeavesRun(t, Start.AddHours(23.9)));
+            Assert.IsFalse(TournamentRules.PrestigeLeavesRun(t, Start.AddHours(24)));
             Assert.AreEqual(TimeSpan.FromHours(14), TournamentRules.Remaining(t, Start.AddHours(10)));
             Assert.AreEqual(TimeSpan.Zero, TournamentRules.Remaining(t, Start.AddHours(30)));
             Assert.IsFalse(TournamentRules.InRun(new TournamentSaveData(), Start), "never entered");
@@ -129,6 +129,37 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(TournamentRules.ShouldSendPending(Entry(), Start.AddHours(30), 2), "nothing kept");
         }
 
+        // ── Retire / leave early (#505) ───────────────────────────────────────
+
+        [Test]
+        public void Retired_EndsTheRunForThisDevice()
+        {
+            var t = Entry(prestigeAtJoin: 1);
+            Assert.IsTrue(TournamentRules.InRun(t, Start.AddHours(2)));
+            t.retired = true;
+            Assert.IsFalse(TournamentRules.InRun(t, Start.AddHours(2)));
+            Assert.IsFalse(TournamentRules.PrestigeLeavesRun(t, Start.AddHours(2)), "prestige is free again");
+            Assert.IsFalse(TournamentRules.ShouldSnapshot(t, Start.AddHours(2), 2, 999f, force: true), "no more snapshots");
+            Assert.IsFalse(TournamentRules.CapturePending(t, Start.AddHours(2), 2, 1, 1, 1));
+            Assert.AreEqual(TournamentPanelState.Finished,
+                TournamentRules.PanelState(true, true, Status("Entry", joined: true), t, Start.AddHours(2)));
+        }
+
+        [Test]
+        public void Retire_Texts()
+        {
+            StringAssert.Contains("ends it early", TournamentRules.PrestigeLeaveMessage(1500, TimeSpan.FromHours(5)));
+            StringAssert.Contains("5h 00m left", TournamentRules.RetireMessage(1500, TimeSpan.FromHours(5)));
+            var running = TournamentPanelText.Describe(TournamentPanelState.Running, Status("Entry", true), Entry(), Start.AddHours(1), Cfg(), false);
+            Assert.IsTrue(running.showRetire);
+            var pending = TournamentPanelText.Describe(TournamentPanelState.Running, null, Entry(2), Start, Cfg(), prestigePending: true);
+            Assert.IsFalse(pending.showRetire, "not before the join's prestige has run");
+            var retired = Entry(); retired.retired = true;
+            var done = TournamentPanelText.Describe(TournamentPanelState.Finished, Status("Entry", true), retired, Start.AddHours(1), Cfg(), false);
+            Assert.AreEqual("You retired from this tournament", done.headline);
+            StringAssert.EndsWith("(retired)", TournamentPanelText.ValueText(new PveBoardRow { value = 900, retired = true, projected = true }));
+        }
+
         // ── Panel state ───────────────────────────────────────────────────────
 
         static PveStatusResponse Status(string phase, bool joined = false, bool settled = false) => new PveStatusResponse
@@ -208,7 +239,7 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual("5m 07s", TournamentRules.FormatSpan(TimeSpan.FromSeconds(307)));
             StringAssert.Contains("+1,234 ✦", TournamentRules.JoinConfirmMessage(1234, "Gold"));
             StringAssert.Contains("Gold bracket", TournamentRules.JoinConfirmMessage(0, "Gold"));
-            StringAssert.Contains("🔒", TournamentRules.PrestigeLockText(TimeSpan.FromHours(3)));
+            Assert.AreEqual("⬆ Prestige · 🏆 3h 00m", TournamentRules.PrestigeInRunText(TimeSpan.FromHours(3)));
             StringAssert.Contains("connection", TournamentRules.ErrorText("network:timeout"));
             StringAssert.Contains("player name", TournamentRules.ErrorText(PveErrors.NameRequired));
         }
@@ -430,7 +461,7 @@ namespace MobileIdleBuilder.Tests
         public void Hud_HasTheTournamentPanelElements()
         {
             var root = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/GameHUD.uxml").Instantiate();
-            Assert.AreEqual("Tournament", root.Q<Button>("btn-tournament").text);
+            Assert.AreEqual("Tourney", DrawerTile.Caption(root.Q<Button>("btn-tournament"))?.text);
             foreach (var n in new[] { "pve-panel", "pve-league-badge", "pve-banner", "pve-state-label", "pve-timer-label", "pve-info-label", "pve-result-label", "pve-your-rank", "pve-leaderboard-list" })
                 Assert.IsNotNull(root.Q(n), n);
             Assert.IsNotNull(root.Q<Button>("btn-pve-start"));
@@ -618,6 +649,51 @@ namespace MobileIdleBuilder.Tests
             CollectionAssert.Contains(fake.Calls, "Claim");
             Assert.AreEqual(before + 150, save.paidCurrency, "never paid twice");
             Assert.IsNull(TournamentRules.NextUnappliedReward(svc.LastStatus, save));
+        }
+
+        [Test]
+        public void RetireAsync_MarksRetiredOnSuccess_KeepsTheRunOnANetworkError()
+        {
+            var svc = Spawn(prestigeCount: 3);
+            var save = SaveManager.Instance.Current;
+            var now = DateTime.UtcNow;
+            save.tournament = new TournamentSaveData
+            {
+                week = PveRules.WeekId(now), startUtc = PveRules.Iso(now.AddHours(-2)), runEndsUtc = PveRules.Iso(now.AddHours(22)),
+                prestigeCountAtJoin = 2, pendingT = 7000,
+            };
+            var fake = new FakeTransport();
+            PveApi.Transport = fake;
+
+            fake.Replies["Retire"] = "{\"error\":\"network:offline\"}";
+            StringAssert.StartsWith("network:", svc.RetireAsync().GetAwaiter().GetResult());
+            Assert.IsFalse(save.tournament.retired, "offline: still in the run (prestige not done)");
+
+            fake.Replies["Retire"] = "{\"t\":7200,\"accepted\":true}";
+            Assert.IsNull(svc.RetireAsync().GetAwaiter().GetResult());
+            Assert.IsTrue(save.tournament.retired);
+            Assert.IsTrue(save.tournament.finalSent);
+            Assert.AreEqual(-1, save.tournament.pendingT, "the kept snapshot is dropped");
+            Assert.IsFalse(svc.PrestigeLeavesRun);
+            CollectionAssert.Contains(fake.Calls, "Retire");
+        }
+
+        [Test]
+        public void RetireAsync_AlreadyRetiredElsewhere_CountsAsDone()
+        {
+            var svc = Spawn(prestigeCount: 3);
+            var save = SaveManager.Instance.Current;
+            var now = DateTime.UtcNow;
+            save.tournament = new TournamentSaveData
+            {
+                week = PveRules.WeekId(now), startUtc = PveRules.Iso(now.AddHours(-2)), runEndsUtc = PveRules.Iso(now.AddHours(22)),
+                prestigeCountAtJoin = 2,
+            };
+            var fake = new FakeTransport();
+            fake.Replies["Retire"] = "{\"error\":\"retired\"}";
+            PveApi.Transport = fake;
+            Assert.IsNull(svc.RetireAsync().GetAwaiter().GetResult());
+            Assert.IsTrue(save.tournament.retired);
         }
 
         [Test]

@@ -42,6 +42,8 @@ namespace MobileIdleBuilder
         public const string GameDataNoticeTitleKey = "gamedata.noticeTitle";
         public const string GameDataNoticeMessageKey = "gamedata.noticeMessage";
         public const string GameDataOverridesKey   = "gamedata.overrides";
+        public const string WhatsNewVersionKey     = "whatsnew.version";   // written by CI with the notes (#502)
+        public const string WhatsNewNotesKey       = "whatsnew.notes";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
         public const string UpdateEnabledKey       = "update.enabled";
@@ -81,6 +83,8 @@ namespace MobileIdleBuilder
         // Curated scalar overrides applied onto the baked ScriptableObjects at boot (config/items/research).
         // JSON blob; default empty => no overrides, the build runs its baked baseline. See GameDataOverrides.
         public const string GameDataOverridesDefault = "{}";
+        // What's-new notes (#502): CI writes both from docs/whats-new.md on each release. Blank => no notice.
+        public const string WhatsNewDefault = "";
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
@@ -112,6 +116,8 @@ namespace MobileIdleBuilder
             new FlagDef(GameDataNoticeTitleKey,   FlagType.String),
             new FlagDef(GameDataNoticeMessageKey, FlagType.String),
             new FlagDef(GameDataOverridesKey,     FlagType.String),
+            new FlagDef(WhatsNewVersionKey,       FlagType.String),
+            new FlagDef(WhatsNewNotesKey,         FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
             new FlagDef(UpdateEnabledKey,         FlagType.Bool),
@@ -161,6 +167,8 @@ namespace MobileIdleBuilder
         public static string GameDataNoticeTitle  => GetString(GameDataNoticeTitleKey,  GameDataNoticeTitleDefault);
         public static string GameDataNoticeMessage => GetString(GameDataNoticeMessageKey, GameDataNoticeMessageDefault);
         public static string GameDataOverridesJson => GetString(GameDataOverridesKey,    GameDataOverridesDefault);
+        public static string WhatsNewVersion      => GetString(WhatsNewVersionKey,      WhatsNewDefault);
+        public static string WhatsNewNotes        => GetString(WhatsNewNotesKey,        WhatsNewDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
         public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);

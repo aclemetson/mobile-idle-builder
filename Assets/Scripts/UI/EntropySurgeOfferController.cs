@@ -6,12 +6,12 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// The Entropy Surge offer: a side icon that appears whenever the Entropy Surge ad is off its 15-minute
-    /// cooldown, and the card it opens.
+    /// cooldown, and the card it opens. Each watch rolls 10% of net worth in entropy (80%) or 10 crystals (20%);
+    /// there is no daily cap (#489).
     ///  - <b>Watch ad</b> plays a rewarded ad (AdService); on reward the cooldown restarts from the watch.
     ///  - <b>No thanks</b> closes the card and restarts the cooldown, so the icon comes back in 15 minutes.
-    ///    It does not use up one of the day's watches.
     ///  - <b>X</b> (and Android back) only closes the card: the icon stays, and the next tap recalculates
-    ///    the amount from the current income.
+    ///    the amount from the current net worth.
     ///
     /// Added to the HUD GameObject by <see cref="HUDController"/> (GetComponent ?? AddComponent), so no
     /// scene wiring is needed. Shown only after the first prestige, when the post-prestige lull it is
@@ -60,10 +60,9 @@ namespace MobileIdleBuilder
         /// Whether the side icon should be showing. Pure so the rule is unit-tested.
         /// </summary>
         public static bool ShouldShowIcon(bool adsEnabled, bool firstPrestigeDone, bool gameLoaded, bool adReady,
-                                          int remainingToday, TimeSpan cooldownLeft, bool cardOpen,
-                                          bool menuOpen = false, bool incomeMeasured = true)
-            => adsEnabled && firstPrestigeDone && gameLoaded && adReady && incomeMeasured
-               && remainingToday > 0 && cooldownLeft <= TimeSpan.Zero && !cardOpen && !menuOpen;
+                                          TimeSpan cooldownLeft, bool cardOpen, bool menuOpen = false)
+            => adsEnabled && firstPrestigeDone && gameLoaded && adReady
+               && cooldownLeft <= TimeSpan.Zero && !cardOpen && !menuOpen;
 
         void Update()
         {
@@ -94,23 +93,19 @@ namespace MobileIdleBuilder
             var ads  = AdService.Instance;
             var save = SaveManager.Instance?.Current;
 
-            // The measurement restarted under an open card (app was backgrounded): its price is stale, so
-            // close it. The icon returns once the income has been measured again.
-            if (IsOpen && (ads == null || !ads.IncomeMeasured(Placement))) CloseCard();
+            if (IsOpen && ads == null) CloseCard();
             // A timed boost started (shop, another ad, Cyclotron Kick): no other boost may be taken now.
             if (IsOpen && ads.BoostLockRemaining(Placement) > TimeSpan.Zero) CloseCard();
 
             bool show = ShouldShowIcon(
-                FeatureFlags.AdsEnabled,
+                FeatureFlags.AdsEnabled || (ads != null && ads.SkipsAds),   // ad-free keeps the surge (#503)
                 save?.tutorial.hasCompletedFirstRun ?? false,
                 ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded,
                 ads != null && ads.IsReady,
-                ads?.Remaining(Placement) ?? 0,
                 // A running timed boost hides the offer like a cooldown does (BoostLock).
                 Max(ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero, ads?.BoostLockRemaining(Placement) ?? TimeSpan.Zero),
                 IsOpen,
-                _menuOpen,
-                ads != null && ads.IncomeMeasured(Placement));
+                _menuOpen);
             SetIconVisible(show);
             _skipNextPop = false;
         }
@@ -131,10 +126,12 @@ namespace MobileIdleBuilder
             var ads = AdService.Instance;
             if (ads == null || _card == null) return;
 
-            // Recalculated on every open: income moves, so a card reopened after the X shows today's figure.
-            long amount = ads.PreviewIncomeReward(Placement);
+            // Recalculated on every open: net worth moves, so a card reopened after the X shows today's figure.
             if (_message != null)
-                _message.text = MessageText(amount, ads.Remaining(Placement));
+                _message.text = MessageText(ads.PreviewEntropyReward(), AdRewardCalculator.Def(Placement), ads.SkipsAds,
+                                            AdRewardCalculator.SurgeCrystalChance(SaveManager.Instance?.Current));
+            var watch = _card.Q<Button>("surge-offer__watch");
+            if (watch != null) watch.text = ads.SkipsAds ? "Claim" : "▶ Watch ad";
 
             IsOpen = true;
             SetIconVisible(false);
@@ -142,8 +139,14 @@ namespace MobileIdleBuilder
             UIInputBlocker.SetModal(_modalOwner, true);
         }
 
-        internal static string MessageText(long amount, int remainingToday) =>
-            $"Watch a short ad for +{amount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} ◈ entropy?\n({remainingToday} left today)";
+        /// <summary>"Watch a short ad for +60,000 ◈ entropy (80%) or 10 ◆ crystals (20%)?" ("Claim ..." when ad-free).</summary>
+        internal static string MessageText(long entropy, AdPlacementDef def, bool adFree = false, float crystalChance = -1f)
+        {
+            int crystalPct = UnityEngine.Mathf.RoundToInt((crystalChance >= 0f ? crystalChance : def.CrystalChance) * 100f);
+            string amount = entropy.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+            return (adFree ? "Claim" : "Watch a short ad for") + $" +{amount} ◈ entropy ({100 - crystalPct}%)"
+                 + $" or {def.CrystalAmount} ◆ crystals ({crystalPct}%)?";
+        }
 
         void Watch()
         {

@@ -82,6 +82,15 @@ namespace MobileIdleBuilder
                 break;
             }
 
+            // On a hidden menu tab (Builder / Recipes tabs, #487): guide to that tab's button.
+            for (var e = target.parent; e != null; e = e.parent)
+            {
+                if (!e.ClassListContains(BuilderMenu.PageClass) || !IsHidden(e)) continue;
+                var tabButton = root.Q(e.name.Replace("-page-", "-tab-"));
+                if (tabButton != null) return Resolve(root, tabButton.name, depth + 1);
+                break;
+            }
+
             // Inside the closed side drawer: guide to the drawer handle.
             for (var e = target.parent; e != null; e = e.parent)
             {

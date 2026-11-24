@@ -1167,7 +1167,7 @@ namespace MobileIdleBuilder
                         info.Add(costLabel);
 
                         int effSecs    = researchService.EffectiveDurationSeconds(research);
-                        var timeLabel  = new Label(effSecs <= 0 ? "Instant" : $"⏳ {FormatResearchTimer(effSecs)}");
+                        var timeLabel  = new Label(ResearchTimeText(effSecs, researchService.FreeResearchLeft));
                         timeLabel.AddToClassList("research-card-time");
                         info.Add(timeLabel);
 
@@ -1462,14 +1462,29 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// True while a tournament run locks manual prestige and Ascension; shows why. The tournament's own
-        /// join prestige goes through <see cref="RequestTournamentPrestige"/> instead.
+        /// During a tournament run a prestige or Ascension ends the run early (#505): asks, retires on the server at
+        /// the current net worth, then runs <paramref name="then"/>. Returns false (and does nothing) when no run is
+        /// on, so the caller goes ahead. The tournament's own join prestige goes through
+        /// <see cref="RequestTournamentPrestige"/> instead.
         /// </summary>
-        private bool BlockedByTournament()
+        private bool LeavesTournamentFirst(System.Action then)
         {
             var svc = TournamentService.Instance;
-            if (svc == null || !svc.PrestigeLocked) return false;
-            ShowNotification("🔒", $"Prestige is locked during your tournament run ({TournamentRules.FormatSpan(svc.RunRemaining)} left).", "warning");
+            if (svc == null || !svc.PrestigeLeavesRun) return false;
+            double nw = _ecsReady && !_progressQuery.IsEmpty
+                ? _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity()).NetWorth : 0d;
+            ConfirmPrompt.Show("End your tournament run?", TournamentRules.PrestigeLeaveMessage(nw, svc.RunRemaining),
+                "End run & prestige", onConfirm: async () =>
+                {
+                    string error = await svc.RetireAsync();
+                    if (this == null) return;
+                    if (error != null)
+                    {
+                        ShowNotification("⚠", TournamentRules.ErrorText(error) + " Prestige not done.", "warning");
+                        return;
+                    }
+                    then?.Invoke();
+                });
             return true;
         }
 
@@ -1497,7 +1512,6 @@ namespace MobileIdleBuilder
         private void OpenPrestigePanel()
         {
             if (!_ecsReady || _progressQuery.IsEmpty || _prestigeQuery.IsEmpty) return;
-            if (BlockedByTournament()) return;
 
             CloseAllPanels();
 
@@ -1508,7 +1522,9 @@ namespace MobileIdleBuilder
             long preview = CalculatePrestigePreview(progress.NetWorth);
             long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
 
-            if (_prestigeSummary  != null) _prestigeSummary.text  = $"Net worth: {progress.NetWorth:N0}";
+            if (_prestigeSummary  != null) _prestigeSummary.text  = $"Net worth: {progress.NetWorth:N0}" +
+                (TournamentService.Instance != null && TournamentService.Instance.PrestigeLeavesRun
+                    ? "\nThis ends your tournament run early." : "");
             if (_prestigeCurrency != null) _prestigeCurrency.text =
                 $"You will receive: {preview} ✦   (current: {held} ✦)";
 
@@ -1519,7 +1535,7 @@ namespace MobileIdleBuilder
         public void RequestAscension()
         {
             if (!_ecsReady || _progressQuery.IsEmpty) return;
-            if (BlockedByTournament()) return;
+            if (LeavesTournamentFirst(RequestAscension)) return;
             AscensionRules.Pending = true;
             OnPrestigeConfirmed();
             ShowNotification("◉", "Ascension! The worlds begin again; the megastructure grows.");
@@ -1528,7 +1544,7 @@ namespace MobileIdleBuilder
         private void OnPrestigeConfirmed()
         {
             if (!_ecsReady || _progressQuery.IsEmpty) return;
-            if (BlockedByTournament()) return;
+            if (LeavesTournamentFirst(OnPrestigeConfirmed)) return;
 
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
@@ -1543,9 +1559,37 @@ namespace MobileIdleBuilder
         // Recipe list
         // ============================================================
 
+        // Recipes (#488): item-type tabs over a horizontally scrolling row of cards (RecipeMenu, MenuTabs).
+        private VisualElement _recipeTabs;
+        private readonly Dictionary<string, VisualElement> _recipePages = new();
+        private string _recipeTab;
+        private string _openRecipeDropUp;   // output id of the card whose method drop-up is open
+        private const string RecipeTabPref = "recipes_tab";
+
+        private void EnsureRecipeTabs()
+        {
+            if (_recipeTabs != null || _recipePanel == null || _recipeList == null) return;
+            _recipeTab = PlayerPrefs.GetString(RecipeTabPref, null);
+            _recipeTabs = MenuTabs.MakeTabBar(RecipeMenu.Prefix, RecipeMenu.Tabs, RecipeMenu.TabLabel, tab =>
+            {
+                _recipeTab = tab;
+                _openRecipeDropUp = null;
+                PlayerPrefs.SetString(RecipeTabPref, tab);
+                MenuTabs.ShowTab(RecipeMenu.Prefix, _recipeTabs, _recipePages, tab);
+                _recipeList.scrollOffset = Vector2.zero;
+            });
+            _recipePanel.Insert(_recipePanel.IndexOf(_recipeList), _recipeTabs);
+            _recipeList.mode = ScrollViewMode.Horizontal;
+            _recipeList.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            _recipeList.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            _recipeList.AddToClassList("recipe-cards");
+        }
+
         private void BuildRecipeList()
         {
+            EnsureRecipeTabs();
             _recipeList.Clear();
+            _recipePages.Clear();
 
             var inventoryCounts = craftService?.GetInventoryCounts() ?? new Dictionary<int, int>();
 
@@ -1558,7 +1602,14 @@ namespace MobileIdleBuilder
                 return;
             }
 
-            // One row per output item (#336): hide recipes the player has never unlocked or that are made in
+            foreach (var tab in RecipeMenu.Tabs)
+            {
+                var page = MenuTabs.MakePage(RecipeMenu.Prefix, tab, "builder-page");
+                _recipePages[tab] = page;
+                _recipeList.Add(page);
+            }
+
+            // One card per output item (#336): hide recipes the player has never unlocked or that are made in
             // another world (Chemistry's molecules stay out of the Physics list), then group the rest.
             var ws = WorldService.Instance;
             string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
@@ -1573,33 +1624,19 @@ namespace MobileIdleBuilder
                 var chosen = RecipeGrouping.PickMethod(group,
                     _recipeMethodChoice.TryGetValue(group.outputId, out var rid) ? rid : null,
                     m => !IsRecipeLocked(m));
-
-                if (group.methods.Count == 1)
-                {
-                    _recipeList.Add(BuildRecipeRow(chosen, inventoryCounts, null));
-                    continue;
-                }
-
-                bool expanded = _expandedRecipeGroups.Contains(group.outputId);
-                var wrapper = new VisualElement();
-                wrapper.AddToClassList("recipe-group");
-                wrapper.Add(BuildRecipeRow(chosen, inventoryCounts, group));
-
-                if (expanded)
-                {
-                    var methods = new VisualElement();
-                    methods.AddToClassList("recipe-methods");
-                    foreach (var method in group.methods)
-                        methods.Add(BuildMethodDetailRow(group, method, method == chosen, inventoryCounts));
-                    wrapper.Add(methods);
-                }
-                _recipeList.Add(wrapper);
+                var outputItem = ItemDatabase.Instance?.Get(group.outputId);
+                string tab = RecipeMenu.TabOf(outputItem != null ? outputItem.category : (ItemCategory?)null);
+                _recipePages[tab].Add(BuildRecipeCard(group, chosen, outputItem, inventoryCounts));
             }
+
+            var withCards = new HashSet<string>();
+            foreach (var kv in _recipePages) if (kv.Value.childCount > 0) withCards.Add(kv.Key);
+            _recipeTab = MenuTabs.PickTab(_recipeTab, withCards, RecipeMenu.Tabs);
+            MenuTabs.ShowTab(RecipeMenu.Prefix, _recipeTabs, _recipePages, _recipeTab);
         }
 
         // Session-only memory of which method the player last picked per output item, and which groups are open.
         private readonly Dictionary<string, string> _recipeMethodChoice = new();
-        private readonly HashSet<string> _expandedRecipeGroups = new();
         private Dictionary<string, string> _buildingNames, _researchNames;
 
         private bool IsRecipeLocked(RecipeJson recipe) =>
@@ -1634,6 +1671,15 @@ namespace MobileIdleBuilder
             return _buildingNames.TryGetValue(buildingId, out var n) ? n : null;
         }
 
+        /// <summary>A research card's time: "Instant", "Instant · 2 free left" (Free Research, #491) or "⏳ 1:30".</summary>
+        internal static string ResearchTimeText(int effectiveSeconds, int freeLeft) =>
+            effectiveSeconds <= 0 ? "Instant"
+            : freeLeft > 0 ? $"Instant · {freeLeft} free left"
+            : $"⏳ {FormatResearchTimer(effectiveSeconds)}";
+
+        /// <summary>The lock line on a recipe known from an earlier run but gated by research now (#490).</summary>
+        internal static string ResearchLockText(string researchName) => $"Research {researchName} to unlock";
+
         private string ResearchNameFor(string researchId)
         {
             if (_researchNames == null)
@@ -1650,52 +1696,44 @@ namespace MobileIdleBuilder
         // Rebuilds the recipe list in place, keeping the scroll position (used after expand / method changes).
         private void RebuildRecipeListKeepingScroll()
         {
-            float scroll = _recipeList.scrollOffset.y;
+            var scroll = _recipeList.scrollOffset;
             BuildRecipeList();
-            _recipeList.scrollOffset = new Vector2(0f, scroll);
+            _recipeList.scrollOffset = scroll;
         }
 
-        // The row for one recipe (the chosen method when the item has several). With a multi-method
-        // group it also carries the "N ways to make this" toggle.
-        private VisualElement BuildRecipeRow(RecipeJson recipe, Dictionary<int, int> inventoryCounts, RecipeGroup group)
+        // One card per item (#488): picture, name, inputs, hints, craft time and worth, then the x1/x5/x10/Max
+        // buttons for the chosen method. An item with several methods shows the chosen one and a drop-up to pick
+        // another (the choice is remembered for the session).
+        private VisualElement BuildRecipeCard(RecipeGroup group, RecipeJson recipe, ItemSO outputItem,
+                                              Dictionary<int, int> inventoryCounts)
         {
             bool isLocked = IsRecipeLocked(recipe);
             int  max      = isLocked ? 0 : (craftService?.MaxCraftable(recipe) ?? 0);
-            bool canCraft = max >= 1;
 
-            var row = new VisualElement();
-            row.AddToClassList("recipe-row");
-            if (isLocked) row.AddToClassList("recipe-row--locked");
-            else if (!canCraft) row.AddToClassList("recipe-row--unavailable");
+            var card = new VisualElement();
+            card.AddToClassList("recipe-card");
+            if (isLocked) card.AddToClassList("recipe-card--locked");   // fades the content, not the drop-up
+            else if (max < 1) card.AddToClassList("recipe-card--unavailable");
 
-            var info = new VisualElement();
-            info.AddToClassList("recipe-info");
-
-            var outputItem = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
-            var outputIcon = MakeItemIcon(outputItem?.icon, "item-icon");
-            if (outputIcon != null) info.Add(outputIcon);
+            var pic = new VisualElement();
+            pic.AddToClassList("recipe-card__icon");
+            if (outputItem?.icon != null) pic.style.backgroundImage = new StyleBackground(outputItem.icon);
+            else
+            {
+                var g = new GlyphIcon(GlyphIcon.Kind.Recipes);
+                g.AddToClassList("building-tile__glyph");
+                pic.Add(g);
+            }
+            card.Add(pic);
 
             var nameLabel = new Label(recipe.name);
             nameLabel.AddToClassList("recipe-name");
+            nameLabel.AddToClassList("recipe-card__name");
+            card.Add(nameLabel);
 
-            var inputsContainer = BuildIngredientsUI(recipe, inventoryCounts);
-
-            if (recipe.requiresBuilding)
-            {
-                var buildingTag = new Label("[Building]");
-                buildingTag.AddToClassList("recipe-building-tag");
-                info.Add(buildingTag);
-            }
-
-            if (isLocked)
-            {
-                var lockLabel = new Label($"[Requires research]");
-                lockLabel.AddToClassList("recipe-lock-hint");
-                info.Add(lockLabel);
-            }
-
-            info.Add(nameLabel);
-            info.Add(inputsContainer);
+            var inputs = BuildIngredientsUI(recipe, inventoryCounts);
+            inputs.AddToClassList("recipe-card__inputs");
+            card.Add(inputs);
 
             // A building-only recipe needs one of its buildings placed (any recipe, busy or idle, #309).
             // Its speed sets the craft time, same as the building takes.
@@ -1703,108 +1741,83 @@ namespace MobileIdleBuilder
             string missingBuilding = null;
             bool hasBuilding = craftService == null
                 || craftService.HasCraftingBuilding(recipe, out speed, out missingBuilding);
-            if (!isLocked && !hasBuilding)
-            {
-                var needLabel = new Label($"Place {AOrAn(missingBuilding)} to craft this");
-                needLabel.AddToClassList("recipe-lock-hint");
-                info.Add(needLabel);
-            }
+            if (isLocked)
+                card.Add(CardHint(ResearchLockText(ResearchNameFor(recipe.requires_research)), "recipe-lock-hint"));
+            else if (!hasBuilding)
+                card.Add(CardHint($"Place {AOrAn(missingBuilding)} to craft this", "recipe-lock-hint"));
 
-            var timeLabel = new Label($"Craft time: {ManualCraftService.UnitSeconds(recipe, speed):0.#}s");
-            timeLabel.style.fontSize = 11;
-            timeLabel.style.opacity  = 0.7f;
-            info.Add(timeLabel);
-
-            // What one item sells for. Shown once per row (the group's row), not on each method row.
+            string meta = $"{ManualCraftService.UnitSeconds(recipe, speed):0.#}s";
             if (outputItem != null)
-            {
-                var worthLabel = new Label(WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId)));
-                worthLabel.style.fontSize = 11;
-                worthLabel.AddToClassList("recipe-bonus-hint");
-                info.Add(worthLabel);
-            }
+                meta += " · " + WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId));
+            card.Add(CardHint(meta, "recipe-card__meta"));
 
             float bonus = recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
-            if (bonus > 0f)
-            {
-                var bonusLabel = new Label(EscapeBonusText(bonus));
-                bonusLabel.style.fontSize = 11;
-                bonusLabel.AddToClassList("recipe-bonus-hint");
-                info.Add(bonusLabel);
-            }
+            if (bonus > 0f) card.Add(CardHint(EscapeBonusText(bonus), "recipe-bonus-hint"));
 
-            if (group != null && group.methods.Count > 1)
+            var spacer = new VisualElement();
+            spacer.AddToClassList("recipe-card__spacer");
+            card.Add(spacer);
+
+            bool several = group != null && group.methods.Count > 1;
+            string methodTitle = RecipeMenu.MethodTitle(recipe, BuildingNameFor);
+            if (several || recipe.requiresBuilding)
+                card.Add(CardHint(methodTitle, "recipe-card__method"));
+
+            if (several)
             {
-                bool open = _expandedRecipeGroups.Contains(group.outputId);
-                var toggle = new Button { text = open ? $"v {group.methods.Count} ways to make this" : $"> {group.methods.Count} ways to make this" };
+                bool open = _openRecipeDropUp == group.outputId;
+                var toggle = new Button { text = RecipeMenu.WaysText(group.methods.Count, open) };
                 toggle.AddToClassList("recipe-methods-toggle");
+                toggle.AddToClassList("recipe-card__ways");
                 string outId = group.outputId;
                 ListTapRouter.Register(_recipeList, toggle, () =>
                 {
-                    if (!_expandedRecipeGroups.Remove(outId)) _expandedRecipeGroups.Add(outId);
+                    _openRecipeDropUp = _openRecipeDropUp == outId ? null : outId;
                     RebuildRecipeListKeepingScroll();
                 });
-                info.Add(toggle);
+                card.Add(toggle);
             }
 
-            row.Add(info);
-            row.Add(BuildCraftButtons(recipe, isLocked, hasBuilding, max));
-            return row;
+            var craft = BuildCraftButtons(recipe, isLocked, hasBuilding, max);
+            craft.AddToClassList("recipe-card__craft");
+            card.Add(craft);
+
+            if (several && _openRecipeDropUp == group.outputId)
+                card.Add(BuildMethodDropUp(group, recipe));
+            return card;
         }
 
-        // One method inside an expanded group: where it is made, inputs, time, lock state and craft buttons.
-        // Crafting from a method makes it the group's remembered choice.
-        private VisualElement BuildMethodDetailRow(RecipeGroup group, RecipeJson method, bool selected,
-                                                   Dictionary<int, int> inventoryCounts)
+        private static Label CardHint(string text, string ussClass)
         {
-            bool isLocked = IsRecipeLocked(method);
-            int  max      = isLocked ? 0 : (craftService?.MaxCraftable(method) ?? 0);
+            var l = new Label(text);
+            l.AddToClassList(ussClass);
+            l.AddToClassList("recipe-card__hint");
+            return l;
+        }
 
-            var row = new VisualElement();
-            row.AddToClassList("recipe-method-row");
-            if (selected) row.AddToClassList("recipe-method-row--selected");
-            if (isLocked) row.AddToClassList("recipe-row--locked");
-
-            var info = new VisualElement();
-            info.AddToClassList("recipe-info");
-
-            string where = RecipeGrouping.MadeInText(method, BuildingNameFor);
-            string title = !string.IsNullOrEmpty(where) ? where
-                : (string.IsNullOrEmpty(method.method_label) ? "Craft from the menu" : method.method_label);
-            if (!string.IsNullOrEmpty(where) && !string.IsNullOrEmpty(method.method_label))
-                title += " · " + method.method_label;
-            var titleLabel = new Label(selected ? title + " (selected)" : title);
-            titleLabel.AddToClassList("recipe-name");
-            info.Add(titleLabel);
-
-            info.Add(BuildIngredientsUI(method, inventoryCounts));
-
-            float speed = 1f;
-            string missingBuilding = null;
-            bool hasBuilding = craftService == null
-                || craftService.HasCraftingBuilding(method, out speed, out missingBuilding);
-
-            if (isLocked)
+        // The drop-up over a card: one button per method (where it is made, or locked behind what research).
+        // Picking one makes it the card's method and closes the drop-up.
+        private VisualElement BuildMethodDropUp(RecipeGroup group, RecipeJson chosen)
+        {
+            var menu = new VisualElement();
+            menu.AddToClassList("recipe-dropup");
+            foreach (var method in group.methods)
             {
-                var lockLabel = new Label($"Research {ResearchNameFor(method.requires_research)} to unlock");
-                lockLabel.AddToClassList("recipe-lock-hint");
-                info.Add(lockLabel);
+                string text = RecipeMenu.ShortMethodTitle(method, BuildingNameFor);
+                if (IsRecipeLocked(method)) text += $" · needs {ResearchNameFor(method.requires_research)}";
+                var option = new Button { text = text };
+                option.AddToClassList("recipe-dropup__option");
+                if (method == chosen) option.AddToClassList("recipe-dropup__option--selected");
+                var m = method;
+                ListTapRouter.Register(_recipeList, option, () =>
+                {
+                    _recipeMethodChoice[group.outputId] = m.id;
+                    _openRecipeDropUp = null;
+                    RebuildRecipeListKeepingScroll();
+                });
+                menu.Add(option);
             }
-            else if (!hasBuilding)
-            {
-                var needLabel = new Label($"Place {AOrAn(missingBuilding)} to craft this");
-                needLabel.AddToClassList("recipe-lock-hint");
-                info.Add(needLabel);
-            }
-
-            var timeLabel = new Label($"Craft time: {ManualCraftService.UnitSeconds(method, speed):0.#}s");
-            timeLabel.style.fontSize = 11;
-            timeLabel.style.opacity  = 0.7f;
-            info.Add(timeLabel);
-
-            row.Add(info);
-            row.Add(BuildCraftButtons(method, isLocked, hasBuilding, max, () => _recipeMethodChoice[group.outputId] = method.id));
-            return row;
+            return menu;
         }
 
         /// <summary>Recipe-row / inspector line for what one item sells for, e.g. "Worth ◈ 2.5 each".</summary>
@@ -1887,26 +1900,21 @@ namespace MobileIdleBuilder
             UpdateRecipeListClearance();
             if (IsRecipePanelOpen && !ListTapRouter.GestureInProgress)
             {
-                float scroll = _recipeList.scrollOffset.y;
+                var scroll = _recipeList.scrollOffset;
                 BuildRecipeList();
-                _recipeList.scrollOffset = new Vector2(0f, scroll);
+                _recipeList.scrollOffset = scroll;
             }
         }
 
-        // Matches .recipe-list .unity-scroll-view__content-container padding-bottom in GameHUD.uss.
-        private const float RecipeListEndPadding = 56f;
-
-        // While the queue strip floats over the bottom of the panel, pad the end of the list by its
-        // height so the last rows can still scroll clear of it. Padding the end never moves the rows
-        // above, unlike the strip pushing the whole list down.
+        // While the queue strip floats over the bottom of the panel, lift the bottom of the card row by its
+        // height so the craft buttons stay clear of it (#488: the cards scroll sideways, not down).
         private void UpdateRecipeListClearance()
         {
-            var content = _recipeList?.contentContainer;
-            var strip   = _craftQueueView?.Root;
-            if (content == null) return;
+            var strip = _craftQueueView?.Root;
+            if (_recipeList == null) return;
             bool shown = strip != null && !strip.ClassListContains("hidden") && !float.IsNaN(strip.layout.height);
-            content.style.paddingBottom = shown
-                ? new StyleLength(RecipeListEndPadding + strip.layout.height)
+            _recipeList.style.marginBottom = shown
+                ? new StyleLength(strip.layout.height)
                 : new StyleLength(StyleKeyword.Null);
         }
 
@@ -1920,18 +1928,52 @@ namespace MobileIdleBuilder
         // Buildings list
         // ============================================================
 
+        // Builder (#487): role tabs over a horizontally scrolling row of cards (BuilderMenu).
+        private VisualElement _builderTabs;
+        private readonly Dictionary<string, VisualElement> _builderPages = new();
+        private string _builderTab;
+        private const string BuilderTabPref = "builder_tab";
+
+        private void EnsureBuilderTabs()
+        {
+            if (_builderTabs != null || _buildingsPanel == null || _buildingsList == null) return;
+            _builderTab = PlayerPrefs.GetString(BuilderTabPref, null);
+            _builderTabs = BuilderMenu.MakeTabBar(tab =>
+            {
+                _builderTab = tab;
+                PlayerPrefs.SetString(BuilderTabPref, tab);
+                BuilderMenu.ShowTab(_builderTabs, _builderPages, tab);
+                _buildingsList.scrollOffset = Vector2.zero;
+            });
+            _buildingsPanel.Insert(_buildingsPanel.IndexOf(_buildingsList), _builderTabs);
+            _buildingsList.mode = ScrollViewMode.Horizontal;
+            _buildingsList.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            _buildingsList.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            _buildingsList.AddToClassList("builder-cards");
+        }
+
         private void BuildBuildingsList()
         {
+            EnsureBuilderTabs();
             _buildingsList.Clear();
+            _builderPages.Clear();
             _buildingAffordRows.Clear();
             _lastAffordEntropy = long.MinValue; // force a re-evaluate next Update
+            foreach (var tab in BuilderMenu.Tabs)
+            {
+                var page = new VisualElement { name = BuilderMenu.PageName(tab) };
+                page.AddToClassList(BuilderMenu.PageClass);
+                page.AddToClassList("builder-page");
+                _builderPages[tab] = page;
+                _buildingsList.Add(page);
+            }
 
             long currentEntropy = 0;
             if (_ecsReady && !_progressQuery.IsEmpty)
                 currentEntropy = _em.GetComponentData<PlayerProgressData>(
                     _progressQuery.GetSingletonEntity()).BaseCurrency;
 
-            // ---- Conveyor Belt entry (always first, always free) ----
+            // ---- Conveyor Belt entry (always first in Logistics, always free) ----
             if (conveyorController != null)
             {
                 // Named so tutorial steps can point at it (TutorialPulseResolver).
@@ -1944,66 +1986,87 @@ namespace MobileIdleBuilder
 
                 // Stream worlds (Chemistry): the same tool draws water channels from a Spring.
                 bool streams = WorldRules.StreamTransport(SaveManager.Instance?.Current);
-                _buildingsList.Add(streams
-                    ? MakeBuildingCard("Channel",
-                        "Draw a stream from a Spring past your buildings; each takes what its reaction needs",
-                        MakeCostLabel(0, true), placeBtn)
-                    : MakeBuildingCard("Conveyor Belt",
-                        "Draw paths to move items between buildings", MakeCostLabel(0, true), placeBtn));
+                string beltName = streams ? "Channel" : "Conveyor Belt";
+                string beltInfo = streams
+                    ? "Draw a stream from a Spring past your buildings; each takes what its reaction needs"
+                    : "Draw paths to move items between buildings";
+                _builderPages["logistics"].Add(BuilderMenu.MakeCard(beltName, null, GlyphIcon.Kind.Flip,
+                    MakeCostLabel(0, true), placeBtn, InfoButton(beltName, beltInfo)));
             }
 
-            if (placementController == null) return;
-
-            AddFieldPurchaseRows(currentEntropy);
-
-            var ws = WorldService.Instance;
-            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
-            foreach (var entry in placementController.availableBuildings)
+            if (placementController != null)
             {
-                // Skip buildings that belong to another world (the Molecular Synthesizer is built in Chemistry)
-                var bso = entry.building;
-                if (bso != null && !WorldGate.BuildingInWorld(bso, activeWorldId)) continue;
+                AddFieldPurchaseRows(currentEntropy);
 
-                // Skip buildings whose required research has not been purchased yet
-                if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
+                var ws = WorldService.Instance;
+                string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
+                foreach (var entry in placementController.availableBuildings)
                 {
-                    if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
-                        continue;
+                    // Skip buildings that belong to another world (the Molecular Synthesizer is built in Chemistry)
+                    var bso = entry.building;
+                    if (bso != null && !WorldGate.BuildingInWorld(bso, activeWorldId)) continue;
+
+                    // Skip buildings whose required research has not been purchased yet
+                    if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
+                    {
+                        if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
+                            continue;
+                    }
+
+                    string detail = entry.defaultRecipe != null
+                        ? $"Produces: {entry.defaultRecipe.displayName}"
+                        : "";
+                    if (!string.IsNullOrEmpty(bso?.description))
+                        detail = string.IsNullOrEmpty(detail) ? bso.description : $"{detail}\n\n{bso.description}";
+                    if (IsObsolete(bso))
+                        detail = $"Obsolete. {bso.obsoleteCondition}\n\n{detail}";
+
+                    int rawCost = entry.building?.entropyCost ?? 0;
+                    float reduction = !_prestigeQuery.IsEmpty
+                        ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
+                        : 0f;
+                    long cost = EntropyWallet.ReducedCost(rawCost, reduction);
+                    bool canAfford = currentEntropy >= cost;
+
+                    var costLabel = MakeCostLabel(cost, canAfford);
+
+                    var placeBtn = new Button { text = "Place" };
+                    if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
+                    placeBtn.SetEnabled(canAfford);
+
+                    // Track cost rows so Update() can re-enable them the moment entropy catches up.
+                    if (cost > 0)
+                        _buildingAffordRows.Add((placeBtn, costLabel, cost));
+
+                    var captured = entry;
+                    ListTapRouter.Register(_buildingsList, placeBtn, () =>
+                    {
+                        SetElementVisible(_buildingsPanel, false);
+                        placementController.BeginPlacement(captured);
+                    });
+
+                    string name = entry.building?.displayName ?? "Building";
+                    _builderPages[BuilderMenu.TabOf(bso)].Add(BuilderMenu.MakeCard(name,
+                        BuilderMenu.CardSprite(bso, entry.defaultRecipe), GlyphIcon.Kind.Build,
+                        costLabel, placeBtn, InfoButton(name, detail)));
                 }
-
-                string detail = entry.defaultRecipe != null
-                    ? $"Produces: {entry.defaultRecipe.displayName}"
-                    : bso?.description ?? "";
-                if (IsObsolete(bso))
-                    detail = $"Obsolete. {bso.obsoleteCondition}";
-
-                int rawCost = entry.building?.entropyCost ?? 0;
-                float reduction = !_prestigeQuery.IsEmpty
-                    ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
-                    : 0f;
-                long cost = EntropyWallet.ReducedCost(rawCost, reduction);
-                bool canAfford = currentEntropy >= cost;
-
-                var costLabel = MakeCostLabel(cost, canAfford);
-
-                var placeBtn = new Button { text = "Place" };
-                if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
-                placeBtn.SetEnabled(canAfford);
-
-                // Track cost rows so Update() can re-enable them the moment entropy catches up.
-                if (cost > 0)
-                    _buildingAffordRows.Add((placeBtn, costLabel, cost));
-
-                var captured = entry;
-                ListTapRouter.Register(_buildingsList, placeBtn, () =>
-                {
-                    SetElementVisible(_buildingsPanel, false);
-                    placementController.BeginPlacement(captured);
-                });
-
-                _buildingsList.Add(MakeBuildingCard(entry.building?.displayName ?? "Building",
-                    detail, costLabel, placeBtn));
             }
+
+            var withCards = new HashSet<string>();
+            foreach (var kv in _builderPages) if (kv.Value.childCount > 0) withCards.Add(kv.Key);
+            _builderTab = BuilderMenu.PickTab(_builderTab, withCards);
+            BuilderMenu.ShowTab(_builderTabs, _builderPages, _builderTab);
+        }
+
+        // The (i) on a Builder card: the building's details in a card (#487). Routed through ListTapRouter like
+        // the Place button, since the ScrollView swallows a Button's own click on touch.
+        private Button InfoButton(string title, string detail)
+        {
+            if (string.IsNullOrEmpty(detail)) return null;
+            var info = new Button();
+            ListTapRouter.Register(_buildingsList, info, () =>
+                ConfirmPrompt.Show(title, detail, "OK", onConfirm: null, cancelLabel: "Close", destructive: false));
+            return info;
         }
 
         /// <summary>
@@ -2038,8 +2101,12 @@ namespace MobileIdleBuilder
                     placementController.BeginFieldPlacement(captured);
                 });
 
-                _buildingsList.Add(MakeBuildingCard(FieldPurchaseName(field), FieldPurchaseDetail(field),
-                    costLabel, placeBtn));
+                string name = FieldPurchaseName(field);
+                var drops = field.outputItems;
+                var picture = field.fieldIcon != null ? field.fieldIcon
+                            : drops.Count > 0 && drops[0] != null ? drops[0].icon : null;
+                _builderPages["harvest"].Add(BuilderMenu.MakeCard(name, picture, GlyphIcon.Kind.Domains,
+                    costLabel, placeBtn, InfoButton(name, FieldPurchaseDetail(field))));
             }
         }
 
@@ -2052,34 +2119,6 @@ namespace MobileIdleBuilder
                 ? $"{field.purchaseGroupSize} fields side by side"
                 : "One field on an empty tile";
             return $"{what}. Each one costs {field.purchaseCostMultiplier:0.#}x the last.";
-        }
-
-        // Every build-menu row has the same three columns so rows line up whatever the text
-        // length: [name + wrapping detail] [fixed-width cost] [Place button that never shrinks].
-        private static VisualElement MakeBuildingCard(string name, string detail, Label costLabel, Button placeBtn)
-        {
-            var card = new VisualElement();
-            card.AddToClassList("building-card");
-
-            var info = new VisualElement();
-            info.AddToClassList("building-card-info");
-            var nameLabel = new Label(name);
-            nameLabel.AddToClassList("building-card-name");
-            info.Add(nameLabel);
-            if (!string.IsNullOrEmpty(detail))
-            {
-                var detailLabel = new Label(detail);
-                detailLabel.AddToClassList("building-card-recipe");
-                info.Add(detailLabel);
-            }
-
-            placeBtn.AddToClassList("craft-btn");
-            placeBtn.AddToClassList("building-card-place");
-
-            card.Add(info);
-            card.Add(costLabel);
-            card.Add(placeBtn);
-            return card;
         }
 
         // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the
@@ -2753,17 +2792,30 @@ namespace MobileIdleBuilder
         public void MaybeShowGameUpdateNotice()
         {
             var save = SaveManager.Instance?.Current;
-            if (!GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc))
-                return;
 
-            _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
-            TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+            // What's new in this build (#502): the release notes CI published, once per text.
+            string notes = FeatureFlags.WhatsNewNotes, notesVersion = FeatureFlags.WhatsNewVersion;
+            var whatsNew = WhatsNew.Decide(Application.version, notesVersion, notes, save?.lastSeenWhatsNewHash,
+                                           newPlayer: !(save?.tutorial.hasCompletedFirstRun ?? false));
+            bool dataChanged = GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc);
 
-            if (save != null)
+            if (whatsNew == WhatsNew.Decision.Show)
             {
-                save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
-                SaveManager.Instance.SaveLocal();
+                // One card: the notes, then the balance notice when values changed too.
+                string message = notes.Trim();
+                if (dataChanged) message += "\n\n" + FeatureFlags.GameDataNoticeMessage;
+                _gameUpdate?.Show(WhatsNew.Title(notesVersion), message, leftAligned: true);   // bullet lists read left
             }
+            else if (dataChanged)
+            {
+                _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
+            }
+            if (dataChanged) TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+
+            if (save == null || (whatsNew == WhatsNew.Decision.Hide && !dataChanged)) return;
+            if (whatsNew != WhatsNew.Decision.Hide) save.lastSeenWhatsNewHash = WhatsNew.Hash(notes);
+            if (dataChanged) save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
+            SaveManager.Instance.SaveLocal();
         }
 
         private void PositionTooltip(VisualElement anchor)

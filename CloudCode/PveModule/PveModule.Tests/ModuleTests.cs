@@ -34,6 +34,36 @@ public class ModuleTests
     }
 
     [Fact]
+    public void EmbeddedRewards_PayStrings_InEveryBand_MoreInHigherLeagues()
+    {
+        var leagues = PveGameConfig.Embedded.Pve.leagues;
+        Assert.All(leagues, l => Assert.All(l.rewards, b => Assert.True(b.strings > 0, l.id)));
+        for (int i = 1; i < leagues.Length; i++)
+            Assert.True(leagues[i].rewards[0].strings > leagues[i - 1].rewards[0].strings, leagues[i].id);
+        Assert.Equal(60, PveRules.RewardFor(leagues[0], 1, 100).strings);
+        Assert.Equal(5, PveRules.RewardFor(leagues[0], 90, 100).strings);   // finished, outside every band
+
+        var back = PveStore.Deserialize<PveReward>(PveStore.Serialize(new PveReward { week = "w", strings = 35 }));
+        Assert.Equal(35, back.strings);
+    }
+
+    [Fact]
+    public void Cosmetics_OnlyKnownIdsOfTheRightKindAreValid_AndTheLookRoundTrips()
+    {
+        Assert.True(PveCosmetics.IsValid("", CosmeticKind.NameColor));
+        Assert.True(PveCosmetics.IsValid("color_gold", CosmeticKind.NameColor));
+        Assert.False(PveCosmetics.IsValid("color_gold", CosmeticKind.Title), "a colour id is not a title");
+        Assert.False(PveCosmetics.IsValid("<b>hi</b>", CosmeticKind.Title), "no free text");
+        Assert.Equal("String Theorist", PveCosmetics.TitleText("title_string_theorist"));
+
+        var m = PveStore.Deserialize<PveMember>(PveStore.Serialize(new PveMember { nameColor = "color_rose", title = "title_idle_physicist" }));
+        Assert.Equal("color_rose", m.nameColor);
+        Assert.Equal("title_idle_physicist", m.title);
+        var row = PveStore.Deserialize<PveBoardRow>(PveStore.Serialize(new PveBoardRow { nameColor = "color_lime" }));
+        Assert.Equal("color_lime", row.nameColor);
+    }
+
+    [Fact]
     public void Deserialize_AcceptsAStoredStringOrAJsonObjectValue()
     {
         string json = PveStore.Serialize(new PveSettings { smallBrackets = true });

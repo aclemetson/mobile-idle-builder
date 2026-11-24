@@ -71,8 +71,8 @@ namespace MobileIdleBuilder
 
         public TimeSpan RunRemaining => TournamentRules.Remaining(Entry, Now);
 
-        /// <summary>Manual prestige and Ascension are locked while this is true.</summary>
-        public bool PrestigeLocked => TournamentRules.PrestigeLocked(Entry, Now);
+        /// <summary>A prestige or Ascension now would end the run early (the HUD asks, then <see cref="RetireAsync"/>).</summary>
+        public bool PrestigeLeavesRun => TournamentRules.PrestigeLeavesRun(Entry, Now);
 
         /// <summary>Joined, but the join's prestige hasn't run (the app closed in between).</summary>
         public bool JoinPrestigePending => Save != null && InRun && TournamentRules.PrestigePending(Entry, Save.prestigeCount);
@@ -91,6 +91,7 @@ namespace MobileIdleBuilder
                 LastStatus = status;
                 MirrorEntry(status);
                 await FinishServerClaims(status);
+                await SyncLookIfChanged(status);
             }
             else if (LastStatus == null || status.error.StartsWith("network:") == false)
             {
@@ -128,6 +129,36 @@ namespace MobileIdleBuilder
             return status;
         }
 
+        /// <summary>
+        /// Leaves the run early at the current net worth (#505). On success (or when the server says the run is
+        /// already over / already retired) the entry is marked retired: no more snapshots, the kept one is dropped,
+        /// prestige is free again. Returns the server error, or null on success; a network error changes nothing.
+        /// </summary>
+        public async Task<string> RetireAsync()
+        {
+            var save = Save;
+            var t = save?.tournament;
+            if (t == null || !TournamentRules.InRun(t, Now)) return null;
+            var (nw, _, _) = SnapshotValues();
+            _sending = true;
+            PveSnapshotResponse r;
+            try { r = await PveApi.Retire(nw); }
+            finally { _sending = false; }
+            if (!string.IsNullOrEmpty(r.error) && r.error.StartsWith("network:")) return r.error;
+            MarkRetired(t);
+            GameLogger.Info($"[PvE] Retired at nw={nw:N0} ({(string.IsNullOrEmpty(r.error) ? "ok" : r.error)}).");
+            OnChanged?.Invoke();
+            return string.IsNullOrEmpty(r.error) || r.error == PveErrors.Retired || r.error == PveErrors.RunOver ? null : r.error;
+        }
+
+        static void MarkRetired(TournamentSaveData t)
+        {
+            t.retired = true;
+            t.finalSent = true;
+            t.pendingT = -1;
+            SaveManager.Instance.SaveLocal();
+        }
+
         /// <summary>What a claim gave, for the reveal card.</summary>
         public sealed class ClaimOutcome
         {
@@ -153,12 +184,34 @@ namespace MobileIdleBuilder
                 outcome.starsLanded = TournamentRules.ApplyReward(save, reward, pool, new System.Random());
                 outcome.applied = true;
                 SaveManager.Instance.SaveLocal();
-                GameLogger.Info($"[PvE] Reward {reward.week} applied: {reward.crystals} crystals, {outcome.starsLanded.Count} stars.");
+                GameLogger.Info($"[PvE] Reward {reward.week} applied: {reward.crystals} crystals, {outcome.starsLanded.Count} stars, {reward.strings} Strings.");
             }
             var r = await PveApi.Claim(reward.week);
             if (!string.IsNullOrEmpty(r.error) && r.error != PveErrors.NothingToClaim) outcome.serverError = r.error;
             await RefreshAsync();
             return outcome;
+        }
+
+        bool _lookSyncing;
+
+        /// <summary>
+        /// Pushes the equipped name colour and title (#500) when the server's profile differs. Called after every
+        /// status refresh and after an equip, so a call that failed offline lands later.
+        /// </summary>
+        public async Task SyncLookIfChanged(PveStatusResponse status = null)
+        {
+            var save = Save;
+            var profile = (status ?? LastStatus)?.profile;
+            if (save == null || profile == null || _lookSyncing) return;
+            if (!TournamentCosmetics.LookDiffers(save, profile.nameColor, profile.title)) return;
+            _lookSyncing = true;
+            try
+            {
+                var r = await PveApi.SetLook(save.pveNameColor ?? "", save.pveTitle ?? "");
+                if (string.IsNullOrEmpty(r.error)) LastStatus = r;
+                else GameLogger.Warning($"[PvE] SetLook failed: {r.error}");
+            }
+            finally { _lookSyncing = false; }
         }
 
         // Rewards this save already applied but the server still lists (its Claim never landed): clear them there.
@@ -181,6 +234,7 @@ namespace MobileIdleBuilder
             var save = Save;
             if (save == null || !s.joinedThisWeek || string.IsNullOrEmpty(s.startUtc)) return;
             var t = save.tournament ??= new TournamentSaveData();
+            if (s.retired && !t.retired && t.week == s.week && t.startUtc == s.startUtc) MarkRetired(t);
             if (t.week == s.week && t.startUtc == s.startUtc && t.league == s.profile?.league) return;
             bool sameRun = t.week == s.week && t.startUtc == s.startUtc;
             t.week = s.week;
@@ -280,6 +334,11 @@ namespace MobileIdleBuilder
             {
                 MarkFinalSent();   // nothing more to send for this run
             }
+            else if (r.error == PveErrors.Retired)
+            {
+                MarkRetired(t);    // retired on another device
+                OnChanged?.Invoke();
+            }
             else if (r.error.StartsWith("network:"))
             {
                 _sinceSnapshot = TournamentRules.SnapshotIntervalSeconds - 30f;   // retry in 30 s
@@ -328,7 +387,7 @@ namespace MobileIdleBuilder
             var t = Entry;
             string kept = TournamentRules.HasPending(t) ? $"t={t.pendingT}s nw={t.pendingNw:N0}" : "none";
             return $"enabled={Enabled} unlocked={Unlocked} state={PanelState} inRun={InRun} " +
-                   $"remaining={TournamentRules.FormatSpan(RunRemaining)} prestigeLocked={PrestigeLocked} " +
+                   $"remaining={TournamentRules.FormatSpan(RunRemaining)} prestigeLeavesRun={PrestigeLeavesRun} retired={t?.retired} " +
                    $"pending={JoinPrestigePending} week={t?.week} bracket={t?.bracketId} final={t?.finalSent} " +
                    $"keptSnapshot={kept} now={PveRules.Iso(Now)}";
         }

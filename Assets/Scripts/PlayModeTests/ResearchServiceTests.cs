@@ -250,6 +250,42 @@ namespace MobileIdleBuilder.PlayModeTests
         // ── Research timer ────────────────────────────────────────────────────
 
         [Test]
+        public void FreeResearch_FirstTimedResearchSkipsItsTimer_ThenTheTimerIsBack()
+        {
+            var upgradesGO = new GameObject("PersistentUpgradeService");
+            try
+            {
+                var upgrades = upgradesGO.AddComponent<PersistentUpgradeService>();
+                RunAwake(upgrades);
+                upgrades.LoadFromSave(new List<string> { "free_research:1" });
+                SpawnServices();
+                Assert.AreEqual(1, ResearchService.Instance.FreeResearchLeft);
+
+                ResearchService.Instance.Purchase(_resTimed);   // 60 s timer, free
+                Assert.IsTrue(ResearchService.Instance.IsUnlocked(_resTimed.id), "free research finishes at once");
+                Assert.IsFalse(ResearchService.Instance.HasActiveResearch);
+                Assert.AreEqual(900L, _em.GetComponentData<PlayerProgressData>(_playerEntity).BaseCurrency,
+                    "the entropy is still paid");
+                Assert.AreEqual(1, SaveManager.Instance.Current.currentRun.freeResearchUsed);
+                Assert.AreEqual(0, ResearchService.Instance.FreeResearchLeft);
+
+                ResearchService.Instance.Purchase(_resTimed2);  // no free ones left: timed
+                Assert.IsFalse(ResearchService.Instance.IsUnlocked(_resTimed2.id));
+                Assert.IsTrue(ResearchService.Instance.HasActiveResearch);
+            }
+            finally
+            {
+                // Awake ran by reflection, so Unity won't call OnDestroy: clear the singleton by hand or the
+                // destroyed service keeps answering Instance for the next tests.
+                var svc = upgradesGO.GetComponent<PersistentUpgradeService>();
+                typeof(SingletonMonoBehaviour<PersistentUpgradeService>)
+                    .GetMethod("OnDestroy", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(svc, null);
+                Object.DestroyImmediate(upgradesGO);
+            }
+        }
+
+        [Test]
         public void StartTimedResearch_DoesNotUnlockImmediately_AndSetsActiveTimer()
         {
             SpawnServices();

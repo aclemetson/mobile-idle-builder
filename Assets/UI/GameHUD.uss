@@ -439,6 +439,51 @@
     color: var(--color-text-secondary);
 }
 
+/* Drawer menu as a 3-column grid of icon tiles with a small caption (#486). The nav ScrollView's
+   content wraps; the MENU title and the locked hint take a full row. */
+.drawer-grid .unity-scroll-view__content-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.drawer-grid .drawer-section-title,
+.drawer-grid .drawer-locked-hint {
+    width: 100%;
+}
+
+.drawer-tile {
+    width: 31%;
+    margin: 0 1% var(--spacing-sm) 1%;
+    min-height: 72px;
+    padding: var(--spacing-sm) 2px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border-radius);
+    border-color: rgba(0, 229, 255, 0.12);
+}
+
+.drawer-tile > .drawer-tile__icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
+}
+
+.drawer-tile__caption {
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
+
+/* The reminder dot sits on the tile's top-right corner instead of the old row's right edge. */
+.drawer-tile > .reminder-dot {
+    top: 6px;
+    margin-top: 0;
+    right: 6px;
+}
+
 /* Hint shown beneath a locked drawer button */
 .drawer-locked-hint {
     color: var(--color-text-secondary);
@@ -597,6 +642,9 @@
     position: relative;
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
+    /* Never squeezed by a long list below it: without this, a tall list shrank every child of the panel,
+       header included, and the title disappeared (#499, research list mode; seen again in the PvE shop). */
+    flex-shrink: 0;
 }
 
 .panel-title {
@@ -1333,6 +1381,12 @@
     -unity-text-align: middle-center;
 }
 
+/* Release notes can run long (#502): the message scrolls inside the card. */
+.game-update-scroll {
+    max-height: 380px;
+    flex-shrink: 1;
+}
+
 .game-update-message {
     color: var(--color-text-secondary);
     font-size: var(--font-size-md);
@@ -1383,7 +1437,243 @@
     -unity-text-align: middle-center;
 }
 
+/* Builder cards (#487): a horizontal row per tab. The ScrollView scrolls sideways; each tab page is a row. */
+.builder-cards .unity-scroll-view__content-container,
+.recipe-cards .unity-scroll-view__content-container {
+    flex-direction: row;
+    padding-bottom: 0;
+}
+
+.builder-page {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.building-tile {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 148px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+}
+
+.building-tile__picture {
+    width: 84px;
+    height: 84px;
+    margin-bottom: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+    justify-content: center;
+    align-items: center;
+}
+
+.building-tile__glyph {
+    width: 48px;
+    height: 48px;
+    color: var(--color-primary);
+}
+
+.building-tile__name {
+    -unity-text-align: middle-center;
+    font-size: var(--font-size-sm);
+    min-height: 36px;
+    margin-bottom: 2px;
+}
+
+.building-tile__cost {
+    -unity-text-align: middle-center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.building-tile__place {
+    width: 100%;
+    margin: 0;
+}
+
+.building-tile__info {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 15px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.building-tile__info > .glyph-icon { width: 16px; height: 16px; }
+
+/* Recipe cards (#488): one per item, in a horizontal row per item-type tab. */
+.recipe-card {
+    flex-direction: column;
+    align-items: stretch;
+    width: 176px;
+    min-height: 300px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.recipe-card__icon {
+    width: 56px;
+    height: 56px;
+    align-self: center;
+    margin-bottom: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+    justify-content: center;
+    align-items: center;
+}
+
+.recipe-card__name {
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 2px;
+}
+
+.recipe-card__inputs {
+    justify-content: center;
+}
+
+.recipe-card__hint {
+    font-size: 11px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-top: 2px;
+}
+
+.recipe-card__meta {
+    color: var(--color-text-secondary);
+}
+
+.recipe-card__method {
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+}
+
+.recipe-card__spacer {
+    flex-grow: 1;
+    min-height: var(--spacing-xs);
+}
+
+.recipe-card__ways {
+    align-self: center;
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.recipe-card__craft {
+    width: 100%;
+    justify-content: center;
+}
+
+.recipe-card--unavailable .recipe-card__icon {
+    opacity: 0.6;
+}
+
+.recipe-card--locked > .recipe-card__icon,
+.recipe-card--locked > .recipe-card__name,
+.recipe-card--locked > .recipe-card__inputs,
+.recipe-card--locked > .recipe-card__meta {
+    opacity: 0.5;
+}
+
+/* The method drop-up: opens upward over the card from just above the toggle. */
+.recipe-dropup {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 108px;
+    padding: 4px;
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-primary);
+    border-radius: var(--border-radius);
+}
+
+.recipe-dropup__option {
+    margin: 2px 0;
+    padding: 4px 6px;
+    white-space: normal;
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-left;
+    background-color: rgba(0, 229, 255, 0.06);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+}
+
+.recipe-dropup__option--selected {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
 /* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
+/* Tournament panel pages (#500): each fills the panel below the tabs. */
+.pve-page {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    flex-direction: column;
+}
+
+/* Cosmetic rows (#500): swatch, name, buy / equip. */
+.pve-cosmetic-row {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.pve-cosmetic-row--on {
+    border-color: var(--color-primary);
+}
+
+.pve-cosmetic-row__swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0);
+    margin-right: var(--spacing-sm);
+}
+
+.pve-cosmetic-row__name {
+    flex-grow: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+}
+
+.pve-cosmetic-row__btn {
+    min-width: 110px;
+}
+
+.pve-shop-balance {
+    padding: var(--spacing-sm) var(--spacing-md) 0;
+    white-space: normal;
+}
+
+/* Strings balance in the tournament panel header (#500). */
+.pve-strings {
+    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-left;
+}
+
 .pve-league-badge {
     margin-left: var(--spacing-sm);
     padding: 2px var(--spacing-sm);
@@ -1430,6 +1720,10 @@
 }
 
 /* Tournament leaderboard rows (TournamentPanelController). Projected values (players behind you) are italic with "~". */
+.tournament-row--retired .tournament-row__value {
+    color: var(--color-text-secondary);
+}
+
 .tournament-row {
     flex-direction: row;
     align-items: center;
@@ -1484,7 +1778,15 @@
     color: var(--color-text-secondary);
 }
 
-/* Player name card (PlayerNamePromptController): text input + validation line. */
+/* Player name card (PlayerNamePromptController): text input + validation line.
+   Anchored near the top instead of centred: the on-screen keyboard opens from the bottom and covered the
+   centred card on phones (#504). UI Toolkit can't read the keyboard height reliably on Android, so the
+   card simply stays clear of the lower half, like the dev console does. */
+.name-prompt {
+    justify-content: flex-start;
+    padding-top: 12%;
+}
+
 .name-prompt__input {
     margin: 0 var(--spacing-md);
     min-height: 44px;

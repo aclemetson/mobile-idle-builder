@@ -87,6 +87,28 @@ namespace MobileIdleBuilder
         private static readonly Color SplitterRock         = new Color(0.50f, 0.56f, 0.66f);// Belt Splitter rock base
         private static readonly Color SpringStone          = new Color(0.40f, 0.47f, 0.51f);// Spring pool stones
         private const float LowHoleScale = 0.55f; // holes on a low plinth, which has little face to fill
+        /// <summary>
+        /// The base colour a building's model is built with, by structure kind (the same values SyncBuildings
+        /// uses). Collectors take their field's colour instead. Used by the Builder icon renderer (#487).
+        /// </summary>
+        public static Color BaseColorFor(BuildingStructureKind kind, bool isSink) =>
+            isSink ? EntropySinkGold : kind switch
+            {
+                BuildingStructureKind.AtomGenerator          => AtomGeneratorGold,
+                BuildingStructureKind.IsotopicManipulator    => IsotopicGreen,
+                BuildingStructureKind.BasicGenerator         => GeneratorCyan,
+                BuildingStructureKind.PowerRelay             => RelayAmber,
+                BuildingStructureKind.StrongForceCombiner    => CombinerSteel,
+                BuildingStructureKind.MolecularSynthesizer   => MoleculeTeal,
+                BuildingStructureKind.MaterialsForge         => ForgeSteel,
+                BuildingStructureKind.ComponentFabricator    => FabricatorViolet,
+                BuildingStructureKind.RadioactiveContainment => ContainmentLead,
+                BuildingStructureKind.BeltSplitter           => SplitterRock,
+                BuildingStructureKind.FusionReactor          => FusionPlinth,
+                BuildingStructureKind.Spring                 => SpringStone,
+                _                                            => DefaultCubeColor,
+            };
+
         private static readonly Color OutputHoleColor    = new Color(1.0f, 0.85f, 0.45f); // lit emission aperture
         private static readonly Color InputHoleColor     = new Color(0.05f, 0.07f, 0.12f); // dark recessed intake mouth
 

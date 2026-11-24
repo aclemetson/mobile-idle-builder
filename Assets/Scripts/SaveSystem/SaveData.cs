@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
         public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
         public List<string> worldsIntroSeen    = new();   // one-shot per world: world-unlock intro dialogue shown. Survives prestige.
         public List<WorldTutorialSaveData> worldTutorials = new(); // per-world tutorial progress (Chemistry...); Physics uses `tutorial`. Survives prestige.
+        public string lastSeenWhatsNewHash;                // WhatsNew.Hash of the release notes last shown (#502). Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
         // Public player name (PvE phase 1, PlayerNameService). UGS Authentication holds the real one; this caches it
@@ -46,6 +47,13 @@ namespace MobileIdleBuilder
         public string activeResearchId;                     // id of the research currently in progress; null/empty = none (one at a time). Cleared on prestige.
         public string activeResearchCompleteUtc;            // ISO 8601 UTC — when the active research finishes (same pattern as speedBoostExpiryUtc). Cleared on prestige.
         public List<string> codex                           = new();
+        public bool  adFree;                                // Ad-free purchase owned (#503): ad rewards without ads + 20% income. Survives prestige.
+        public long  pveStrings;
+        public List<string> pveTrack = new();
+        public List<string> pveCosmetics = new();           // owned cosmetic ids (PveCosmetics, #500)
+        public string pveNameColor;                         // equipped leaderboard name colour ("" / null = none)
+        public string pveTitle;                             // equipped leaderboard title
+        public string pveBeltTheme;                         // equipped belt theme (own grid only)               // tournament track levels "id:level" (TournamentTrack, #500). Survives prestige.                            // Strings, the tournament currency (#500). Survives prestige and Ascension.
         public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
         public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
         public double lastKnownNetWorth;                    // Snapshot written by ECSLoadBridge; used by shop entropy scaling
@@ -139,6 +147,7 @@ namespace MobileIdleBuilder
         public long  totalEntropySpent;
         public long  totalEntropyDiscounted;   // list price minus price paid; net worth counts purchases at list price
         public double baseNetWorth;
+        public int    freeResearchUsed;            // research this run that skipped its timer (Free Research, #491)
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();
         public List<string> nonPersistentUpgrades   = new();
@@ -360,6 +369,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public int    prestigeCountAtJoin = -1;
         public bool   finalSent;            // the snapshot at the 24h mark went through
+        public bool   retired;              // left the run early (#505): score frozen on the server, run over for this device
         // The latest snapshot taken during the run that the server hasn't confirmed (pendingT = its elapsed
         // seconds; -1 = none). Kept so a snapshot lost when the OS suspended the app still counts: it is sent
         // on the next launch with its own time (TournamentRules.CapturePending, PveRules.SnapshotTime).

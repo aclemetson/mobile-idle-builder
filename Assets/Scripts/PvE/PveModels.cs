@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
         public int top_percent;
         public int crystals;
         public int stars;
+        public int strings;         // Strings, the tournament currency (#500); spent in the tournament shop
     }
 
     [Serializable]
@@ -57,6 +58,9 @@ namespace MobileIdleBuilder
         public string name;
         public string startUtc;
         public bool dev;
+        public bool retired;            // left early (#505): score frozen at the retire snapshot (rate 0), no more snapshots
+        public string nameColor;        // cosmetics (#500): PveCosmetics ids, "" = none
+        public string title;
         public List<PveSnap> snaps = new List<PveSnap>();
     }
 
@@ -110,6 +114,7 @@ namespace MobileIdleBuilder
         public int size;
         public int crystals;
         public int stars;
+        public int strings;         // #500
     }
 
     [Serializable]
@@ -120,6 +125,8 @@ namespace MobileIdleBuilder
         public string bracketId;    // that tournament's bracket
         public List<PveHistoryEntry> history = new List<PveHistoryEntry>();
         public List<PveReward> pendingRewards = new List<PveReward>();
+        public string nameColor;    // the leaderboard look (#500), copied onto each new member record
+        public string title;
     }
 
     // ── Responses (module → client, as a JSON string) ──
@@ -139,6 +146,7 @@ namespace MobileIdleBuilder
         public string runEndsUtc;
         public string bracketId;
         public bool bracketSettled;
+        public bool retired;            // this player left this week's run early
     }
 
     [Serializable]
@@ -157,7 +165,10 @@ namespace MobileIdleBuilder
         public double value;
         public bool projected;
         public bool you;
+        public bool retired;            // left early: the value is final
         public int elapsed;             // that player's own elapsed seconds (clamped to the run)
+        public string nameColor;        // cosmetics (#500): PveCosmetics ids
+        public string title;
     }
 
     [Serializable]
@@ -193,5 +204,7 @@ namespace MobileIdleBuilder
         public const string Busy            = "busy";
         public const string NothingToClaim  = "nothing_to_claim";
         public const string Config          = "config_missing";
+        public const string Retired         = "retired";
+        public const string BadLook         = "bad_look";
     }
 }

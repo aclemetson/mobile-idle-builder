@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Extractor
   description: 'Draws raw feedstock from Chemistry''s fields: hydrogen, oxygen and
     nitrogen gas, graphite, and minerals.'
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5bebcb097fa9119449f929d88eaf22c1, type: 3}
   prefab: {fileID: 0}
   buildingId: 14
   tier: 3

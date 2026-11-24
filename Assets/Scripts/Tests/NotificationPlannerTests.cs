@@ -281,13 +281,6 @@ namespace MobileIdleBuilder.Tests
         static NotificationInputs SurgeInputs(SaveData save, bool adsOn = true) =>
             NotificationInputs.FromSave(save, Now, Now, TimeSpan.Zero, 0f, false, null, surgeOfferEnabled: adsOn);
 
-        static void UseAllSurgeWatches(SaveData save, DateTime nextReset)
-        {
-            for (int n = 0; n < AdRewardCalculator.DailyCap(AdPlacement.EntropySurge); n++)
-                AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropySurge);
-            save.adWatchResetUtc = nextReset.ToString("O");
-        }
-
         [Test]
         public void Surge_Ready_WaitsTheMinimumAway()
         {
@@ -312,22 +305,6 @@ namespace MobileIdleBuilder.Tests
             var save = TutorialDoneSave();
             save.speedBoostExpiryUtc = Now.AddHours(3).ToString("O");
             Assert.AreEqual(TimeSpan.FromHours(3), SurgeInputs(save).SurgeReadyIn);
-        }
-
-        [Test]
-        public void Surge_DailyCapUsed_WaitsForTheReset()
-        {
-            var save = TutorialDoneSave();
-            UseAllSurgeWatches(save, Now.Date.AddDays(1));   // midnight, 12 h away
-            Assert.AreEqual(TimeSpan.FromHours(12), SurgeInputs(save).SurgeReadyIn);
-        }
-
-        [Test]
-        public void Surge_StaleCapPastReset_CountsAsAvailable()
-        {
-            var save = TutorialDoneSave();
-            UseAllSurgeWatches(save, Now.AddHours(-1));   // counters not yet zeroed, but the reset has passed
-            Assert.AreEqual(NotificationPlanner.SurgeMinAway, SurgeInputs(save).SurgeReadyIn);
         }
 
         [Test]

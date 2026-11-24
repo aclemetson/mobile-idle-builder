@@ -17,7 +17,7 @@ MonoBehaviour:
   description: 'Lets unstable isotopes decay: one isotope in, the element it becomes
     out, plus the particle it releases. Choose which output side each product leaves
     by.'
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: bd89941ac7975794ab826e68aceec19a, type: 3}
   prefab: {fileID: 0}
   buildingId: 6
   tier: 2

@@ -161,21 +161,14 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// When the Entropy Surge offer is back: the latest of its cooldown, the one-boost-at-a-time lock, the
-        /// daily-cap reset (00:00 UTC, when today's watches are used up) and <see cref="NotificationPlanner.SurgeMinAway"/>.
+        /// When the Entropy Surge offer is back: the latest of its cooldown, the one-boost-at-a-time lock and
+        /// <see cref="NotificationPlanner.SurgeMinAway"/>. The surge has no daily cap (#489).
         /// The floor keeps a 15-minute cooldown from pinging every player who closes the app right after a surge.
         /// </summary>
         internal static TimeSpan SurgeReadyDelay(SaveData save, DateTime gameNow)
         {
             const AdPlacement p = AdPlacement.EntropySurge;
             var wait = NotificationPlanner.SurgeMinAway;
-
-            // Counters are zeroed lazily on the next day check, so stale counts past the reset mean "full again".
-            bool resetPassed = TryParseUtc(save.adWatchResetUtc, out var reset) && gameNow >= reset;
-            // No reset recorded at all: the next day check resets the counters, so the cap does not hold it back.
-            if (!resetPassed && reset != default && AdRewardCalculator.Remaining(save, p) <= 0)
-                wait = Max(wait, reset - gameNow);
-
             wait = Max(wait, AdRewardCalculator.CooldownRemaining(save, p, gameNow));
             if (BoostLock.BlocksAd(save, p, gameNow)) wait = Max(wait, BoostLock.Remaining(save, gameNow));
             return wait;

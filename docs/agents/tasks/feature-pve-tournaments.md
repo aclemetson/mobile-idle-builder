@@ -126,6 +126,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - Save (`tournament`, additive, survives prestige): `weekId`, `bracketId`, `startUtc`, `league`, `lastSnapshotT`, `scoreFrozen`.
 - Join flow: `pve_status` checks the window → confirm modal ("This prestiges your current run: +N prestige currency") → `pve_join` → on success, set `PrestigeRequested` (the normal prestige, with currency). The `tournament` block survives `PrestigeRunReset`, and the new run is the tournament run.
 - During the 24h: **block manual prestige** (button disabled with a countdown) so net worth can't be reset mid-run.
+- **Changed 2026-11-23 (#505): leave early instead of a lock.** Prestige/Ascension mid-run asks ("End your tournament run?") and then calls the module's `Retire(netWorth)` before prestiging: a last snapshot at the current net worth with idle rate 0 (never below the last recorded), member marked `retired` (later snapshots get `retired`). The panel has a Retire button doing the same without prestiging. Board rows show "(retired)"; status reports `retired` so another device follows. Offline, the prestige is refused rather than leaving a stale projection.
 - Snapshots: every 5 min of real play (reuse the telemetry snapshot loop's cadence), on leaderboard open, on `SaveManager.Backgrounding`. Payload `{nw, rate}`: `rate` = net-worth rate from the idle snapshot chains (what `OfflineCollectionService` would pay per second, before the cap).
 - After 24h, the score is frozen (server side). The run continues normally, and prestige unlocks again.
 
@@ -158,6 +159,6 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 
 ## Open items for later
 
-- Special tournament currency (reward slot reserved).
+- ~~Special tournament currency~~: **Strings** (#500, 2026-11-24). Every reward band pays them (`PveRewardBand.strings` → `PveReward.strings`; Bronze 60/35/20/10/5 up to Champion 300/175/100/50/25 for 1st / 2nd-3rd / 4th-10th / top 25% / everyone who finished). Claimed into `SaveData.pveStrings`, with the balance in the panel header. Spent on a tournament track (Star Resonance, Lucky Draw, Surge Luck, Harmonics) and cosmetics (leaderboard name colours and titles, belt themes): parts 2 and 3.
 - Bracket size growth toward 100 as the player base grows (config only).
 - Push notification at Friday 00:00 / when your 24h is nearly up (reuse `NotificationPlanner`).
