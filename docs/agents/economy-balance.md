@@ -133,20 +133,22 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | id | Name | Effect | Levels |
 |---|---|---|---|
 | `entropy_headstart` | Entropy Headstart | +250e starting entropy / run | per-lvl |
-| `memory_resonance` | Memory Resonance | −5% research cost (live: `ResearchService.EffectiveCost`) | per-lvl |
-| `assembly_line` | Assembly Line | +10% craft speed | per-lvl |
+| `memory_resonance` | Memory Resonance | −5% research cost (live: `ResearchService.EffectiveCost`; −50% at max, under `ResearchCost.MaxDiscount` 90%) | 10 |
+| `assembly_line` | Assembly Line | +10% craft speed | 20 |
 | `expanded_vault` | Expanded Vault | +20 inventory slots | per-lvl |
 | `field_cooldown` | Quick Hands | −5% field tap cooldown (max −50%) | per-lvl |
-| `quantum_yield` | Quantum Yield | +10% recipe output | per-lvl |
+| `quantum_yield` | Quantum Yield | +10% recipe output | 20 |
 | `efficient_layouts` | Efficient Layouts | −5% building cost (max −30%) | per-lvl |
 | `turnkey_builder` | Turnkey Builder | +1 pre-placed Harvester / run | per-lvl |
 | `research_overdrive` | Research Overdrive | −5% research timer (max −50%; prereq Memory Resonance 2) | 10 |
 | `free_research` | Free Research | +1 research per run that finishes the moment it starts (entropy still paid; `ResearchService.FreeResearchLeft`, counted in `CurrentRunData.freeResearchUsed`, reset by prestige; research already instant doesn't use one); 25✦ → 1,800✦, prereq Research Overdrive 1 (#491) | 10 |
-| `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | per-lvl |
+| `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | 10 |
 | `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 30 min, max 12h; 23 levels, 5✦ → 700✦, no prereq) | 23 |
 | `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 20%, max 100%) | per-lvl |
 | `salvage_protocols` | Salvage Protocols | +10% removal refund (base 50%, max 100%; prereq Efficient Layouts 1) | 5 |
 | `surplus_resale` | Surplus Brokerage | +10% of the Demon price for auto-sold unused items (base 50%, max 100%) | 5 |
+
+**Deep-game tails (#501, 2026-11-24):** a first pass to the Dyson Node earns about 24k✦ and the 4-year Ascension plan about 700k✦ (`scripts/item_timeline.py` `WALLS` / `ASCENSION`), while the shop held about 86k✦ and its cheap core upgrades maxed by the third wall. The uncapped, live tracks got longer tails, each extra level costing x1.25 (Quantum Yield), x1.3 (Assembly Line, Echo, world tracks) or x1.45 (Memory Resonance) the last: Memory Resonance 5→10, Assembly Line 5→20, Quantum Yield 10→20, Entropy Echo 4→10, Fission Yield 6→15, Neutron Economy 5→15, Spring Pressure 6→12, Catalysis / Growth Media / Furnace Heat / Precision 8→15. The shop now holds about 680k✦, and its priciest level is 48k✦ (Quantum Yield 20, about two loops). Not extended: capped effects (Research Overdrive, idle cap/rate, Salvage, Surplus, Quick Hands, Efficient Layouts), the flat Entropy Headstart, and Expanded Vault / Turnkey Builder, whose effects are not wired yet. `scripts/prestige_plan.py` now reads every cost from `PersistentUpgradeService.cs`. `UpgradeLevelDepthTests` guards this.
 
 **Removal refunds** (`DemolishRefund`, applied by `DeconstructController`): removing a building returns `Fraction × spent`, where spent = placement cost after the prestige discount + every speed/storage/input upgrade bought. The building's whole spent amount leaves `TotalEntropySpent`, so net worth drops by the unrefunded part and place/remove loops can't farm prestige. Belts are free (no refund). The grid's only Maxwell's Demon can't be removed, and every removal asks to confirm (`ConfirmPrompt`).
 
