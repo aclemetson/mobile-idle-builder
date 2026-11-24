@@ -89,10 +89,6 @@ namespace MobileIdleBuilder
                 FilterSystem.WriteRules(buffer, RemapRules(FilterSystem.ReadRules(buffer),
                                                            oldRotation, oldFlipped, rotation, flipped));
             }
-
-            // The splitter's next side is an absolute facing too; start its turn over.
-            if (em.HasComponent<SplitterState>(e))
-                em.SetComponentData(e, new SplitterState { NextFacing = -1 });
         }
 
         /// <summary>

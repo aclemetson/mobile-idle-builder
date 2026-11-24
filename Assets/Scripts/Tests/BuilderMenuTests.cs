@@ -30,7 +30,6 @@ namespace MobileIdleBuilder.Tests
         [TestCase("atomic_assembler", "production")]
         [TestCase("fusion_reactor", "production")]
         [TestCase("molecular_synthesizer", "production")]
-        [TestCase("splitter_2", "logistics")]
         [TestCase("filter", "logistics")]
         [TestCase("basic_generator", "power")]
         [TestCase("power_relay", "power")]

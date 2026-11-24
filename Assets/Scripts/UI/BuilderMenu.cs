@@ -43,7 +43,7 @@ namespace MobileIdleBuilder
         {
             if (b == null) return "logistics";
             if (b.isEntropySink) return "special";
-            if (b.isSplitter || b.isItemFilter || b.structureKind == BuildingStructureKind.BeltSplitter) return "logistics";
+            if (b.isItemFilter) return "logistics";
             if (b.isPowerSource || b.structureKind == BuildingStructureKind.PowerRelay) return "power";
             if (b.isSpring || b.structureKind == BuildingStructureKind.NucleonHarvester
                 || (b.compatibleFields != null && b.compatibleFields.Length > 0)) return "harvest";

@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
             public int2 PrimaryInboundCell;    // first inbound (N,E,S,W order)
             public int  PrimaryInboundExitDir; // its ExitDir == travel dir into this cell (this cell's EntryDir); -1 if head
             public bool IsHead;                // no inbound — a source / chain head
+            public int  InboundMask;           // bit d set = flow enters from the neighbour in direction d
         }
 
         /// <summary>
@@ -31,18 +32,23 @@ namespace MobileIdleBuilder
         /// are not counted as any neighbour's inbound, so a belt that merely runs up to another (without
         /// an endpoint coinciding) stays separate instead of auto-merging. Pass null for no blocks.
         /// </summary>
+        /// <param name="splitMasks">Belt splits: cell → output mask (<see cref="BeltSplit.Mask"/>). A split feeds every
+        /// neighbour on its mask, and its primary link (NextSegment) prefers its ExitDir, else its first output.</param>
         public static Dictionary<int2, CellLinks> Compute(IReadOnlyDictionary<int2, int> cellExit,
-                                                          HashSet<int2> outputBlocked = null)
+                                                          HashSet<int2> outputBlocked = null,
+                                                          IReadOnlyDictionary<int2, int> splitMasks = null)
         {
             var result = new Dictionary<int2, CellLinks>(cellExit.Count);
 
             bool IsBlocked(int2 c) => outputBlocked != null && outputBlocked.Contains(c);
+            int SplitMask(int2 c) => splitMasks != null && splitMasks.TryGetValue(c, out int m) ? m : 0;
 
             foreach (var kv in cellExit)
             {
                 int2 cell = kv.Key;
                 int  exit = kv.Value;
                 var  link = new CellLinks();
+                int  mask = SplitMask(cell);
 
                 int2 outCell = Adjacent(cell, exit);
                 if (!IsBlocked(cell) &&
@@ -51,22 +57,36 @@ namespace MobileIdleBuilder
                     link.HasOutput  = true;
                     link.OutputCell = outCell;
                 }
+                else if (mask != 0)
+                {
+                    // A split whose primary side has no belt yet still links to its first output that does.
+                    for (int d = 0; d < 4 && !link.HasOutput; d++)
+                    {
+                        if (!BeltSplitRules.Has(mask, d)) continue;
+                        int2 oc = Adjacent(cell, d);
+                        if (!cellExit.ContainsKey(oc)) continue;
+                        link.HasOutput  = true;
+                        link.OutputCell = oc;
+                    }
+                }
 
                 int count = 0;
                 for (int d = 0; d < 4; d++)
                 {
                     int2 nc = Adjacent(cell, d);
                     if (!cellExit.TryGetValue(nc, out int nExit)) continue;
-                    if (IsBlocked(nc)) continue;                                // its output is disconnected
-                    int2 nExitCell = Adjacent(nc, nExit);
-                    if (nExitCell.x != cell.x || nExitCell.y != cell.y) continue; // not an inbound
+                    int  toUs  = Opposite(d);                                   // the direction from nc to this cell
+                    bool feeds = !IsBlocked(nc) && nExit == toUs;               // its ExitDir points here
+                    if (!feeds && BeltSplitRules.Has(SplitMask(nc), toUs)) feeds = true; // a split output points here
+                    if (!feeds) continue;
 
                     count++;
+                    link.InboundMask |= 1 << d;
                     if (!link.HasPrimaryInbound)
                     {
                         link.HasPrimaryInbound     = true;
                         link.PrimaryInboundCell    = nc;
-                        link.PrimaryInboundExitDir = nExit;
+                        link.PrimaryInboundExitDir = toUs;   // travel direction into this cell
                     }
                 }
 
@@ -92,7 +112,8 @@ namespace MobileIdleBuilder
         /// chain). Only cells the route merely PASSES THROUGH (i >= 1) are protected from hijacking.
         /// </summary>
         public static bool CanPlace(IReadOnlyDictionary<int2, int> cellExit, IReadOnlyList<int2> path,
-                                    int maxInbounds, out string reason)
+                                    int maxInbounds, out string reason,
+                                    IReadOnlyDictionary<int2, int> splitMasks = null)
         {
             reason = null;
             if (path == null || path.Count == 0) { reason = "empty path"; return false; }
@@ -107,6 +128,9 @@ namespace MobileIdleBuilder
                 if (!cellExit.ContainsKey(outCell)) continue; // no live successor — free to redirect
 
                 int desired = DirBetween(path[i], path[i + 1]);
+                // A split may be passed through along any of its outputs.
+                if (splitMasks != null && splitMasks.TryGetValue(cell, out int sm) && BeltSplitRules.Has(sm, desired))
+                    continue;
                 if (exit != desired)
                 {
                     reason = $"cell ({cell.x},{cell.y}) already outputs {(OutputDirection)exit}; cannot fork output";

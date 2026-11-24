@@ -92,6 +92,10 @@ namespace MobileIdleBuilder
                 }
             }
 
+            // Belt splits: every item that reached one is given its exit by weighted turns, among the sides that
+            // have a belt, so it curves toward its branch as it crosses the tile.
+            PlanSplitExits(segEntities, segMap);
+
             // ----------------------------------------------------------------
             // Pass 2 — Advance items (back-pressure aware)
             //
@@ -117,7 +121,9 @@ namespace MobileIdleBuilder
                 bool isStream = EntityManager.HasComponent<StreamSegment>(e);
                 if (isStream && EntityManager.GetComponentData<StreamSegment>(e).HasSource == 0) continue;
 
-                float frontLimit = seg.NextSegment != Entity.Null
+                float frontLimit = EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap)
+                    ? SplitFrontLimit(e, seg, segMap, spacing)
+                    : seg.NextSegment != Entity.Null
                     ? BeltMotion.FrontLimitBehind(Rear(seg.NextSegment), spacing)
                     : isStream || TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
                         ? BeltMotion.Open : BeltMotion.TailRest(spacing);
@@ -143,6 +149,7 @@ namespace MobileIdleBuilder
             var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir)>();
             var overflows         = new List<(Entity from, int itemID, Entity bldg)>();
             var mergeTargets      = new HashSet<Entity>();
+            var splitChoice       = new Dictionary<Entity, int>();   // split segment -> the side it hands off to now
 
             for (int i = 0; i < segEntities.Length; i++)
             {
@@ -153,7 +160,18 @@ namespace MobileIdleBuilder
                 var item = ConveyorItems.Front(EntityManager, e);
                 if (item.Progress < 1f) continue;
 
-                if (seg.NextSegment != Entity.Null)
+                if (EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap))
+                {
+                    // A split: its planned side if that belt has room, else the next side by turns that does.
+                    int dir = ChooseSplitExit(e, seg, segMap, item, spacing);
+                    if (dir >= 0)
+                    {
+                        splitChoice[e] = dir;
+                        mergeTargets.Add(segMap[AdjacentCell(seg.Cell, dir)]);
+                    }
+                    // else every output is backed up: the item waits
+                }
+                else if (seg.NextSegment != Entity.Null)
                 {
                     // Defer to the per-target round-robin below (handles single and merge cells alike).
                     if (BeltMotion.HasRoom(Rear(seg.NextSegment), item.Progress - 1f, spacing))
@@ -250,9 +268,19 @@ namespace MobileIdleBuilder
                     if (!segMap.TryGetValue(nc, out Entity inSeg)) continue;
 
                     var inData = EntityManager.GetComponentData<ConveyorSegmentData>(inSeg);
-                    if (inData.OutputBlocked) continue;                                         // dead-end: not connected
-                    int2 inExitCell = AdjacentCell(inData.Cell, inData.ExitDir);
-                    if (inExitCell.x != tSeg.Cell.x || inExitCell.y != tSeg.Cell.y) continue; // not an inbound
+                    if (splitChoice.TryGetValue(inSeg, out int splitDir))
+                    {
+                        // A split hands off only to the side it chose this frame.
+                        int2 c = AdjacentCell(inData.Cell, splitDir);
+                        if (c.x != tSeg.Cell.x || c.y != tSeg.Cell.y) continue;
+                    }
+                    else
+                    {
+                        if (EntityManager.HasComponent<BeltSplit>(inSeg)) continue;                // a split waiting on another side
+                        if (inData.OutputBlocked) continue;                                         // dead-end: not connected
+                        int2 inExitCell = AdjacentCell(inData.Cell, inData.ExitDir);
+                        if (inExitCell.x != tSeg.Cell.x || inExitCell.y != tSeg.Cell.y) continue; // not an inbound
+                    }
                     if (!ConveyorItems.Has(EntityManager, inSeg)) continue;
                     float frontProgress = ConveyorItems.Front(EntityManager, inSeg).Progress;
                     if (frontProgress < 1f) continue;
@@ -278,7 +306,7 @@ namespace MobileIdleBuilder
                 ConveyorItems.RemoveFront(EntityManager, chosen);
 
                 // Animate the item from the edge it actually arrived through, and advance the cursor.
-                tSeg.EntryDir    = chosenSeg.ExitDir;
+                tSeg.EntryDir    = OppositeDir(chosenDir);   // travel direction in (a split's side, or the inbound's ExitDir)
                 tSeg.MergeCursor = (chosenDir + 1) % 4;
                 EntityManager.SetComponentData(target, tSeg);
             }
@@ -287,7 +315,6 @@ namespace MobileIdleBuilder
             // Pass 4 — Pull items from building output buffers onto chain heads
             // ----------------------------------------------------------------
             var pulls = new List<(Entity head, int itemID)>();
-            var splitterHeads = new Dictionary<Entity, List<(Entity head, int facing)>>();
 
             for (int i = 0; i < segEntities.Length; i++)
             {
@@ -353,15 +380,6 @@ namespace MobileIdleBuilder
                     continue;
                 }
 
-                if (EntityManager.HasComponent<SplitterTag>(bldg))
-                {
-                    // A Belt Splitter: its sides take turns, decided once every ready head is known.
-                    if (!splitterHeads.TryGetValue(bldg, out var heads))
-                        splitterHeads[bldg] = heads = new List<(Entity head, int facing)>();
-                    heads.Add((e, portFacing));
-                    continue;
-                }
-
                 int itemID = outputBuf[0].ItemID;
                 if (EntityManager.HasBuffer<OutputPortFilter>(bldg))
                 {
@@ -379,9 +397,6 @@ namespace MobileIdleBuilder
                     GameLogger.Develop($"[ConveyorSystem] Chain head @ {seg.Cell}: pulled itemID={itemID} " +
                               $"from building at {sourceCell} (portFacing={portFacing}) onto belt.");
             }
-
-            foreach (var kv in splitterHeads)
-                PullFromSplitter(kv.Key, kv.Value, pulls);
 
             foreach (var (head, itemID) in pulls)
             {
@@ -403,6 +418,81 @@ namespace MobileIdleBuilder
             bldgEntities.Dispose();
             segMap.Dispose();
             buildingMap.Dispose();
+        }
+
+        // ----------------------------------------------------------------
+        // Belt splits (BeltSplit): weighted turns between 2-3 output sides
+        // ----------------------------------------------------------------
+
+        // True when at least one of the split's output sides has a belt to hand to.
+        private bool SplitHasOutput(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap)
+        {
+            var split = EntityManager.GetComponentData<BeltSplit>(e);
+            for (int d = 0; d < 4; d++)
+                if (BeltSplitRules.Has(split.Mask, d) && segMap.ContainsKey(AdjacentCell(seg.Cell, d))) return true;
+            return false;
+        }
+
+        // Gives every item on a split without a planned exit one, by weighted turns among sides that have a belt.
+        private void PlanSplitExits(NativeArray<Entity> segs, NativeHashMap<int2, Entity> segMap)
+        {
+            for (int i = 0; i < segs.Length; i++)
+            {
+                var e = segs[i];
+                if (!EntityManager.HasComponent<BeltSplit>(e) || !ConveyorItems.Has(EntityManager, e)) continue;
+                var seg   = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+                var split = EntityManager.GetComponentData<BeltSplit>(e);
+                var buf   = EntityManager.GetBuffer<ConveyorItem>(e);
+                bool changed = false;
+                for (int k = 0; k < buf.Length; k++)
+                {
+                    var it = buf[k];
+                    if (it.OutEdge != 0 && BeltSplitRules.Has(split.Mask, it.OutEdge - 1)) continue;
+                    int dir = BeltSplitRules.Pick(ref split, d => segMap.ContainsKey(AdjacentCell(seg.Cell, d)));
+                    if (dir < 0) break;
+                    it.OutEdge = ConveyorItem.EncodeEdge(dir);
+                    buf[k]  = it;
+                    changed = true;
+                }
+                if (changed) EntityManager.SetComponentData(e, split);
+            }
+        }
+
+        // The front item may run to the edge when any output has room for it; else it stops behind the best one.
+        private float SplitFrontLimit(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap, float spacing)
+        {
+            var split = EntityManager.GetComponentData<BeltSplit>(e);
+            float best = float.NegativeInfinity;
+            for (int d = 0; d < 4; d++)
+            {
+                if (!BeltSplitRules.Has(split.Mask, d) || !segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)) continue;
+                float lim = BeltMotion.FrontLimitBehind(Rear(t), spacing);
+                if (lim > best) best = lim;
+            }
+            return best;
+        }
+
+        // The side a split's ready front item leaves by: its planned side when that belt has room, else the next
+        // side by turns whose belt has room (the item's plan is rewritten). -1 when every output is backed up.
+        private int ChooseSplitExit(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap,
+                                    ConveyorItem front, float spacing)
+        {
+            bool Room(int d) =>
+                segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)
+                && BeltMotion.HasRoom(Rear(t), front.Progress - 1f, spacing);
+
+            var split = EntityManager.GetComponentData<BeltSplit>(e);
+            int planned = front.OutEdge - 1;
+            if (planned >= 0 && BeltSplitRules.Has(split.Mask, planned) && Room(planned)) return planned;
+
+            int dir = BeltSplitRules.Pick(ref split, d => Room(d));
+            if (dir < 0) return -1;
+            EntityManager.SetComponentData(e, split);
+            var buf = EntityManager.GetBuffer<ConveyorItem>(e);
+            var it  = buf[0];
+            it.OutEdge = ConveyorItem.EncodeEdge(dir);
+            buf[0] = it;
+            return dir;
         }
 
         // ----------------------------------------------------------------
@@ -470,7 +560,7 @@ namespace MobileIdleBuilder
                 {
                     int2 cell = AdjacentCell(seg.Cell, dir);
                     if (!buildingMap.TryGetValue(cell, out Entity bldg)) continue;
-                    if (EntityManager.HasComponent<SplitterTag>(bldg) || EntityManager.HasBuffer<OutputPortFilter>(bldg)) continue;
+                    if (EntityManager.HasBuffer<OutputPortFilter>(bldg)) continue;
                     if (!HasMatchingPort(bldg, cell, OppositeDir(dir), PortType.Output)) continue;
                     if (!EntityManager.HasBuffer<BuildingOutputSlot>(bldg)) continue;
                     var outputBuf = EntityManager.GetBuffer<BuildingOutputSlot>(bldg);
@@ -492,43 +582,6 @@ namespace MobileIdleBuilder
                     });
                 }
             }
-        }
-
-        /// <summary>
-        /// Belt Splitter: gives its next item to the side whose turn it is, or the next ready side after it
-        /// (<see cref="SplitterRotation"/>), then passes the turn on. One item per splitter per tick, far more
-        /// than a belt carries, so the branches share the flow evenly whatever order the heads were visited in.
-        /// </summary>
-        private void PullFromSplitter(Entity bldg, List<(Entity head, int facing)> readyHeads,
-                                      List<(Entity head, int itemID)> pulls)
-        {
-            var outputBuf = EntityManager.GetBuffer<BuildingOutputSlot>(bldg);
-            if (outputBuf.Length == 0) return;
-
-            var order = new List<int>(3);
-            var ports = EntityManager.GetBuffer<PlacedPortData>(bldg, isReadOnly: true);
-            for (int p = 0; p < ports.Length; p++)
-                if (ports[p].PortType == (int)PortType.Output && !order.Contains(ports[p].Facing))
-                    order.Add(ports[p].Facing);
-
-            var ready = new HashSet<int>();
-            foreach (var (_, facing) in readyHeads) ready.Add(facing);
-
-            var state  = EntityManager.GetComponentData<SplitterState>(bldg);
-            int chosen = SplitterRotation.Pick(order, state.NextFacing, ready);
-            if (chosen < 0) return;
-
-            foreach (var (head, facing) in readyHeads)
-            {
-                if (facing != chosen) continue;
-                int itemID = outputBuf[0].ItemID;
-                SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
-                pulls.Add((head, itemID));
-                break;
-            }
-
-            state.NextFacing = SplitterRotation.After(order, chosen);
-            EntityManager.SetComponentData(bldg, state);
         }
 
         // ----------------------------------------------------------------
