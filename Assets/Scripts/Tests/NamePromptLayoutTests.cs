@@ -26,6 +26,11 @@ namespace MobileIdleBuilder.Tests
         [UnityTest]
         public IEnumerator NameCard_StaysAboveTheKeyboard_InPortrait()
         {
+            // Lays out in a real editor window, which needs a graphics device: CI runs Unity with -nographics
+            // (opening the window there logs an error and fails the run). Checked in the Editor / on GPU runners.
+            if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null)
+                Assert.Ignore("Needs a graphics device to lay out an editor window (CI runs -nographics).");
+
             const float W = 540, H = 960;
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/GameHUD.uxml");
             _window = ScriptableObject.CreateInstance<Host>();
