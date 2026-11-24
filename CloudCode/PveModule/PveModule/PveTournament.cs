@@ -152,6 +152,7 @@ namespace MobileIdleBuilder.PveModule
             var member = new PveMember
             {
                 playerId = ctx.PlayerId, name = name, startUtc = PveRules.Iso(now), dev = dev,
+                nameColor = profile.nameColor, title = profile.title,   // the player's leaderboard look (#500)
                 snaps = new List<PveSnap> { new PveSnap { t = 0, nw = 0, rate = 0, cap = 0 } },
             };
             await store.SetCustom(bracketId, PveRules.MemberKey(ctx.PlayerId), member, null);
@@ -305,8 +306,59 @@ namespace MobileIdleBuilder.PveModule
                     you = r.member.playerId == ctx.PlayerId,
                     retired = r.member.retired,
                     elapsed = PveRules.Elapsed(PveRules.ParseIso(r.member.startUtc), now, run),
+                    nameColor = PveCosmetics.IsValid(r.member.nameColor, CosmeticKind.NameColor) ? r.member.nameColor : null,
+                    title = PveCosmetics.IsValid(r.member.title, CosmeticKind.Title) ? r.member.title : null,
                 });
             return Ser(resp);
+        }
+
+        // ── Look (#500) ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Sets the player's leaderboard look (name colour + title, PveCosmetics ids; "" = none). Stored on the
+        /// profile so every later tournament carries it, and on this week's member record while it is still open.
+        /// Unknown ids are refused, so no free text ever reaches the board. Ownership is the client's (Strings are
+        /// a client-side balance); the worst a modified client gets is a colour.
+        /// </summary>
+        [CloudCodeFunction("SetLook")]
+        public async Task<string> SetLook(IExecutionContext ctx, string nameColor = "", string title = "", string debugNow = null)
+        {
+            nameColor ??= ""; title ??= "";
+            if (!PveCosmetics.IsValid(nameColor, CosmeticKind.NameColor) || !PveCosmetics.IsValid(title, CosmeticKind.Title))
+                return Ser(new PveStatusResponse { error = PveErrors.BadLook });
+            var cfg = Config();
+            if (cfg?.leagues == null) return Ser(new PveStatusResponse { error = PveErrors.Config });
+            var store = new PveStore(_api, ctx);
+            var settings = await Settings(store);
+            var now = Now(settings, debugNow);
+
+            var profile = await PveStore.WithRetry(
+                () => store.GetProfile(ctx.PlayerId),
+                p =>
+                {
+                    p ??= new PveProfile();
+                    p.nameColor = nameColor;
+                    p.title = title;
+                    return p;
+                },
+                (p, lk) => store.SetProfile(ctx.PlayerId, p, lk));
+
+            if (!string.IsNullOrEmpty(profile?.bracketId) && !string.IsNullOrEmpty(profile.lastWeek)
+                && now < PveRules.SettleAfter(profile.lastWeek))
+            {
+                string key = PveRules.MemberKey(ctx.PlayerId);
+                await PveStore.WithRetry(
+                    () => store.GetCustom<PveMember>(profile.bracketId, key),
+                    m =>
+                    {
+                        if (m == null) return null;
+                        m.nameColor = nameColor;
+                        m.title = title;
+                        return m;
+                    },
+                    (m, lk) => store.SetCustom(profile.bracketId, key, m, lk));
+            }
+            return Ser(await BuildStatus(store, cfg, ctx.PlayerId, profile, now));
         }
 
         // ── Claim ─────────────────────────────────────────────────────────

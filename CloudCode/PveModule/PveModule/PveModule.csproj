@@ -20,6 +20,7 @@
   <ItemGroup>
     <Compile Include="..\..\..\Assets\Scripts\PvE\PveRules.cs" Link="Shared\PveRules.cs" />
     <Compile Include="..\..\..\Assets\Scripts\PvE\PveModels.cs" Link="Shared\PveModels.cs" />
+    <Compile Include="..\..\..\Assets\Scripts\PvE\PveCosmetics.cs" Link="Shared\PveCosmetics.cs" />
     <Compile Include="..\..\..\Assets\Scripts\Services\PlayerNameRules.cs" Link="Shared\PlayerNameRules.cs" />
     <EmbeddedResource Include="..\..\..\Assets\Data\game_data.json" LogicalName="game_data.json" Link="Shared\game_data.json" />
   </ItemGroup>

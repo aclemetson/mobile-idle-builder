@@ -105,6 +105,21 @@ namespace MobileIdleBuilder
         // Unity lifecycle
         // ----------------------------------------------------------------
 
+        void OnEnable()  => TournamentCosmetics.Changed += ApplyBeltTheme;
+        void OnDisable() => TournamentCosmetics.Changed -= ApplyBeltTheme;
+
+        /// <summary>
+        /// The belt lattice's colours: the equipped belt theme (#500, bought with Strings) or the default warm
+        /// white. Rewritten on the shared material whenever the theme changes; streams keep their water colours.
+        /// </summary>
+        void ApplyBeltTheme()
+        {
+            if (_flowMaterial == null || !_ownsFlowMaterial) return;
+            var theme = TournamentCosmetics.BeltColors(SaveManager.Instance?.Current);
+            _flowMaterial.SetColor("_LineColor", theme?.line ?? BeltLineColor);
+            _flowMaterial.SetColor("_GlowColor", theme?.glow ?? BeltGlowColor);
+        }
+
         void Start()
         {
             var world = World.DefaultGameObjectInjectionWorld;
@@ -694,6 +709,7 @@ namespace MobileIdleBuilder
                 _flowMaterial.SetFloat("_Mapping", 1f);
                 _flowMaterial.SetFloat("_CellSize", gridRenderer != null ? gridRenderer.CellSize : 1.5f);
                 _ownsFlowMaterial = true;
+                ApplyBeltTheme();
             }
             else
             {

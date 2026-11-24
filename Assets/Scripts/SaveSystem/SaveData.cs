@@ -49,7 +49,11 @@ namespace MobileIdleBuilder
         public List<string> codex                           = new();
         public bool  adFree;                                // Ad-free purchase owned (#503): ad rewards without ads + 20% income. Survives prestige.
         public long  pveStrings;
-        public List<string> pveTrack = new();               // tournament track levels "id:level" (TournamentTrack, #500). Survives prestige.                            // Strings, the tournament currency (#500). Survives prestige and Ascension.
+        public List<string> pveTrack = new();
+        public List<string> pveCosmetics = new();           // owned cosmetic ids (PveCosmetics, #500)
+        public string pveNameColor;                         // equipped leaderboard name colour ("" / null = none)
+        public string pveTitle;                             // equipped leaderboard title
+        public string pveBeltTheme;                         // equipped belt theme (own grid only)               // tournament track levels "id:level" (TournamentTrack, #500). Survives prestige.                            // Strings, the tournament currency (#500). Survives prestige and Ascension.
         public long  paidCurrency;                          // Crystals (◆) — earned via achievements / IAP
         public long  crystalsPurchased;                     // Lifetime IAP crystals (audit trail)
         public double lastKnownNetWorth;                    // Snapshot written by ECSLoadBridge; used by shop entropy scaling

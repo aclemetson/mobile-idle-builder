@@ -50,7 +50,11 @@ cd CloudCode/PveModule
 dotnet test
 ```
 
-### CI deploy (automatic)
+### Module functions added later
+
+- `SetLook(nameColor, title)` (#500): the leaderboard look, as PveCosmetics ids validated server-side. Stored on the profile and on this week's member. Join copies it onto new members, and Board returns it per row. Redeploy the module so the game's equip calls stop failing; until then the client just retries on each refresh.
+
+## CI deploy (automatic)
 
 `release-internal.yml` deploys the module to the **development** environment whenever integration merges into a
 `release/**` branch: the same trigger and commit as the internal Android build, so the development module always
