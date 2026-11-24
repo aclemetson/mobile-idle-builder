@@ -141,6 +141,7 @@ All bought with prestige currency (✦); costs roughly double per level (≈5 �
 | `efficient_layouts` | Efficient Layouts | −5% building cost (max −30%) | per-lvl |
 | `turnkey_builder` | Turnkey Builder | +1 pre-placed Harvester / run | per-lvl |
 | `research_overdrive` | Research Overdrive | −5% research timer (max −50%; prereq Memory Resonance 2) | 10 |
+| `free_research` | Free Research | +1 research per run that finishes the moment it starts (entropy still paid; `ResearchService.FreeResearchLeft`, counted in `CurrentRunData.freeResearchUsed`, reset by prestige; research already instant doesn't use one); 25✦ → 1,800✦, prereq Research Overdrive 1 (#491) | 10 |
 | `entropy_echo` | Entropy Echo | +5% prestige currency earned / run | per-lvl |
 | `idle_time_cap` | Dormant Resonance | +30 min idle runtime (base 30 min, max 12h; 23 levels, 5✦ → 700✦, no prereq) | 23 |
 | `idle_collection_rate` | Idle Efficiency | +5% idle collection rate (base 20%, max 100%) | per-lvl |

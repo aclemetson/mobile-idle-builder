@@ -222,6 +222,14 @@ namespace MobileIdleBuilder
             return Mathf.Max(0, Mathf.RoundToInt(research.durationSeconds * (1f - reduction)));
         }
 
+        /// <summary>
+        /// Research left this run that will finish the moment it starts: the Free Research levels (#491) less
+        /// the ones already used this run (<see cref="CurrentRunData.freeResearchUsed"/>, reset by prestige).
+        /// </summary>
+        public int FreeResearchLeft =>
+            FreeResearchRule.Remaining(PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.FreeResearch) ?? 0f,
+                                       SaveManager.Instance?.Current?.currentRun?.freeResearchUsed ?? 0);
+
         // ── Start / complete ─────────────────────────────────────────────────
 
         /// <summary>
@@ -242,6 +250,16 @@ namespace MobileIdleBuilder
             if (effective <= 0)
             {
                 CompleteResearch(research);
+                return;
+            }
+
+            // Free Research (#491): a timed research skips its timer while this run has free ones left.
+            var run = SaveManager.Instance?.Current?.currentRun;
+            if (run != null && FreeResearchLeft > 0)
+            {
+                run.freeResearchUsed++;
+                GameLogger.Info($"[ResearchService] Free research: {research.displayName} ({FreeResearchLeft} left this run)");
+                CompleteResearch(research);   // saves
                 return;
             }
 
