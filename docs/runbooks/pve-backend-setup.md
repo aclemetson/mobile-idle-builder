@@ -50,6 +50,33 @@ cd CloudCode/PveModule
 dotnet test
 ```
 
+### CI deploy (automatic)
+
+`release-internal.yml` deploys the module to the **development** environment whenever integration merges into a
+`release/**` branch: the same trigger and commit as the internal Android build, so the development module always
+matches the newest internal APK. Job `cloud-code` (ubuntu) runs `scripts/deploy-cloud-code.sh`: module tests, then
+`dotnet publish -c Release -r linux-x64`, zipped into `PveModule.ccm`, then `ugs deploy` with the existing UGS
+service account (`UGS_GAME_CONFIG_SERVICE_KEY_ID` / `..._SECRET_KEY`; the environment name is looked up from
+`UGS_ENV_ID_DEVELOPMENT`). The `.ccm` and the CLI's JSON result are kept as the run's `pve-module-<n>` artifact.
+A failed deploy fails that job only; the Play upload still goes out.
+
+One-time setup: give that service account the **Cloud Code Editor** project role (Unity Cloud Dashboard >
+Administration > Service accounts > the account > Project roles). Without it the job fails with a permissions error.
+
+Run it by hand (same script; `--dry-run` changes nothing):
+
+```
+UGS_CLI_SERVICE_KEY_ID=... UGS_CLI_SERVICE_SECRET_KEY=... UGS_PROJECT_ID=... \
+  ./scripts/deploy-cloud-code.sh <environment-id> --dry-run
+```
+
+**Keep the module backward compatible.** Installed builds lag the server: every new function parameter needs a
+default, responses only gain fields, and nothing an older client sends may be refused for being old (see `atT`
+and `Retire`, both added that way). With CI deploying on every release merge, a breaking change would reach
+players' older builds without anyone redeploying by hand.
+
+The Deployment window (above) still works for deploying a branch to development before it is merged.
+
 ## 3. Weekly settlement schedule
 
 Every week's brackets are settled shortly after Sunday 00:00 UTC, once every 24h run has ended and its final snapshot is in (00:10 at the earliest). A player's own bracket is also settled when they next open the tournament (the `Status` call), so a missed schedule only delays other players' history and rewards until they open it.
