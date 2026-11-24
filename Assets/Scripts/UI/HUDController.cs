@@ -38,7 +38,6 @@ namespace MobileIdleBuilder
         private GameUpdateNoticeSubController       _gameUpdate;
         private HUDPremiumShopSubController         _shop;
         private HUDSettingsSubController            _settings;
-        private SitesSubController                  _sites;
         private WorldsSubController                 _worlds;
 
         // ---- Power-connection overlay toggle ----
@@ -59,7 +58,7 @@ namespace MobileIdleBuilder
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
                               _achievementsPanel, _tournamentPanel, _placementOverlay,
-                              _shopPanel, _settingsPanel, _rewardsPanel, _sitesPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
+                              _shopPanel, _settingsPanel, _rewardsPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
@@ -196,7 +195,6 @@ namespace MobileIdleBuilder
             _gameUpdate   = GetComponent<GameUpdateNoticeSubController>() ?? gameObject.AddComponent<GameUpdateNoticeSubController>();
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
-            _sites        = GetComponent<SitesSubController>();
             _worlds       = GetComponent<WorldsSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
@@ -251,7 +249,6 @@ namespace MobileIdleBuilder
             _gameUpdate?.Init(root, this);
             _shop?.Initialize(root);
             _settings?.Initialize(root);
-            _sites?.Init(root, this);
             _worlds?.Init(root, this);
             BindButtons(root);
             ApplyAchievementsGate();
@@ -398,7 +395,6 @@ namespace MobileIdleBuilder
             _statusBar?.SetECSContext(_em, _inventoryQuery, _progressQuery, _powerQuery);
             _inspector?.SetECSContext(_em);
             _prestigeShop?.SetECSContext(_em);
-            _sites?.SetECSContext(_em);
             _worlds?.SetECSContext(_em);
         }
 
@@ -465,7 +461,6 @@ namespace MobileIdleBuilder
             _prestigePanel     = root.Q("prestige-panel");
             _shopPanel         = root.Q("shop-panel");
             _settingsPanel     = root.Q("settings-panel");
-            _sitesPanel        = root.Q("sites-panel");
             _worldsPanel       = root.Q("worlds-panel");
             _placementOverlay  = root.Q("placement-overlay");
 
@@ -473,7 +468,7 @@ namespace MobileIdleBuilder
             {
                 _recipePanel, _buildingsPanel, _codexPanel,
                 _researchPanel, _upgradesPanel, _managersPanel, _statsPanel, _megastructurePanel, _rewardsPanel, _achievementsPanel, _tournamentPanel, _prestigePanel,
-                _shopPanel, _settingsPanel, _sitesPanel, _worldsPanel
+                _shopPanel, _settingsPanel, _worldsPanel
             };
 
             // Panel content
@@ -585,7 +580,6 @@ namespace MobileIdleBuilder
                 achievementService?.ClaimAllRewards();
                 BuildAchievementsList();
             };
-            root.Q<Button>("btn-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenSitesPanel));
             root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
             root.Q<Button>("btn-tournament").clicked   += () => TryOpenPanel(OpenTournamentPanel);
             root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
@@ -617,7 +611,6 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pve").clicked              += () => SetElementVisible(_tournamentPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
-            root.Q<Button>("btn-close-sites")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_sitesPanel, false));
             root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
 
             // Deconstruct (header button inside buildings panel)
@@ -1252,9 +1245,6 @@ namespace MobileIdleBuilder
             if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
                 BuildRecipeList();
 
-            // One-shot Quantum Domains introduction when its gate research is unlocked.
-            _sites?.NotifyResearchUnlocked(research);
-
             // Reveal the megastructure nav button when its gating research lands.
             ApplyMegastructureGate();
         }
@@ -1304,14 +1294,6 @@ namespace MobileIdleBuilder
         {
             if (!FeatureFlags.PveEnabled)         SetElementVisible(root.Q<Button>("btn-tournament"), false);
             if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
-        }
-
-        private void OpenSitesPanel()
-        {
-            CloseAllPanels();
-            _sites?.ClearNavHighlight();
-            _sites?.Refresh();
-            SetElementVisible(_sitesPanel, true);
         }
 
         internal void OpenWorldsPanel()

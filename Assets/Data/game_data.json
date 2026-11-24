@@ -639,7 +639,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "bio_cells",
@@ -653,7 +653,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "deep_physics",
@@ -666,7 +666,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"],
+      "start_sites": [],
       "planned": true
     },
     {
@@ -681,7 +681,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "bio_ecosystems",
@@ -695,7 +695,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "metallurgy_ores",
@@ -709,7 +709,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "metallurgy_alloys",
@@ -723,7 +723,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "metallurgy_advanced",
@@ -737,7 +737,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "engineering_components",
@@ -751,7 +751,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "engineering_systems",
@@ -765,7 +765,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "engineering_megastructure",
@@ -779,7 +779,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     }
   ],
   "research": [
@@ -16501,6 +16501,7 @@
       "id": "site_quark_sea",
       "display_name": "Quark Sea",
       "unlock_cost": 250000,
+      "retired": true,
       "field_overrides": [
         { "field": "quark_field", "density_multiplier": 2.0 },
         { "field": "electron_field", "density_multiplier": 0.0 }
@@ -16510,6 +16511,7 @@
       "id": "site_lepton_storm",
       "display_name": "Lepton Storm",
       "unlock_cost": 10000000,
+      "retired": true,
       "field_overrides": [
         { "field": "electron_field", "density_multiplier": 2.0 },
         { "field": "quark_field", "density_multiplier": 0.0 }
@@ -16519,6 +16521,7 @@
       "id": "site_actinide_vein",
       "display_name": "Actinide Vein",
       "unlock_cost": 250000,
+      "retired": true,
       "_note_fissile": "uranium_field/plutonium_field are NOT in the default FieldGenerator list; their density_multiplier is read as an absolute field count for this site (see FieldGenerator.IntroducedFields).",
       "field_overrides": [
         { "field": "uranium_field", "density_multiplier": 0.0 },
@@ -17497,35 +17500,6 @@
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "atomic_assembler",
-          "action": ""
-        }
-      ]
-    },
-    {
-      "id": "intro_quantum_domains",
-      "lines": [
-        {
-          "speaker_name": "The Architect",
-          "text": "Materials Science opens a new frontier. Until now you have built within a single Quantum Domain — but the foundry can anchor to others.",
-          "portrait_path": "TODO",
-          "pause_game": true,
-          "highlight_target": "",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Each Domain is its own build site, with a separate grid and field distribution. The Quark Sea teems with quark fields; the Lepton Storm runs thick with electrons. Anchoring to one costs entropy, but the unlock never expires — not even through prestige.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Open the menu and tap Domains to survey what is within reach. An inactive Domain keeps producing while you work elsewhere — collected the next time you return to it.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "",
           "action": ""
         }
       ]
