@@ -26,6 +26,20 @@ A purchase sets `SaveData.adFree` (survives prestige, syncs with the cloud save)
 device; Google redelivers owned non-consumables). iOS shows a **Restore Purchases** button under the card
 (`IAPService.RestorePurchases`, App Store requirement).
 
+**Once per account.** `ad_free` can be bought once per Google / Apple account. Three layers enforce it:
+1. **The store.** Google Play refuses to sell an owned one-time product again until the app consumes it ("You
+   already own this item"). Unity IAP never consumes a `ProductType.NonConsumable`, so it stays owned for good.
+   Apple refuses a second purchase of a Non-Consumable, and offers to restore it for free instead.
+2. **The game.**
+   - The card shows **Owned** with its button disabled.
+   - `IAPService.BuyProduct` refuses to start a purchase when the save owns it or the store already holds the
+     receipt (`AdFree.CanBuy`), and restores it instead.
+   - Granting is idempotent (`AdFree.Grant`).
+3. **Play Console.** Leave **multi-quantity** off on the product's purchase option.
+
+The entitlement belongs to the **store account**. Any game save that signs in on a device with that
+Google / Apple account gets it back through the receipt.
+
 On a successful purchase, `IAPService.ProcessPurchase` calls
 `PremiumShopService.AwardCrystals(amount)`, which adds to `SaveData.paidCurrency` (the ◆ balance)
 and `SaveData.crystalsPurchased` (lifetime audit), then saves.

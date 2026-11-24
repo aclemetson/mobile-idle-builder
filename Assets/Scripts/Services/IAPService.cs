@@ -79,6 +79,15 @@ namespace MobileIdleBuilder
                 GameLogger.Warning("[IAP] Store not initialized — cannot buy.");
                 return;
             }
+            // Ad-free is bought once per store account (#503). Already owned here or on the store (bought on
+            // another device, cloud save not synced yet): restore it instead of starting a second purchase.
+            if (productId == AdFree.ProductId && !AdFree.CanBuy(SaveManager.Instance?.Current, StoreOwnsAdFree))
+            {
+                GameLogger.Info("[IAP] Ad-free already owned: restoring instead of buying.");
+                RestoreAdFreeFromReceipt();
+                OnPurchaseComplete?.Invoke(productId, AdFree.Owned(SaveManager.Instance?.Current));
+                return;
+            }
             _controller.InitiatePurchase(productId);
         }
 

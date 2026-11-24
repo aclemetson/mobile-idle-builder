@@ -26,6 +26,12 @@ namespace MobileIdleBuilder
 
         public static bool Owned(SaveData save) => save != null && save.adFree;
 
+        /// <summary>
+        /// Whether a purchase may start: never when this save owns it or the store already holds the receipt
+        /// (the stores refuse a second buy of a non-consumable too; this keeps the game from even asking).
+        /// </summary>
+        public static bool CanBuy(SaveData save, bool storeOwnsIt) => !Owned(save) && !storeOwnsIt;
+
         /// <summary>1.2 while owned, else 1.</summary>
         public static float IncomeMultiplier(SaveData save) => Owned(save) ? 1f + IncomeBonus : 1f;
 

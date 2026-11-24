@@ -52,6 +52,14 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void CanBuy_OnlyWhenNeitherTheSaveNorTheStoreOwnsIt()
+        {
+            Assert.IsTrue(AdFree.CanBuy(new SaveData(), storeOwnsIt: false));
+            Assert.IsFalse(AdFree.CanBuy(new SaveData { adFree = true }, storeOwnsIt: false), "owned in this save");
+            Assert.IsFalse(AdFree.CanBuy(new SaveData(), storeOwnsIt: true), "bought on another device: restore, don't rebuy");
+        }
+
+        [Test]
         public void Ownership_SurvivesASave_AndPrestige()
         {
             var save = new SaveData { adFree = true };
