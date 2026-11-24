@@ -36,6 +36,10 @@ IAP packs (`IAPService.CrystalAmounts`): 600◆ ($0.99), 3,200◆ ($4.99), 7,500
 | Crystal Drop | +25◆ | 1 |
 | Entropy Surge | **a roll** (#489, 2026-11-24): 80% pays 10% of live net worth in entropy (`AdRewardCalculator.CalcEntropyReward`, floor 500e, quoted before the ad plays), 20% pays 10◆ (`SurgeRollsCrystals`); **15 min cooldown** (`SaveData.adLastWatch`). Replaced Entropy Boost (retired; its enum id stays for old save counters) and the old "10 min of automation income" payout | none |
 
+**Ad-free purchase** (#503, `AdFree.cs`, product `ad_free`, ~$9.99 non-consumable, `SaveData.adFree`):
+- Every placement grants its reward without the ad (`AdService.SkipsAds`; it ignores the ads flag and ad availability). Cooldowns and caps still apply, and the buttons read "Claim". The Entropy Surge stays.
+- **+20% entropy income** forever: live, as a factor in the `EntropyIncomeBoost` singleton (`AdFree.CombinedIncomeMultiplier` = Cyclotron boost × 1.2, written by `CyclotronController.SyncBoost`), and offline (`OfflineCollectionService` idle payout + Time Warp, `AdFree.ApplyIncome`).
+
 Every placement except Entropy Surge has a **5 min cooldown** between watches (`AdRewardCalculator.StandardCooldownMinutes`, same `SaveData.adLastWatch` bookkeeping; the panel button shows "Ready in m:ss"). The surge has no daily cap (`AdRewardCalculator.Uncapped`, `HasDailyCap`), so only its cooldown paces it. `IncomeRateTracker.RewardPerSecond` (and `AutomationIncome.Unboosted`) fed the old income-minutes surge and are now unused by ads: a cleanup candidate. Other counters reset at 00:00 UTC (`SaveData.adWatchCounts` / `adWatchResetUtc`), same pattern as daily challenges.
 
 > **Remote balance overrides:** any `game_config` scalar (and many per-entity values) can be overridden at runtime via the `GameDataOverrides` remote-config layer without a rebuild (see `feature-flags.md`). When debugging "the number in game ≠ the number in `game_data.json`", check for an active override before assuming the doc/code is wrong.

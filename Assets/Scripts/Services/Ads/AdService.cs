@@ -118,7 +118,13 @@ namespace MobileIdleBuilder
         // ── Public query API (for the UI) ─────────────────────────────────────
 
         /// <summary>True when ads are enabled and a rewarded ad can currently be shown.</summary>
-        public bool IsReady => EnsureProviderIfEnabled() && _provider != null && _provider.IsRewardedReady;
+        public bool IsReady => SkipsAds || (EnsureProviderIfEnabled() && _provider != null && _provider.IsRewardedReady);
+
+        /// <summary>
+        /// The player owns the ad-free purchase (#503): every reward is granted without playing an ad, so neither
+        /// the ads flag nor a loaded ad is needed.
+        /// </summary>
+        public bool SkipsAds => AdFree.Owned(SaveManager.Instance?.Current);
 
         /// <summary>
         /// Start() only sees the flag value cached from the previous launch; the fresh Remote Config fetch
@@ -143,8 +149,7 @@ namespace MobileIdleBuilder
         /// <summary>True if the player may watch this placement right now (enabled, ready, under cap, cooled down).</summary>
         public bool CanWatch(AdPlacement p)
         {
-            if (!EnsureProviderIfEnabled()) return false;
-            if (_provider == null || !_provider.IsRewardedReady) return false;
+            if (!IsReady) return false;
             if (CooldownRemaining(p) > TimeSpan.Zero) return false;
             if (BoostLockRemaining(p) > TimeSpan.Zero) return false;
             return Remaining(p) > 0;
@@ -223,7 +228,8 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) { Finish(onDone, Fail(p, AdShowOutcome.NoSave, "Save not ready.")); return; }
 
-            if (!EnsureProviderIfEnabled()) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
+            bool skipAd = SkipsAds;
+            if (!skipAd && !EnsureProviderIfEnabled()) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
 
             AdRewardCalculator.ApplyDailyReset(save, GameClock.UtcNow);
             if (AdRewardCalculator.IsAtCap(save, p))
@@ -242,7 +248,7 @@ namespace MobileIdleBuilder
                 Finish(onDone, Fail(p, AdShowOutcome.BoostActive, BoostLock.Message(save, GameClock.UtcNow) + "."));
                 return;
             }
-            if (_provider == null || !_provider.IsRewardedReady)
+            if (!skipAd && (_provider == null || !_provider.IsRewardedReady))
             {
                 Finish(onDone, Fail(p, AdShowOutcome.NotReady, "No ad available right now."));
                 return;
@@ -251,17 +257,17 @@ namespace MobileIdleBuilder
             // The surge's entropy is priced now, before the ad, so the player gets the amount the card showed.
             long quoted = AdRewardCalculator.Def(p).Kind == AdRewardKind.SurgeRoll ? PreviewEntropyReward() : 0;
 
-            _provider.ShowRewarded(earned =>
+            void OnAdFinished(bool earned)
             {
                 if (!earned)
                 {
-                    _provider.LoadRewarded();
+                    _provider?.LoadRewarded();
                     Finish(onDone, Fail(p, AdShowOutcome.Declined, "Ad skipped — no reward."));
                     return;
                 }
 
                 bool granted = GrantReward(save, p, doubleOfflineResult, quoted, out string message);
-                _provider.LoadRewarded();
+                if (!skipAd) _provider?.LoadRewarded();
 
                 if (!granted)
                 {
@@ -273,7 +279,11 @@ namespace MobileIdleBuilder
                 AdRewardCalculator.RecordWatch(save, p, GameClock.UtcNow);
                 SaveManager.Instance.SaveLocal();
                 Finish(onDone, new AdShowResult { Outcome = AdShowOutcome.Granted, Placement = p, Message = message });
-            });
+            }
+
+            // Ad-free (#503): the reward without the ad. Cooldowns and caps still apply.
+            if (skipAd) OnAdFinished(true);
+            else        _provider.ShowRewarded(OnAdFinished);
         }
 
         /// <summary>

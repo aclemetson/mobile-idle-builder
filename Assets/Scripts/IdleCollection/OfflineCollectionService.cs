@@ -101,6 +101,7 @@ namespace MobileIdleBuilder
             GameLogger.Debug($"[Idle] Boost-weighted seconds={weighted:F0} of capped={cappedSeconds:F0}");
 
             var result = ComputePayout(snapshots, (float)weighted, rate);
+            result.EntropyEarned = AdFree.ApplyIncome(save, result.EntropyEarned);   // +20% when ad-free (#503)
             result.ElapsedSeconds = elapsedSeconds;
             result.CappedSeconds  = cappedSeconds;
             result.MaxSeconds     = effectiveCap;
@@ -189,6 +190,7 @@ namespace MobileIdleBuilder
                 : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
             var   result = ComputePayout(snapshots, seconds, 1f);
+            result.EntropyEarned = AdFree.ApplyIncome(save, result.EntropyEarned);   // +20% when ad-free (#503)
             result.ElapsedSeconds = seconds;
             result.CappedSeconds  = seconds;
             return result.HasAnyOutput ? result : null;
