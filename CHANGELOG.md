@@ -4,7 +4,25 @@ Notable changes per release. Builds are versioned `major.minor.patch`, and the p
 
 ## 0.6 (in progress)
 
-Building and belt editing that works with fingers, and a startup that keeps your account and your newest save.
+Building and belt editing that works with fingers, a startup that keeps your account and your newest save, weekly PvE tournaments, and a reworked menu and monetisation layer.
+
+### Tournaments
+- **Weekly PvE tournaments**: join from Friday 00:00 to Saturday 00:00 UTC. Joining is a prestige, and the next 24 hours of net worth are compared against a bracket in your league, at each player's own elapsed time. Promotion and demotion move you through six leagues. Rewards are crystals plus item stars (+20% value each) (#492-#497).
+- **Leave early**: prestiging mid-run warns first, and a Retire button freezes your score (#505).
+- **Strings**, the tournament currency: paid by every reward band. They buy a permanent tournament track (Star Resonance, Lucky Draw, Surge Luck, Harmonics), leaderboard name colours and titles, and belt themes (#519, #520, #521).
+
+### Menus
+- **Side drawer** as a grid of icons with captions (#510).
+- **Builder**: role tabs and swipeable cards with rendered 3D building icons (#511).
+- **Recipes**: item-type tabs and cards, with a drop-up to pick between several ways of making an item (#512).
+- Research-gated items name the research they need (#506). The name card moves clear of the keyboard (#507).
+
+### Economy and monetisation
+- **Entropy Surge** rolls 10% of net worth in entropy (80%) or 10 crystals (20%), with no daily cap. It replaces Entropy Boost (#513).
+- **Free Research** prestige upgrade: the first research of each run skips its timer (#514).
+- **Longer prestige-shop tails** so the shop lasts through Ascension (about 680k prestige currency in total) (#515).
+- **Ad-Free Forever** (one-time purchase): ad rewards without ads, plus +20% entropy income (#517).
+- **What's new**: release notes are published by CI and shown once after an update (#516).
 
 ### Gameplay and UX
 - **Building edit mode**: press and hold a placed building to move, rotate or flip it without destroying it. Its contents, recipe, upgrades, manager and filter rules move with it, and moving is free. A Remove button deletes it after a confirmation; delete mode stays for clearing several buildings (#430).
@@ -13,6 +31,7 @@ Building and belt editing that works with fingers, and a startup that keeps your
 - The achievement reset countdown ticks while the panel is open (#429).
 
 ### Fixes
+- The Research header no longer disappears in list mode, and no panel header shrinks under a long list (#499, #521).
 - **Sign-in sticks**: a Google-linked account no longer shows as Guest after a restart (#431).
 - **Newest save wins**: an upload that never reached the cloud no longer lets an older cloud save replace this device's progress (#431).
 - **No more hang at 99%**: when the device and cloud saves differ, the game loads and then asks which to keep, instead of waiting behind the loading screen (#431).
