@@ -642,6 +642,9 @@
     position: relative;
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
+    /* Never squeezed by a long list below it: without this, a tall list shrank every child of the panel,
+       header included, and the title disappeared (#499, research list mode; seen again in the PvE shop). */
+    flex-shrink: 0;
 }
 
 .panel-title {
@@ -1618,8 +1621,44 @@
 .pve-page {
     flex-grow: 1;
     flex-shrink: 1;
+    flex-basis: 0;
     min-height: 0;
     flex-direction: column;
+}
+
+/* Cosmetic rows (#500): swatch, name, buy / equip. */
+.pve-cosmetic-row {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.pve-cosmetic-row--on {
+    border-color: var(--color-primary);
+}
+
+.pve-cosmetic-row__swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0);
+    margin-right: var(--spacing-sm);
+}
+
+.pve-cosmetic-row__name {
+    flex-grow: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+}
+
+.pve-cosmetic-row__btn {
+    min-width: 110px;
 }
 
 .pve-shop-balance {

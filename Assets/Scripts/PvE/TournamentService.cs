@@ -91,6 +91,7 @@ namespace MobileIdleBuilder
                 LastStatus = status;
                 MirrorEntry(status);
                 await FinishServerClaims(status);
+                await SyncLookIfChanged(status);
             }
             else if (LastStatus == null || status.error.StartsWith("network:") == false)
             {
@@ -189,6 +190,28 @@ namespace MobileIdleBuilder
             if (!string.IsNullOrEmpty(r.error) && r.error != PveErrors.NothingToClaim) outcome.serverError = r.error;
             await RefreshAsync();
             return outcome;
+        }
+
+        bool _lookSyncing;
+
+        /// <summary>
+        /// Pushes the equipped name colour and title (#500) when the server's profile differs. Called after every
+        /// status refresh and after an equip, so a call that failed offline lands later.
+        /// </summary>
+        public async Task SyncLookIfChanged(PveStatusResponse status = null)
+        {
+            var save = Save;
+            var profile = (status ?? LastStatus)?.profile;
+            if (save == null || profile == null || _lookSyncing) return;
+            if (!TournamentCosmetics.LookDiffers(save, profile.nameColor, profile.title)) return;
+            _lookSyncing = true;
+            try
+            {
+                var r = await PveApi.SetLook(save.pveNameColor ?? "", save.pveTitle ?? "");
+                if (string.IsNullOrEmpty(r.error)) LastStatus = r;
+                else GameLogger.Warning($"[PvE] SetLook failed: {r.error}");
+            }
+            finally { _lookSyncing = false; }
         }
 
         // Rewards this save already applied but the server still lists (its Claim never landed): clear them there.

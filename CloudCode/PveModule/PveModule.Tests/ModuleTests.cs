@@ -48,6 +48,22 @@ public class ModuleTests
     }
 
     [Fact]
+    public void Cosmetics_OnlyKnownIdsOfTheRightKindAreValid_AndTheLookRoundTrips()
+    {
+        Assert.True(PveCosmetics.IsValid("", CosmeticKind.NameColor));
+        Assert.True(PveCosmetics.IsValid("color_gold", CosmeticKind.NameColor));
+        Assert.False(PveCosmetics.IsValid("color_gold", CosmeticKind.Title), "a colour id is not a title");
+        Assert.False(PveCosmetics.IsValid("<b>hi</b>", CosmeticKind.Title), "no free text");
+        Assert.Equal("String Theorist", PveCosmetics.TitleText("title_string_theorist"));
+
+        var m = PveStore.Deserialize<PveMember>(PveStore.Serialize(new PveMember { nameColor = "color_rose", title = "title_idle_physicist" }));
+        Assert.Equal("color_rose", m.nameColor);
+        Assert.Equal("title_idle_physicist", m.title);
+        var row = PveStore.Deserialize<PveBoardRow>(PveStore.Serialize(new PveBoardRow { nameColor = "color_lime" }));
+        Assert.Equal("color_lime", row.nameColor);
+    }
+
+    [Fact]
     public void Deserialize_AcceptsAStoredStringOrAJsonObjectValue()
     {
         string json = PveStore.Serialize(new PveSettings { smallBrackets = true });

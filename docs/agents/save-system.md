@@ -19,6 +19,7 @@ One JSON-serialized class, written to `Application.persistentDataPath/save.json`
 | `unlockedResearch / codex` | `unlockedResearch` is per-run (cleared by PrestigeSystem); `codex` is dead |
 | ~~`researchCompletedEver`~~ | removed 2026-11-15 with the per-node prestige memory discount. Older saves still carry it; `JsonUtility` ignores it on load and drops it on the next save |
 | `pveTrack` | tournament track levels as "id:level" (`TournamentTrack`, #500). Survives prestige and Ascension |
+| `pveCosmetics`, `pveNameColor`, `pveTitle`, `pveBeltTheme` | cosmetics bought with Strings (#500): owned ids, and the equipped one per kind. Name colour and title are mirrored to the PvE profile (`SetLook`) for the leaderboard. Survive prestige |
 | `pveStrings` | Strings, the tournament currency (#500), added on a tournament claim (`TournamentRules.ApplyReward`). Root field: survives prestige and Ascension |
 | `adLastWatch` (`AdLastWatchEntry` id/utc) | last watch per ad placement (ISO 8601 UTC); drives per-placement cooldowns (Entropy Surge, 15 min). Survives prestige |
 | `playerName` / `namePromptSkipped` | public player name for tournament leaderboards (PvE phase 1, 2026-11-23): cached full UGS name `Name#1234` ("" = never chosen; UGS Authentication player names is the source of truth, refreshed each launch by `PlayerNameService.RefreshAsync`), and whether the post-tutorial name card was answered Later. Survive prestige |

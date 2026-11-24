@@ -45,6 +45,10 @@ namespace MobileIdleBuilder
         public static Task<PveSnapshotResponse> Retire(double netWorth) =>
             Send<PveSnapshotResponse>("Retire", Args(("netWorth", netWorth)));
 
+        /// <summary>Sets the leaderboard look (PveCosmetics ids, "" = none), #500.</summary>
+        public static Task<PveStatusResponse> SetLook(string nameColor, string title) =>
+            Send<PveStatusResponse>("SetLook", Args(("nameColor", nameColor ?? ""), ("title", title ?? "")));
+
         public static Task<PveBoardResponse> Board() =>
             Send<PveBoardResponse>("Board", Args());
 

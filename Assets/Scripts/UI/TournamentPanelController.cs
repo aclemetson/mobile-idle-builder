@@ -74,6 +74,7 @@ namespace MobileIdleBuilder
                 if (btn != null) btn.clicked += () => SelectTab(captured);
             }
             TournamentTrack.Changed += OnTrackChanged;
+            TournamentCosmetics.Changed += OnTrackChanged;
             foreach (var l in new[] { _info, _completed }) if (l != null) l.style.whiteSpace = WhiteSpace.Normal;
         }
 
@@ -114,6 +115,7 @@ namespace MobileIdleBuilder
         {
             if (_subscribed && TournamentService.Instance != null) TournamentService.Instance.OnChanged -= OnServiceChanged;
             TournamentTrack.Changed -= OnTrackChanged;
+            TournamentCosmetics.Changed -= OnTrackChanged;
         }
 
         void OnServiceChanged() { if (IsOpen) Rebuild(); }
@@ -226,6 +228,11 @@ namespace MobileIdleBuilder
 
                 var rank = new Label($"#{r.rank}"); rank.AddToClassList("tournament-row__rank");
                 var name = new Label(r.you ? $"{r.name} (you)" : r.name); name.AddToClassList("tournament-row__name");
+                // The player's look (#500): name colour, and the title under the name.
+                var nameColor = TournamentCosmetics.NameColor(r.nameColor);
+                if (nameColor.HasValue) name.style.color = nameColor.Value;
+                string titleText = PveCosmetics.TitleText(r.title);
+                if (!string.IsNullOrEmpty(titleText)) name.text += "\n" + titleText;
                 var value = new Label(TournamentPanelText.ValueText(r)); value.AddToClassList("tournament-row__value");
                 if (r.retired) row.AddToClassList("tournament-row--retired");
                 var played = new Label(TournamentPanelText.PlayedText(r.elapsed)); played.AddToClassList("tournament-row__played");
@@ -282,6 +289,64 @@ namespace MobileIdleBuilder
             _shopList.Add(title);
             foreach (var def in TournamentTrack.All)
                 _shopList.Add(TrackRow(save, def));
+
+            // Cosmetics (#500 part 3): colours and titles show on the leaderboard; belt themes on your own grid.
+            AddCosmeticSection(save, CosmeticKind.NameColor, "Leaderboard name colour");
+            AddCosmeticSection(save, CosmeticKind.Title,     "Leaderboard title");
+            AddCosmeticSection(save, CosmeticKind.BeltTheme, "Belt theme");
+        }
+
+        void AddCosmeticSection(SaveData save, CosmeticKind kind, string heading)
+        {
+            var title = new Label(heading);
+            title.AddToClassList("drawer-section-title");
+            _shopList.Add(title);
+            foreach (var def in PveCosmetics.All)
+                if (def.kind == kind) _shopList.Add(CosmeticRow(save, def));
+        }
+
+        VisualElement CosmeticRow(SaveData save, CosmeticDef def)
+        {
+            bool owned = TournamentCosmetics.Owns(save, def.id);
+            bool on    = TournamentCosmetics.IsEquipped(save, def);
+
+            var row = new VisualElement();
+            row.AddToClassList("pve-cosmetic-row");
+            if (on) row.AddToClassList("pve-cosmetic-row--on");
+
+            var swatch = new VisualElement();
+            swatch.AddToClassList("pve-cosmetic-row__swatch");
+            string hex = def.kind == CosmeticKind.Title ? null : def.value;
+            if (hex != null && ColorUtility.TryParseHtmlString(hex, out var c)) swatch.style.backgroundColor = c;
+            if (def.kind == CosmeticKind.BeltTheme && ColorUtility.TryParseHtmlString(def.value2, out var glow))
+                swatch.style.borderBottomColor = swatch.style.borderTopColor =
+                    swatch.style.borderLeftColor = swatch.style.borderRightColor = glow;
+            if (def.kind == CosmeticKind.Title) HUDController.SetElementVisible(swatch, false);
+            row.Add(swatch);
+
+            var name = new Label(def.kind == CosmeticKind.Title ? $"\"{def.label}\"" : def.label);
+            name.AddToClassList("pve-cosmetic-row__name");
+            if (def.kind == CosmeticKind.NameColor && hex != null && ColorUtility.TryParseHtmlString(hex, out var nc))
+                name.style.color = nc;
+            row.Add(name);
+
+            var btn = new Button { text = TournamentPanelText.CosmeticButtonText(owned, on, def.cost) };
+            btn.AddToClassList("craft-btn");
+            btn.AddToClassList("pve-cosmetic-row__btn");
+            btn.SetEnabled(owned || TournamentCosmetics.CanBuy(save, def));
+            string id = def.id;
+            ListTapRouter.Register(_shopList, btn, () =>
+            {
+                var s = SaveManager.Instance?.Current;
+                bool done = TournamentCosmetics.Owns(s, id) ? TournamentCosmetics.ToggleEquip(s, id)
+                                                           : TournamentCosmetics.TryBuy(s, id);
+                if (!done) return;
+                SaveManager.Instance.SaveLocal();
+                _ = TournamentService.Instance?.SyncLookIfChanged();   // colours and titles reach the leaderboard
+                Rebuild(false);
+            });
+            row.Add(btn);
+            return row;
         }
 
         VisualElement TrackRow(SaveData save, TrackDef def)
@@ -532,6 +597,10 @@ namespace MobileIdleBuilder
 
         /// <summary>"60 Strings" / "1 String".</summary>
         public static string StringsText(long n) => n == 1 ? "1 String" : $"{n:N0} Strings";
+
+        /// <summary>A cosmetic's button: its price, "Equip", or "Equipped" (tap again to take it off).</summary>
+        public static string CosmeticButtonText(bool owned, bool equipped, int cost) =>
+            !owned ? StringsText(cost) : equipped ? "Equipped" : "Equip";
 
         /// <summary>"Lv 2 / 5", or "Lv 5 / 5  MAX".</summary>
         public static string TrackLevelText(int level, int max) =>
