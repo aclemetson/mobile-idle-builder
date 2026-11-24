@@ -20,7 +20,7 @@ namespace MobileIdleBuilder
         HUDController _hud;
         VisualElement _panel;
         Label _state, _timer, _info, _completed, _badge, _banner, _yourRank;
-        Button _start, _refresh, _claim;
+        Button _start, _refresh, _claim, _retire;
         ScrollView _list;
         IVisualElementScheduledItem _ticker;
 
@@ -47,10 +47,12 @@ namespace MobileIdleBuilder
             _yourRank  = _panel.Q<Label>("pve-your-rank");
             _start     = _panel.Q<Button>("btn-pve-start");
             _claim     = _panel.Q<Button>("btn-pve-claim");
+            _retire    = _panel.Q<Button>("btn-pve-retire");
             _refresh   = _panel.Q<Button>("btn-pve-refresh");
             _list      = _panel.Q<ScrollView>("pve-leaderboard-list");
             if (_start != null)   _start.clicked   += OnStartPressed;
             if (_claim != null)   _claim.clicked   += OnClaimPressed;
+            if (_retire != null)  _retire.clicked  += OnRetirePressed;
             if (_refresh != null) _refresh.clicked += () => _ = RefreshAllAsync();
             foreach (var l in new[] { _info, _completed }) if (l != null) l.style.whiteSpace = WhiteSpace.Normal;
         }
@@ -137,6 +139,12 @@ namespace MobileIdleBuilder
                 _start.text = _busy && !_claiming ? "Starting..." : "Start tournament";
             }
 
+            if (_retire != null)
+            {
+                HUDController.SetElementVisible(_retire, d.showRetire);
+                _retire.SetEnabled(!_busy);
+            }
+
             // League badge (header), result banner, claim button, your rank.
             bool live = state != TournamentPanelState.Disabled && state != TournamentPanelState.Locked;
             string leagueId = svc.LastStatus?.profile?.league ?? svc.Entry?.league;
@@ -191,11 +199,34 @@ namespace MobileIdleBuilder
                 var rank = new Label($"#{r.rank}"); rank.AddToClassList("tournament-row__rank");
                 var name = new Label(r.you ? $"{r.name} (you)" : r.name); name.AddToClassList("tournament-row__name");
                 var value = new Label(TournamentPanelText.ValueText(r)); value.AddToClassList("tournament-row__value");
+                if (r.retired) row.AddToClassList("tournament-row--retired");
                 var played = new Label(TournamentPanelText.PlayedText(r.elapsed)); played.AddToClassList("tournament-row__played");
                 row.Add(rank); row.Add(name); row.Add(value); row.Add(played);
                 _list.Add(row);
             }
             _list.Add(new Label(TournamentPanelText.BoardFootnote(_board)) { style = { whiteSpace = WhiteSpace.Normal, fontSize = 11, opacity = 0.7f } });
+        }
+
+        // ── Retire (#505) ─────────────────────────────────────────────────
+
+        void OnRetirePressed()
+        {
+            var svc = TournamentService.Instance;
+            if (svc == null || _busy || !svc.InRun) return;
+            var (nw, _, _) = TournamentService.SnapshotValues();
+            ConfirmPrompt.Show("Retire early?", TournamentRules.RetireMessage(nw, svc.RunRemaining), "Retire",
+                onConfirm: async () =>
+                {
+                    _busy = true;
+                    Rebuild(rowsToo: false);
+                    string error;
+                    try { error = await svc.RetireAsync(); }
+                    finally { _busy = false; }
+                    if (this == null) return;
+                    _message = error == null ? null : TournamentRules.ErrorText(error);
+                    if (error == null) _hud?.ShowNotification("🏆", "You retired from the tournament. Your score is locked in.");
+                    _ = RefreshAllAsync();
+                });
         }
 
         // ── Claim ─────────────────────────────────────────────────────────
@@ -268,7 +299,7 @@ namespace MobileIdleBuilder
         public struct Lines
         {
             public string headline, timer, info, result;
-            public bool showStart;
+            public bool showStart, showRetire;
         }
 
         public static Lines Describe(TournamentPanelState state, PveStatusResponse status, TournamentSaveData entry,
@@ -308,9 +339,10 @@ namespace MobileIdleBuilder
                     d.headline = prestigePending ? "Starting your run..." : $"{league} league: run in progress";
                     d.timer = $"{TournamentRules.FormatSpan(TournamentRules.Remaining(entry, now))} left";
                     d.info = "Values are compared at your own elapsed time. ~ marks an estimate for players behind you.";
+                    d.showRetire = !prestigePending;
                     break;
                 case TournamentPanelState.Finished:
-                    d.headline = "Your run is over";
+                    d.headline = entry != null && entry.retired ? "You retired from this tournament" : "Your run is over";
                     var at = status?.week != null ? PveRules.SettleAfter(status.week) : now;
                     d.timer = at > now ? $"Final results in {TournamentRules.FormatSpan(at - now)}." : "Final results are being tallied.";
                     break;
@@ -351,7 +383,8 @@ namespace MobileIdleBuilder
         }
 
         public static string ValueText(PveBoardRow r) =>
-            (r.projected ? "~" : "") + NumberFormat.Entropy(r.value);
+            r.retired ? NumberFormat.Entropy(r.value) + " (retired)"
+                      : (r.projected ? "~" : "") + NumberFormat.Entropy(r.value);
 
         public static string PlayedText(int elapsedSeconds) => $"{elapsedSeconds / 3600f:0.0}h";
 

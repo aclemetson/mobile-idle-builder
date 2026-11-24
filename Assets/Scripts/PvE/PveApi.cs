@@ -41,6 +41,10 @@ namespace MobileIdleBuilder
             return Send<PveSnapshotResponse>("Snapshot", args);
         }
 
+        /// <summary>Leaves this week's run early at <paramref name="netWorth"/> (#505).</summary>
+        public static Task<PveSnapshotResponse> Retire(double netWorth) =>
+            Send<PveSnapshotResponse>("Retire", Args(("netWorth", netWorth)));
+
         public static Task<PveBoardResponse> Board() =>
             Send<PveBoardResponse>("Board", Args());
 

@@ -83,6 +83,7 @@ namespace MobileIdleBuilder.PveModule
                 r.bracketSettled = meta?.settled ?? false;
                 if (member != null)
                 {
+                    r.retired    = member.retired;
                     var start = PveRules.ParseIso(member.startUtc);
                     r.startUtc   = member.startUtc;
                     r.runEndsUtc = PveRules.Iso(start.AddSeconds(PveRules.RunSeconds(cfg)));
@@ -193,6 +194,7 @@ namespace MobileIdleBuilder.PveModule
 
             int run = PveRules.RunSeconds(cfg);
             var check = SnapCheck.Accepted;
+            bool retired = false;
             int t = 0;
             string key = PveRules.MemberKey(ctx.PlayerId);
             var written = await PveStore.WithRetry(
@@ -200,6 +202,7 @@ namespace MobileIdleBuilder.PveModule
                 m =>
                 {
                     if (m == null) { check = SnapCheck.Stale; return null; }
+                    if (m.retired) { retired = true; return null; }
                     int serverT = (int)Math.Floor((now - PveRules.ParseIso(m.startUtc)).TotalSeconds);
                     check = PveRules.SnapshotTime(serverT, atT, out int rawT);
                     if (check != SnapCheck.Accepted) { t = Math.Max(0, Math.Min(serverT, run)); return null; }
@@ -209,10 +212,62 @@ namespace MobileIdleBuilder.PveModule
                 },
                 (m, lk) => store.SetCustom(profile.bracketId, key, m, lk));
 
+            if (retired) return Ser(new PveSnapshotResponse { error = PveErrors.Retired });
             if (check == SnapCheck.RunOver) return Ser(new PveSnapshotResponse { error = PveErrors.RunOver, t = t });
             if (check != SnapCheck.Accepted)
                 return Ser(new PveSnapshotResponse { error = $"{PveErrors.Rejected}:{check}", t = t });
             return Ser(new PveSnapshotResponse { accepted = written != null, t = t });
+        }
+
+        // ── Retire (#505) ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Leaves this week's run early: records a last snapshot at the current net worth with idle rate 0, so
+        /// the score stays at that value for the rest of the 24h (ValueAt projects nothing from it), and marks
+        /// the member retired so no later snapshot counts. Used by the Retire button and by prestiging mid-run.
+        /// </summary>
+        [CloudCodeFunction("Retire")]
+        public async Task<string> Retire(IExecutionContext ctx, double netWorth, string debugNow = null)
+        {
+            var cfg = Config();
+            if (cfg?.leagues == null) return Ser(new PveSnapshotResponse { error = PveErrors.Config });
+            var store = new PveStore(_api, ctx);
+            var settings = await Settings(store);
+            var now = Now(settings, debugNow);
+
+            var profile = (await store.GetProfile(ctx.PlayerId)).Value;
+            if (profile == null || string.IsNullOrEmpty(profile.bracketId) || string.IsNullOrEmpty(profile.lastWeek))
+                return Ser(new PveSnapshotResponse { error = PveErrors.NotJoined });
+            if (now >= PveRules.SettleAfter(profile.lastWeek))
+                return Ser(new PveSnapshotResponse { error = PveErrors.RunOver });
+
+            int run = PveRules.RunSeconds(cfg);
+            var check = SnapCheck.Accepted;
+            bool already = false;
+            int t = 0;
+            string key = PveRules.MemberKey(ctx.PlayerId);
+            await PveStore.WithRetry(
+                () => store.GetCustom<PveMember>(profile.bracketId, key),
+                m =>
+                {
+                    if (m == null) { check = SnapCheck.Stale; return null; }
+                    if (m.retired) { already = true; return null; }
+                    int serverT = (int)Math.Floor((now - PveRules.ParseIso(m.startUtc)).TotalSeconds);
+                    if (serverT >= run) { check = SnapCheck.RunOver; return null; }   // the run is over anyway
+                    t = Math.Max(0, serverT);
+                    // The final value: never below what is already recorded (a retire can't lower a score).
+                    double last = m.snaps.Count > 0 ? m.snaps[m.snaps.Count - 1].nw : 0;
+                    check = PveRules.AddSnap(m.snaps, serverT, Math.Max(netWorth, last), 0, 0, run, cfg.snapshot_bucket_minutes * 60);
+                    if (check != SnapCheck.Accepted) return null;
+                    m.retired = true;
+                    return m;
+                },
+                (m, lk) => store.SetCustom(profile.bracketId, key, m, lk));
+
+            if (already) return Ser(new PveSnapshotResponse { error = PveErrors.Retired });
+            if (check == SnapCheck.RunOver) return Ser(new PveSnapshotResponse { error = PveErrors.RunOver });
+            if (check != SnapCheck.Accepted) return Ser(new PveSnapshotResponse { error = $"{PveErrors.Rejected}:{check}", t = t });
+            return Ser(new PveSnapshotResponse { accepted = true, t = t });
         }
 
         // ── Board ─────────────────────────────────────────────────────────
@@ -248,6 +303,7 @@ namespace MobileIdleBuilder.PveModule
                     value = r.value,
                     projected = r.projected,
                     you = r.member.playerId == ctx.PlayerId,
+                    retired = r.member.retired,
                     elapsed = PveRules.Elapsed(PveRules.ParseIso(r.member.startUtc), now, run),
                 });
             return Ser(resp);

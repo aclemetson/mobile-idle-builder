@@ -71,8 +71,8 @@ namespace MobileIdleBuilder
 
         public TimeSpan RunRemaining => TournamentRules.Remaining(Entry, Now);
 
-        /// <summary>Manual prestige and Ascension are locked while this is true.</summary>
-        public bool PrestigeLocked => TournamentRules.PrestigeLocked(Entry, Now);
+        /// <summary>A prestige or Ascension now would end the run early (the HUD asks, then <see cref="RetireAsync"/>).</summary>
+        public bool PrestigeLeavesRun => TournamentRules.PrestigeLeavesRun(Entry, Now);
 
         /// <summary>Joined, but the join's prestige hasn't run (the app closed in between).</summary>
         public bool JoinPrestigePending => Save != null && InRun && TournamentRules.PrestigePending(Entry, Save.prestigeCount);
@@ -128,6 +128,36 @@ namespace MobileIdleBuilder
             return status;
         }
 
+        /// <summary>
+        /// Leaves the run early at the current net worth (#505). On success (or when the server says the run is
+        /// already over / already retired) the entry is marked retired: no more snapshots, the kept one is dropped,
+        /// prestige is free again. Returns the server error, or null on success; a network error changes nothing.
+        /// </summary>
+        public async Task<string> RetireAsync()
+        {
+            var save = Save;
+            var t = save?.tournament;
+            if (t == null || !TournamentRules.InRun(t, Now)) return null;
+            var (nw, _, _) = SnapshotValues();
+            _sending = true;
+            PveSnapshotResponse r;
+            try { r = await PveApi.Retire(nw); }
+            finally { _sending = false; }
+            if (!string.IsNullOrEmpty(r.error) && r.error.StartsWith("network:")) return r.error;
+            MarkRetired(t);
+            GameLogger.Info($"[PvE] Retired at nw={nw:N0} ({(string.IsNullOrEmpty(r.error) ? "ok" : r.error)}).");
+            OnChanged?.Invoke();
+            return string.IsNullOrEmpty(r.error) || r.error == PveErrors.Retired || r.error == PveErrors.RunOver ? null : r.error;
+        }
+
+        static void MarkRetired(TournamentSaveData t)
+        {
+            t.retired = true;
+            t.finalSent = true;
+            t.pendingT = -1;
+            SaveManager.Instance.SaveLocal();
+        }
+
         /// <summary>What a claim gave, for the reveal card.</summary>
         public sealed class ClaimOutcome
         {
@@ -181,6 +211,7 @@ namespace MobileIdleBuilder
             var save = Save;
             if (save == null || !s.joinedThisWeek || string.IsNullOrEmpty(s.startUtc)) return;
             var t = save.tournament ??= new TournamentSaveData();
+            if (s.retired && !t.retired && t.week == s.week && t.startUtc == s.startUtc) MarkRetired(t);
             if (t.week == s.week && t.startUtc == s.startUtc && t.league == s.profile?.league) return;
             bool sameRun = t.week == s.week && t.startUtc == s.startUtc;
             t.week = s.week;
@@ -280,6 +311,11 @@ namespace MobileIdleBuilder
             {
                 MarkFinalSent();   // nothing more to send for this run
             }
+            else if (r.error == PveErrors.Retired)
+            {
+                MarkRetired(t);    // retired on another device
+                OnChanged?.Invoke();
+            }
             else if (r.error.StartsWith("network:"))
             {
                 _sinceSnapshot = TournamentRules.SnapshotIntervalSeconds - 30f;   // retry in 30 s
@@ -328,7 +364,7 @@ namespace MobileIdleBuilder
             var t = Entry;
             string kept = TournamentRules.HasPending(t) ? $"t={t.pendingT}s nw={t.pendingNw:N0}" : "none";
             return $"enabled={Enabled} unlocked={Unlocked} state={PanelState} inRun={InRun} " +
-                   $"remaining={TournamentRules.FormatSpan(RunRemaining)} prestigeLocked={PrestigeLocked} " +
+                   $"remaining={TournamentRules.FormatSpan(RunRemaining)} prestigeLeavesRun={PrestigeLeavesRun} retired={t?.retired} " +
                    $"pending={JoinPrestigePending} week={t?.week} bracket={t?.bracketId} final={t?.finalSent} " +
                    $"keptSnapshot={kept} now={PveRules.Iso(Now)}";
         }

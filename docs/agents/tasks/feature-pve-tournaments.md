@@ -126,6 +126,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 - Save (`tournament`, additive, survives prestige): `weekId`, `bracketId`, `startUtc`, `league`, `lastSnapshotT`, `scoreFrozen`.
 - Join flow: `pve_status` checks the window → confirm modal ("This prestiges your current run: +N prestige currency") → `pve_join` → on success, set `PrestigeRequested` (the normal prestige, with currency). The `tournament` block survives `PrestigeRunReset`, and the new run is the tournament run.
 - During the 24h: **block manual prestige** (button disabled with a countdown) so net worth can't be reset mid-run.
+- **Changed 2026-11-23 (#505): leave early instead of a lock.** Prestige/Ascension mid-run asks ("End your tournament run?") and then calls the module's `Retire(netWorth)` before prestiging: a last snapshot at the current net worth with idle rate 0 (never below the last recorded), member marked `retired` (later snapshots get `retired`). The panel has a Retire button doing the same without prestiging. Board rows show "(retired)"; status reports `retired` so another device follows. Offline, the prestige is refused rather than leaving a stale projection.
 - Snapshots: every 5 min of real play (reuse the telemetry snapshot loop's cadence), on leaderboard open, on `SaveManager.Backgrounding`. Payload `{nw, rate}`: `rate` = net-worth rate from the idle snapshot chains (what `OfflineCollectionService` would pay per second, before the cap).
 - After 24h, the score is frozen (server side). The run continues normally, and prestige unlocks again.
 

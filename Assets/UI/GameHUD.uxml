@@ -319,6 +319,7 @@
                 <ui:Label name="pve-timer-label"   text=""                 class="recipe-inputs" />
                 <ui:Label name="pve-info-label"    text=""                 class="recipe-inputs" />
                 <ui:Button name="btn-pve-start"    text="Start tournament" class="craft-btn" />
+                <ui:Button name="btn-pve-retire"   text="Retire early"     class="craft-btn surge-offer__decline hidden" />
                 <ui:Label name="pve-result-label"  text=""                 class="recipe-inputs" />
                 <ui:Button name="btn-pve-claim"    text="Claim reward"     class="craft-btn hidden" />
             </ui:VisualElement>

@@ -1462,14 +1462,29 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// True while a tournament run locks manual prestige and Ascension; shows why. The tournament's own
-        /// join prestige goes through <see cref="RequestTournamentPrestige"/> instead.
+        /// During a tournament run a prestige or Ascension ends the run early (#505): asks, retires on the server at
+        /// the current net worth, then runs <paramref name="then"/>. Returns false (and does nothing) when no run is
+        /// on, so the caller goes ahead. The tournament's own join prestige goes through
+        /// <see cref="RequestTournamentPrestige"/> instead.
         /// </summary>
-        private bool BlockedByTournament()
+        private bool LeavesTournamentFirst(System.Action then)
         {
             var svc = TournamentService.Instance;
-            if (svc == null || !svc.PrestigeLocked) return false;
-            ShowNotification("🔒", $"Prestige is locked during your tournament run ({TournamentRules.FormatSpan(svc.RunRemaining)} left).", "warning");
+            if (svc == null || !svc.PrestigeLeavesRun) return false;
+            double nw = _ecsReady && !_progressQuery.IsEmpty
+                ? _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity()).NetWorth : 0d;
+            ConfirmPrompt.Show("End your tournament run?", TournamentRules.PrestigeLeaveMessage(nw, svc.RunRemaining),
+                "End run & prestige", onConfirm: async () =>
+                {
+                    string error = await svc.RetireAsync();
+                    if (this == null) return;
+                    if (error != null)
+                    {
+                        ShowNotification("⚠", TournamentRules.ErrorText(error) + " Prestige not done.", "warning");
+                        return;
+                    }
+                    then?.Invoke();
+                });
             return true;
         }
 
@@ -1497,7 +1512,6 @@ namespace MobileIdleBuilder
         private void OpenPrestigePanel()
         {
             if (!_ecsReady || _progressQuery.IsEmpty || _prestigeQuery.IsEmpty) return;
-            if (BlockedByTournament()) return;
 
             CloseAllPanels();
 
@@ -1508,7 +1522,9 @@ namespace MobileIdleBuilder
             long preview = CalculatePrestigePreview(progress.NetWorth);
             long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
 
-            if (_prestigeSummary  != null) _prestigeSummary.text  = $"Net worth: {progress.NetWorth:N0}";
+            if (_prestigeSummary  != null) _prestigeSummary.text  = $"Net worth: {progress.NetWorth:N0}" +
+                (TournamentService.Instance != null && TournamentService.Instance.PrestigeLeavesRun
+                    ? "\nThis ends your tournament run early." : "");
             if (_prestigeCurrency != null) _prestigeCurrency.text =
                 $"You will receive: {preview} ✦   (current: {held} ✦)";
 
@@ -1519,7 +1535,7 @@ namespace MobileIdleBuilder
         public void RequestAscension()
         {
             if (!_ecsReady || _progressQuery.IsEmpty) return;
-            if (BlockedByTournament()) return;
+            if (LeavesTournamentFirst(RequestAscension)) return;
             AscensionRules.Pending = true;
             OnPrestigeConfirmed();
             ShowNotification("◉", "Ascension! The worlds begin again; the megastructure grows.");
@@ -1528,7 +1544,7 @@ namespace MobileIdleBuilder
         private void OnPrestigeConfirmed()
         {
             if (!_ecsReady || _progressQuery.IsEmpty) return;
-            if (BlockedByTournament()) return;
+            if (LeavesTournamentFirst(OnPrestigeConfirmed)) return;
 
             var entity   = _progressQuery.GetSingletonEntity();
             var progress = _em.GetComponentData<PlayerProgressData>(entity);
