@@ -1378,6 +1378,12 @@
     -unity-text-align: middle-center;
 }
 
+/* Release notes can run long (#502): the message scrolls inside the card. */
+.game-update-scroll {
+    max-height: 380px;
+    flex-shrink: 1;
+}
+
 .game-update-message {
     color: var(--color-text-secondary);
     font-size: var(--font-size-md);

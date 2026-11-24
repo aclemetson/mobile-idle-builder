@@ -657,7 +657,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- ═══ GAME UPDATE NOTICE (shown once per published gamedata.updatedUtc) ═══ -->
+        <!-- ═══ GAME UPDATE NOTICE (once per published gamedata.updatedUtc; also the what's-new notes, #502) ═══ -->
         <ui:VisualElement name="game-update-modal" class="idle-return-modal hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
             <ui:VisualElement name="game-update-backdrop" class="idle-return-backdrop" />
@@ -665,7 +665,10 @@
                 <ui:VisualElement class="panel-header">
                     <ui:Label name="game-update-title" text="Game Updated" class="panel-title" />
                 </ui:VisualElement>
-                <ui:Label name="game-update-message" text="" class="game-update-message" />
+                <ui:ScrollView name="game-update-scroll" class="game-update-scroll"
+                               vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
+                    <ui:Label name="game-update-message" text="" class="game-update-message" />
+                </ui:ScrollView>
                 <ui:Button name="btn-game-update-ok" text="OK" class="craft-btn" />
             </ui:VisualElement>
         </ui:VisualElement>

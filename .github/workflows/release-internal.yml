@@ -221,10 +221,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.UGS_SERVICE_KEY_ID != ''
         with:
-          sparse-checkout: scripts
+          sparse-checkout: |
+            scripts
+            docs
 
       - name: Publish latest Android version for the update prompt
         if: env.UGS_SERVICE_KEY_ID != ''
         continue-on-error: true
         shell: pwsh
         run: ./scripts/set-remote-config.ps1 -EnvironmentId "$env:UGS_ENV_ID_DEVELOPMENT" -Key update.latest.android -Value "${{ needs.build.outputs.version }}"
+
+      # What's-new notice (#502): docs/whats-new.md -> whatsnew.notes + whatsnew.version in one write, so the
+      # game shows this release's notes once on this build or newer (WhatsNew.cs). Blank notes skip the write.
+      - name: Publish what's-new notes
+        if: env.UGS_SERVICE_KEY_ID != ''
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'whatsnew.json'
+          python3 scripts/whats_new.py "${{ needs.build.outputs.version }}" $out
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if (Test-Path $out) { ./scripts/set-remote-config.ps1 -EnvironmentId "$env:UGS_ENV_ID_DEVELOPMENT" -JsonFile $out }
