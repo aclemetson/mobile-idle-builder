@@ -2792,17 +2792,30 @@ namespace MobileIdleBuilder
         public void MaybeShowGameUpdateNotice()
         {
             var save = SaveManager.Instance?.Current;
-            if (!GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc))
-                return;
 
-            _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
-            TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+            // What's new in this build (#502): the release notes CI published, once per text.
+            string notes = FeatureFlags.WhatsNewNotes, notesVersion = FeatureFlags.WhatsNewVersion;
+            var whatsNew = WhatsNew.Decide(Application.version, notesVersion, notes, save?.lastSeenWhatsNewHash,
+                                           newPlayer: !(save?.tutorial.hasCompletedFirstRun ?? false));
+            bool dataChanged = GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc);
 
-            if (save != null)
+            if (whatsNew == WhatsNew.Decision.Show)
             {
-                save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
-                SaveManager.Instance.SaveLocal();
+                // One card: the notes, then the balance notice when values changed too.
+                string message = notes.Trim();
+                if (dataChanged) message += "\n\n" + FeatureFlags.GameDataNoticeMessage;
+                _gameUpdate?.Show(WhatsNew.Title(notesVersion), message, leftAligned: true);   // bullet lists read left
             }
+            else if (dataChanged)
+            {
+                _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
+            }
+            if (dataChanged) TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+
+            if (save == null || (whatsNew == WhatsNew.Decision.Hide && !dataChanged)) return;
+            if (whatsNew != WhatsNew.Decision.Hide) save.lastSeenWhatsNewHash = WhatsNew.Hash(notes);
+            if (dataChanged) save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
+            SaveManager.Instance.SaveLocal();
         }
 
         private void PositionTooltip(VisualElement anchor)

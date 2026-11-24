@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
         public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
         public List<string> worldsIntroSeen    = new();   // one-shot per world: world-unlock intro dialogue shown. Survives prestige.
         public List<WorldTutorialSaveData> worldTutorials = new(); // per-world tutorial progress (Chemistry...); Physics uses `tutorial`. Survives prestige.
+        public string lastSeenWhatsNewHash;                // WhatsNew.Hash of the release notes last shown (#502). Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
         // Public player name (PvE phase 1, PlayerNameService). UGS Authentication holds the real one; this caches it
