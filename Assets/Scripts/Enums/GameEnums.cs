@@ -165,6 +165,7 @@ namespace MobileIdleBuilder
         WorldCraftSpeed,          // additive craft speed in one world only (UpgradeDef.world), e.g. Neutron Economy
         WorldOutput,              // additive output in one world only (UpgradeDef.world), e.g. Fission Yield
         WorldStreamFlow,          // additive Spring flow in one stream world (UpgradeDef.world), e.g. Spring Pressure
+        FreeResearch,             // +1 research per level each run that completes the moment it starts (#491)
     }
 
     public enum AchievementTrigger

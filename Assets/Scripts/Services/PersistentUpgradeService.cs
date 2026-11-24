@@ -125,6 +125,16 @@ namespace MobileIdleBuilder
                 new[]{ 30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800 },
                 new[]{ ("memory_resonance", 2) }),
 
+            // #491: the first N research of each run skip their timer (still paid in entropy). Early timers
+            // are short and later ones long, so each level is worth more as the tree deepens; priced alongside
+            // Research Overdrive, which it follows.
+            new UpgradeDef(
+                "free_research", "Free Research",
+                "One more research per level finishes the moment you start it, each run (you still pay its entropy).",
+                UpgradeEffectType.FreeResearch, 1f, 10,
+                new[]{ 25, 45, 75, 120, 190, 300, 470, 740, 1150, 1800 },
+                new[]{ ("research_overdrive", 1) }),
+
             new UpgradeDef(
                 "entropy_echo", "Entropy Echo",
                 "Earn +5% more prestige currency per run per level.",

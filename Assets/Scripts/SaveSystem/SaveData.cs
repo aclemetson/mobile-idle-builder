@@ -139,6 +139,7 @@ namespace MobileIdleBuilder
         public long  totalEntropySpent;
         public long  totalEntropyDiscounted;   // list price minus price paid; net worth counts purchases at list price
         public double baseNetWorth;
+        public int    freeResearchUsed;            // research this run that skipped its timer (Free Research, #491)
         public List<string> inventoryKeys           = new();
         public List<int>    inventoryValues         = new();
         public List<string> nonPersistentUpgrades   = new();

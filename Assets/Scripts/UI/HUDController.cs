@@ -1167,7 +1167,7 @@ namespace MobileIdleBuilder
                         info.Add(costLabel);
 
                         int effSecs    = researchService.EffectiveDurationSeconds(research);
-                        var timeLabel  = new Label(effSecs <= 0 ? "Instant" : $"⏳ {FormatResearchTimer(effSecs)}");
+                        var timeLabel  = new Label(ResearchTimeText(effSecs, researchService.FreeResearchLeft));
                         timeLabel.AddToClassList("research-card-time");
                         info.Add(timeLabel);
 
@@ -1670,6 +1670,12 @@ namespace MobileIdleBuilder
             }
             return _buildingNames.TryGetValue(buildingId, out var n) ? n : null;
         }
+
+        /// <summary>A research card's time: "Instant", "Instant · 2 free left" (Free Research, #491) or "⏳ 1:30".</summary>
+        internal static string ResearchTimeText(int effectiveSeconds, int freeLeft) =>
+            effectiveSeconds <= 0 ? "Instant"
+            : freeLeft > 0 ? $"Instant · {freeLeft} free left"
+            : $"⏳ {FormatResearchTimer(effectiveSeconds)}";
 
         /// <summary>The lock line on a recipe known from an earlier run but gated by research now (#490).</summary>
         internal static string ResearchLockText(string researchName) => $"Research {researchName} to unlock";
