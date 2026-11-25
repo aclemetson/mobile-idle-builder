@@ -58,6 +58,8 @@ namespace MobileIdleBuilder
             // Every consumer starts "not beside a stream"; segments below overwrite that.
             var status = new Dictionary<Entity, StreamStatus>(consumers.Length);
             foreach (var c in consumers) status[c] = new StreamStatus { OnStream = 0, Ratio = 0f };
+            // Buildings that took their draw from a stream a Spring feeds (vs. one only beside dry channels).
+            var fed = new HashSet<Entity>();
 
             // Heads first: a segment's inbound neighbours are always one hop further from the tail.
             var order   = HeadsFirst(segs);
@@ -89,12 +91,16 @@ namespace MobileIdleBuilder
                 {
                     var cell = Adjacent(seg.Cell, dir);
                     if (!buildingMap.TryGetValue(cell, out var b)) continue;
-                    if (!status.TryGetValue(b, out var st) || st.OnStream != 0) continue;
+                    if (!status.TryGetValue(b, out var st)) continue;
+                    // Already on a stream: keep it, unless that one was dry and this one has a Spring.
+                    bool wasDry = st.OnStream != 0 && !fed.Contains(b);
+                    if (st.OnStream != 0 && !(wasDry && source)) continue;
                     if (!HasPort(b, cell, dir, PortType.Input) && !HasPort(b, cell, Opposite(dir), PortType.Output)) continue;
 
                     float d = EntityManager.GetComponentData<StreamConsumer>(b).Draw;
-                    draw += d;
+                    if (!wasDry) draw += d;
                     float ratio = source ? StreamRules.Take(ref left, d) : 0f;
+                    if (source) fed.Add(b);
                     status[b] = new StreamStatus { OnStream = 1, Ratio = ratio };
                 }
 

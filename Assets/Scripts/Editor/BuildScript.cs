@@ -51,7 +51,13 @@ namespace MobileIdleBuilder.Editor
             }
         }
 
-        public static void BuildIOS()
+        public static void BuildIOS() => BuildIOSInternal(devTooling: false);
+
+        // TestFlight build: compiles in the dev console and dev-only tooling (DEVELOPMENT_BUILD), the iOS
+        // twin of BuildAndroidDevelopment. Without it the console was compiled out of every iOS build.
+        public static void BuildIOSDevelopment() => BuildIOSInternal(devTooling: true);
+
+        private static void BuildIOSInternal(bool devTooling)
         {
             string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "iOS");
             Directory.CreateDirectory(outputDir);
@@ -65,7 +71,10 @@ namespace MobileIdleBuilder.Editor
                 locationPathName = outputDir,
                 target           = BuildTarget.iOS,
                 options          = BuildOptions.None,
+                // Same as Android: the symbol only, not BuildOptions.Development (no debuggable player).
+                extraScriptingDefines = devTooling ? new[] { "DEVELOPMENT_BUILD" } : null,
             };
+            GameLogger.Info($"iOS build extra defines: {(devTooling ? "DEVELOPMENT_BUILD" : "(none)")}");
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
             if (report.summary.result != BuildResult.Succeeded)

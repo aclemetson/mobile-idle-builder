@@ -226,6 +226,51 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void NoSpring_BankBuildingIsDry()
+        {
+            Stream();
+            var a = Bank(1, 3f);
+
+            Tick();
+
+            Assert.AreEqual(1, Status(a).OnStream);
+            Assert.AreEqual(0f, Status(a).Ratio, "a stream no Spring feeds powers nothing");
+        }
+
+        [Test]
+        public void BuildingBesideADryChannelAndAStream_TakesFromTheStream()
+        {
+            Spring(10f);
+            Stream();
+            var a = Bank(1, 3f);
+            // A longer dry channel on the far bank (y = 2), so it is walked first (heads first).
+            const int len = 8;
+            var dry = new Entity[len];
+            for (int k = 0; k < len; k++)
+            {
+                dry[k] = _em.CreateEntity();
+                _em.AddComponentData(dry[k], new GridPosition { Cell = new int2(1 + k, 2) });
+                _em.AddComponentData(dry[k], new StreamSegment());
+                _em.AddBuffer<ConveyorItem>(dry[k]);
+            }
+            for (int k = 0; k < len; k++)
+                _em.AddComponentData(dry[k], new ConveyorSegmentData
+                {
+                    Cell = new int2(1 + k, 2), EntryDir = East, ExitDir = East, TransportTime = 1f,
+                    NextSegment = k + 1 < len ? dry[k + 1] : Entity.Null,
+                    PrevSegment = k > 0 ? dry[k - 1] : Entity.Null,
+                    IsChainHead = k == 0,
+                });
+            _em.GetBuffer<PlacedPortData>(a).Add(new PlacedPortData { PortType = (int)PortType.Input, CellX = 1, CellY = 1, Facing = South });
+
+            Tick();
+
+            Assert.AreEqual(1f, Status(a).Ratio, 1e-5f);
+            using var q = _em.CreateEntityQuery(typeof(StreamGridState));
+            Assert.AreEqual(3f, q.GetSingleton<StreamGridState>().Draw, 1e-5f, "its draw counts once");
+        }
+
+        [Test]
         public void BankBuilding_TakesOnlyWhatItsRecipeUses()
         {
             Spring(10f);

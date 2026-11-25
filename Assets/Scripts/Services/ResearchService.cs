@@ -199,8 +199,13 @@ namespace MobileIdleBuilder
                 }
             }
 
+            // Tutorial: while collection is paused only the tutorial's next research can be bought, and a
+            // player already stuck on it gets it for what they hold (TutorialResearchPolicy).
+            if (!TutorialResearchPolicy.CanBuy(research.id, IsUnlocked)) return false;
+
             long currentEntropy = GetCurrentEntropy();
-            return currentEntropy >= EffectiveCost(research);
+            long cost           = EffectiveCost(research);
+            return currentEntropy >= cost || TutorialResearchPolicy.IsRescue(research.id, currentEntropy, cost);
         }
 
         /// <summary>
@@ -244,7 +249,9 @@ namespace MobileIdleBuilder
 
             // Check-and-spend in one step; CanPurchase already confirmed the balance.
             long cost = EffectiveCost(research);
-            if (!EntropyWallet.TrySpend(_progressQuery, cost, research.costBaseCurrency)) return;
+            if (TutorialResearchPolicy.IsRescue(research.id, GetCurrentEntropy(), cost))
+                cost = EntropyWallet.SpendUpTo(_progressQuery, cost, research.costBaseCurrency);
+            else if (!EntropyWallet.TrySpend(_progressQuery, cost, research.costBaseCurrency)) return;
             AchievementService.Instance?.NotifyEntropySpent(cost);
 
             int effective = EffectiveDurationSeconds(research);

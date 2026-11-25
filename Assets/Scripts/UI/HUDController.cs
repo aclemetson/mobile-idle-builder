@@ -912,13 +912,20 @@ namespace MobileIdleBuilder
                 // CanPurchase is the authority — it covers already-unlocked, prerequisites and
                 // affordability together, so this cannot drift from what Purchase() will accept.
                 btn.SetEnabled(!labBusy && researchService.CanPurchase(research));
-                btn.text = labBusy ? "Lab busy" : "Start";
+                btn.text = ResearchStartText(labBusy, research);
 
                 // Research cost has only an --unaffordable class; there is no --affordable pair.
                 costLabel?.EnableInClassList("research-card-cost--unaffordable",
                                              entropy < researchService.EffectiveCost(research));
             }
         }
+
+        /// <summary>The Start button's label: "Lab busy", "Later" while the tutorial holds this research back
+        /// (TutorialResearchPolicy), else "Start".</summary>
+        private string ResearchStartText(bool labBusy, ResearchSO research) =>
+            labBusy ? "Lab busy"
+            : !TutorialResearchPolicy.CanBuy(research.id, researchService.IsUnlocked) ? "Later"
+            : "Start";
 
         /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance discounts it.</summary>
         internal static string ResearchCostText(long cost, long baseCost)
@@ -1171,7 +1178,7 @@ namespace MobileIdleBuilder
                         footer.Add(info);
 
                         // Start button (disabled while the lab is busy with another research)
-                        var startBtn = new Button { text = labBusy ? "Lab busy" : "Start" };
+                        var startBtn = new Button { text = ResearchStartText(labBusy, research) };
                         startBtn.AddToClassList("craft-btn");
                         startBtn.SetEnabled(!labBusy && canPurchase);
 
