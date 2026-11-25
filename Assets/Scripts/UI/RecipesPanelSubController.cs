@@ -242,7 +242,7 @@ namespace MobileIdleBuilder
             nameLabel.AddToClassList("recipe-card__name");
             card.Add(nameLabel);
 
-            var inputs = HUDController.BuildIngredientsUI(recipe, inventoryCounts);
+            var inputs = HudText.BuildIngredientsUI(recipe, inventoryCounts);
             inputs.AddToClassList("recipe-card__inputs");
             card.Add(inputs);
 
@@ -253,17 +253,17 @@ namespace MobileIdleBuilder
             bool hasBuilding = craftService == null
                 || craftService.HasCraftingBuilding(recipe, out speed, out missingBuilding);
             if (isLocked)
-                card.Add(CardHint(HUDController.ResearchLockText(ResearchNameFor(recipe.requires_research)), "recipe-lock-hint"));
+                card.Add(CardHint(HudText.ResearchLockText(ResearchNameFor(recipe.requires_research)), "recipe-lock-hint"));
             else if (!hasBuilding)
                 card.Add(CardHint($"Place {AOrAn(missingBuilding)} to craft this", "recipe-lock-hint"));
 
             string meta = $"{ManualCraftService.UnitSeconds(recipe, speed):0.#}s";
             if (outputItem != null)
-                meta += " · " + HUDController.WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId));
+                meta += " · " + HudText.WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId));
             card.Add(CardHint(meta, "recipe-card__meta"));
 
             float bonus = recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
-            if (bonus > 0f) card.Add(CardHint(HUDController.EscapeBonusText(bonus), "recipe-bonus-hint"));
+            if (bonus > 0f) card.Add(CardHint(HudText.EscapeBonusText(bonus), "recipe-bonus-hint"));
 
             var spacer = new VisualElement();
             spacer.AddToClassList("recipe-card__spacer");

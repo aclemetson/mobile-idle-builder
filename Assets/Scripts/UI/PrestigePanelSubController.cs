@@ -46,7 +46,7 @@ namespace MobileIdleBuilder
         double NetWorth => CanRequest ? _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity()).NetWorth : 0d;
 
         /// <summary>Prestige currency a prestige would pay now (the tournament join card shows it).</summary>
-        public long Preview() => CanRequest ? HUDController.CalculatePrestigePreview(NetWorth) : 0;
+        public long Preview() => CanRequest ? HudText.CalculatePrestigePreview(NetWorth) : 0;
 
         /// <summary>Fills and shows the panel. The caller closes other panels first. False when ECS is not ready.</summary>
         public bool Open()
@@ -57,7 +57,7 @@ namespace MobileIdleBuilder
             var prestige = _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity());
 
             // Mirror the rate used in PrestigeSystem
-            long preview = HUDController.CalculatePrestigePreview(progress.NetWorth);
+            long preview = HudText.CalculatePrestigePreview(progress.NetWorth);
             long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
 
             if (_summary != null) _summary.text = $"Net worth: {progress.NetWorth:N0}" +

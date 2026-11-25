@@ -64,9 +64,9 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void Landscape_IsWiderThanTall()
         {
-            Assert.IsTrue(HUDController.IsLandscape(1170, 520));
-            Assert.IsFalse(HUDController.IsLandscape(540, 1120));
-            Assert.IsFalse(HUDController.IsLandscape(100, 0));
+            Assert.IsTrue(HudText.IsLandscape(1170, 520));
+            Assert.IsFalse(HudText.IsLandscape(540, 1120));
+            Assert.IsFalse(HudText.IsLandscape(100, 0));
         }
     }
 }

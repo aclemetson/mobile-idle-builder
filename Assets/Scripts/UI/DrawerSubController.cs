@@ -50,7 +50,7 @@ namespace MobileIdleBuilder
             {
                 Vector2 downPos = Vector2.zero;
                 handle.RegisterCallback<PointerDownEvent>(e => downPos = e.position, TrickleDown.TrickleDown);
-                handle.RegisterCallback<ClickEvent>(e => { if (HUDController.IsTap(downPos, e.position, 12f)) Toggle(); });
+                handle.RegisterCallback<ClickEvent>(e => { if (HudText.IsTap(downPos, e.position, 12f)) Toggle(); });
             }
             _backdrop?.RegisterCallback<ClickEvent>(_ => Close());
         }

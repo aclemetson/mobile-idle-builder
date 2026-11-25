@@ -220,7 +220,7 @@ namespace MobileIdleBuilder
             float desiredTop = topAbove < margin ? panelPoint.y + 24f : topAbove;
             Vector2 panelSize = panel.visualTree.layout.size;
             Vector2 pos = panelSize.x > 0f && panelSize.y > 0f
-                ? HUDController.ClampPopup(new Vector2(panelPoint.x - w * 0.5f, desiredTop), new Vector2(w, h), panelSize, margin)
+                ? HudText.ClampPopup(new Vector2(panelPoint.x - w * 0.5f, desiredTop), new Vector2(w, h), panelSize, margin)
                 : new Vector2(panelPoint.x - w * 0.5f, desiredTop);
             _confirmPopup.style.left = pos.x;
             _confirmPopup.style.top  = pos.y;
@@ -323,8 +323,8 @@ namespace MobileIdleBuilder
             _btnUp?.EnableInClassList("conveyor-mode-btn--on", raise);
 
             if (_conveyorLabel != null)
-                _conveyorLabel.text = raise ? HUDController.ConveyorRaiseLabel
-                                            : HUDController.ConveyorBarLabel(destroy, hasStart, candidate, ended);
+                _conveyorLabel.text = raise ? HudText.ConveyorRaiseLabel
+                                            : HudText.ConveyorBarLabel(destroy, hasStart, candidate, ended);
         }
 
         // ── Deconstruct ───────────────────────────────────────────────────────

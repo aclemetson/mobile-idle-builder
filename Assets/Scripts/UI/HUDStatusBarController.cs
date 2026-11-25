@@ -177,7 +177,7 @@ namespace MobileIdleBuilder
             bool brownout = state.Draw > state.Supply + 0.001f;
             bool warn     = brownout || state.DisconnectedCount > 0;
 
-            string text = HUDController.FormatPowerLabel(state.Draw, state.Supply);
+            string text = HudText.FormatPowerLabel(state.Draw, state.Supply);
             if (state.DisconnectedCount > 0) text += $"  ({state.DisconnectedCount} unpowered)";
             if (warn) text = "⚠ " + text;
 
@@ -286,7 +286,7 @@ namespace MobileIdleBuilder
             _lastResearchRemaining = remaining;
 
             string name = rs.ActiveResearch != null ? rs.ActiveResearch.displayName : "Research";
-            _researchStatusLabel.text = $"🔬 {name}   ⏳ {HUDController.FormatResearchTimer(remaining)}";
+            _researchStatusLabel.text = $"🔬 {name}   ⏳ {HudText.FormatResearchTimer(remaining)}";
             _researchStatus.style.display = DisplayStyle.Flex;
         }
 
@@ -327,7 +327,7 @@ namespace MobileIdleBuilder
         internal static string FormatCraftStatus(string recipeName, int frontCount, int itemsBehind, double secondsLeft)
         {
             string more = itemsBehind > 0 ? $"  +{itemsBehind} more" : "";
-            return $"⚗ {recipeName} ×{frontCount}{more}   ⏳ {HUDController.FormatResearchTimer(secondsLeft)}";
+            return $"⚗ {recipeName} ×{frontCount}{more}   ⏳ {HudText.FormatResearchTimer(secondsLeft)}";
         }
     }
 }

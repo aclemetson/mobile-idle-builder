@@ -280,7 +280,7 @@ namespace MobileIdleBuilder
         // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the cost blank (#197).
         static Label MakeCostLabel(long cost, bool canAfford)
         {
-            var costLabel = new Label(HUDController.FormatBuildCost(cost));
+            var costLabel = new Label(HudText.FormatBuildCost(cost));
             costLabel.AddToClassList("building-card-cost");
             costLabel.AddToClassList(canAfford ? "building-card-recipe--affordable" : "building-card-recipe--unaffordable");
             return costLabel;

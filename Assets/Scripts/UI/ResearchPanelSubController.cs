@@ -187,7 +187,7 @@ namespace MobileIdleBuilder
 
             double rem = _service.ActiveRemainingSeconds;
             if (_countdownLabel != null)
-                _countdownLabel.text = $"⏳ {HUDController.FormatResearchTimer(rem)}";
+                _countdownLabel.text = $"⏳ {HudText.FormatResearchTimer(rem)}";
 
             if (_skipBtn != null && !_skipConfirming)
             {
@@ -321,9 +321,9 @@ namespace MobileIdleBuilder
             string Meta(ResearchSO r) => State(r) switch
             {
                 ResearchTreeView.NodeState.Done      => "Researched",
-                ResearchTreeView.NodeState.Active    => $"In progress · {HUDController.FormatResearchTimer(_service.ActiveRemainingSeconds)}",
-                ResearchTreeView.NodeState.Available => $"◈ {HUDController.ShortNumber(_service.EffectiveCost(r))}" + (currentEntropy >= _service.EffectiveCost(r) ? "  Ready" : ""),
-                _ => WorldLockText(r) ?? $"Locked · ◈ {HUDController.ShortNumber(_service.EffectiveCost(r))}",
+                ResearchTreeView.NodeState.Active    => $"In progress · {HudText.FormatResearchTimer(_service.ActiveRemainingSeconds)}",
+                ResearchTreeView.NodeState.Available => $"◈ {HudText.ShortNumber(_service.EffectiveCost(r))}" + (currentEntropy >= _service.EffectiveCost(r) ? "  Ready" : ""),
+                _ => WorldLockText(r) ?? $"Locked · ◈ {HudText.ShortNumber(_service.EffectiveCost(r))}",
             };
 
             // Open on the research the player is working toward: the one the tutorial is asking for (selected,
@@ -416,7 +416,7 @@ namespace MobileIdleBuilder
             else if (isActive)
             {
                 // In-progress: live countdown + skip-for-crystals
-                _countdownLabel = new Label($"⏳ {HUDController.FormatResearchTimer(_service.ActiveRemainingSeconds)}");
+                _countdownLabel = new Label($"⏳ {HudText.FormatResearchTimer(_service.ActiveRemainingSeconds)}");
                 _countdownLabel.AddToClassList("research-card-cost");
                 footer.Add(_countdownLabel);
                 BuildSkipUi(footer);
@@ -434,7 +434,7 @@ namespace MobileIdleBuilder
                 if (currentEntropy < cost) costLabel.AddToClassList("research-card-cost--unaffordable");
                 info.Add(costLabel);
 
-                var timeLabel = new Label(HUDController.ResearchTimeText(_service.EffectiveDurationSeconds(research),
+                var timeLabel = new Label(HudText.ResearchTimeText(_service.EffectiveDurationSeconds(research),
                                                                          _service.FreeResearchLeft));
                 timeLabel.AddToClassList("research-card-time");
                 info.Add(timeLabel);
