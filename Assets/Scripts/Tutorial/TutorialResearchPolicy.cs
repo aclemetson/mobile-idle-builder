@@ -49,8 +49,10 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// True when the current step waits on <paramref name="researchId"/> with collection paused and the
-        /// player cannot afford it: the purchase goes through for whatever entropy they hold.
+        /// True when the current step waits on <paramref name="researchId"/> with collection paused or limited
+        /// to some fields, and the player cannot afford it: the purchase goes through for whatever entropy they
+        /// hold. A limited step counts too: the fields it leaves open give items, not entropy, and the Demon
+        /// takes nothing on a research step (<see cref="TutorialSellPolicy"/>).
         /// </summary>
         public static bool IsRescue(TutorialFlowSO flow, bool active, int stepIndex, string researchId,
                                     long balance, long cost)
@@ -58,7 +60,7 @@ namespace MobileIdleBuilder
             if (!active || flow?.steps == null || stepIndex < 0 || stepIndex >= flow.steps.Length) return false;
             if (balance >= cost) return false;
             var step = flow.steps[stepIndex];
-            if (step?.onEnter == null || !step.onEnter.blockCollection) return false;
+            if (step == null || !CollectionRestricted(step)) return false;
             var cond = step.advanceCondition;
             return cond?.type == ConditionType.ResearchUnlocked && cond.researchId == researchId;
         }
