@@ -222,6 +222,7 @@ namespace MobileIdleBuilder.Tests
             using var world = new World("StarsSink");
             var em = world.EntityManager;
             var group = world.CreateSystemManaged<SimulationSystemGroup>();
+            group.AddSystemToUpdateList(world.CreateSystemManaged<ItemValueTableSystem>());
             group.AddSystemToUpdateList(world.CreateSystem<EntropySinkSystem>());
             group.SortSystems();
 
@@ -235,9 +236,39 @@ namespace MobileIdleBuilder.Tests
             SlotBufferUtils.AddToInputBuffer(buf, 6, 3);
 
             world.Update();
-            // ItemDatabase.Instance is null in an isolated world, so the sink's base is its 1/item fallback;
-            // the stars still double it.
-            Assert.AreEqual(6L, em.GetComponentData<PlayerProgressData>(player).BaseCurrency);
+            // The price table (#284) reads the injected item: 3 carbon x 10 x2 (5 stars).
+            Assert.AreEqual(60L, em.GetComponentData<PlayerProgressData>(player).BaseCurrency);
+        }
+
+        [Test]
+        public void Sink_RepricesWhenStarsAreGranted()
+        {
+            ItemDatabase.InjectForTesting(new[] { MakeItem("carbon", 6, 10f) });
+            var save = SpawnSaveManager();
+
+            using var world = new World("StarsReprice");
+            var em = world.EntityManager;
+            var group = world.CreateSystemManaged<SimulationSystemGroup>();
+            group.AddSystemToUpdateList(world.CreateSystemManaged<ItemValueTableSystem>());
+            group.AddSystemToUpdateList(world.CreateSystem<EntropySinkSystem>());
+            group.SortSystems();
+
+            var player = em.CreateEntity();
+            em.AddComponent<PlayerInventoryTag>(player);
+            em.AddComponentData(player, new PlayerProgressData());
+            var sink = em.CreateEntity();
+            em.AddComponent<EntropySinkTag>(sink);
+            em.AddComponentData(sink, new BuildingData { IsActive = true });
+            em.AddBuffer<BuildingInputSlot>(sink);
+
+            SlotBufferUtils.AddToInputBuffer(em.GetBuffer<BuildingInputSlot>(sink), 6, 1);
+            world.Update();
+            Assert.AreEqual(10L, em.GetComponentData<PlayerProgressData>(player).BaseCurrency);
+
+            ItemStars.Add(save, "carbon", 5);   // the price table (#284) must notice and rebuild
+            SlotBufferUtils.AddToInputBuffer(em.GetBuffer<BuildingInputSlot>(sink), 6, 1);
+            world.Update();
+            Assert.AreEqual(30L, em.GetComponentData<PlayerProgressData>(player).BaseCurrency, "10, then 10 x2");
         }
 
         [Test]
@@ -250,6 +281,7 @@ namespace MobileIdleBuilder.Tests
             using var world = new World("StarsNetWorth");
             var em = world.EntityManager;
             var group = world.CreateSystemManaged<SimulationSystemGroup>();
+            group.AddSystemToUpdateList(world.CreateSystemManaged<ItemValueTableSystem>());
             group.AddSystemToUpdateList(world.CreateSystem<NetWorthSystem>());
             group.SortSystems();
 
