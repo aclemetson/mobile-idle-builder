@@ -100,8 +100,8 @@ namespace MobileIdleBuilder
             }
 
             // Belt splits: every item that reached one is given its exit by weighted turns, among the sides that
-            // have a belt, so it curves toward its branch as it crosses the tile.
-            PlanSplitExits(segEntities, segMap);
+            // have a belt or a building input facing the split, so it curves toward its branch as it crosses the tile.
+            PlanSplitExits(segEntities, segMap, buildingMap);
 
             // ----------------------------------------------------------------
             // Pass 2 — Advance items (back-pressure aware)
@@ -130,8 +130,8 @@ namespace MobileIdleBuilder
                 bool isStream = EntityManager.HasComponent<StreamSegment>(e);
                 if (isStream && EntityManager.GetComponentData<StreamSegment>(e).HasSource == 0) continue;
 
-                float frontLimit = EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap)
-                    ? SplitFrontLimit(e, seg, segMap, spacing)
+                float frontLimit = EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap, buildingMap)
+                    ? SplitFrontLimit(e, seg, segMap, buildingMap, buf[0].ItemID, spacing)
                     : seg.NextSegment != Entity.Null
                     ? FrontLimitInto(e, seg.NextSegment, spacing)
                     : isStream || TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
@@ -170,14 +170,19 @@ namespace MobileIdleBuilder
                 var item = ConveyorItems.Front(EntityManager, e);
                 if (item.Progress < 1f) continue;
 
-                if (EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap))
+                if (EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap, buildingMap))
                 {
-                    // A split: its planned side if that belt has room, else the next side by turns that does.
-                    int dir = ChooseSplitExit(e, seg, segMap, item, spacing);
-                    if (dir >= 0)
+                    // A split: its planned side if that side has room, else the next side by turns that does.
+                    int dir = ChooseSplitExit(e, seg, segMap, buildingMap, item, spacing);
+                    if (dir >= 0 && segMap.TryGetValue(AdjacentCell(seg.Cell, dir), out Entity branch))
                     {
                         splitChoice[e] = dir;
-                        mergeTargets.Add(segMap[AdjacentCell(seg.Cell, dir)]);
+                        mergeTargets.Add(branch);
+                    }
+                    else if (dir >= 0 && SplitInputAt(seg, dir, buildingMap, out Entity bldg))
+                    {
+                        // A building's input faces this side: the item goes straight in, as at a belt's tail.
+                        buildingDeposits.Add((e, bldg, item.ItemID, dir));
                     }
                     // else every output is backed up: the item waits
                 }
@@ -468,17 +473,35 @@ namespace MobileIdleBuilder
         // Belt splits (BeltSplit): weighted turns between 2-3 output sides
         // ----------------------------------------------------------------
 
-        // True when at least one of the split's output sides has a belt to hand to.
-        private bool SplitHasOutput(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap)
+        // A building whose input port faces the split on side d (a split placed right in front of an input).
+        private bool SplitInputAt(ConveyorSegmentData seg, int d, NativeHashMap<int2, Entity> buildingMap, out Entity bldg)
         {
-            var split = EntityManager.GetComponentData<BeltSplit>(e);
-            for (int d = 0; d < 4; d++)
-                if (BeltSplitRules.Has(split.Mask, d) && segMap.ContainsKey(AdjacentCell(seg.Cell, d))) return true;
+            int2 cell = AdjacentCell(seg.Cell, d);
+            if (buildingMap.TryGetValue(cell, out bldg) && HasMatchingPort(bldg, cell, d, PortType.Input)
+                && EntityManager.HasBuffer<BuildingInputSlot>(bldg) && EntityManager.HasComponent<BuildingInventoryConfig>(bldg))
+                return true;
+            bldg = Entity.Null;
             return false;
         }
 
-        // Gives every item on a split without a planned exit one, by weighted turns among sides that have a belt.
-        private void PlanSplitExits(NativeArray<Entity> segs, NativeHashMap<int2, Entity> segMap)
+        // Side d of a split leads somewhere: a belt, or a building input facing the split.
+        private bool SplitSideOpen(ConveyorSegmentData seg, int d, NativeHashMap<int2, Entity> segMap,
+                                   NativeHashMap<int2, Entity> buildingMap) =>
+            segMap.ContainsKey(AdjacentCell(seg.Cell, d)) || SplitInputAt(seg, d, buildingMap, out _);
+
+        // True when at least one of the split's output sides has a belt or a building input to hand to.
+        private bool SplitHasOutput(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap,
+                                    NativeHashMap<int2, Entity> buildingMap)
+        {
+            var split = EntityManager.GetComponentData<BeltSplit>(e);
+            for (int d = 0; d < 4; d++)
+                if (BeltSplitRules.Has(split.Mask, d) && SplitSideOpen(seg, d, segMap, buildingMap)) return true;
+            return false;
+        }
+
+        // Gives every item on a split without a planned exit one, by weighted turns among its open sides.
+        private void PlanSplitExits(NativeArray<Entity> segs, NativeHashMap<int2, Entity> segMap,
+                                    NativeHashMap<int2, Entity> buildingMap)
         {
             for (int i = 0; i < segs.Length; i++)
             {
@@ -492,7 +515,7 @@ namespace MobileIdleBuilder
                 {
                     var it = buf[k];
                     if (it.OutEdge != 0 && BeltSplitRules.Has(split.Mask, it.OutEdge - 1)) continue;
-                    int dir = BeltSplitRules.Pick(ref split, d => segMap.ContainsKey(AdjacentCell(seg.Cell, d)));
+                    int dir = BeltSplitRules.Pick(ref split, d => SplitSideOpen(seg, d, segMap, buildingMap));
                     if (dir < 0) break;
                     it.OutEdge = ConveyorItem.EncodeEdge(dir);
                     buf[k]  = it;
@@ -503,27 +526,35 @@ namespace MobileIdleBuilder
         }
 
         // The front item may run to the edge when any output has room for it; else it stops behind the best one.
-        private float SplitFrontLimit(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap, float spacing)
+        // A building input that takes the item lets it run to the edge, like a belt's tail.
+        private float SplitFrontLimit(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap,
+                                      NativeHashMap<int2, Entity> buildingMap, int frontItem, float spacing)
         {
             var split = EntityManager.GetComponentData<BeltSplit>(e);
             float best = float.NegativeInfinity;
             for (int d = 0; d < 4; d++)
             {
-                if (!BeltSplitRules.Has(split.Mask, d) || !segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)) continue;
-                float lim = FrontLimitInto(e, t, spacing);
+                if (!BeltSplitRules.Has(split.Mask, d)) continue;
+                float lim;
+                if (segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)) lim = FrontLimitInto(e, t, spacing);
+                else if (SplitInputAt(seg, d, buildingMap, out Entity b) && DecideDeposit(e, b, frontItem) == InputDecision.Accept)
+                    lim = BeltMotion.Open;
+                else continue;
                 if (lim > best) best = lim;
             }
-            return best;
+            return best == float.NegativeInfinity ? BeltMotion.TailRest(spacing / Len(e)) : best;
         }
 
         // The side a split's ready front item leaves by: its planned side when that belt has room, else the next
         // side by turns whose belt has room (the item's plan is rewritten). -1 when every output is backed up.
         private int ChooseSplitExit(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap,
-                                    ConveyorItem front, float spacing)
+                                    NativeHashMap<int2, Entity> buildingMap, ConveyorItem front, float spacing)
         {
+            // A belt side has room when its rear is clear; a building side when its input takes this item now.
             bool Room(int d) =>
                 segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)
-                && RoomInto(t, e, front.Progress, spacing);
+                    ? RoomInto(t, e, front.Progress, spacing)
+                    : SplitInputAt(seg, d, buildingMap, out Entity b) && DecideDeposit(e, b, front.ItemID) == InputDecision.Accept;
 
             var split = EntityManager.GetComponentData<BeltSplit>(e);
             int planned = front.OutEdge - 1;
