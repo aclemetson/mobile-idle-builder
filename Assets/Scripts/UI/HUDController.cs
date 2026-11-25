@@ -63,23 +63,10 @@ namespace MobileIdleBuilder
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
-                           _researchList, _upgradesList;
+                           _upgradesList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel;
-        // Research timer UI (live countdown + skip on the in-progress card)
-        private Label      _researchCountdownLabel;
-        // Research tree (#337): shown instead of the list once the tutorial is done; the list stays one tap away.
-        private ResearchTreeView _researchTree;
-        private Button     _researchModeBtn;
-        private bool       _researchTreeMode = true;
-        private VisualElement _researchTabs;        // one tab per unlocked world (Physics / Chemistry / Biology)
-        private string     _researchWorldTab;       // world id whose research is shown; set to the live world on open
-        private string     _researchSelectedId;
-        private bool       _researchFocusPending;
-        private ResearchBlock[] _researchBlocks;
-        private const string ResearchViewPref = "research_view_mode";
-        private Button     _researchSkipBtn;
-        private bool       _researchSkipConfirming;
-        private UnityEngine.UIElements.IVisualElementScheduledItem _researchTicker;
+        // ---- Research panel (list/tree, tabs, cards, skip: ResearchPanelSubController, #286) ----
+        private ResearchPanelSubController _research;
 
         // Live affordability refresh: automation can raise entropy past a building's cost while
         // the Build panel is open. We re-enable buy buttons on entropy change instead of only at
@@ -87,15 +74,6 @@ namespace MobileIdleBuilder
         private readonly List<(Button btn, Label costLabel, long cost)> _buildingAffordRows = new();
         private long _lastAffordEntropy = long.MinValue;
         private FieldGenerator _fieldGenerator; // source of the fields sold in the Build menu
-
-        // Same problem in the Research panel, which had no live refresh at all: a Start button that
-        // was unaffordable at panel-open stayed dead until the panel was reopened. Rows captured in
-        // BuildResearchList; re-evaluated by the 1 Hz research ticker. The research is stored rather
-        // than a precomputed bool because CanPurchase() is the authority on unlocked + prereqs +
-        // affordability, and labBusy is tracked too so buttons revive when the lab frees up.
-        private readonly List<(Button btn, Label costLabel, ResearchSO research)> _researchAffordRows = new();
-        private long _lastResearchAffordEntropy = long.MinValue;
-        private bool _lastResearchAffordLabBusy;
 
         // ---- HUD chrome ----
         private VisualElement _drawerPanel;
@@ -194,6 +172,7 @@ namespace MobileIdleBuilder
             _settings     = GetComponent<HUDSettingsSubController>();
             _worlds       = GetComponent<WorldsSubController>();
             _achievements = GetComponent<AchievementsSubController>() ?? gameObject.AddComponent<AchievementsSubController>();
+            _research     = GetComponent<ResearchPanelSubController>() ?? gameObject.AddComponent<ResearchPanelSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
@@ -384,6 +363,7 @@ namespace MobileIdleBuilder
             _inspector?.SetECSContext(_em);
             _prestigeShop?.SetECSContext(_em);
             _worlds?.SetECSContext(_em);
+            _research?.SetECSContext(_em);
         }
 
         void Update()
@@ -463,8 +443,7 @@ namespace MobileIdleBuilder
             _recipeList       = root.Q<ScrollView>("recipe-list");
             _buildingsList    = root.Q<ScrollView>("buildings-list");
             _codexList        = root.Q<ScrollView>("codex-list");
-            _researchList     = root.Q<ScrollView>("research-list");
-            SetUpResearchTree();
+            _research?.Initialize(root, researchService);   // tree/list toggle, world tabs, cards
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievements?.Initialize(root, achievementService);   // tabs, list, claim all, close
 
@@ -735,171 +714,11 @@ namespace MobileIdleBuilder
             return el;
         }
 
-        private void SetUpResearchTree()
-        {
-            if (_researchPanel == null || _researchList == null) return;
-            _researchTreeMode = PlayerPrefs.GetInt(ResearchViewPref, 1) == 1;
-            _researchBlocks   = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.blocks ?? System.Array.Empty<ResearchBlock>();
-
-            _researchTree = new ResearchTreeView();
-            _researchTree.NodeSelected += r => { _researchSelectedId = r.id; BuildResearchList(); };
-            int at = _researchPanel.IndexOf(_researchList);
-            _researchPanel.Insert(at + 1, _researchTree);
-
-            // Tree / List toggle in the panel header, left of the close button.
-            var header = _researchPanel.Q("panel-header");
-            _researchModeBtn = new Button { name = "btn-research-view" };
-            _researchModeBtn.AddToClassList("research-view-btn");
-            _researchModeBtn.clicked += () =>
-            {
-                _researchTreeMode = !_researchTreeMode;
-                PlayerPrefs.SetInt(ResearchViewPref, _researchTreeMode ? 1 : 0);
-                _researchFocusPending = _researchTreeMode;
-                BuildResearchList();
-            };
-            var close = header?.Q<Button>("btn-close-research");
-            if (header != null) header.Insert(close != null ? header.IndexOf(close) : header.childCount, _researchModeBtn);
-
-            // World tabs under the header: each world's research on its own page.
-            _researchTabs = new VisualElement { name = "research-world-tabs" };
-            _researchTabs.AddToClassList("research-tabs");
-            _researchPanel.Insert(_researchPanel.IndexOf(_researchList), _researchTabs);
-        }
-
-        /// <summary>World a research belongs to for the tabs (ResearchSO.world; empty = Physics).</summary>
-        internal static string ResearchTabOf(ResearchSO r) =>
-            string.IsNullOrEmpty(r?.world) ? WorldGate.Physics : r.world;
-
-        /// <summary>Rebuilds the world tabs: one per unlocked world, hidden when only Physics is open.</summary>
-        private void RefreshResearchTabs()
-        {
-            if (_researchTabs == null) return;
-            _researchTabs.Clear();
-            var ws = WorldService.Instance;
-            var worlds = ws?.AllWorlds;
-            int shown = 0;
-            if (worlds != null)
-                for (int i = 0; i < worlds.Count; i++)
-                {
-                    var w = worlds[i];
-                    if (w == null || !ws.IsUnlocked(i)) continue;
-                    shown++;
-                    string id = w.id;
-                    var tab = new Button(() =>
-                    {
-                        if (_researchWorldTab == id) return;
-                        _researchWorldTab = id;
-                        _researchSelectedId = null;
-                        _researchFocusPending = true;
-                        BuildResearchList();
-                    }) { text = w.displayName, name = "research-tab-" + id };
-                    tab.AddToClassList("research-tab");
-                    if (id == _researchWorldTab) tab.AddToClassList("research-tab--selected");
-                    _researchTabs.Add(tab);
-                }
-            SetElementVisible(_researchTabs, shown > 1);
-        }
-
         private void OpenResearchPanel()
         {
             CloseAllPanels();
-            _researchFocusPending = true;
-            // Open on the world the player is in: its research first, the others one tap away.
-            _researchWorldTab = WorldGate.ActiveWorldId() ?? WorldGate.Physics;
-            BuildResearchList();
-            SetElementVisible(_researchPanel, true);
-
-            // Drive the live research countdown while the panel is open (paused when it closes).
-            if (_researchTicker == null)
-                _researchTicker = _researchList.schedule.Execute(UpdateResearchCountdown).Every(1000);
-            else
-                _researchTicker.Resume();
-
+            _research?.Open();
             OnResearchPanelOpened?.Invoke();
-        }
-
-        // Updates just the active card's countdown + skip cost each second, so an open inline
-        // skip confirm is not blown away by a full rebuild.
-        private void UpdateResearchCountdown()
-        {
-            if (_researchPanel == null || _researchPanel.ClassListContains("hidden"))
-            {
-                _researchTicker?.Pause();
-                return;
-            }
-
-            // MUST run before the HasActiveResearch guard below: "no research running" is exactly
-            // the state where Start buttons matter, so a refresh placed after that early return
-            // would never fire in the case it exists to fix.
-            RefreshResearchAffordability();
-
-            if (researchService == null || !researchService.HasActiveResearch) return;
-
-            double rem = researchService.ActiveRemainingSeconds;
-            if (_researchCountdownLabel != null)
-                _researchCountdownLabel.text = $"⏳ {FormatResearchTimer(rem)}";
-
-            if (_researchSkipBtn != null && !_researchSkipConfirming)
-            {
-                long cost     = researchService.ActiveSkipCost;
-                long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
-                _researchSkipBtn.text = $"Skip  ♦{cost:N0}";
-                _researchSkipBtn.SetEnabled(crystals >= cost);
-            }
-        }
-
-        /// <summary>
-        /// Re-evaluates Start-button state for the open Research panel. Without this a Start button
-        /// that was unaffordable when the panel opened stayed dead forever, because BuildResearchList
-        /// only runs on open / purchase / skip / cancel / research-unlock — never on an entropy
-        /// change — so automation earning the cost had no visible effect until the panel was reopened.
-        ///
-        /// Driven by the existing 1 Hz research ticker rather than Update(): it is already scoped to
-        /// the open panel and already live-refreshes the Skip button the same way.
-        /// </summary>
-        private void RefreshResearchAffordability()
-        {
-            if (researchService == null || _researchAffordRows.Count == 0) return;
-            if (!_ecsReady || _progressQuery.IsEmpty) return;
-
-            long entropy = _em.GetComponentData<PlayerProgressData>(
-                _progressQuery.GetSingletonEntity()).BaseCurrency;
-            bool labBusy = researchService.HasActiveResearch;
-
-            // labBusy is part of the key, not just entropy: when a research finishes the lab frees
-            // up and every other Start button becomes live again at unchanged entropy.
-            if (entropy == _lastResearchAffordEntropy && labBusy == _lastResearchAffordLabBusy) return;
-            _lastResearchAffordEntropy = entropy;
-            _lastResearchAffordLabBusy = labBusy;
-
-            foreach (var (btn, costLabel, research) in _researchAffordRows)
-            {
-                if (btn == null || research == null) continue;
-
-                // CanPurchase is the authority — it covers already-unlocked, prerequisites and
-                // affordability together, so this cannot drift from what Purchase() will accept.
-                btn.SetEnabled(!labBusy && researchService.CanPurchase(research));
-                btn.text = ResearchStartText(labBusy, research);
-
-                // Research cost has only an --unaffordable class; there is no --affordable pair.
-                costLabel?.EnableInClassList("research-card-cost--unaffordable",
-                                             entropy < researchService.EffectiveCost(research));
-            }
-        }
-
-        /// <summary>The Start button's label: "Lab busy", "Later" while the tutorial holds this research back
-        /// (TutorialResearchPolicy), else "Start".</summary>
-        private string ResearchStartText(bool labBusy, ResearchSO research) =>
-            labBusy ? "Lab busy"
-            : !TutorialResearchPolicy.CanBuy(research.id, researchService.IsUnlocked) ? "Later"
-            : "Start";
-
-        /// <summary>"◈ 750", or "◈ 750 (-25%)" when Memory Resonance discounts it.</summary>
-        internal static string ResearchCostText(long cost, long baseCost)
-        {
-            if (baseCost <= 0 || cost >= baseCost) return $"◈ {cost:N0}";
-            int pct = (int)System.Math.Round(100d * (baseCost - cost) / baseCost);
-            return pct > 0 ? $"◈ {cost:N0} (-{pct}%)" : $"◈ {cost:N0}";
         }
 
         public static string FormatResearchTimer(double seconds)
@@ -911,146 +730,6 @@ namespace MobileIdleBuilder
             return $"{ts.Seconds}s";
         }
 
-        private void BuildResearchList()
-        {
-            if (_researchList == null) return;
-            _researchList.Clear();
-
-            // Reset per-build references for the active-research card (reassigned below if present).
-            _researchCountdownLabel = null;
-            _researchSkipBtn        = null;
-            _researchSkipConfirming = false;
-
-            // The rows about to be discarded must not be refreshed after their elements are gone,
-            // and the entropy cache is reset so the next tick re-evaluates rather than short-circuiting
-            // on an unchanged value (same reason BuildBuildingsList resets _lastAffordEntropy).
-            _researchAffordRows.Clear();
-            _lastResearchAffordEntropy = long.MinValue;
-
-            if (researchService == null || researchService.AllResearch == null ||
-                researchService.AllResearch.Count == 0)
-            {
-                _researchList.Add(new Label("No research available."));
-                return;
-            }
-
-            long currentEntropy = 0;
-            if (_ecsReady && !_progressQuery.IsEmpty)
-                currentEntropy = _em.GetComponentData<PlayerProgressData>(
-                    _progressQuery.GetSingletonEntity()).BaseCurrency;
-
-            bool tutorialActive = false;
-            if (_ecsReady && !_tutorialQuery.IsEmpty)
-                tutorialActive = _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
-
-            _researchWorldTab ??= WorldGate.ActiveWorldId() ?? WorldGate.Physics;
-            RefreshResearchTabs();
-            // Only the selected world's research (the tabs); the tutorial's target always shows.
-            string tutorialTarget = tutorialActive ? TutorialResearchTargetId() : null;
-            var shownResearch = researchService.AllResearch
-                .Where(r => r != null && (ResearchTabOf(r) == _researchWorldTab || r.id == tutorialTarget)).ToList();
-
-            bool treeMode = _researchTree != null && _researchTreeMode;
-            SetElementVisible(_researchList, !treeMode);
-            if (_researchTree != null) SetElementVisible(_researchTree, treeMode);
-            if (_researchModeBtn != null)
-            {
-                SetElementVisible(_researchModeBtn, _researchTree != null);
-                _researchModeBtn.text = treeMode ? "List" : "Tree";
-            }
-
-            if (treeMode)
-            {
-                BuildResearchTree(shownResearch, currentEntropy, tutorialTarget);
-                return;
-            }
-
-            foreach (var research in shownResearch)
-            {
-                if (research == null) continue;
-                bool unlocked   = researchService.IsUnlocked(research.id);
-                bool prereqsMet = PrereqsMet(research);
-
-                // During the tutorial, only show research that is already unlocked
-                // or whose prerequisites are all satisfied (the immediate frontier).
-                if (tutorialActive && !unlocked && !prereqsMet) continue;
-
-                _researchList.Add(BuildResearchCard(research, currentEntropy));
-            }
-        }
-
-        // Prerequisite research done AND its world (WorldGate) open.
-        private bool PrereqsMet(ResearchSO research) =>
-            researchService.WorldOpen(research) &&
-            (research.prerequisites == null || research.prerequisites.Length == 0 ||
-             System.Array.TrueForAll(research.prerequisites, p => p == null || researchService.IsUnlocked(p.id)));
-
-        /// <summary>"Opens with Chemistry" while the research's world is still locked, else null.</summary>
-        private string WorldLockText(ResearchSO research) =>
-            researchService.WorldOpen(research) ? null : $"Opens with {WorldGate.DisplayName(research.requiredWorld)}";
-
-        /// <summary>The research the current tutorial step is waiting for, or null when it waits for something else.</summary>
-        private string TutorialResearchTargetId()
-        {
-            var steps = TutorialFlowSO.Current?.steps;
-            int index = _tutorialQuery.GetSingleton<TutorialStateData>().CurrentStepIndex;
-            if (steps == null || index < 0 || index >= steps.Length) return null;
-            var condition = steps[index].advanceCondition;
-            return condition.type == ConditionType.ResearchUnlocked ? condition.researchId : null;
-        }
-
-        private void BuildResearchTree(IReadOnlyList<ResearchSO> all, long currentEntropy, string tutorialTargetId)
-        {
-            ResearchTreeView.NodeState State(ResearchSO r) =>
-                researchService.IsUnlocked(r.id) ? ResearchTreeView.NodeState.Done
-                : researchService.HasActiveResearch && researchService.ActiveResearchId == r.id ? ResearchTreeView.NodeState.Active
-                : PrereqsMet(r) ? ResearchTreeView.NodeState.Available
-                : ResearchTreeView.NodeState.Locked;
-            string Meta(ResearchSO r) => State(r) switch
-            {
-                ResearchTreeView.NodeState.Done   => "Researched",
-                ResearchTreeView.NodeState.Active => $"In progress · {FormatResearchTimer(researchService.ActiveRemainingSeconds)}",
-                ResearchTreeView.NodeState.Available => $"◈ {ShortNumber(researchService.EffectiveCost(r))}" + (currentEntropy >= researchService.EffectiveCost(r) ? "  Ready" : ""),
-                _ => WorldLockText(r) ?? $"Locked · ◈ {ShortNumber(researchService.EffectiveCost(r))}",
-            };
-
-            // Open on the research the player is working toward: the one the tutorial is asking for (selected,
-            // so its Start button is on screen), else the one in progress, else the first available.
-            if (_researchFocusPending)
-            {
-                _researchFocusPending = false;
-                var tutorialTarget = all.FirstOrDefault(r => r != null && r.id == tutorialTargetId);
-                if (tutorialTarget != null) _researchSelectedId = tutorialTarget.id;
-                var target = tutorialTarget
-                          ?? all.FirstOrDefault(r => r != null && State(r) == ResearchTreeView.NodeState.Active)
-                          ?? all.Where(r => r != null && State(r) == ResearchTreeView.NodeState.Available)
-                                .OrderBy(r => System.Array.FindIndex(_researchBlocks, b => b.id == r.block)).ThenBy(r => r.costBaseCurrency)
-                                .FirstOrDefault();
-                if (target != null) { _researchSelectedId ??= target.id; _researchTree.FocusOn(target.id); }
-            }
-
-            _researchTree.Rebuild(all, _researchBlocks, State, Meta, _researchSelectedId);
-
-            var detail = _researchTree.Detail;
-            detail.Clear();
-            var selected = all.FirstOrDefault(r => r != null && r.id == _researchSelectedId);
-            if (selected == null)
-            {
-                var hint = new Label("Tap a research to see what it unlocks and start it. Drag to move around, pinch to zoom.");
-                hint.AddToClassList("research-card-desc");
-                detail.Add(hint);
-                return;
-            }
-            var block = System.Array.Find(_researchBlocks, b => b.id == selected.block);
-            if (block != null)
-            {
-                var phase = new Label(block.displayName);
-                phase.AddToClassList("rt-detail-phase");
-                detail.Add(phase);
-            }
-            detail.Add(BuildResearchCard(selected, currentEntropy));
-        }
-
         internal static string ShortNumber(long v)
         {
             if (v >= 1_000_000_000_000) return (v / 1e12).ToString(v >= 100_000_000_000_000 ? "0" : "0.#") + "T";
@@ -1060,160 +739,10 @@ namespace MobileIdleBuilder
             return v.ToString("N0");
         }
 
-        /// <summary>One research card: name, description, and cost/Start, the live timer + skip, or what it requires.
-        /// The list shows one per research; the tree shows the selected node's.</summary>
-        private VisualElement BuildResearchCard(ResearchSO research, long currentEntropy)
-        {
-            {
-                bool unlocked   = researchService.IsUnlocked(research.id);
-                bool prereqsMet = PrereqsMet(research);
-                bool canPurchase = !unlocked && prereqsMet && researchService.CanPurchase(research);
-
-                var card = new VisualElement();
-                card.AddToClassList("research-card");
-                if (unlocked) card.AddToClassList("research-card--unlocked");
-
-                // Name
-                var nameLabel = new Label(research.displayName);
-                nameLabel.AddToClassList("research-card-name");
-                card.Add(unlocked ? GlyphIcon.TitleRow(GlyphIcon.Kind.Check, nameLabel) : nameLabel);
-
-                // Description (wrapping)
-                if (!string.IsNullOrEmpty(research.description))
-                {
-                    var descLabel = new Label(research.description);
-                    descLabel.AddToClassList("research-card-desc");
-                    card.Add(descLabel);
-                }
-
-                if (research.effects != null)
-                    foreach (var effect in research.effects)
-                    {
-                        var effectLabel = new Label(ResearchEffectText.Describe(effect));
-                        effectLabel.AddToClassList("research-card-effect");
-                        card.Add(effectLabel);
-                    }
-
-                bool isActive    = researchService.HasActiveResearch &&
-                                   researchService.ActiveResearchId == research.id;
-                bool labBusy     = researchService.HasActiveResearch && !isActive;
-
-                if (isActive) card.AddToClassList("research-card--in-progress");
-
-                if (!unlocked)
-                {
-                    var footer = new VisualElement();
-                    footer.AddToClassList("research-card-footer");
-
-                    if (!prereqsMet)
-                    {
-                        // Show what's blocking this research: its world first, else the missing prerequisites
-                        var prereqNames = string.Join(", ",
-                            System.Array.ConvertAll(research.prerequisites ?? System.Array.Empty<ResearchSO>(),
-                                p => p != null ? p.displayName : "?"));
-                        var prereqLabel = new Label(WorldLockText(research) ?? $"Requires: {prereqNames}");
-                        prereqLabel.AddToClassList("research-card-prereq");
-                        footer.Add(prereqLabel);
-                    }
-                    else if (isActive)
-                    {
-                        // In-progress: live countdown + skip-for-crystals
-                        _researchCountdownLabel = new Label($"⏳ {FormatResearchTimer(researchService.ActiveRemainingSeconds)}");
-                        _researchCountdownLabel.AddToClassList("research-card-cost");
-                        footer.Add(_researchCountdownLabel);
-                        BuildResearchSkipUi(footer, research);
-                    }
-                    else
-                    {
-                        // Cost + effective research time (after the Research Overdrive discount),
-                        // stacked so the Start button stays on the right.
-                        var info = new VisualElement();
-                        info.AddToClassList("research-card-info");
-
-                        long cost       = researchService.EffectiveCost(research);
-                        bool affordable = currentEntropy >= cost;
-                        var costLabel   = new Label(ResearchCostText(cost, research.costBaseCurrency));
-                        costLabel.AddToClassList("research-card-cost");
-                        if (!affordable) costLabel.AddToClassList("research-card-cost--unaffordable");
-                        info.Add(costLabel);
-
-                        int effSecs    = researchService.EffectiveDurationSeconds(research);
-                        var timeLabel  = new Label(ResearchTimeText(effSecs, researchService.FreeResearchLeft));
-                        timeLabel.AddToClassList("research-card-time");
-                        info.Add(timeLabel);
-
-                        footer.Add(info);
-
-                        // Start button (disabled while the lab is busy with another research)
-                        var startBtn = new Button { text = ResearchStartText(labBusy, research) };
-                        startBtn.AddToClassList("craft-btn");
-                        startBtn.SetEnabled(!labBusy && canPurchase);
-
-                        // Track for the live affordability refresh (see RefreshResearchAffordability).
-                        _researchAffordRows.Add((startBtn, costLabel, research));
-
-                        var captured = research;
-                        startBtn.clicked += () =>
-                        {
-                            researchService.Purchase(captured);
-                            BuildResearchList();
-                        };
-                        footer.Add(startBtn);
-                    }
-
-                    card.Add(footer);
-                }
-
-                return card;
-            }
-        }
-
-        // Skip button for the in-progress research. First tap reveals a Confirm/Cancel row so
-        // spending crystals is always a deliberate two-tap action (no generic confirm modal exists).
-        private void BuildResearchSkipUi(VisualElement footer, ResearchSO research)
-        {
-            long cost     = researchService.ActiveSkipCost;
-            long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
-
-            _researchSkipBtn = new Button { text = $"Skip  ♦{cost:N0}" };
-            _researchSkipBtn.AddToClassList("craft-btn");
-            _researchSkipBtn.SetEnabled(crystals >= cost);
-            _researchSkipBtn.clicked += () =>
-            {
-                _researchSkipConfirming = true;
-                footer.Remove(_researchSkipBtn);
-
-                var confirm = new Button { text = $"Confirm  ♦{researchService.ActiveSkipCost:N0}" };
-                confirm.AddToClassList("craft-btn");
-                confirm.clicked += () =>
-                {
-                    researchService.SkipActive(); // completion fires OnResearchUnlocked → rebuild
-                    BuildResearchList();
-                };
-
-                var cancel = new Button();
-                cancel.AddToClassList("craft-btn");
-                GlyphIcon.SetOn(cancel, GlyphIcon.Kind.Close);
-                cancel.clicked += () => BuildResearchList();
-
-                footer.Add(confirm);
-                footer.Add(cancel);
-            };
-            footer.Add(_researchSkipBtn);
-        }
-
         private void OnResearchUnlocked(ResearchSO research)
         {
-            // Refresh research panel if it is currently open. During the tutorial, close it instead: every
-            // step after a tutorial research needs the world or another panel, and a Research panel left
-            // open silently blocked field taps (2026-11-07 playtest: 18 turns lost at gather_for_hydrogen).
-            if (_researchPanel != null && !_researchPanel.ClassListContains("hidden"))
-            {
-                bool tutorialActive = _ecsReady && !_tutorialQuery.IsEmpty
-                                      && _tutorialQuery.GetSingleton<TutorialStateData>().IsActive;
-                if (tutorialActive) SetElementVisible(_researchPanel, false);
-                else                BuildResearchList();
-            }
+            // An open Research panel rebuilds, or closes during the tutorial (ResearchPanelSubController).
+            _research?.OnResearchUnlocked();
 
             // Refresh buildings panel if it is open (newly unlocked buildings will appear)
             if (_buildingsPanel != null && !_buildingsPanel.ClassListContains("hidden"))
