@@ -17926,7 +17926,7 @@
       ]
     },
     {
-      "_comment": "Last tutorial line (#275): names the goals that left the tutorial. 2026-11-19: also introduces the Chemistry task list and the Cyclotron.",
+      "_comment": "Last tutorial line (#275): names the goals that left the tutorial. 2026-11-19: also introduces the Chemistry task list and the Cyclotron; 2026-11-24: belt path splitting tip.",
       "id": "tutorial_complete_context",
       "lines": [
         {
@@ -17948,6 +17948,14 @@
         {
           "speaker_name": "The Architect",
           "text": "To open Chemistry, work through the task list that appears at the top of the screen. Each stage asks for elements: send them to Maxwell's Demon and they count toward it while still paying entropy. Progress carries over when you prestige, so it takes a few runs. Tap the list to see what the current stage needs.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "A tip for your belts: hold any belt to split it, sending its items two or three ways. The (i) on the Conveyor Belt card in the Build menu has the details.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
