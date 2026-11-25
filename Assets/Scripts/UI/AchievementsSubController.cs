@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -5,16 +7,26 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// The Achievements panel (achievements-panel in GameHUD.uxml): category tabs, the reset countdown, the
-    /// card list (with the login calendar on the Daily tab) and Claim All (#286, moved out of HUDController).
-    /// HUDController still owns the drawer: it closes other panels before <see cref="Open"/>, pulses the
-    /// unlock hint and lights the reminder dots. Sibling MonoBehaviour on the HUD GameObject (added at runtime
-    /// when missing).
+    /// card list (with the login calendar on the Daily tab) and Claim All (#286, moved out of HUDController); plus
+    /// the drawer-side plumbing: the first-prestige unlock gate and its hint pulse (drawer handle, then the
+    /// Achievements button once the drawer is open), the reminder dots, and claiming from a banner.
+    /// HUDController closes other panels before <see cref="Open"/> and forwards drawer open/close to
+    /// <see cref="SwapHintPulse"/>. Sibling MonoBehaviour on the HUD GameObject (added at runtime when missing).
     /// </summary>
     [RequireComponent(typeof(HUDController))]
     public class AchievementsSubController : MonoBehaviour
     {
         AchievementService _service;
         DailyEventsSubController _daily;
+        HUDController _hud;
+        VisualElement _root;
+
+        // Gate: Weekly/Monthly/Progress unlock with the first prestige (hasCompletedFirstRun).
+        Button    _btnMenu;
+        Label     _lockedHint;
+        bool      _unlocked;
+        Coroutine _hintPulse;
+        Button    _hintTarget;
 
         VisualElement _panel;
         ScrollView    _list;
@@ -26,11 +38,15 @@ namespace MobileIdleBuilder
 
         public bool IsOpen => _panel != null && !_panel.ClassListContains("hidden");
 
-        public void Initialize(VisualElement root, AchievementService service)
+        public void Initialize(VisualElement root, AchievementService service, HUDController hud)
         {
             Cleanup();
             _service = service;
+            _hud     = hud;
+            _root    = root;
             _daily   = GetComponent<DailyEventsSubController>();
+            _btnMenu    = root.Q<Button>("btn-achievements");
+            _lockedHint = root.Q<Label>("achievements-locked-hint");
 
             _panel          = root.Q("achievements-panel");
             _list           = root.Q<ScrollView>("achievements-list");
@@ -92,14 +108,119 @@ namespace MobileIdleBuilder
 
         void Close() => HUDController.SetElementVisible(_panel, false);
 
+        static bool FirstRunDone => SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
+
         /// <summary>
         /// Weekly, Monthly and Progress unlock with the first prestige; until then their tabs show a lock.
         /// The menu itself is always open (Daily works from the start).
         /// </summary>
         public void ApplyGate(bool unlocked)
         {
+            _btnMenu?.SetEnabled(true);
+            HUDController.SetElementVisible(_lockedHint, false);
             foreach (var tab in new[] { _tabWeekly, _tabMonthly, _tabProgression })
                 tab?.EnableInClassList("achievements-tab--locked", !unlocked);
+        }
+
+        /// <summary>Applies the gate at scene start.</summary>
+        public void InitGate()
+        {
+            _unlocked = FirstRunDone;
+            ApplyGate(_unlocked);
+            GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_unlocked}");
+        }
+
+        /// <summary>
+        /// Per-frame: the first prestige in this session unlocks Weekly/Monthly/Progress. Re-applies the gate, lets
+        /// the service start those periods, and points the player at the menu (hint + pulse).
+        /// </summary>
+        public void TickGate()
+        {
+            if (_unlocked || !FirstRunDone) return;
+            GameLogger.Info("[HUD] Achievements gate flipped: showing unlock hint.");
+            _unlocked = true;
+            ApplyGate(true);
+            _service?.InitPostPrestige();
+            _hud?.ShowTutorialHint("🏆 Weekly, Monthly and Progress achievements unlocked! Open the drawer and tap Achievements.");
+            SwapHintPulse("btn-drawer-handle");
+        }
+
+        /// <summary>True while the unlock hint is pulsing a button.</summary>
+        public bool HintPulsing => _hintPulse != null;
+
+        /// <summary>Moves the unlock-hint pulse to <paramref name="buttonId"/> (the handle, or the drawer row once open).</summary>
+        public void SwapHintPulse(string buttonId)
+        {
+            StopHintPulse();
+            var btn = _root?.Q<Button>(buttonId);
+            if (btn == null) return;
+            _hintTarget = btn;
+            _hintPulse  = StartCoroutine(PulseHint(btn));
+        }
+
+        /// <summary>The player found the menu: hide the hint and stop the pulse.</summary>
+        public void DismissHint()
+        {
+            _hud?.HideTutorialHint();
+            StopHintPulse();
+        }
+
+        void StopHintPulse()
+        {
+            if (_hintPulse != null) { StopCoroutine(_hintPulse); _hintPulse = null; }
+            _hintTarget?.RemoveFromClassList("panel-btn--highlight");
+            _hintTarget = null;
+        }
+
+        static IEnumerator PulseHint(Button btn)
+        {
+            while (true)
+            {
+                btn.AddToClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+                btn.RemoveFromClassList("panel-btn--highlight");
+                yield return new WaitForSecondsRealtime(0.7f);
+            }
+        }
+
+        // ── Reminder dots + banner claims ─────────────────────────────────────
+
+        static bool TutorialActive => SaveManager.Instance?.Current?.tutorial?.isActive ?? false;
+
+        static bool LoginRewardWaiting =>
+            FeatureFlags.DailyEventsEnabled && (DailyEventService.Instance?.CanClaimLoginReward() ?? false);
+
+        /// <summary>
+        /// Registers the red dots: the drawer row (which also lights the ≡ handle) and each tab with a reward
+        /// waiting. Add future menu-row dots (shop, daily) to <paramref name="reminders"/> with <c>menuRow: true</c>.
+        /// </summary>
+        public void RegisterReminders(MenuReminderController reminders, VisualElement root)
+        {
+            if (reminders == null) return;
+            reminders.Register("btn-achievements",
+                () => !TutorialActive && ((_service != null && _service.ClaimableCount > 0) || LoginRewardWaiting),
+                menuRow: true);
+            RegisterTab(reminders, "ach-tab-daily",       AchievementCategory.Daily);
+            RegisterTab(reminders, "ach-tab-weekly",      AchievementCategory.Weekly);
+            RegisterTab(reminders, "ach-tab-monthly",     AchievementCategory.Monthly);
+            RegisterTab(reminders, "ach-tab-progression", AchievementCategory.Progression);
+            reminders.Init(root);
+        }
+
+        void RegisterTab(MenuReminderController reminders, string tab, AchievementCategory category) =>
+            reminders.Register(tab,
+                () => !TutorialActive && ((_service != null && _service.HasClaimable(category))
+                                          || (category == AchievementCategory.Daily && LoginRewardWaiting)),
+                menuRow: false);
+
+        /// <summary>The ✓ on an achievement banner: claims it and says so.</summary>
+        public void ClaimFromBanner(string id)
+        {
+            if (_service == null || !_service.IsClaimable(id)) return;
+            var a = _service.GetAll()?.FirstOrDefault(x => x != null && x.id == id);
+            _service.ClaimReward(id);
+            RefreshIfOpen();
+            if (a != null) _hud?.ShowNotification("♦", $"Claimed: {a.displayName}");   // not ✓: blank on Android
         }
 
         /// <summary>The first tab with a reward waiting, so the menu opens where the red dot is; Daily otherwise.</summary>

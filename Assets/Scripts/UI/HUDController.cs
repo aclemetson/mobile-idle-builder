@@ -48,9 +48,7 @@ namespace MobileIdleBuilder
         private WorldsSubController                 _worlds;
 
         // ---- Power-connection overlay toggle ----
-        private Button                              _btnPowerToggle;
-        private PowerConnectionOverlayController    _powerOverlay;
-        private bool                                _powerConnectionsShown;
+        private HudChromeSubController              _chrome;   // tooltip, ⚡ toggle, update notice (#286)
 
         // ---- ECS (retained for panel content queries) ----
         private EntityManager _em;
@@ -102,22 +100,12 @@ namespace MobileIdleBuilder
 
         // ---- Output selector ----
 
-        // ---- Tooltip ----
-        private VisualElement _tooltipPopup;
-        private Label         _tooltipTitle, _tooltipBody;
 
         // ---- Achievements panel (tabs, list, claim all: AchievementsSubController, #286) ----
         private AchievementsSubController _achievements;
 
-        // ---- Achievements gate ----
-        private Button    _btnAchievements;
-        private Label     _achievementsLockedHint;
-        private bool      _achievementsUnlocked;
-
         // ---- Megastructure gate (nav button hidden until megastructure_theory is researched) ----
         private Button    _btnMegastructure;
-        private Coroutine _achievementsHintPulse;
-        private Button    _achievementsHintPulseTarget;
 
         // ============================================================
         // Unity lifecycle
@@ -150,17 +138,18 @@ namespace MobileIdleBuilder
             _modeBars     = GetComponent<ModeBarsSubController>() ?? gameObject.AddComponent<ModeBarsSubController>();
             _codex        = GetComponent<CodexPanelSubController>() ?? gameObject.AddComponent<CodexPanelSubController>();
             _prestigeUi   = GetComponent<PrestigePanelSubController>() ?? gameObject.AddComponent<PrestigePanelSubController>();
+            _chrome       = GetComponent<HudChromeSubController>() ?? gameObject.AddComponent<HudChromeSubController>();
             _drawer       = GetComponent<DrawerSubController>() ?? gameObject.AddComponent<DrawerSubController>();
             _drawer.Opened += () =>
             {
                 OnDrawerOpened?.Invoke();
                 // Hint active: btn-achievements is now visible, so pulse it instead of the drawer handle.
-                if (_achievementsHintPulse != null) SwapAchievementsHintPulse("btn-achievements");
+                if (_achievements != null && _achievements.HintPulsing) _achievements.SwapHintPulse("btn-achievements");
             };
             _drawer.Closed += () =>
             {
                 // Hint still active but the drawer is hidden: back to pulsing the drawer handle.
-                if (_achievementsHintPulse != null) SwapAchievementsHintPulse("btn-drawer-handle");
+                if (_achievements != null && _achievements.HintPulsing) _achievements.SwapHintPulse("btn-drawer-handle");
             };
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
@@ -217,17 +206,14 @@ namespace MobileIdleBuilder
             _settings?.Initialize(root);
             _worlds?.Init(root, this);
             BindButtons(root);
-            ApplyAchievementsGate();
+            _achievements?.InitGate();
             ApplyMegastructureGate();
             ApplyFeatureFlagGates(root);
-            _achievementsUnlocked = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
-            GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
             CloseAllPanels();
             // notification-banner starts hidden via CSS translate (no .hidden class needed)
             SetElementVisible(root.Q("tutorial-hint-banner"),  false);
             SetElementVisible(root.Q("field-proximity-banner"), false);
-            SetElementVisible(_tooltipPopup, false);
             SetElementVisible(root.Q("building-inspector-panel"), false);
 
             if (placementController != null)
@@ -312,21 +298,7 @@ namespace MobileIdleBuilder
             _buildings?.Tick();
             RefreshBannerClearance();
             _recipes?.Tick(GameClock.UtcNow);
-
-            // One-shot: detect first prestige in the same session and re-apply the gate
-            if (!_achievementsUnlocked)
-            {
-                bool firstRunNow = SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
-                if (firstRunNow)
-                {
-                    GameLogger.Info($"[HUD] Achievements gate flipped — showing unlock hint. _banner={_banner != null}");
-                    _achievementsUnlocked = true;
-                    ApplyAchievementsGate();
-                    achievementService?.InitPostPrestige();
-                    ShowTutorialHint("🏆 Weekly, Monthly and Progress achievements unlocked! Open the drawer and tap Achievements.");
-                    StartAchievementsHintPulse();
-                }
-            }
+            _achievements?.TickGate();   // first prestige this session unlocks Weekly/Monthly/Progress
         }
 
         // ============================================================
@@ -374,11 +346,8 @@ namespace MobileIdleBuilder
             _codex?.Initialize(root);
             _research?.Initialize(root, this);   // tree/list toggle, world tabs, cards
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
-            _achievements?.Initialize(root, achievementService);   // tabs, list, claim all, close
+            _achievements?.Initialize(root, achievementService, this);   // tabs, list, claim all, gate, hint, close
 
-            // Achievements gate
-            _btnAchievements        = root.Q<Button>("btn-achievements");
-            _achievementsLockedHint = root.Q<Label>("achievements-locked-hint");
             _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
             _prestigeUi?.Initialize(root, this);   // summary, preview, Confirm
@@ -391,12 +360,9 @@ namespace MobileIdleBuilder
             _namePrompt?.Init(root, this);  // "Choose your name" card (PvE leaderboards): after the tutorial + Settings
             _tournament?.Init(root, this);  // Tournament panel (pve-panel): status, join, leaderboard, rewards
             _tournamentIntro?.Init(root, this); // "Tournament open" dialogue once per entry window + pulse to the button
-            InitReminders(root);            // red dots: achievements to claim (drawer row, its tabs, the ≡ handle)
+            _achievements?.RegisterReminders(_reminders, root);   // red dots: drawer row, its tabs, the ≡ handle
 
-            // Tooltip — inner element inside "tooltip-instance" TemplateContainer
-            _tooltipPopup = root.Q("tooltip-popup");
-            _tooltipTitle = root.Q<Label>("tooltip-popup__title");
-            _tooltipBody  = root.Q<Label>("tooltip-popup__body");
+            _chrome?.Initialize(root);      // tooltip + ⚡ power-connection toggle
 
         }
 
@@ -424,15 +390,6 @@ namespace MobileIdleBuilder
             // Top bar
             root.Q<Button>("btn-prestige").clicked += OpenPrestigePanel;
             root.Q<Button>("btn-settings").clicked += () => TryOpenPanel(OpenSettingsPanel);
-
-            // Power-connection overlay toggle (⚡ button). Restores its persisted on/off state.
-            _btnPowerToggle = root.Q<Button>("btn-power-toggle");
-            if (_btnPowerToggle != null)
-            {
-                _powerConnectionsShown = SettingsService.Instance?.Current?.showPowerConnections ?? false;
-                ApplyPowerConnectionState();
-                _btnPowerToggle.clicked += TogglePowerConnections;
-            }
 
             // Panel close buttons
             root.Q<Button>("btn-close-recipes").clicked      += () => SetElementVisible(_recipePanel,       false);
@@ -585,59 +542,14 @@ namespace MobileIdleBuilder
             _settings?.Open();
         }
 
-        /// <summary>
-        /// The menu is always open: its Daily tab (login calendar + daily achievements) works from the start.
-        /// Weekly, Monthly and Progress unlock with the first prestige; their tabs show a lock until then.
-        /// </summary>
-        private void ApplyAchievementsGate()
-        {
-            _btnAchievements?.SetEnabled(true);
-            SetElementVisible(_achievementsLockedHint, false);
-            _achievements?.ApplyGate(AchievementsUnlocked);
-        }
-
         private void OpenAchievementsPanel() =>
             OpenAchievementsPanel(_achievements != null ? _achievements.FirstClaimableCategory() : AchievementCategory.Daily);
 
         private void OpenAchievementsPanel(AchievementCategory category)
         {
-            DismissAchievementsHint();
+            _achievements?.DismissHint();
             CloseAllPanels();
             _achievements?.Open(category);
-        }
-
-        private void StartAchievementsHintPulse() =>
-            SwapAchievementsHintPulse("btn-drawer-handle");
-
-        private void SwapAchievementsHintPulse(string buttonId)
-        {
-            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
-            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
-            _achievementsHintPulseTarget = null;
-            var root = GetComponent<UIDocument>()?.rootVisualElement;
-            var btn  = root?.Q<Button>(buttonId);
-            if (btn == null) return;
-            _achievementsHintPulseTarget = btn;
-            _achievementsHintPulse       = StartCoroutine(PulseAchievementsHint(btn));
-        }
-
-        private void DismissAchievementsHint()
-        {
-            HideTutorialHint();
-            if (_achievementsHintPulse != null) { StopCoroutine(_achievementsHintPulse); _achievementsHintPulse = null; }
-            _achievementsHintPulseTarget?.RemoveFromClassList("panel-btn--highlight");
-            _achievementsHintPulseTarget = null;
-        }
-
-        private IEnumerator PulseAchievementsHint(Button btn)
-        {
-            while (true)
-            {
-                btn.AddToClassList("panel-btn--highlight");
-                yield return new WaitForSecondsRealtime(0.7f);
-                btn.RemoveFromClassList("panel-btn--highlight");
-                yield return new WaitForSecondsRealtime(0.7f);
-            }
         }
 
         // ============================================================
@@ -784,49 +696,7 @@ namespace MobileIdleBuilder
             var    category = achievement.category;
             _banner.ShowNotification("🏆", message, null,
                 onTap:    () => TryOpenPanel(() => OpenAchievementsPanel(category)),
-                onAccept: () => ClaimAchievementFromBanner(id));
-        }
-
-        private bool AchievementsUnlocked => SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false;
-
-        /// <summary>
-        /// Registers the reminder dots. Menu rows also light the ≡ handle; add future ones (shop, daily) here
-        /// with <c>menuRow: true</c>.
-        /// </summary>
-        private void InitReminders(VisualElement root)
-        {
-            if (_reminders == null) return;
-            _reminders.Register("btn-achievements",
-                () => !TutorialActive && ((achievementService != null && achievementService.ClaimableCount > 0)
-                                          || LoginRewardWaiting),
-                menuRow: true);
-            RegisterAchTabReminder("ach-tab-daily",       AchievementCategory.Daily);
-            RegisterAchTabReminder("ach-tab-weekly",      AchievementCategory.Weekly);
-            RegisterAchTabReminder("ach-tab-monthly",     AchievementCategory.Monthly);
-            RegisterAchTabReminder("ach-tab-progression", AchievementCategory.Progression);
-            _reminders.Init(root);
-        }
-
-        private void RegisterAchTabReminder(string tab, AchievementCategory category) =>
-            _reminders.Register(tab,
-                () => !TutorialActive && ((achievementService != null && achievementService.HasClaimable(category))
-                                          || (category == AchievementCategory.Daily && LoginRewardWaiting)),
-                menuRow: false);
-
-        private static bool TutorialActive => SaveManager.Instance?.Current?.tutorial?.isActive ?? false;
-
-        private static bool LoginRewardWaiting =>
-            FeatureFlags.DailyEventsEnabled && (DailyEventService.Instance?.CanClaimLoginReward() ?? false);
-
-        private void ClaimAchievementFromBanner(string id)
-        {
-            var service = achievementService;
-            if (service == null || !service.IsClaimable(id)) return;
-            var a = service.GetAll()?.FirstOrDefault(x => x != null && x.id == id);
-            service.ClaimReward(id);
-            _achievements?.RefreshIfOpen();
-            if (a != null)
-                _banner?.ShowNotification("♦", $"Claimed: {a.displayName}");   // not ✓: blank on Android
+                onAccept: () => _achievements?.ClaimFromBanner(id));
         }
 
         public void ShowFieldBanner(FieldSO field)   => _banner?.ShowFieldBanner(field);
@@ -835,61 +705,9 @@ namespace MobileIdleBuilder
         public void HideTutorialHint()               => _banner?.HideTutorialHint();
         public void SetTutorialHintProgress(string progress) => _banner?.SetTutorialHintProgress(progress);
 
-        // ============================================================
-        // Tooltip
-        // ============================================================
-
-        /// <summary>
-        /// Shows the tooltip positioned near <paramref name="anchor"/>.
-        /// Prefers rendering above; falls back to below if there is insufficient space.
-        /// </summary>
-        public void ShowTooltip(string title, string body, VisualElement anchor)
-        {
-            if (_tooltipPopup == null) return;
-
-            if (_tooltipTitle != null) _tooltipTitle.text = title;
-            if (_tooltipBody  != null) _tooltipBody.text  = body;
-
-            // Layout isn't known until after first render — position once geometry resolves
-            _tooltipPopup.RegisterCallbackOnce<GeometryChangedEvent>(_ => PositionTooltip(anchor));
-            SetElementVisible(_tooltipPopup, true);
-        }
-
-        public void HideTooltip() => SetElementVisible(_tooltipPopup, false);
-
-        // ============================================================
-        // Power-connection overlay toggle (⚡ top-bar button)
-        // ============================================================
-
-        private void TogglePowerConnections()
-        {
-            _powerConnectionsShown = !_powerConnectionsShown;
-            ApplyPowerConnectionState();
-            SettingsService.Instance?.SetShowPowerConnections(_powerConnectionsShown);
-        }
-
-        /// <summary>Syncs the button's on/off look and the map overlay to the current toggle state.</summary>
-        private void ApplyPowerConnectionState()
-        {
-            EnsurePowerOverlay()?.SetVisible(_powerConnectionsShown);
-
-            if (_btnPowerToggle == null) return;
-            if (_powerConnectionsShown) _btnPowerToggle.AddToClassList("power-toggle-btn--active");
-            else                        _btnPowerToggle.RemoveFromClassList("power-toggle-btn--active");
-        }
-
-        /// <summary>
-        /// Finds the map power-connection overlay, creating a runtime one if the scene has none (self-wires
-        /// to the GridRenderer via FindAnyObjectByType), so no manual scene wiring is required.
-        /// </summary>
-        private PowerConnectionOverlayController EnsurePowerOverlay()
-        {
-            if (_powerOverlay != null) return _powerOverlay;
-            _powerOverlay = FindAnyObjectByType<PowerConnectionOverlayController>();
-            if (_powerOverlay == null)
-                _powerOverlay = new GameObject("PowerConnectionOverlay").AddComponent<PowerConnectionOverlayController>();
-            return _powerOverlay;
-        }
+        // Tooltip (HudChromeSubController); other controllers call these.
+        public void ShowTooltip(string title, string body, VisualElement anchor) => _chrome?.ShowTooltip(title, body, anchor);
+        public void HideTooltip() => _chrome?.HideTooltip();
 
         // ============================================================
         // Building inspector pass-throughs (delegated to HUDBuildingInspectorSubController)
@@ -909,53 +727,9 @@ namespace MobileIdleBuilder
         // Idle-return modal pass-through (delegated to IdleReturnSubController)
         public void ShowIdleReturn(IdleCollectionResult result) => _idleReturn?.Show(result);
 
-        /// <summary>
-        /// Shows the game-data update notice once if the remote <c>gamedata.updatedUtc</c> stamp is
-        /// newer than the saved marker, then records the marker so it fires once per published stamp.
-        /// Called by ECSLoadBridge after the save is applied. No-op (silent) on any blank/stale stamp.
-        /// </summary>
-        public void MaybeShowGameUpdateNotice()
-        {
-            var save = SaveManager.Instance?.Current;
-
-            // What's new in this build (#502): the release notes CI published, once per text.
-            string notes = FeatureFlags.WhatsNewNotes, notesVersion = FeatureFlags.WhatsNewVersion;
-            var whatsNew = WhatsNew.Decide(Application.version, notesVersion, notes, save?.lastSeenWhatsNewHash,
-                                           newPlayer: !(save?.tutorial.hasCompletedFirstRun ?? false));
-            bool dataChanged = GameUpdateNotice.ShouldShow(FeatureFlags.GameDataUpdatedUtc, save?.lastSeenGameDataUtc);
-
-            if (whatsNew == WhatsNew.Decision.Show)
-            {
-                // One card: the notes, then the balance notice when values changed too.
-                string message = notes.Trim();
-                if (dataChanged) message += "\n\n" + FeatureFlags.GameDataNoticeMessage;
-                _gameUpdate?.Show(WhatsNew.Title(notesVersion), message, leftAligned: true);   // bullet lists read left
-            }
-            else if (dataChanged)
-            {
-                _gameUpdate?.Show(FeatureFlags.GameDataNoticeTitle, FeatureFlags.GameDataNoticeMessage);
-            }
-            if (dataChanged) TelemetryService.Instance?.RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
-
-            if (save == null || (whatsNew == WhatsNew.Decision.Hide && !dataChanged)) return;
-            if (whatsNew != WhatsNew.Decision.Hide) save.lastSeenWhatsNewHash = WhatsNew.Hash(notes);
-            if (dataChanged) save.lastSeenGameDataUtc = FeatureFlags.GameDataUpdatedUtc;
-            SaveManager.Instance.SaveLocal();
-        }
-
-        private void PositionTooltip(VisualElement anchor)
-        {
-            if (anchor == null || _tooltipPopup == null) return;
-
-            var anchorBounds  = anchor.worldBound;
-            var tooltipHeight = _tooltipPopup.layout.height;
-
-            float top = anchorBounds.yMin - tooltipHeight - 8f;
-            if (top < 0f) top = anchorBounds.yMax + 8f; // not enough room above — go below
-
-            _tooltipPopup.style.left = anchorBounds.xMin;
-            _tooltipPopup.style.top  = top;
-        }
+        /// <summary>The "What's new" / game-data notice, once per text or stamp (HudChromeSubController).
+        /// Called by ECSLoadBridge after the save is applied.</summary>
+        public void MaybeShowGameUpdateNotice() => _chrome?.MaybeShowGameUpdateNotice(_gameUpdate);
 
         // ============================================================
         // Helpers
