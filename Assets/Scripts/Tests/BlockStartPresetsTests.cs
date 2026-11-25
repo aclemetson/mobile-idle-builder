@@ -85,10 +85,10 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void LateBlocks_OpenTheWorldsAndSitesTheirEarlierResearchUnlocked()
+        public void LateBlocks_OpenTheWorldsTheirEarlierResearchUnlocked()
         {
             var bio = Build("bio_cells");
-            CollectionAssert.Contains(bio.unlockedSites, "site_actinide_vein", "Fissile Extraction is behind the player");
+            CollectionAssert.DoesNotContain(bio.unlockedSites, "site_actinide_vein", "Quantum Domains are retired (2026-11-24)");
             var chemistry = _worlds.allWorlds.FirstOrDefault(w => w != null && w.id == "world_chemistry");
             Assert.IsNotNull(chemistry);
             CollectionAssert.Contains(bio.unlockedWorlds, chemistry.id);

@@ -10,7 +10,7 @@ namespace MobileIdleBuilder.Tests
         static readonly string[] Buttons =
         {
             "btn-buildings", "btn-recipes", "btn-codex", "btn-stats", "btn-research", "btn-cyclotron", "btn-upgrades",
-            "btn-managers", "btn-megastructure", "btn-rewards", "btn-achievements", "btn-worlds", "btn-sites",
+            "btn-managers", "btn-megastructure", "btn-rewards", "btn-achievements", "btn-worlds",
             "btn-tournament", "btn-shop",
         };
 

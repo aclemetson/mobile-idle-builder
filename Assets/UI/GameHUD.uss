@@ -1337,6 +1337,12 @@
     color: var(--color-danger);
 }
 
+/* Up (overpass) while it's on: the next tap lays an overpass. */
+.conveyor-mode-btn--on {
+    background-color: var(--color-primary);
+    color: rgb(10, 14, 26);
+}
+
 /* ---- Idle Return Modal ---- */
 .idle-return-modal {
     align-items: center;
@@ -1435,6 +1441,54 @@
     min-height: 44px;
     margin: 0 var(--spacing-xs);
     -unity-text-align: middle-center;
+}
+
+/* Belt split card (press-and-hold on a belt, BeltSplitCard). */
+.belt-split-card {
+    max-width: 460px;
+}
+
+.belt-split-rows {
+    padding: 0 var(--spacing-md);
+}
+
+.belt-split-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    padding: 2px var(--spacing-xs);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.belt-split-row--on {
+    border-color: var(--color-primary);
+}
+
+.belt-split-row__side {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+}
+
+.belt-split-row__step {
+    min-width: 0;
+    width: 44px;
+    margin: 0 2px;
+}
+
+.belt-split-row__weight {
+    width: 28px;
+    -unity-text-align: middle-center;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+.belt-split-summary {
+    padding: var(--spacing-xs) var(--spacing-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 /* Builder cards (#487): a horizontal row per tab. The ScrollView scrolls sideways; each tab page is a row. */

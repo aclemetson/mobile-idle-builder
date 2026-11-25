@@ -21,7 +21,6 @@ namespace MobileIdleBuilder
         public List<string> permanentUpgrades = new();
         public List<string> unlockedSites      = new();   // site ids unlocked; survives prestige. site_origin implicit.
         public List<string> unlockedWorlds     = new();   // world ids unlocked; survives prestige. world_physics implicit (like site_origin).
-        public bool  domainsIntroSeen;                     // one-shot: Quantum Domains intro dialogue shown. Survives prestige.
         public List<string> worldsIntroSeen    = new();   // one-shot per world: world-unlock intro dialogue shown. Survives prestige.
         public List<WorldTutorialSaveData> worldTutorials = new(); // per-world tutorial progress (Chemistry...); Physics uses `tutorial`. Survives prestige.
         public string lastSeenWhatsNewHash;                // WhatsNew.Hash of the release notes last shown (#502). Survives prestige.
@@ -216,6 +215,8 @@ namespace MobileIdleBuilder
         public int[] blockedOutputs;             // flattened [x0,y0,...] of belt cells whose forward output
                                                  // is an intentional dead-end (ran up to a belt without merging)
         public bool  startersPlaced;             // the site's starting buildings (SiteSO.startingBuildings) were placed this run
+        public int[] splits;                     // belt splits, flattened [x, y, mask, w0, w1, w2, w3, ...]
+                                                 // (BeltSplitRules.Stride per split); null = none
     }
 
     [Serializable]

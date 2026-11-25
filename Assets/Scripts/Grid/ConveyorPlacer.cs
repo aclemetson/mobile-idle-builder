@@ -18,6 +18,9 @@ namespace MobileIdleBuilder
     ///   - A cell may take flow from multiple inbound segments (any segment whose ExitDir points at
     ///     it), but it always has exactly one output. Placement REJECTS a second output on a cell.
     ///   - Merge inbound count is capped at 3.
+    ///   - A belt split (<see cref="BeltSplit"/>, set by press-and-hold) is the one exception: its tile outputs to
+    ///     2-3 sides. ExitDir stays one of them (the primary); a run started on (or passed through) a split adds
+    ///     that side as an output instead of rerouting the tile.
     ///
     /// After (re)linking, <see cref="TryAutoTurnEnds"/> orients dead-end cells toward adjacent
     /// building ports so the river always visually flows INTO a building input / OUT of an output.
@@ -74,8 +77,8 @@ namespace MobileIdleBuilder
         public string RejectReason(List<Vector2Int> path)
         {
             if (!_queryReady || path == null || path.Count == 0) return null;
-            SnapshotBelts(out _, out var cellExit);
-            return ConveyorTopology.CanPlace(cellExit, ToInt2(path), MaxInbounds, out string reason)
+            SnapshotBelts(out _, out var cellExit, out var splitMasks);
+            return ConveyorTopology.CanPlace(cellExit, ToInt2(path), MaxInbounds, out string reason, splitMasks, Bridges())
                 ? null : PlayerReason(reason);
         }
 
@@ -88,14 +91,27 @@ namespace MobileIdleBuilder
             int count = path.Count;
 
             // Snapshot existing geometry: cell→entity (to reuse cells) and cell→ExitDir (to validate).
-            SnapshotBelts(out var cellMap, out var cellExit);
+            SnapshotBelts(out var cellMap, out var cellExit, out var splitMasks);
             var pathCells = ToInt2(path);
 
-            if (!ConveyorTopology.CanPlace(cellExit, pathCells, MaxInbounds, out string reason))
+            if (!ConveyorTopology.CanPlace(cellExit, pathCells, MaxInbounds, out string reason, splitMasks, Bridges()))
             {
                 GameLogger.Warning($"[ConveyorPlacer] Placement rejected: {reason}.");
                 refusal = PlayerReason(reason);
                 return false;
+            }
+
+            // A full split can't take another output: refuse before anything is placed.
+            for (int i = 0; i < count - 1; i++)
+            {
+                var c = new int2(path[i].x, path[i].y);
+                if (!splitMasks.TryGetValue(c, out int sm)) continue;
+                int dir = (int)TravelDir(path[i], path[i + 1]);
+                if (!BeltSplitRules.Has(sm, dir) && BeltSplitRules.Count(sm) >= BeltSplitRules.MaxOutputs)
+                {
+                    refusal = "That split already has 3 outputs.";
+                    return false;
+                }
             }
 
             var newCells = new HashSet<int2>();
@@ -132,6 +148,19 @@ namespace MobileIdleBuilder
                     cellMap[cell] = e;
                     newCells.Add(new int2(cell.x, cell.y));
                 }
+                else if (i < count - 1 && _em.HasComponent<BeltSplit>(e))
+                {
+                    // A split: drawing on from it adds that side as one of its outputs (the organic way to
+                    // draw a branch) instead of rerouting the tile. Up to three outputs; never a way in.
+                    int dir   = (int)TravelDir(path[i], path[i + 1]);
+                    var split = _em.GetComponentData<BeltSplit>(e);
+                    if (!BeltSplitRules.Has(split.Mask, dir))
+                    {
+                        split.Mask = (byte)(split.Mask | (1 << dir));
+                        split.SetWeight(dir, BeltSplitRules.MinWeight);
+                        _em.SetComponentData(e, split);
+                    }
+                }
                 else if (i < count - 1)
                 {
                     // Existing, non-terminal: redirect its output along the path (extending from an
@@ -143,6 +172,29 @@ namespace MobileIdleBuilder
                     _em.SetComponentData(e, s);
                 }
                 // Existing terminal cell keeps its own ExitDir (and downstream / output).
+            }
+
+            // Overpasses: two cells of the path that aren't neighbours are a span. The upstream one is the ramp up and
+            // carries the bridge; the tiles between stay free for belts and closed to buildings.
+            for (int i = 0; i + 1 < count; i++)
+            {
+                if (!OverpassRules.IsSpan(path[i], path[i + 1])) continue;
+                var up = cellMap[path[i]];
+                var bridge = new BeltBridge
+                {
+                    Exit   = new int2(path[i + 1].x, path[i + 1].y),
+                    Length = OverpassRules.Crossed(path[i], path[i + 1]) + 1,
+                };
+                if (_em.HasComponent<BeltBridge>(up))
+                {
+                    var old = _em.GetComponentData<BeltBridge>(up);
+                    if (old.Exit.Equals(bridge.Exit)) continue;   // a load replay of the same span
+                    UnregisterSpan(path[i], new Vector2Int(old.Exit.x, old.Exit.y));
+                    _em.SetComponentData(up, bridge);
+                }
+                else _em.AddComponentData(up, bridge);
+                foreach (var c in OverpassRules.CrossedCells(path[i], path[i + 1]))
+                    GridOccupancy.Instance?.RegisterOverpass(c.x, c.y);
             }
 
             // A run that merely runs UP TO an existing belt (without an endpoint landing on it) must
@@ -157,16 +209,20 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Existing belts: cell → entity (to reuse cells) and cell → ExitDir (to validate).</summary>
-        private void SnapshotBelts(out Dictionary<Vector2Int, Entity> cellMap, out Dictionary<int2, int> cellExit)
+        private void SnapshotBelts(out Dictionary<Vector2Int, Entity> cellMap, out Dictionary<int2, int> cellExit,
+                                   out Dictionary<int2, int> splitMasks)
         {
-            cellMap  = new Dictionary<Vector2Int, Entity>();
-            cellExit = new Dictionary<int2, int>();
+            cellMap    = new Dictionary<Vector2Int, Entity>();
+            cellExit   = new Dictionary<int2, int>();
+            splitMasks = new Dictionary<int2, int>();
             var existing = _segmentQuery.ToEntityArray(Allocator.Temp);
             for (int i = 0; i < existing.Length; i++)
             {
                 var seg = _em.GetComponentData<ConveyorSegmentData>(existing[i]);
                 cellMap[new Vector2Int(seg.Cell.x, seg.Cell.y)] = existing[i];
                 cellExit[seg.Cell] = seg.ExitDir;
+                if (_em.HasComponent<BeltSplit>(existing[i]))
+                    splitMasks[seg.Cell] = _em.GetComponentData<BeltSplit>(existing[i]).Mask;
             }
             existing.Dispose();
         }
@@ -186,7 +242,8 @@ namespace MobileIdleBuilder
         {
             if (string.IsNullOrEmpty(topologyReason)) return null;
             if (topologyReason.Contains("inbounds")) return "That belt already takes 3 belts in.";
-            if (topologyReason.Contains("fork"))     return "A belt can't split. Pick another path.";
+            if (topologyReason.Contains("overpass")) return "Overpass ramps join from the side.";
+            if (topologyReason.Contains("fork"))     return "Can't fork a belt. Hold it to split.";
             return "That belt can't go there.";
         }
 
@@ -234,6 +291,15 @@ namespace MobileIdleBuilder
             var pathSet = new HashSet<int2>();
             foreach (var c in path) pathSet.Add(new int2(c.x, c.y));
 
+            // A ramp's span side faces the belts underneath: never a link to block (and no seam marker there).
+            var spanSides = new HashSet<(int2, int)>();
+            foreach (var kv in Bridges())
+            {
+                int dir = ConveyorTopology.DirBetween(kv.Key, kv.Value);
+                spanSides.Add((kv.Key, dir));
+                spanSides.Add((kv.Value, OppositeDir(dir)));
+            }
+
             foreach (var p in newCells)
             {
                 if (!cellMap.TryGetValue(new Vector2Int(p.x, p.y), out var pe)) continue;
@@ -243,6 +309,7 @@ namespace MobileIdleBuilder
                 {
                     int2 q = AdjacentCell(p, d);
                     if (pathSet.Contains(q)) continue;          // same run — an intentional link
+                    if (spanSides.Contains((p, d)) || spanSides.Contains((q, OppositeDir(d)))) continue; // under an overpass
                     if (!cellMap.TryGetValue(new Vector2Int(q.x, q.y), out var qe)) continue; // not a conveyor
 
                     var qSeg = _em.GetComponentData<ConveyorSegmentData>(qe);
@@ -254,6 +321,11 @@ namespace MobileIdleBuilder
                         pSeg.OutputBlocked = true;
                         _em.SetComponentData(pe, pSeg);
                     }
+
+                    // A split whose output faces the new cell: that's the branch being drawn, keep it.
+                    if (_em.HasComponent<BeltSplit>(qe)
+                        && BeltSplitRules.Has(_em.GetComponentData<BeltSplit>(qe).Mask, OppositeDir(d)))
+                        continue;
 
                     // The existing belt points into the new cell — block the existing belt's output.
                     int2 qExitCell = AdjacentCell(q, qSeg.ExitDir);
@@ -288,6 +360,26 @@ namespace MobileIdleBuilder
 
             if (target == Entity.Null) return false;
 
+            // Removing either ramp takes the overpass down. The other ramp stays as a plain belt; a ramp-up left behind
+            // is a dead end, so it doesn't drop onto whatever belt ran underneath.
+            var cell = new int2(x, y);
+            if (_em.HasComponent<BeltBridge>(target))
+            {
+                var b = _em.GetComponentData<BeltBridge>(target);
+                UnregisterSpan(new Vector2Int(x, y), new Vector2Int(b.Exit.x, b.Exit.y));
+            }
+            foreach (var kv in Bridges())
+            {
+                if (!kv.Value.Equals(cell)) continue;
+                var up = SegmentAt(new Vector2Int(kv.Key.x, kv.Key.y));
+                UnregisterSpan(new Vector2Int(kv.Key.x, kv.Key.y), new Vector2Int(x, y));
+                _em.RemoveComponent<BeltBridge>(up);
+                var us = _em.GetComponentData<ConveyorSegmentData>(up);
+                us.OutputBlocked = true;
+                _em.SetComponentData(up, us);
+                if (_em.HasBuffer<ConveyorItem>(up)) _em.GetBuffer<ConveyorItem>(up).Clear();   // they were in the air
+            }
+
             _em.DestroyEntity(target);
             GridOccupancy.Instance?.UnregisterConveyor(x, y);
             conveyorVisualizer?.RemoveBelt(x, y);
@@ -297,6 +389,214 @@ namespace MobileIdleBuilder
 
             GameLogger.Develop($"[ConveyorPlacer] Removed conveyor segment at ({x},{y}).");
             return true;
+        }
+
+        // ----------------------------------------------------------------
+        // Belt splits (press-and-hold on a belt, BeltSplitCard)
+        // ----------------------------------------------------------------
+
+        /// <summary>The belt segment at <paramref name="cell"/>, or Entity.Null.</summary>
+        private Entity SegmentAt(Vector2Int cell)
+        {
+            if (!_queryReady) return Entity.Null;
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            Entity found = Entity.Null;
+            for (int i = 0; i < entities.Length && found == Entity.Null; i++)
+            {
+                var s = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (s.Cell.x == cell.x && s.Cell.y == cell.y) found = entities[i];
+            }
+            entities.Dispose();
+            return found;
+        }
+
+        /// <summary>Every overpass: ramp-up cell → ramp-down cell.</summary>
+        public Dictionary<int2, int2> Bridges()
+        {
+            var map = new Dictionary<int2, int2>();
+            if (!_queryReady) return map;
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                if (!_em.HasComponent<BeltBridge>(entities[i])) continue;
+                map[_em.GetComponentData<ConveyorSegmentData>(entities[i]).Cell] = _em.GetComponentData<BeltBridge>(entities[i]).Exit;
+            }
+            entities.Dispose();
+            return map;
+        }
+
+        /// <summary>True when <paramref name="cell"/> is either ramp of an overpass.</summary>
+        public bool IsOverpassRamp(Vector2Int cell)
+        {
+            var c = new int2(cell.x, cell.y);
+            foreach (var kv in Bridges())
+                if (kv.Key.Equals(c) || kv.Value.Equals(c)) return true;
+            return false;
+        }
+
+        // The tiles under a span are no longer under it.
+        private static void UnregisterSpan(Vector2Int up, Vector2Int down)
+        {
+            if (GridOccupancy.Instance == null || !OverpassRules.IsStraight(up, down)) return;
+            foreach (var c in OverpassRules.CrossedCells(up, down)) GridOccupancy.Instance.UnregisterOverpass(c.x, c.y);
+        }
+
+        /// <summary>True when a belt (not a stream) sits at <paramref name="cell"/>.</summary>
+        public bool HasBeltAt(Vector2Int cell)
+        {
+            var e = SegmentAt(cell);
+            return e != Entity.Null && !_em.HasComponent<StreamSegment>(e);
+        }
+
+        /// <summary>
+        /// What the split card needs about the belt at <paramref name="cell"/>: which sides feed it (can't be outputs),
+        /// its current output mask (just its ExitDir when it isn't a split yet) and the weights (1 where unset).
+        /// </summary>
+        public bool TryGetSplitInfo(Vector2Int cell, out int inboundMask, out int outputMask, out int[] weights, out bool isSplit)
+        {
+            inboundMask = 0; outputMask = 0; weights = new[] { 1, 1, 1, 1 }; isSplit = false;
+            var e = SegmentAt(cell);
+            if (e == Entity.Null || IsOverpassRamp(cell)) return false;   // ramps don't split
+            var seg = _em.GetComponentData<ConveyorSegmentData>(e);
+            inboundMask = InboundMaskOf(seg);
+            if (_em.HasComponent<BeltSplit>(e))
+            {
+                var split = _em.GetComponentData<BeltSplit>(e);
+                isSplit    = true;
+                outputMask = split.Mask;
+                for (int d = 0; d < 4; d++) weights[d] = BeltSplitRules.ClampWeight(split.Weight(d));
+            }
+            else outputMask = 1 << seg.ExitDir;
+            return true;
+        }
+
+        /// <summary>
+        /// Makes the belt at <paramref name="cell"/> a split to the sides in <paramref name="mask"/> with these weights
+        /// (N, E, S, W). Sides that feed the tile are dropped; fewer than two outputs removes the split. The tile's
+        /// ExitDir moves onto an output if it isn't one.
+        /// </summary>
+        public bool SetSplit(Vector2Int cell, int mask, IReadOnlyList<int> weights)
+        {
+            var e = SegmentAt(cell);
+            if (e == Entity.Null || _em.HasComponent<StreamSegment>(e) || IsOverpassRamp(cell)) return false;
+            var seg = _em.GetComponentData<ConveyorSegmentData>(e);
+            int allowedMask = mask & BeltSplitRules.AllowedOutputs(InboundMaskOf(seg));
+            if (BeltSplitRules.Count(allowedMask) == 1)
+            {
+                // Down to one side: a plain belt again, leaving by that side.
+                int only = 0;
+                for (int d = 0; d < 4; d++) if (BeltSplitRules.Has(allowedMask, d)) only = d;
+                if (_em.HasComponent<BeltSplit>(e)) _em.RemoveComponent<BeltSplit>(e);
+                seg.ExitDir = only;
+                seg.OutputBlocked = false;
+                _em.SetComponentData(e, seg);
+                ClearPlannedExits(e);
+                RebuildTopology();
+                conveyorVisualizer?.RefreshAll();
+                return true;
+            }
+            if (!BeltSplitRules.Normalize(mask, InboundMaskOf(seg), out int valid)) return ClearSplit(cell);
+
+            var split = _em.HasComponent<BeltSplit>(e) ? _em.GetComponentData<BeltSplit>(e) : default;
+            split.Mask = (byte)valid;
+            for (int d = 0; d < 4; d++)
+            {
+                bool on = BeltSplitRules.Has(valid, d);
+                split.SetWeight(d, on ? BeltSplitRules.ClampWeight(weights != null && d < weights.Count ? weights[d] : 1) : 0);
+                if (!on) split.SetCredit(d, 0);
+            }
+            if (_em.HasComponent<BeltSplit>(e)) _em.SetComponentData(e, split);
+            else                                _em.AddComponentData(e, split);
+
+            if (!BeltSplitRules.Has(valid, seg.ExitDir))
+            {
+                for (int d = 0; d < 4; d++) if (BeltSplitRules.Has(valid, d)) { seg.ExitDir = d; break; }
+                seg.OutputBlocked = false;
+                _em.SetComponentData(e, seg);
+            }
+            ClearPlannedExits(e);
+            RebuildTopology();
+            conveyorVisualizer?.RefreshAll();
+            return true;
+        }
+
+        /// <summary>Turns the split at <paramref name="cell"/> back into a plain belt (its ExitDir output stays).</summary>
+        public bool ClearSplit(Vector2Int cell)
+        {
+            var e = SegmentAt(cell);
+            if (e == Entity.Null || !_em.HasComponent<BeltSplit>(e)) return false;
+            _em.RemoveComponent<BeltSplit>(e);
+            ClearPlannedExits(e);
+            RebuildTopology();
+            conveyorVisualizer?.RefreshAll();
+            return true;
+        }
+
+        /// <summary>Restores saved splits (load), after every chain is placed.</summary>
+        public void ApplySplits(IReadOnlyList<BeltSplitData> splits)
+        {
+            if (!_queryReady || splits == null || splits.Count == 0) return;
+            var byCell = new Dictionary<int2, BeltSplitData>();
+            foreach (var sd in splits) byCell[new int2(sd.X, sd.Y)] = sd;
+
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var s = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (!byCell.TryGetValue(s.Cell, out var sd) || BeltSplitRules.Count(sd.Mask) < BeltSplitRules.MinOutputs) continue;
+                var split = new BeltSplit { Mask = (byte)sd.Mask };
+                for (int d = 0; d < 4; d++)
+                    split.SetWeight(d, BeltSplitRules.Has(sd.Mask, d) ? BeltSplitRules.ClampWeight(sd.Weight(d)) : 0);
+                if (_em.HasComponent<BeltSplit>(entities[i])) _em.SetComponentData(entities[i], split);
+                else                                          _em.AddComponentData(entities[i], split);
+                if (!BeltSplitRules.Has(sd.Mask, s.ExitDir))
+                {
+                    for (int d = 0; d < 4; d++) if (BeltSplitRules.Has(sd.Mask, d)) { s.ExitDir = d; break; }
+                    _em.SetComponentData(entities[i], s);
+                }
+            }
+            entities.Dispose();
+            RebuildTopology();
+            conveyorVisualizer?.RefreshAll();
+        }
+
+        /// <summary>Every live split, for the save.</summary>
+        public List<BeltSplitData> CollectSplits()
+        {
+            var list = new List<BeltSplitData>();
+            if (!_queryReady) return list;
+            var entities = _segmentQuery.ToEntityArray(Allocator.Temp);
+            for (int i = 0; i < entities.Length; i++)
+            {
+                if (!_em.HasComponent<BeltSplit>(entities[i])) continue;
+                var s     = _em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                var split = _em.GetComponentData<BeltSplit>(entities[i]);
+                list.Add(new BeltSplitData
+                {
+                    X = s.Cell.x, Y = s.Cell.y, Mask = split.Mask,
+                    W0 = split.W0, W1 = split.W1, W2 = split.W2, W3 = split.W3,
+                });
+            }
+            entities.Dispose();
+            return list;
+        }
+
+        // Which sides feed this tile: belts (and split outputs) pointing at it, and an adjacent building output.
+        private int InboundMaskOf(ConveyorSegmentData seg)
+        {
+            SnapshotBelts(out _, out var cellExit, out var splitMasks);
+            var links = ConveyorTopology.Compute(cellExit, null, splitMasks, Bridges());
+            int mask = links.TryGetValue(seg.Cell, out var l) ? l.InboundMask : 0;
+            if (seg.IsChainHead) mask |= 1 << OppositeDir(seg.EntryDir);   // the building it pulls from
+            return mask;
+        }
+
+        // Items already on the tile forget their planned exit (the outputs changed).
+        private void ClearPlannedExits(Entity e)
+        {
+            if (!_em.HasBuffer<ConveyorItem>(e)) return;
+            var buf = _em.GetBuffer<ConveyorItem>(e);
+            for (int k = 0; k < buf.Length; k++) { var it = buf[k]; it.OutEdge = 0; buf[k] = it; }
         }
 
         // ----------------------------------------------------------------
@@ -326,6 +626,7 @@ namespace MobileIdleBuilder
             var data     = new Dictionary<Entity, ConveyorSegmentData>(entities.Length);
             var cellExit = new Dictionary<int2, int>(entities.Length);
             var blocked  = new HashSet<int2>();
+            var splits   = new Dictionary<int2, int>();
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -334,9 +635,11 @@ namespace MobileIdleBuilder
                 data[entities[i]] = s;
                 cellExit[s.Cell]  = s.ExitDir;
                 if (s.OutputBlocked) blocked.Add(s.Cell);
+                if (_em.HasComponent<BeltSplit>(entities[i]))
+                    splits[s.Cell] = _em.GetComponentData<BeltSplit>(entities[i]).Mask;
             }
 
-            var links = ConveyorTopology.Compute(cellExit, blocked);
+            var links = ConveyorTopology.Compute(cellExit, blocked, splits, Bridges());
 
             foreach (var kv in data)
             {
@@ -410,8 +713,9 @@ namespace MobileIdleBuilder
                 int2 cell = s.Cell;
                 bool changed = false;
 
-                // Tail: turn output toward an adjacent building input facing this cell.
-                if (s.NextSegment == Entity.Null)
+                // Tail: turn output toward an adjacent building input facing this cell (never a split: its
+                // ExitDir is one of the outputs the player chose).
+                if (s.NextSegment == Entity.Null && !_em.HasComponent<BeltSplit>(e))
                 {
                     int newExit = ConveyorAutoTurn.TailExit(s.ExitDir, dir =>
                     {

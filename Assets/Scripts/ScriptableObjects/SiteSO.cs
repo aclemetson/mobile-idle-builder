@@ -29,6 +29,10 @@ namespace MobileIdleBuilder
         [Tooltip("Entropy cost to unlock this site. 0 = unlocked from start (origin).")]
         public long unlockCost;
 
+        [Tooltip("Retired (2026-11-24): the Physics Quantum Domains, made obsolete by worlds and Field Synthesis. " +
+                 "Kept in the list so saved site indices stay put; never unlockable, travelled to or paid idle.")]
+        public bool retired;
+
         [Tooltip("Per-field density overrides for this site. Empty = default field set.")]
         public List<SiteFieldOverride> fieldOverrides = new();
 

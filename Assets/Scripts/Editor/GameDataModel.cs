@@ -324,7 +324,6 @@ namespace MobileIdleBuilder.Editor
         public float                  flow_draw                  = 0f;      // L/s a building takes from its stream
         public string                 world                      = "";      // world id it is built in ("" = every world)
         public bool                   is_item_filter             = false;
-        public bool                   is_splitter                = false;   // Belt Splitter: items leave by each output side in turn
         public bool                   assignable_outputs         = false;
         public string[]               recipe_mode_labels         = null;
         public string[]               recipe_mode_prefixes       = null;
@@ -403,6 +402,7 @@ namespace MobileIdleBuilder.Editor
         public string                        id              = "";
         public string                        display_name    = "";
         public long                          unlock_cost     = 0;
+        public bool                          retired         = false;   // SiteSO.retired
         public List<SiteFieldOverrideJson>   field_overrides = new();
         public List<SiteStartingBuildingJson> starting_buildings = new();   // placed once per run on first load
 

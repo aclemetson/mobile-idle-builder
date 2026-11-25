@@ -186,9 +186,6 @@ namespace MobileIdleBuilder.Editor
                 case BuildingStructureKind.NucleonHarvester:
                     host.AddComponent<NucleonHarvesterStructure>().Initialize(Entity.Null, fw, fh,
                         new Vector2(0f, -fh * 0.5f), FieldColor(b)); break;
-                case BuildingStructureKind.BeltSplitter:
-                    host.AddComponent<SplitterStructure>().Initialize(Entity.Null, (int)OutputDirection.North,
-                        new List<int> { (int)OutputDirection.West, (int)OutputDirection.East }, color, FlowMaterial()); break;
                 case BuildingStructureKind.Spring:
                     host.AddComponent<SpringStructure>().Initialize((int)OutputDirection.South, color, FlowMaterial()); break;
                 default:

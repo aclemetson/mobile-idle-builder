@@ -126,10 +126,6 @@
                     <MobileIdleBuilder.GlyphIcon icon="Worlds" class="drawer-tile__icon" />
                     <ui:Label text="Worlds" class="drawer-tile__caption" />
                 </ui:Button>
-                <ui:Button name="btn-sites" text="" class="drawer-nav-btn drawer-tile">
-                    <MobileIdleBuilder.GlyphIcon icon="Domains" class="drawer-tile__icon" />
-                    <ui:Label text="Domains" class="drawer-tile__caption" />
-                </ui:Button>
                 <ui:Button name="btn-tournament" text="" class="drawer-nav-btn drawer-tile">
                     <MobileIdleBuilder.GlyphIcon icon="Tournament" class="drawer-tile__icon" />
                     <ui:Label text="Tourney" class="drawer-tile__caption" />
@@ -321,20 +317,6 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
-        <!-- ═══ SITES / QUANTUM DOMAINS PANEL ═══ -->
-        <ui:VisualElement name="sites-panel" class="slide-panel hidden">
-            <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Quantum Domains" class="panel-title" />
-                <ui:Button name="btn-close-sites" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-            </ui:VisualElement>
-            <ui:VisualElement name="sites-balance" class="prestige-shop-balance">
-                <ui:Label name="sites-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
-            </ui:VisualElement>
-            <ui:ScrollView name="sites-list" class="recipe-list"
-                           vertical-scroller-visibility="Auto"
-                           horizontal-scroller-visibility="Hidden" />
-        </ui:VisualElement>
-
         <!-- ═══ WORLDS / TRACKS PANEL ═══ -->
         <ui:VisualElement name="worlds-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
@@ -503,6 +485,8 @@
                 <ui:Button name="btn-conveyor-confirm" text="" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
                 <!-- Undo: removes the last traced point (name kept from the old Clear button). -->
                 <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Undo point" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Undo" /></ui:Button>
+                <!-- Up: the next tap lays an overpass (Overpasses research). -->
+                <ui:Button name="btn-conveyor-up" text="Up" tooltip="Raise the next stretch over belts" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Clear and start a new belt" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />

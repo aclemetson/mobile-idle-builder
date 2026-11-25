@@ -214,6 +214,15 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
 
+            // Retired Quantum Domains (2026-11-24): refund their unlocks and stop their idle production, before
+            // the idle payout and the currency below read the save.
+            long domainsRefund = SiteRetirement.Migrate(save, Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites);
+            if (domainsRefund > 0)
+            {
+                save.currentRun.baseCurrency += domainsRefund;
+                GameLogger.Info($"[ECSLoadBridge] Quantum Domains retired: refunded {domainsRefund:N0} entropy.");
+            }
+
             // Restore purchased permanent upgrades first — effects depend on this. The multipliers are then
             // recomputed from the levels (the source of truth) rather than trusted from the save: older
             // builds composed the premium speed boost into the saved speed multiplier and could persist it

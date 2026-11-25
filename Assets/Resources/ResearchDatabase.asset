@@ -21,8 +21,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 07d24042f66809543a69db826346ad04, type: 2}
   - {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
   - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
-  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
-  - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
   - {fileID: 11400000, guid: 8df3263ba828dd242a8e4db2896dc77f, type: 2}
@@ -92,6 +90,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 45cac0aa7a4f2384cb0c8c625e23e162, type: 2}
   - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
   - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
+  - {fileID: 11400000, guid: 2c81d4a27103bdb4a9e076e504fba132, type: 2}
+  - {fileID: 11400000, guid: 8e5db0410ea749147a2292eb0a0100d8, type: 2}
   blocks:
   - id: ignition
     displayName: Ignition
@@ -413,8 +413,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: bio_cells
     displayName: Cells
     order: 16
@@ -439,8 +438,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: deep_physics
     displayName: Deep Physics
     order: 17
@@ -465,8 +463,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: bio_multicellular
     displayName: Multicellular Life
     order: 18
@@ -491,8 +488,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: bio_ecosystems
     displayName: Ecosystems
     order: 19
@@ -517,8 +513,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: metallurgy_ores
     displayName: Ores
     order: 20
@@ -544,8 +539,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: metallurgy_alloys
     displayName: Smelting & Alloys
     order: 21
@@ -570,8 +564,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: metallurgy_advanced
     displayName: Advanced Materials
     order: 22
@@ -597,8 +590,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: engineering_components
     displayName: Components
     order: 23
@@ -624,8 +616,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: engineering_systems
     displayName: Systems
     order: 24
@@ -650,8 +641,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: engineering_megastructure
     displayName: Megastructure
     order: 25
@@ -676,5 +666,4 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []

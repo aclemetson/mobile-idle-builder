@@ -10,31 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
-  m_Name: rapid_extraction_ii
+  m_Name: overpasses
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
-  id: rapid_extraction_ii
-  displayName: Rapid Extraction II
-  description: Field tap cooldown is a further 20% shorter.
+  id: overpasses
+  displayName: Overpasses
+  description: Raise a belt over others. While drawing a belt, tap Up to lay the
+    next straight stretch as an overpass that crosses up to 4 tiles of belts.
   icon: {fileID: 0}
   branch: 3
   prerequisites:
-  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
+  - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
   depthInTree: 2
   block: foundations
   treeX: -1
   treeY: -1
   requiredWorld: 
   world: world_physics
-  costBaseCurrency: 48000
+  costBaseCurrency: 600000
   costPrestigeCurrency: 0
   durationSeconds: 120
-  fieldCooldownMult: 0.8
+  fieldCooldownMult: 1
   effects: []
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 8e5db0410ea749147a2292eb0a0100d8, type: 2}
   resetsOnPrestige: 1
-  codexEntry: A tuned resonance cascade drives field recharge near its physical limit,
-    collapsing the cooldown between taps.
+  codexEntry: 'Lift the field lattice off the floor and it carries its current through
+    the air: belts can cross without touching.'

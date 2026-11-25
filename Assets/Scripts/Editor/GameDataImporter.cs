@@ -518,7 +518,6 @@ namespace MobileIdleBuilder.Editor
             so.flowDraw            = data.flow_draw;
             so.world               = data.world ?? "";
             so.isItemFilter        = data.is_item_filter;
-            so.isSplitter          = data.is_splitter;
             so.assignableOutputs   = data.assignable_outputs;
             so.recipeModeLabels    = data.recipe_mode_labels;
             so.recipeModePrefixes  = data.recipe_mode_prefixes;
@@ -673,6 +672,7 @@ namespace MobileIdleBuilder.Editor
             so.id          = data.id;
             so.displayName = data.display_name;
             so.unlockCost  = data.unlock_cost;
+            so.retired     = data.retired;
 
             so.fieldOverrides.Clear();
             if (data.field_overrides != null)

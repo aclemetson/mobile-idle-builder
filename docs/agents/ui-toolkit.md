@@ -10,7 +10,7 @@
 
 ### Verified element inventory in GameHUD.uxml (by `name=`)
 
-`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `achievements-panel` (:132), `prestige-panel` (:152), `sites-panel` (Quantum Domains — multi-grids site switcher), `pve-panel` (the Tournament panel: `TournamentPanelController`, drawer button `btn-tournament`; elements `pve-league-badge`, `pve-banner`, `pve-state-label`, `pve-timer-label`, `pve-info-label`, `btn-pve-start`, `pve-result-label`, `btn-pve-claim`, `pve-your-rank`, `btn-pve-refresh`, `pve-leaderboard-list`), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
+`top-bar` (:21), `left-drawer` (:42), `recipe-panel` (:73), `buildings-panel` (:84), `codex-panel` (:96), `research-panel` (:107), `upgrades-panel` (:118 — this is the prestige shop), `achievements-panel` (:132), `prestige-panel` (:152), `pve-panel` (the Tournament panel: `TournamentPanelController`, drawer button `btn-tournament`; elements `pve-league-badge`, `pve-banner`, `pve-state-label`, `pve-timer-label`, `pve-info-label`, `btn-pve-start`, `pve-result-label`, `btn-pve-claim`, `pve-your-rank`, `btn-pve-refresh`, `pve-leaderboard-list`), `shop-panel` (:191 — premium/crystal shop), `settings-panel` (:210), `placement-overlay`/`placement-bar` (:249) + `placement-confirm-popup` (world-anchored ✓/✕), `conveyor-overlay` (:260), `deconstruct-overlay` (:269), `building-inspector-panel` (:295), `demon-panel` (:306), `idle-return-modal` (:378).
 
 Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by adding/removing `hidden`.
 
@@ -20,7 +20,7 @@ Slide-in panels share `class="slide-panel hidden"` — visibility is toggled by 
 - Sub-controllers are **MonoBehaviour components on the SAME GameObject as HUDController**, marked `[RequireComponent(typeof(HUDController))]`, and fetched with `GetComponent<>()` in `HUDController` (`HUDController.cs:106-111`). They are NOT constructed in code and NOT separate scene objects.
   - **Trap:** a new sub-controller class does nothing until the component is added to the HUD GameObject in `GameScene.unity`. `[RequireComponent]` does not retro-add it to an existing scene object — this is a manual Unity Editor step; flag it to the user in your final report.
 - Lifecycle calls made by HUDController on each sub-controller: `Init(VisualElement root, HUDController hud)` (query elements by name, e.g., `root.Q("upgrades-panel")`) then `SetECSContext(EntityManager em)` once ECS is ready, then `Refresh()` when the panel opens. Copy `Assets/Scripts/UI/PrestigeShopSubController.cs` — it is the cleanest reference (panel + currency label + ScrollView list rebuilt in `Refresh()`).
-- `SitesSubController.cs` is a second clean reference (sites-panel): list rebuilt in `Refresh()`, a pure `ClassifyRow(isActive, isUnlocked, canAfford)` helper drives each row's action (Active/Travel/Unlock/Locked), and the Travel handler calls `HUDController.CancelActiveModes()` before `SiteService.SwitchTo` so placement overlays clear before the grid swaps.
+- `WorldsSubController.cs` is a second clean reference (worlds-panel): list rebuilt in `Refresh()`, one row per world with Active/Travel/Unlock, and Travel calls `HUDController.CancelActiveModes()` before switching so placement overlays clear before the grid swaps. (The Quantum Domains panel, `SitesSubController`, was retired 2026-11-24.)
 - Drawer nav buttons are wired in HUDController around `HUDController.cs:454-491` (`root.Q<Button>("btn-recipes").clicked += () => TryOpenPanel(OpenRecipePanel);`). New panels add a button + `OpenXPanel` method here.
 - Building rows/list items are built **in C#** (`new VisualElement()` + `AddToClassList`), not via UXML templates, in sub-controllers — follow that style.
 
@@ -76,6 +76,14 @@ Covered by `TutorialSellPolicyTests`.
 ## Side drawer menu (icon grid, #486)
 
 The drawer's nav ScrollView (`drawer-nav-scroll drawer-grid`) wraps into a 3-column grid of `drawer-tile` buttons. Each tile keeps its `btn-*` name (all wiring, `TutorialPulseResolver` and reminder dots are unchanged) and holds a `GlyphIcon` (`drawer-tile__icon`, 28px; the menu kinds Build to Shop, drawn as vectors in `GlyphIcon.cs`) plus a caption label (`drawer-tile__caption`). Set a tile's label with `DrawerTile.SetCaption` (the Cyclotron's live "Cyclotron (42m)" does); never `button.text`, which would draw over the tile. The reminder dot sits on the tile's top-right corner. Covered by `DrawerTilesTests`.
+
+## Overpass Up button (conveyor bar)
+
+`btn-conveyor-up` in `GameHUD.uxml`'s conveyor bar, shown by `HUDController.UpdateConveyorBar` while tracing once the Overpasses research is done (`ConveyorPlacementController.CanRaise`). It toggles `RaiseNext` (class `conveyor-mode-btn--on`, label `ConveyorRaiseLabel`); the next tap lays one overpass and turns it off. Holding a ramp shows `BeltSplitCard.RampMessage` instead of the split card.
+
+## Belt split card (press-and-hold a belt)
+
+`PlayerInputRouter` starts the same hold as building edit mode on a belt tile (not a stream). At `LongPress.HoldSeconds` it opens `BeltSplitCard`, built in code on the HUD root with the confirm-prompt card styles (`belt-split-*` in `GameHUD.uss`). The card has one row per side: the way in is greyed "(in)"; the others toggle on or off (2-3 outputs) with a − / + weight 1-5. Every change applies at once through `ConveyorPlacer.SetSplit`, so the fork's arms show on the belt under the card. Down to one side it becomes a plain belt leaving that way, and "No split" does the same. Drawing a belt from a split tile adds that side as an output. Pure texts are in `BeltSplitText`. Tests: `BeltSplitTests`.
 
 ## Builder menu (tabs + horizontal cards, #487)
 

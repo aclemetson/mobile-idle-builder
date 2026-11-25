@@ -10,33 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
-  m_Name: rapid_extraction_i
+  m_Name: overpasses_ii
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
-  id: rapid_extraction_i
-  displayName: Rapid Extraction I
-  description: Field tap cooldown is 15% shorter.
+  id: overpasses_ii
+  displayName: Overpasses II
+  description: Overpasses cross up to 8 tiles.
   icon: {fileID: 0}
   branch: 3
   prerequisites:
-  - {fileID: 11400000, guid: c8d1a109e3f4550607082930a1a2b3ca, type: 2}
-  depthInTree: 1
-  block: ignition
+  - {fileID: 11400000, guid: 2c81d4a27103bdb4a9e076e504fba132, type: 2}
+  depthInTree: 2
+  block: foundations
   treeX: -1
   treeY: -1
   requiredWorld: 
   world: world_physics
-  costBaseCurrency: 150
+  costBaseCurrency: 4000000
   costPrestigeCurrency: 0
-  durationSeconds: 30
-  fieldCooldownMult: 0.85
+  durationSeconds: 300
+  fieldCooldownMult: 1
   effects: []
   unlocksItems: []
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch:
-  - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
-  - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
+  unlocksResearch: []
   resetsOnPrestige: 1
-  codexEntry: Refining the extraction pulse lets a field recharge faster after each
-    manual tap, shortening the wait between collections.
+  codexEntry: A stiffer lattice holds its shape across a longer gap.

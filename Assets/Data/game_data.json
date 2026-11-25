@@ -639,7 +639,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "bio_cells",
@@ -653,7 +653,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "deep_physics",
@@ -666,7 +666,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"],
+      "start_sites": [],
       "planned": true
     },
     {
@@ -681,7 +681,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "bio_ecosystems",
@@ -695,7 +695,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "metallurgy_ores",
@@ -709,7 +709,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "metallurgy_alloys",
@@ -723,7 +723,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "metallurgy_advanced",
@@ -737,7 +737,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "engineering_components",
@@ -751,7 +751,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "engineering_systems",
@@ -765,7 +765,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     },
     {
       "id": "engineering_megastructure",
@@ -779,7 +779,7 @@
       "start_prestige_currency_earned": 11000,
       "start_permanent_upgrades": ["assembly_line:5", "memory_resonance:5", "entropy_headstart:5", "quantum_yield:5", "idle_time_cap:5", "research_overdrive:4", "idle_collection_rate:5", "efficient_layouts:4", "surplus_resale:4", "expanded_vault:5", "field_cooldown:5", "salvage_protocols:4", "turnkey_builder:3", "entropy_echo:2"],
       "start_entropy": 523000000,
-      "start_sites": ["site_actinide_vein"]
+      "start_sites": []
     }
   ],
   "research": [
@@ -798,7 +798,7 @@
       "unlocks_recipes": ["proton", "neutron"],
       "unlocks_buildings": ["strong_force_combiner"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["hydrogen_synthesis", "rapid_extraction_i"],
+      "unlocks_research": ["hydrogen_synthesis"],
       "resets_on_prestige": true,
       "codex_entry": "The foundational discovery enabling nucleon synthesis. By controlling the strong force, quarks can be permanently bound into stable protons and neutrons.",
       "icon_path": "TODO",
@@ -829,7 +829,7 @@
     {
       "id": "automation_i",
       "display_name": "Automation I",
-      "description": "Unlocks the Harvester — a field collector that gathers particles continuously without manual input. Also unlocks the Filter and the Belt Splitters for routing belts.",
+      "description": "Unlocks the Harvester — a field collector that gathers particles continuously without manual input. Also unlocks the Filter for sorting belts. Hold a belt to split it.",
       "branch": "Engineering",
       "prerequisites": ["hydrogen_synthesis"],
       "depth_in_tree": 2,
@@ -838,9 +838,9 @@
       "duration_seconds": 20,
       "unlocks_items": [],
       "unlocks_recipes": [],
-      "unlocks_buildings": ["harvester", "filter", "splitter_2", "splitter_3"],
+      "unlocks_buildings": ["harvester", "filter"],
       "unlocks_grid_expansion": false,
-      "unlocks_research": ["field_synthesis", "surplus_containment"],
+      "unlocks_research": ["field_synthesis", "surplus_containment", "transportation_1"],
       "resets_on_prestige": true,
       "codex_entry": "Continuous field collection without manual input. A Harvester placed on a quantum field extracts particles automatically at its rated output rate.",
       "icon_path": "TODO",
@@ -949,51 +949,6 @@
       "unlocks_research": [],
       "resets_on_prestige": true,
       "codex_entry": "Two harvesters on opposing polarity fields can be merged into a single Nucleon Harvester, producing protons or neutrons directly without quark combination.",
-      "icon_path": "TODO",
-      "block": "foundations",
-      "world": "world_physics"
-    },
-    {
-      "_comment": "Field tap-cooldown reduction branch — purely a manual-collection modifier, gates no buildings/items",
-      "id": "rapid_extraction_i",
-      "display_name": "Rapid Extraction I",
-      "description": "Field tap cooldown is 15% shorter.",
-      "branch": "Engineering",
-      "prerequisites": ["recombination_i"],
-      "depth_in_tree": 1,
-      "cost_base_currency": 150,
-      "cost_prestige_currency": 0,
-      "duration_seconds": 30,
-      "field_cooldown_mult": 0.85,
-      "unlocks_items": [],
-      "unlocks_recipes": [],
-      "unlocks_buildings": [],
-      "unlocks_grid_expansion": false,
-      "unlocks_research": ["rapid_extraction_ii", "transportation_1"],
-      "resets_on_prestige": true,
-      "codex_entry": "Refining the extraction pulse lets a field recharge faster after each manual tap, shortening the wait between collections.",
-      "icon_path": "TODO",
-      "block": "ignition",
-      "world": "world_physics"
-    },
-    {
-      "id": "rapid_extraction_ii",
-      "display_name": "Rapid Extraction II",
-      "description": "Field tap cooldown is a further 20% shorter.",
-      "branch": "Engineering",
-      "prerequisites": ["rapid_extraction_i"],
-      "depth_in_tree": 2,
-      "cost_base_currency": 48000,
-      "cost_prestige_currency": 0,
-      "duration_seconds": 120,
-      "field_cooldown_mult": 0.8,
-      "unlocks_items": [],
-      "unlocks_recipes": [],
-      "unlocks_buildings": [],
-      "unlocks_grid_expansion": false,
-      "unlocks_research": [],
-      "resets_on_prestige": true,
-      "codex_entry": "A tuned resonance cascade drives field recharge near its physical limit, collapsing the cooldown between taps.",
       "icon_path": "TODO",
       "block": "foundations",
       "world": "world_physics"
@@ -2544,7 +2499,7 @@
       "effects": [
         { "type": "ConveyorSpeed", "value": 1.0 }
       ],
-      "prerequisites": ["rapid_extraction_i"],
+      "prerequisites": ["automation_i"],
       "depth_in_tree": 0,
       "cost_prestige_currency": 0,
       "unlocks_items": [],
@@ -2575,11 +2530,53 @@
       "unlocks_recipes": [],
       "unlocks_buildings": [],
       "unlocks_grid_expansion": 0,
-      "unlocks_research": [],
+      "unlocks_research": ["overpasses"],
       "resets_on_prestige": true,
       "codex_entry": "",
       "icon_path": "TODO",
       "advances_curve": false,
+      "block": "foundations",
+      "world": "world_physics"
+    },
+    {
+      "id": "overpasses",
+      "display_name": "Overpasses",
+      "branch": "Engineering",
+      "cost_base_currency": 600000,
+      "duration_seconds": 120,
+      "description": "Raise a belt over others. While drawing a belt, tap Up to lay the next straight stretch as an overpass that crosses up to 4 tiles of belts.",
+      "prerequisites": ["transportation_2"],
+      "depth_in_tree": 2,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": 0,
+      "unlocks_research": ["overpasses_ii"],
+      "resets_on_prestige": true,
+      "codex_entry": "Lift the field lattice off the floor and it carries its current through the air: belts can cross without touching.",
+      "icon_path": "TODO",
+      "block": "foundations",
+      "world": "world_physics"
+    },
+    {
+      "id": "overpasses_ii",
+      "display_name": "Overpasses II",
+      "branch": "Engineering",
+      "cost_base_currency": 4000000,
+      "duration_seconds": 300,
+      "description": "Overpasses cross up to 8 tiles.",
+      "prerequisites": ["overpasses"],
+      "depth_in_tree": 2,
+      "cost_prestige_currency": 0,
+      "unlocks_items": [],
+      "unlocks_recipes": [],
+      "unlocks_buildings": [],
+      "unlocks_grid_expansion": 0,
+      "unlocks_research": [],
+      "resets_on_prestige": true,
+      "codex_entry": "A stiffer lattice holds its shape across a longer gap.",
+      "icon_path": "TODO",
       "block": "foundations",
       "world": "world_physics"
     }
@@ -14539,105 +14536,6 @@
       "is_item_filter": true
     },
     {
-      "id": "splitter_2",
-      "display_name": "Belt Splitter (2-way)",
-      "description": "Forks one belt into two. Items come in one side and leave by the left and right sides in turn, so each branch gets half. Any item, no sorting.",
-      "icon_path": "TODO",
-      "prefab_path": "TODO",
-      "building_id": 27,
-      "tier": 1,
-      "category": "Core",
-      "is_obsoleteable": false,
-      "obsolete_condition": "",
-      "requires_power": false,
-      "is_power_source": false,
-      "base_power_cost_ev": 0.0,
-      "power_cost_is_dynamic": false,
-      "base_output_ev": 0.0,
-      "influence_radius_tiles": 0.0,
-      "link_radius_tiles": 0.0,
-      "base_output_rate": 1.0,
-      "supported_recipes": [],
-      "input_slot_count": 0,
-      "input_slot_labels": [],
-      "is_entropy_sink": false,
-      "footprint": [1, 1],
-      "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
-        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" },
-        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
-      ],
-      "placement_rule": "Anywhere",
-      "compatible_adjacent_categories": [],
-      "compatible_fields": [],
-      "entropy_cost": 40,
-      "base_max_output_items": 10,
-      "base_max_input_items_per_slot": 10,
-      "upgrade_levels": [],
-      "storage_upgrade_levels": [],
-      "input_upgrade_levels": [],
-      "has_special_upgrade": false,
-      "special_upgrade_id": "",
-      "required_research": "automation_i",
-      "available_from_start": false,
-      "tutorial_note": "Not taught in the tutorial. Pure logistics: no recipe, no power, no craft time.",
-      "collects_decay_particles": false,
-      "decay_collection_rate": 0.0,
-      "codex_entry": "A fork in the flow. Whatever arrives is dealt out to the outgoing belts one at a time, taking turns, so a single line of particles can feed two buildings at once. A blocked branch is skipped until it clears.",
-      "is_splitter": true,
-      "structure_kind": "BeltSplitter"
-    },
-    {
-      "id": "splitter_3",
-      "display_name": "Belt Splitter (3-way)",
-      "description": "Forks one belt into three. Items come in one side and leave by the left, front and right sides in turn, so each branch gets a third. Any item, no sorting.",
-      "icon_path": "TODO",
-      "prefab_path": "TODO",
-      "building_id": 28,
-      "tier": 1,
-      "category": "Core",
-      "is_obsoleteable": false,
-      "obsolete_condition": "",
-      "requires_power": false,
-      "is_power_source": false,
-      "base_power_cost_ev": 0.0,
-      "power_cost_is_dynamic": false,
-      "base_output_ev": 0.0,
-      "influence_radius_tiles": 0.0,
-      "link_radius_tiles": 0.0,
-      "base_output_rate": 1.0,
-      "supported_recipes": [],
-      "input_slot_count": 0,
-      "input_slot_labels": [],
-      "is_entropy_sink": false,
-      "footprint": [1, 1],
-      "ports": [
-        { "port_type": "Input", "local_cell": [0, 0], "local_facing": "East" },
-        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "North" },
-        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "East" },
-        { "port_type": "Output", "local_cell": [0, 0], "local_facing": "South" }
-      ],
-      "placement_rule": "Anywhere",
-      "compatible_adjacent_categories": [],
-      "compatible_fields": [],
-      "entropy_cost": 60,
-      "base_max_output_items": 10,
-      "base_max_input_items_per_slot": 10,
-      "upgrade_levels": [],
-      "storage_upgrade_levels": [],
-      "input_upgrade_levels": [],
-      "has_special_upgrade": false,
-      "special_upgrade_id": "",
-      "required_research": "automation_i",
-      "available_from_start": false,
-      "tutorial_note": "Not taught in the tutorial. Pure logistics: no recipe, no power, no craft time.",
-      "collects_decay_particles": false,
-      "decay_collection_rate": 0.0,
-      "codex_entry": "A three-way fork. Each item that arrives goes out the next side in turn, left, ahead, right, so one belt can feed three buildings evenly. A blocked branch is skipped until it clears.",
-      "is_splitter": true,
-      "structure_kind": "BeltSplitter"
-    },
-    {
       "id": "spring",
       "display_name": "Spring",
       "description": "Wells up clean water. Draw a channel from it and the stream carries whatever you drop in past every building on its banks. Its flow is shared by those buildings, upstream first.",
@@ -16546,6 +16444,7 @@
       "id": "site_quark_sea",
       "display_name": "Quark Sea",
       "unlock_cost": 250000,
+      "retired": true,
       "field_overrides": [
         { "field": "quark_field", "density_multiplier": 2.0 },
         { "field": "electron_field", "density_multiplier": 0.0 }
@@ -16555,6 +16454,7 @@
       "id": "site_lepton_storm",
       "display_name": "Lepton Storm",
       "unlock_cost": 10000000,
+      "retired": true,
       "field_overrides": [
         { "field": "electron_field", "density_multiplier": 2.0 },
         { "field": "quark_field", "density_multiplier": 0.0 }
@@ -16564,6 +16464,7 @@
       "id": "site_actinide_vein",
       "display_name": "Actinide Vein",
       "unlock_cost": 250000,
+      "retired": true,
       "_note_fissile": "uranium_field/plutonium_field are NOT in the default FieldGenerator list; their density_multiplier is read as an absolute field count for this site (see FieldGenerator.IntroducedFields).",
       "field_overrides": [
         { "field": "uranium_field", "density_multiplier": 0.0 },
@@ -17542,35 +17443,6 @@
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "atomic_assembler",
-          "action": ""
-        }
-      ]
-    },
-    {
-      "id": "intro_quantum_domains",
-      "lines": [
-        {
-          "speaker_name": "The Architect",
-          "text": "Materials Science opens a new frontier. Until now you have built within a single Quantum Domain — but the foundry can anchor to others.",
-          "portrait_path": "TODO",
-          "pause_game": true,
-          "highlight_target": "",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Each Domain is its own build site, with a separate grid and field distribution. The Quark Sea teems with quark fields; the Lepton Storm runs thick with electrons. Anchoring to one costs entropy, but the unlock never expires — not even through prestige.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "",
-          "action": ""
-        },
-        {
-          "speaker_name": "The Architect",
-          "text": "Open the menu and tap Domains to survey what is within reach. An inactive Domain keeps producing while you work elsewhere — collected the next time you return to it.",
-          "portrait_path": "TODO",
-          "pause_game": false,
-          "highlight_target": "",
           "action": ""
         }
       ]
