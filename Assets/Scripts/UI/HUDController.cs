@@ -64,14 +64,14 @@ namespace MobileIdleBuilder
         // ---- Panels ----
         private VisualElement _recipePanel, _buildingsPanel, _codexPanel,
                               _researchPanel, _upgradesPanel, _prestigePanel,
-                              _achievementsPanel, _tournamentPanel, _placementOverlay,
+                              _achievementsPanel, _tournamentPanel,
                               _shopPanel, _settingsPanel, _rewardsPanel, _worldsPanel, _managersPanel, _megastructurePanel, _statsPanel;
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
         private ScrollView _codexList,
                            _upgradesList;
-        private Label      _prestigeSummary, _prestigeCurrency, _placementLabel;
+        private Label      _prestigeSummary, _prestigeCurrency;
         // ---- Research panel (list/tree, tabs, cards, skip: ResearchPanelSubController, #286) ----
         private ResearchPanelSubController _research;
 
@@ -84,37 +84,10 @@ namespace MobileIdleBuilder
         private bool          _drawerOpen;
         private readonly DrawerTapGuard _drawerTapGuard = new DrawerTapGuard(DrawerSlideMs / 1000.0);
 
-        // ---- Back button (#205) ----
-        // Mode flags mirror the controllers' OnPlacingChanged / OnConveyorPlacingChanged /
-        // OnDeconstructingChanged events. _modeEndedFrame lets the back handler yield on the frame a
-        // controller cancelled its mode on the same Escape press, so one press never closes two layers.
-        private bool _placingMode, _conveyorMode, _deconstructMode;
-        private int  _modeEndedFrame = -1;
         private DialogueController _dialogue;
 
-        // ---- Placement controls ----
-        private Button        _btnRotateOutput;
-        private Button        _btnFlipBuilding;
-        private Button        _btnRemoveBuilding; // edit mode only
-        private VisualElement _placementConfirmPopup;
-        private VisualElement _placementBar;
-        private Button        _btnConfirmPlace;
-        private Button        _btnCancelCandidate;
-        private Button        _btnRotateCandidate;
-
-        // ---- Conveyor placement ----
-        private VisualElement _conveyorOverlay;
-        private VisualElement _conveyorBar;
-        private Label         _conveyorLabel;
-        private Button        _btnConveyorRotate;
-        private Button        _btnConveyorConfirm;
-        private Button        _btnConveyorCancelCandidate;
-        private Button        _btnConveyorNewStart;
-        private Button        _btnConveyorUp;
-        private Button        _btnConveyorMode;
-
-        // ---- Deconstruct mode ----
-        private VisualElement _deconstructOverlay;
+        // ---- Mode bars (placement / conveyor / deconstruct, confirm popup, output selector: ModeBarsSubController, #286) ----
+        private ModeBarsSubController _modeBars;
 
         // ---- Recipe-menu craft queue (#310) ----
         // ---- Recipes panel (tabs, cards, craft buttons, queue strip: RecipesPanelSubController, #286) ----
@@ -128,9 +101,6 @@ namespace MobileIdleBuilder
         public event System.Action OnBuildingRecipeSet;
 
         // ---- Output selector ----
-        private VisualElement _outputSelector;
-        private VisualElement _outputSelectorOptions;
-        private Label         _outputSelectorTitle;
 
         // ---- Tooltip ----
         private VisualElement _tooltipPopup;
@@ -178,6 +148,7 @@ namespace MobileIdleBuilder
             _research     = GetComponent<ResearchPanelSubController>() ?? gameObject.AddComponent<ResearchPanelSubController>();
             _buildings    = GetComponent<BuildingsPanelSubController>() ?? gameObject.AddComponent<BuildingsPanelSubController>();
             _recipes      = GetComponent<RecipesPanelSubController>() ?? gameObject.AddComponent<RecipesPanelSubController>();
+            _modeBars     = GetComponent<ModeBarsSubController>() ?? gameObject.AddComponent<ModeBarsSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
@@ -240,39 +211,18 @@ namespace MobileIdleBuilder
             GameLogger.Info($"[HUD] Achievements gate at scene start: unlocked={_achievementsUnlocked} (hasCompletedFirstRun={SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun})");
 
             CloseAllPanels();
-            SetElementVisible(_placementOverlay,   false);
-            SetElementVisible(_placementConfirmPopup, false);
-            SetElementVisible(_conveyorOverlay,    false);
-            SetElementVisible(_deconstructOverlay, false);
             // notification-banner starts hidden via CSS translate (no .hidden class needed)
             SetElementVisible(root.Q("tutorial-hint-banner"),  false);
             SetElementVisible(root.Q("field-proximity-banner"), false);
-            SetElementVisible(_outputSelector, false);
             SetElementVisible(_tooltipPopup, false);
             SetElementVisible(root.Q("building-inspector-panel"), false);
 
             if (placementController != null)
-            {
-                placementController.OnPlacingChanged         += OnPlacingChanged;
-                placementController.OnOutputSelectionRequired += ShowOutputSelector;
-                placementController.OnBuildingPlaced         += OnBuildingPlaced;
-                placementController.OnCandidateChanged       += OnCandidateChanged;
-                placementController.IsPointerOverPlacementUI  = IsPointerOverPlacementUI;
-            }
-
+                placementController.OnBuildingPlaced += OnBuildingPlaced;
             if (conveyorController != null)
-            {
-                conveyorController.OnPlacingChanged   += OnConveyorPlacingChanged;
-                conveyorController.OnModeChanged      += OnConveyorModeChanged;
-                conveyorController.OnCandidateChanged += OnConveyorCandidateChanged;
-                conveyorController.OnStartChanged     += OnConveyorStartChanged;
-                conveyorController.OnTraceChanged     += UpdateConveyorBar;
-                conveyorController.OnChainPlaced      += RaiseConveyorPlaced;
-                conveyorController.IsPointerOverConveyorUI = IsPointerOverConveyorUI;
-            }
-
-            if (deconstructController != null)
-                deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
+                conveyorController.OnChainPlaced     += RaiseConveyorPlaced;
+            // Overlays, bars, confirm popup, output selector and the back button's mode flags.
+            _modeBars?.Attach(placementController, conveyorController, deconstructController);
 
 
 
@@ -303,27 +253,10 @@ namespace MobileIdleBuilder
             UIInputBlocker.Unregister(GetComponent<UIDocument>());
 
             if (placementController != null)
-            {
-                placementController.OnPlacingChanged         -= OnPlacingChanged;
-                placementController.OnOutputSelectionRequired -= ShowOutputSelector;
-                placementController.OnBuildingPlaced         -= OnBuildingPlaced;
-                placementController.OnCandidateChanged       -= OnCandidateChanged;
-                placementController.IsPointerOverPlacementUI  = null;
-            }
-
+                placementController.OnBuildingPlaced -= OnBuildingPlaced;
             if (conveyorController != null)
-            {
-                conveyorController.OnPlacingChanged   -= OnConveyorPlacingChanged;
-                conveyorController.OnModeChanged      -= OnConveyorModeChanged;
-                conveyorController.OnCandidateChanged -= OnConveyorCandidateChanged;
-                conveyorController.OnStartChanged     -= OnConveyorStartChanged;
-                conveyorController.OnTraceChanged     -= UpdateConveyorBar;
-                conveyorController.OnChainPlaced      -= RaiseConveyorPlaced;
-                conveyorController.IsPointerOverConveyorUI = null;
-            }
-
-            if (deconstructController != null)
-                deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
+                conveyorController.OnChainPlaced     -= RaiseConveyorPlaced;
+            _modeBars?.Detach();
 
 
 
@@ -365,7 +298,7 @@ namespace MobileIdleBuilder
             _statusBar?.Tick();
             _inspector?.Tick();
             HandleBackButton();
-            UpdatePlacementConfirmPopup();
+            _modeBars?.Tick();
             _buildings?.Tick();
             RefreshBannerClearance();
             _recipes?.Tick(GameClock.UtcNow);
@@ -424,7 +357,6 @@ namespace MobileIdleBuilder
             _shopPanel         = root.Q("shop-panel");
             _settingsPanel     = root.Q("settings-panel");
             _worldsPanel       = root.Q("worlds-panel");
-            _placementOverlay  = root.Q("placement-overlay");
 
             _allPanels = new[]
             {
@@ -449,34 +381,7 @@ namespace MobileIdleBuilder
 
             _prestigeSummary  = root.Q<Label>("prestige-summary");
             _prestigeCurrency = root.Q<Label>("prestige-currency");
-            _placementLabel   = root.Q<Label>("placement-label");
-            _btnRotateOutput  = root.Q<Button>("btn-rotate-output");
-            _btnFlipBuilding  = root.Q<Button>("btn-flip-building");
-            _btnRemoveBuilding = root.Q<Button>("btn-remove-building");
-            _placementConfirmPopup = root.Q("placement-confirm-popup");
-            _placementBar          = root.Q("placement-bar");
-            _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
-            _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
-            _btnRotateCandidate    = root.Q<Button>("btn-rotate-candidate");
-
-            // Output selector
-            _outputSelector        = root.Q("output-selector");
-            _outputSelectorOptions = root.Q("output-selector__options");
-            _outputSelectorTitle   = root.Q<Label>("output-selector__title");
-
-            // Conveyor placement
-            _conveyorOverlay            = root.Q("conveyor-overlay");
-            _conveyorBar                = root.Q("conveyor-bar");
-            _conveyorLabel              = root.Q<Label>("conveyor-label");
-            _btnConveyorRotate          = root.Q<Button>("btn-conveyor-rotate");
-            _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
-            _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
-            _btnConveyorNewStart        = root.Q<Button>("btn-conveyor-new-start");
-            _btnConveyorUp              = root.Q<Button>("btn-conveyor-up");
-            _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
-
-            // Deconstruct mode
-            _deconstructOverlay = root.Q("deconstruct-overlay");
+            _modeBars?.Initialize(root);   // placement / conveyor / deconstruct bars, confirm popup, output selector
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
             SaveConflictPrompt.Init(root); // "Two saves found": this device vs the cloud save
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
@@ -563,43 +468,6 @@ namespace MobileIdleBuilder
                     SetElementVisible(_buildingsPanel, false);
                     deconstructController?.BeginDeconstructMode();
                 };
-
-            // Building placement
-            root.Q<Button>("btn-cancel-placement").clicked += () => placementController?.CancelPlacement();
-            if (_btnRotateOutput != null)
-                _btnRotateOutput.clicked += () => placementController?.Rotate();
-            if (_btnFlipBuilding != null)
-                _btnFlipBuilding.clicked += () => placementController?.Flip();
-            if (_btnRemoveBuilding != null)
-                _btnRemoveBuilding.clicked += () => placementController?.RequestRemoveEditedBuilding();
-            if (_btnConfirmPlace != null)
-                _btnConfirmPlace.clicked += () => placementController?.ConfirmCandidate();
-            if (_btnCancelCandidate != null)
-                _btnCancelCandidate.clicked += () => placementController?.ClearCandidate();
-            if (_btnRotateCandidate != null)
-                _btnRotateCandidate.clicked += () => placementController?.Rotate();
-
-            // Conveyor "Finished" (button inside the conveyor overlay)
-            root.Q<Button>("btn-cancel-conveyor")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
-                conveyorController?.CancelConveyorMode());
-
-            // Conveyor candidate controls + Create/Destroy toggle
-            if (_btnConveyorRotate != null)
-                _btnConveyorRotate.clicked += () => conveyorController?.RotatePath();
-            if (_btnConveyorConfirm != null)
-                _btnConveyorConfirm.clicked += () => conveyorController?.ConfirmPath();
-            if (_btnConveyorCancelCandidate != null)
-                _btnConveyorCancelCandidate.clicked += () => conveyorController?.UndoLastNode();
-            if (_btnConveyorNewStart != null)
-                _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
-            if (_btnConveyorUp != null)
-                _btnConveyorUp.clicked += () => conveyorController?.ToggleRaise();
-            if (_btnConveyorMode != null)
-                _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
-
-            // Deconstruct cancel
-            root.Q<Button>("btn-cancel-deconstruct")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ =>
-                deconstructController?.CancelDeconstructMode());
 
             // Building inspector close
             var btnCloseInspector = root.Q<Button>("btn-close-inspector");
@@ -1028,81 +896,8 @@ namespace MobileIdleBuilder
         }
 
         // ============================================================
-        // Placement overlay
+        // Mode-bar helpers (pure; ModeBarsSubController and tests use these) and tutorial signals
         // ============================================================
-
-        private void OnPlacingChanged(bool isPlacing)
-        {
-            TrackMode(ref _placingMode, isPlacing);
-            SetElementVisible(_placementOverlay, isPlacing);
-            if (!isPlacing)
-            {
-                SetElementVisible(_placementConfirmPopup, false);
-                // The output selector only exists inside placement; a cancel from Escape/back used to
-                // leave it on screen.
-                SetElementVisible(_outputSelector, false);
-            }
-
-            bool canRotate = isPlacing && (placementController?.CanRotate ?? false);
-            bool canFlip   = isPlacing && (placementController?.CanFlip   ?? false);
-            bool editing   = isPlacing && (placementController?.IsEditing ?? false);
-            SetElementVisible(_btnRotateOutput, canRotate);
-            SetElementVisible(_btnFlipBuilding, canFlip);
-            SetElementVisible(_btnRemoveBuilding, editing);
-
-            if (isPlacing && _placementLabel != null)
-            {
-                string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
-                _placementLabel.text = editing
-                    ? $"Tap a tile to move it  ·  confirm to keep it there{rotateHint}"
-                    : $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
-            }
-        }
-
-        // ============================================================
-        // Placement confirm popup (world-anchored ✓ / ✕ at the candidate cell)
-        // ============================================================
-
-        private void OnCandidateChanged(bool hasCandidate)
-        {
-            SetElementVisible(_placementConfirmPopup, hasCandidate);
-            // Surface the rotate (↻) action on the confirm popup itself for rotatable buildings,
-            // so the player can re-orient in-context next to ✓/✕ instead of reaching for the bottom bar.
-            SetElementVisible(_btnRotateCandidate,
-                hasCandidate && (placementController?.CanRotate ?? false));
-            if (hasCandidate) UpdatePlacementConfirmPopup();
-        }
-
-        private void UpdatePlacementConfirmPopup()
-        {
-            if (_placementConfirmPopup == null || placementController == null) return;
-            if (!placementController.HasCandidate) return;
-
-            var panel = _placementConfirmPopup.panel;
-            var cam   = Camera.main;
-            if (panel == null || cam == null) return;
-
-            Vector2 panelPoint = RuntimePanelUtils.CameraTransformWorldToPanel(
-                panel, placementController.CandidateWorldPosition, cam);
-
-            float w = _placementConfirmPopup.resolvedStyle.width;
-            float h = _placementConfirmPopup.resolvedStyle.height;
-            if (float.IsNaN(w)) w = 0f;
-            if (float.IsNaN(h)) h = 0f;
-
-            // Centre horizontally over the cell and float above it (below it if that would clip the top).
-            const float margin = 8f;
-            float topAbove = panelPoint.y - h - 24f;
-            float desiredTop = topAbove < margin ? panelPoint.y + 24f : topAbove;
-            Vector2 panelSize = panel.visualTree.layout.size;
-            Vector2 pos = (panelSize.x > 0f && panelSize.y > 0f)
-                ? ClampPopup(new Vector2(panelPoint.x - w * 0.5f, desiredTop), new Vector2(w, h), panelSize, margin)
-                : new Vector2(panelPoint.x - w * 0.5f, desiredTop);
-            _placementConfirmPopup.style.left = pos.x;
-            _placementConfirmPopup.style.top  = pos.y;
-
-            _btnConfirmPlace?.SetEnabled(placementController.CandidateValid);
-        }
 
         /// <summary>Clamps a popup's top-left so the whole popup stays inside the panel with a margin.</summary>
         public static Vector2 ClampPopup(Vector2 desired, Vector2 size, Vector2 panelSize, float margin)
@@ -1116,91 +911,6 @@ namespace MobileIdleBuilder
         public static bool IsTap(Vector2 down, Vector2 up, float threshold)
             => (up - down).sqrMagnitude <= threshold * threshold;
 
-        /// <summary>True if a screen-space point is over the confirm popup or the placement bar. Used so
-        /// a tap on placement UI is not also treated as a map tap by BuildingPlacementController.</summary>
-        private bool IsPointerOverPlacementUI(Vector2 screenPos)
-            => ScreenPointInElement(_placementConfirmPopup, screenPos)
-            || ScreenPointInElement(_placementBar,          screenPos);  // the bar strip, NOT the full-screen overlay
-
-        /// <summary>True if a screen-space point is over the conveyor toolbar strip. Used so a tap on
-        /// the conveyor bar is not also treated as a grid tap by ConveyorPlacementController.</summary>
-        private bool IsPointerOverConveyorUI(Vector2 screenPos)
-        {
-            return ScreenPointInElement(_conveyorBar, screenPos);  // the bar strip, NOT the full-screen overlay
-        }
-
-        private static bool ScreenPointInElement(VisualElement el, Vector2 screenPos)
-        {
-            if (el == null || el.ClassListContains("hidden")) return false;
-            var panel = el.panel;
-            if (panel == null) return false;
-            // Input System screen coords are bottom-left origin; panel coords are top-left. In this
-            // project RuntimePanelUtils.ScreenToPanel scales but does NOT flip Y, so we flip here.
-            // Without this, top-of-screen UI (placement/conveyor bars) maps to the bottom of the
-            // panel and never registers as "over UI", leaking taps to the grid behind it.
-            Vector2 flipped  = new Vector2(screenPos.x, Screen.height - screenPos.y);
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel, flipped);
-            return el.worldBound.Contains(panelPos);
-        }
-
-        private void OnConveyorPlacingChanged(bool isPlacing)
-        {
-            TrackMode(ref _conveyorMode, isPlacing);
-            SetElementVisible(_conveyorOverlay, isPlacing);
-
-            if (isPlacing)
-            {
-                // Mode always re-enters in Create with no pending trace (this also refreshes the bar).
-                OnConveyorModeChanged(false);
-            }
-        }
-
-        /// <summary>Updates the Create/Destroy toggle look and the bar's instructional text.</summary>
-        private void OnConveyorModeChanged(bool isDestroy)
-        {
-            if (_btnConveyorMode != null)
-            {
-                _btnConveyorMode.text = isDestroy ? "Destroy" : "Create";
-                if (isDestroy) _btnConveyorMode.AddToClassList("conveyor-mode-btn--destroy");
-                else           _btnConveyorMode.RemoveFromClassList("conveyor-mode-btn--destroy");
-            }
-
-            UpdateConveyorBar();
-        }
-
-        private void OnConveyorCandidateChanged(bool hasCandidate) => UpdateConveyorBar();
-        private void OnConveyorStartChanged(bool hasStart)         => UpdateConveyorBar();
-
-        /// <summary>
-        /// The conveyor bar for the current trace: Bend and Place once there is a belt to place, Undo and New
-        /// once a start is set, and a short instruction that never repeats the button names.
-        /// </summary>
-        private void UpdateConveyorBar()
-        {
-            var  cc        = conveyorController;
-            bool destroy   = IsDestroyModeActive();
-            bool hasStart  = cc != null && !destroy && cc.HasStart;
-            bool candidate = cc != null && !destroy && cc.HasCandidate;
-
-            SetElementVisible(_btnConveyorRotate,          candidate);
-            SetElementVisible(_btnConveyorConfirm,         candidate);
-            SetElementVisible(_btnConveyorCancelCandidate, hasStart);
-            SetElementVisible(_btnConveyorNewStart,        hasStart);
-
-            // Up (overpass): once researched, while the trace can go on. Lit while the next tap lays one.
-            bool ended  = cc != null && cc.IsTraceEnded;
-            bool raise  = hasStart && cc.RaiseNext;
-            SetElementVisible(_btnConveyorUp, hasStart && !ended && cc.CanRaise);
-            if (_btnConveyorUp != null)
-            {
-                if (raise) _btnConveyorUp.AddToClassList("conveyor-mode-btn--on");
-                else       _btnConveyorUp.RemoveFromClassList("conveyor-mode-btn--on");
-            }
-
-            if (_conveyorLabel != null)
-                _conveyorLabel.text = raise ? ConveyorRaiseLabel : ConveyorBarLabel(destroy, hasStart, candidate, ended);
-        }
-
         /// <summary>The conveyor bar's instruction while Up is on.</summary>
         internal const string ConveyorRaiseLabel = "Tap where the overpass lands";
 
@@ -1213,9 +923,6 @@ namespace MobileIdleBuilder
             return canPlace ? "Tap the next point, or place" : "Tap the next point";
         }
 
-        private bool IsDestroyModeActive() =>
-            conveyorController != null && conveyorController.IsDestroyMode;
-
         /// <summary>Forwards the controller's chain-placed signal to tutorial listeners.</summary>
         private void RaiseConveyorPlaced() => OnConveyorPlaced?.Invoke();
 
@@ -1223,21 +930,9 @@ namespace MobileIdleBuilder
         /// Drives the tutorial's "set the Combiner to Proton" step.</summary>
         public void NotifyBuildingRecipeSet() => OnBuildingRecipeSet?.Invoke();
 
-        private void OnDeconstructingChanged(bool isDeconstructing)
-        {
-            TrackMode(ref _deconstructMode, isDeconstructing);
-            SetElementVisible(_deconstructOverlay, isDeconstructing);
-        }
-
         // ============================================================
         // Back button (#205)
         // ============================================================
-
-        private void TrackMode(ref bool flag, bool active)
-        {
-            if (flag && !active) _modeEndedFrame = Time.frameCount;
-            flag = active;
-        }
 
         /// <summary>
         /// Android back / Escape closes the top-most UI layer, one per press. Order and rules live in
@@ -1256,8 +951,7 @@ namespace MobileIdleBuilder
 
             var state = new BackNavigation.State
             {
-                ModeActiveOrJustEnded = _placingMode || _conveyorMode || _deconstructMode
-                                        || _modeEndedFrame == Time.frameCount,
+                ModeActiveOrJustEnded = _modeBars != null && _modeBars.ModeActiveOrJustEnded,
                 DialoguePlaying  = _dialogue != null && _dialogue.IsPlaying,
                 TestAdOpen       = _testAd != null && _testAd.IsOpen,
                 // The name card is a centred question card like ConfirmPrompt, so it shares that layer.
@@ -1366,51 +1060,6 @@ namespace MobileIdleBuilder
         public void ShowTutorialHint(string message) => _banner?.ShowTutorialHint(message);
         public void HideTutorialHint()               => _banner?.HideTutorialHint();
         public void SetTutorialHintProgress(string progress) => _banner?.SetTutorialHintProgress(progress);
-
-        // ============================================================
-        // Output selector
-        // ============================================================
-
-        private void ShowOutputSelector(List<RecipeSO> options)
-        {
-            if (_outputSelector == null || _outputSelectorOptions == null) return;
-
-            _outputSelectorOptions.Clear();
-
-            foreach (var recipe in options)
-            {
-                var captured = recipe;
-                var item     = recipe.outputItem;
-                string label = item != null
-                    ? (item.displayName ?? item.name)
-                    : recipe.displayName;
-
-                var btn = new Button { text = label };
-                btn.AddToClassList("output-option-btn");
-                btn.clicked += () =>
-                {
-                    SetElementVisible(_outputSelector, false);
-                    placementController?.SelectOutput(captured);
-                };
-                _outputSelectorOptions.Add(btn);
-            }
-
-            // Wire cancel button once (clear existing callbacks by replacing via query each time)
-            var cancelBtn = _outputSelector.Q<Button>("btn-cancel-output");
-            if (cancelBtn != null)
-            {
-                cancelBtn.clicked -= OnCancelOutputSelector;
-                cancelBtn.clicked += OnCancelOutputSelector;
-            }
-
-            SetElementVisible(_outputSelector, true);
-        }
-
-        private void OnCancelOutputSelector()
-        {
-            SetElementVisible(_outputSelector, false);
-            placementController?.CancelPlacement();
-        }
 
         // ============================================================
         // Tooltip
