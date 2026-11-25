@@ -15,5 +15,6 @@ MonoBehaviour:
   id: site_origin
   displayName: Origin Domain
   unlockCost: 0
+  retired: 0
   fieldOverrides: []
   startingBuildings: []

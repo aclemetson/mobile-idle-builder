@@ -403,6 +403,7 @@ namespace MobileIdleBuilder.Editor
         public string                        id              = "";
         public string                        display_name    = "";
         public long                          unlock_cost     = 0;
+        public bool                          retired         = false;   // SiteSO.retired
         public List<SiteFieldOverrideJson>   field_overrides = new();
         public List<SiteStartingBuildingJson> starting_buildings = new();   // placed once per run on first load
 

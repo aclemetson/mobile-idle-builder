@@ -15,6 +15,7 @@ MonoBehaviour:
   id: site_actinide_vein
   displayName: Actinide Vein
   unlockCost: 250000
+  retired: 1
   fieldOverrides:
   - field: {fileID: 11400000, guid: 159f60aa615bd2144bfb0d2075fc0797, type: 2}
     densityMultiplier: 0

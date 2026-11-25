@@ -15,6 +15,7 @@ MonoBehaviour:
   id: site_lepton_storm
   displayName: Lepton Storm
   unlockCost: 10000000
+  retired: 1
   fieldOverrides:
   - field: {fileID: 11400000, guid: f83fb6a6f9e98a24aa388cca0166e7ad, type: 2}
     densityMultiplier: 2

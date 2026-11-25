@@ -673,6 +673,7 @@ namespace MobileIdleBuilder.Editor
             so.id          = data.id;
             so.displayName = data.display_name;
             so.unlockCost  = data.unlock_cost;
+            so.retired     = data.retired;
 
             so.fieldOverrides.Clear();
             if (data.field_overrides != null)

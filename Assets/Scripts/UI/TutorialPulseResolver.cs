@@ -40,7 +40,6 @@ namespace MobileIdleBuilder
             ["rewards-panel"]       = "btn-rewards",
             ["achievements-panel"]  = "btn-achievements",
             ["worlds-panel"]        = "btn-worlds",
-            ["sites-panel"]         = "btn-sites",
             ["shop-panel"]          = "btn-shop",
             ["megastructure-panel"] = "btn-megastructure",
             ["pve-panel"]           = "btn-tournament",

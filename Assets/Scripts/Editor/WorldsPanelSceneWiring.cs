@@ -7,7 +7,7 @@ namespace MobileIdleBuilder.Editor
     /// <summary>
     /// One-shot editor utility that wires the Phase 5 Worlds panel into GameScene: adds the
     /// <see cref="WorldsSubController"/> component to the HUD GameObject (the one that already carries
-    /// HUDController + SitesSubController). [RequireComponent] does NOT retro-add a sub-controller to an
+    /// HUDController). [RequireComponent] does NOT retro-add a sub-controller to an
     /// existing scene object, so this must be done explicitly — mirrors how the other sub-controllers
     /// are attached. Idempotent: a no-op if the component is already present.
     /// </summary>

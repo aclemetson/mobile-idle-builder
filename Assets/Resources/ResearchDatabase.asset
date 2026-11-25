@@ -411,8 +411,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: bio_cells
     displayName: Cells
     order: 16
@@ -437,8 +436,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: deep_physics
     displayName: Deep Physics
     order: 17
@@ -463,8 +461,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: bio_multicellular
     displayName: Multicellular Life
     order: 18
@@ -489,8 +486,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: bio_ecosystems
     displayName: Ecosystems
     order: 19
@@ -515,8 +511,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: metallurgy_ores
     displayName: Ores
     order: 20
@@ -542,8 +537,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: metallurgy_alloys
     displayName: Smelting & Alloys
     order: 21
@@ -568,8 +562,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: metallurgy_advanced
     displayName: Advanced Materials
     order: 22
@@ -595,8 +588,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: engineering_components
     displayName: Components
     order: 23
@@ -622,8 +614,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: engineering_systems
     displayName: Systems
     order: 24
@@ -648,8 +639,7 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
   - id: engineering_megastructure
     displayName: Megastructure
     order: 25
@@ -674,5 +664,4 @@ MonoBehaviour:
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []

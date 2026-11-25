@@ -9,7 +9,7 @@
 
 ## The World layer
 
-A **World** wraps the existing multi-Site machinery ("Quantum Domains") one level up. Physics / Chemistry / Biology are three Worlds; each owns its own set of Sites, its own research (branch), and its own map theme. Only ONE world's ONE site is live ECS; everything else runs on idle snapshots (identical to the Site model — no multi-world ECS).
+A **World** wraps the multi-Site machinery one level up (the Physics-only "Quantum Domains" that first used it were retired 2026-11-24). Physics / Chemistry / Biology are three Worlds; each owns its own set of Sites, its own research (branch), and its own map theme. Only ONE world's ONE site is live ECS; everything else runs on idle snapshots (identical to the Site model — no multi-world ECS).
 
 ```
 World (Physics)   ── sites[] ── grids[]   (live one, rest idle-snapshot)
