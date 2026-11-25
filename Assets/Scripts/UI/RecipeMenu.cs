@@ -5,7 +5,7 @@ namespace MobileIdleBuilder
     /// <summary>
     /// Recipes menu layout (#488): item-type tabs over a horizontally scrolling row of cards, one per item. An
     /// item with several ways to make it gets a drop-up on its card to pick the method. Pure helpers live here;
-    /// HUDController.BuildRecipeList builds the cards.
+    /// RecipesPanelSubController builds the cards.
     /// </summary>
     public static class RecipeMenu
     {

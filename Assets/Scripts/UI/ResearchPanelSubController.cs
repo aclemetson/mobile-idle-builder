@@ -19,7 +19,9 @@ namespace MobileIdleBuilder
     {
         const string ViewPref = "research_view_mode";
 
-        ResearchService _service;
+        HUDController   _hud;
+        // Live: after a scene reload the HUD's serialized reference is a doomed duplicate (BindLiveServices).
+        ResearchService _service => _hud != null ? _hud.Research : null;
         EntityManager   _em;
         EntityQuery     _progressQuery, _tutorialQuery;
         bool            _ecsReady;
@@ -49,9 +51,9 @@ namespace MobileIdleBuilder
 
         public bool IsOpen => _panel != null && !_panel.ClassListContains("hidden");
 
-        public void Initialize(VisualElement root, ResearchService service)
+        public void Initialize(VisualElement root, HUDController hud)
         {
-            _service = service;
+            _hud     = hud;
             _panel   = root.Q("research-panel");
             _list    = root.Q<ScrollView>("research-list");
             SetUpTree();
