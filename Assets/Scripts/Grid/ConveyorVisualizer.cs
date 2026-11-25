@@ -60,6 +60,11 @@ namespace MobileIdleBuilder
         private readonly List<int>                         _inbound    = new(4);
         private readonly Dictionary<(int, int), int>       _splitMasks = new();   // belt splits: cell -> output mask
         private readonly List<int>                         _forkExits  = new(3);
+        // Overpasses (BeltBridge): ramp-up cell -> (span direction, length in tiles); ramp-down cell -> span direction.
+        private readonly Dictionary<(int, int), (int dir, int len)> _rampUps   = new();
+        private readonly Dictionary<(int, int), int>                _rampDowns = new();
+        private Material _girderMaterial;
+        private static readonly Color GirderColor = new(0.30f, 0.38f, 0.52f, 1f);
         private readonly bool[] _feeds = new bool[4];
         private readonly bool[] _sinks = new bool[4];
         // One property block for every visual made here; SetPropertyBlock copies it, so reuse is safe.
@@ -168,6 +173,7 @@ namespace MobileIdleBuilder
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
             if (_streamMaterial != null) Destroy(_streamMaterial);
             if (_ownsGapMaterial && _gapMaterial != null) Destroy(_gapMaterial);
+            if (_girderMaterial != null) Destroy(_girderMaterial);
         }
 
         // ----------------------------------------------------------------
@@ -241,6 +247,8 @@ namespace MobileIdleBuilder
                 int     inEdge     = OppositeDir(seg.EntryDir);
                 int     beltExit   = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
                 bool    isSplit    = em.HasComponent<BeltSplit>(e);
+                bool    isRampUp   = _rampUps.TryGetValue((seg.Cell.x, seg.Cell.y), out var rampUp);
+                bool    isRampDown = _rampDowns.TryGetValue((seg.Cell.x, seg.Cell.y), out int downDir);
 
                 for (int k = 0; k < items.Length; k++)
                 {
@@ -267,8 +275,27 @@ namespace MobileIdleBuilder
                     int   entry   = item.EntryEdgeOr(inEdge);
                     int   exitDir = isSplit ? item.ExitEdgeOr(beltExit) : beltExit;   // a split's item heads for its branch
                     float t       = Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress));
-                    Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, t);
-                    pos.y       = 0.3f;
+                    bool  onDeck  = false;
+                    Vector3 local;
+                    float   lift;
+                    if (isRampUp)
+                    {
+                        // An overpass: up the ramp tile, then along the deck to the ramp down.
+                        float s = Mathf.Clamp01(item.Progress) * rampUp.len;
+                        onDeck  = s >= 1f;
+                        local   = onDeck ? ConveyorFlowMeshBuilder.Dir(rampUp.dir) * cs * (s - 0.5f)
+                                         : ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, rampUp.dir, s);
+                        lift    = onDeck ? OverpassRules.DeckHeight : ConveyorFlowMeshBuilder.RampLift(local, rampUp.dir, cs, true);
+                        t       = Mathf.Min(s, 0.98f);
+                        exitDir = rampUp.dir;
+                    }
+                    else
+                    {
+                        local = ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, t);
+                        lift  = isRampDown ? ConveyorFlowMeshBuilder.RampLift(local, downDir, cs, false) : 0f;
+                    }
+                    Vector3 pos = cellCenter + local;
+                    pos.y       = 0.3f + lift;
                     sphere.transform.localPosition = pos;
 
                     // Tiles and atoms face the camera so they stay readable as it orbits; a comet tail or wave
@@ -279,7 +306,8 @@ namespace MobileIdleBuilder
                             Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
                     else if (facing == BeltItemVisuals.Facing.AlongBelt)
                     {
-                        Vector3 dir = ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Min(1f, t + 0.02f))
+                        Vector3 dir = onDeck ? ConveyorFlowMeshBuilder.Dir(exitDir)
+                                    : ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Min(1f, t + 0.02f))
                                     - ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Max(0f, t - 0.02f));
                         dir.y = 0f;
                         if (dir.sqrMagnitude > 1e-8f) sphere.transform.localRotation = Quaternion.LookRotation(dir, Vector3.up);
@@ -413,11 +441,22 @@ namespace MobileIdleBuilder
             var exitMap = _exitMap;
             exitMap.Clear();
             _splitMasks.Clear();
+            _rampUps.Clear();
+            _rampDowns.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
                 if (em.HasComponent<BeltSplit>(entities[i]))
                     _splitMasks[(seg.Cell.x, seg.Cell.y)] = em.GetComponentData<BeltSplit>(entities[i]).Mask;
+                if (em.HasComponent<BeltBridge>(entities[i]))
+                {
+                    // A ramp up feeds only its ramp down, so it is no neighbour's inbound.
+                    var b   = em.GetComponentData<BeltBridge>(entities[i]);
+                    int dir = ConveyorTopology.DirBetween(seg.Cell, b.Exit);
+                    _rampUps[(seg.Cell.x, seg.Cell.y)] = (dir, Mathf.Max(1, b.Length));
+                    _rampDowns[(b.Exit.x, b.Exit.y)]   = dir;
+                    continue;
+                }
                 if (seg.OutputBlocked) continue;
                 exitMap[(seg.Cell.x, seg.Cell.y)] = seg.ExitDir;
             }
@@ -440,6 +479,13 @@ namespace MobileIdleBuilder
                 else                        _tailVisualExit.Remove(cell);
 
                 var inbound = ComputeInboundEdges(seg.Cell, exitMap, _splitMasks, _inbound);   // read by Build, not kept
+                // Overpass ramps: a belt under the span never joins one, and a ramp down is fed from the span side.
+                if (_rampUps.TryGetValue(cell, out var ru)) inbound.Remove(ru.dir);
+                if (_rampDowns.TryGetValue(cell, out int rdDir))
+                {
+                    inbound.Remove(OppositeDir(rdDir));
+                    inbound.Insert(0, OppositeDir(rdDir));
+                }
                 if (_splitMasks.TryGetValue(cell, out int splitMask))
                 {
                     // A belt split: the reverse of a merge, one branch per output side (drawn even before a
@@ -449,7 +495,12 @@ namespace MobileIdleBuilder
                     _spawnedBelts[cell] = SpawnFork(seg.Cell.x, seg.Cell.y, OppositeDir(seg.EntryDir), _forkExits, cs);
                 }
                 else
-                    _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
+                {
+                    var go = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
+                    if (_rampUps.TryGetValue(cell, out var up)) BuildOverpass(go, up.dir, up.len, cs);
+                    else if (_rampDowns.TryGetValue(cell, out int downDir)) LiftFlow(go, downDir, cs, false);
+                    _spawnedBelts[cell] = go;
+                }
             }
 
             entities.Dispose();
@@ -652,6 +703,67 @@ namespace MobileIdleBuilder
                 if (nExitCell.x == cell.x && nExitCell.y == cell.y) edges.Add(d);
             }
             return edges;
+        }
+
+        // ----------------------------------------------------------------
+        // Overpasses (BeltBridge)
+        // ----------------------------------------------------------------
+
+        // Lifts a ramp tile's ribbon (spawned by SpawnBeltTrack) toward the deck.
+        private static void LiftFlow(GameObject beltRoot, int spanDir, float cs, bool rampUp)
+        {
+            var mf = beltRoot.transform.Find("Flow")?.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null) ConveyorFlowMeshBuilder.LiftRamp(mf.sharedMesh, spanDir, cs, rampUp);
+        }
+
+        // The whole overpass hangs off its ramp-up tile: the ramp, a raised belt over each tile crossed, and a girder
+        // along each side of the deck. Removing the ramp-up's visual removes all of it.
+        private void BuildOverpass(GameObject rampUpRoot, int spanDir, int len, float cs)
+        {
+            LiftFlow(rampUpRoot, spanDir, cs, true);
+            Vector3 along = ConveyorFlowMeshBuilder.Dir(spanDir);
+            float   deckY = ConveyorFlowMeshBuilder.FlowY + OverpassRules.DeckHeight;
+            for (int k = 1; k < len; k++)
+            {
+                var deck = new GameObject($"Deck_{k}", typeof(MeshFilter), typeof(MeshRenderer));
+                deck.transform.SetParent(rampUpRoot.transform, worldPositionStays: false);
+                deck.transform.localPosition = along * (k * cs);
+                deck.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.Build(cs, spanDir, spanDir, null, deckY);
+                var mr = deck.GetComponent<MeshRenderer>();
+                mr.sharedMaterial    = GetFlowMaterial();
+                mr.shadowCastingMode = ShadowCastingMode.Off;
+                mr.receiveShadows    = false;
+            }
+
+            // Girders: from the middle of the ramp up to the middle of the ramp down, just under the deck's edges.
+            Vector3 side   = Vector3.Cross(Vector3.up, along);
+            float   offset = cs * ConveyorFlowMeshBuilder.WaterWidthFrac * 0.5f + 0.03f;
+            float   length = (len - 1) * cs + cs * 0.5f;
+            Vector3 mid    = along * (cs * len * 0.5f) + Vector3.up * (deckY - 0.05f);
+            Vector3 size   = along * length + side * 0.05f + Vector3.up * 0.07f;
+            size = new Vector3(Mathf.Abs(size.x), size.y, Mathf.Abs(size.z));
+            for (int s = -1; s <= 1; s += 2)
+            {
+                var girder = new GameObject("Girder", typeof(MeshFilter), typeof(MeshRenderer));
+                girder.transform.SetParent(rampUpRoot.transform, worldPositionStays: false);
+                girder.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.BuildBox(mid + side * (offset * s), size);
+                var mr = girder.GetComponent<MeshRenderer>();
+                mr.sharedMaterial    = GetGirderMaterial();
+                mr.shadowCastingMode = ShadowCastingMode.Off;
+                mr.receiveShadows    = false;
+            }
+        }
+
+        private Material GetGirderMaterial()
+        {
+            if (_girderMaterial != null) return _girderMaterial;
+            // URP Unlit so it never renders magenta on Android (CLAUDE.md rule).
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+            _girderMaterial = new Material(shader != null ? shader : Shader.Find("Sprites/Default"));
+            if (_girderMaterial.HasProperty("_BaseColor")) _girderMaterial.SetColor("_BaseColor", GirderColor);
+            if (_girderMaterial.HasProperty("_Color"))     _girderMaterial.SetColor("_Color", GirderColor);
+            _girderMaterial.color = GirderColor;
+            return _girderMaterial;
         }
 
         // A belt split's tile: the fork mesh in the belts' own material.

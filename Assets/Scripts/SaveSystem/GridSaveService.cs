@@ -90,6 +90,15 @@ namespace MobileIdleBuilder
             {
                 var seg = _em.GetComponentData<ConveyorSegmentData>(e);
                 GridOccupancy.Instance?.UnregisterConveyor(seg.Cell.x, seg.Cell.y);
+                if (_em.HasComponent<BeltBridge>(e) && GridOccupancy.Instance != null)
+                {
+                    // The tiles under its overpass are open to buildings again.
+                    var b    = _em.GetComponentData<BeltBridge>(e);
+                    var up   = new Vector2Int(seg.Cell.x, seg.Cell.y);
+                    var down = new Vector2Int(b.Exit.x, b.Exit.y);
+                    if (OverpassRules.IsStraight(up, down))
+                        foreach (var c in OverpassRules.CrossedCells(up, down)) GridOccupancy.Instance.UnregisterOverpass(c.x, c.y);
+                }
                 conveyorVisualizer?.RemoveBelt(seg.Cell.x, seg.Cell.y);
                 _em.DestroyEntity(e);
             }

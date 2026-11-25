@@ -129,6 +129,7 @@ namespace MobileIdleBuilder
         private Button        _btnConveyorConfirm;
         private Button        _btnConveyorCancelCandidate;
         private Button        _btnConveyorNewStart;
+        private Button        _btnConveyorUp;
         private Button        _btnConveyorMode;
 
         // ---- Deconstruct mode ----
@@ -520,6 +521,7 @@ namespace MobileIdleBuilder
             _btnConveyorConfirm         = root.Q<Button>("btn-conveyor-confirm");
             _btnConveyorCancelCandidate = root.Q<Button>("btn-conveyor-cancel-candidate");
             _btnConveyorNewStart        = root.Q<Button>("btn-conveyor-new-start");
+            _btnConveyorUp              = root.Q<Button>("btn-conveyor-up");
             _btnConveyorMode            = root.Q<Button>("btn-conveyor-mode");
 
             // Deconstruct mode
@@ -650,6 +652,8 @@ namespace MobileIdleBuilder
                 _btnConveyorCancelCandidate.clicked += () => conveyorController?.UndoLastNode();
             if (_btnConveyorNewStart != null)
                 _btnConveyorNewStart.clicked += () => conveyorController?.ResetStart();
+            if (_btnConveyorUp != null)
+                _btnConveyorUp.clicked += () => conveyorController?.ToggleRaise();
             if (_btnConveyorMode != null)
                 _btnConveyorMode.clicked += () => conveyorController?.ToggleMode();
 
@@ -2479,9 +2483,22 @@ namespace MobileIdleBuilder
             SetElementVisible(_btnConveyorCancelCandidate, hasStart);
             SetElementVisible(_btnConveyorNewStart,        hasStart);
 
+            // Up (overpass): once researched, while the trace can go on. Lit while the next tap lays one.
+            bool ended  = cc != null && cc.IsTraceEnded;
+            bool raise  = hasStart && cc.RaiseNext;
+            SetElementVisible(_btnConveyorUp, hasStart && !ended && cc.CanRaise);
+            if (_btnConveyorUp != null)
+            {
+                if (raise) _btnConveyorUp.AddToClassList("conveyor-mode-btn--on");
+                else       _btnConveyorUp.RemoveFromClassList("conveyor-mode-btn--on");
+            }
+
             if (_conveyorLabel != null)
-                _conveyorLabel.text = ConveyorBarLabel(destroy, hasStart, candidate, cc != null && cc.IsTraceEnded);
+                _conveyorLabel.text = raise ? ConveyorRaiseLabel : ConveyorBarLabel(destroy, hasStart, candidate, ended);
         }
+
+        /// <summary>The conveyor bar's instruction while Up is on.</summary>
+        internal const string ConveyorRaiseLabel = "Tap where the overpass lands";
 
         /// <summary>The conveyor bar's instruction for a trace state. Pure (unit-tested); short so it fits the bar.</summary>
         internal static string ConveyorBarLabel(bool destroy, bool hasStart, bool canPlace, bool ended)

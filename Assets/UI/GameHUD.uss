@@ -1337,6 +1337,12 @@
     color: var(--color-danger);
 }
 
+/* Up (overpass) while it's on: the next tap lays an overpass. */
+.conveyor-mode-btn--on {
+    background-color: var(--color-primary);
+    color: rgb(10, 14, 26);
+}
+
 /* ---- Idle Return Modal ---- */
 .idle-return-modal {
     align-items: center;
