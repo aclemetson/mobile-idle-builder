@@ -17,6 +17,11 @@ namespace MobileIdleBuilder
         [SerializeField] private AchievementService           achievementService;
         [SerializeField] private ResearchService              researchService;
 
+        // For the panel sub-controllers (#286).
+        internal BuildingPlacementController PlacementController => placementController;
+        internal ConveyorPlacementController ConveyorController  => conveyorController;
+        internal ResearchService             Research            => researchService;
+
         // Sub-controllers (siblings on same GameObject)
         private HUDStatusBarController              _statusBar;
         private HUDBuildingInspectorSubController   _inspector;
@@ -62,18 +67,14 @@ namespace MobileIdleBuilder
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
-        private ScrollView _recipeList, _buildingsList, _codexList,
+        private ScrollView _recipeList, _codexList,
                            _upgradesList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel;
         // ---- Research panel (list/tree, tabs, cards, skip: ResearchPanelSubController, #286) ----
         private ResearchPanelSubController _research;
 
-        // Live affordability refresh: automation can raise entropy past a building's cost while
-        // the Build panel is open. We re-enable buy buttons on entropy change instead of only at
-        // panel-open. Rows captured in BuildBuildingsList; re-evaluated in Update.
-        private readonly List<(Button btn, Label costLabel, long cost)> _buildingAffordRows = new();
-        private long _lastAffordEntropy = long.MinValue;
-        private FieldGenerator _fieldGenerator; // source of the fields sold in the Build menu
+        // ---- Build menu (tabs, cards, field purchases, affordability: BuildingsPanelSubController, #286) ----
+        private BuildingsPanelSubController _buildings;
 
         // ---- HUD chrome ----
         private VisualElement _drawerPanel;
@@ -173,6 +174,7 @@ namespace MobileIdleBuilder
             _worlds       = GetComponent<WorldsSubController>();
             _achievements = GetComponent<AchievementsSubController>() ?? gameObject.AddComponent<AchievementsSubController>();
             _research     = GetComponent<ResearchPanelSubController>() ?? gameObject.AddComponent<ResearchPanelSubController>();
+            _buildings    = GetComponent<BuildingsPanelSubController>() ?? gameObject.AddComponent<BuildingsPanelSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
@@ -364,6 +366,7 @@ namespace MobileIdleBuilder
             _prestigeShop?.SetECSContext(_em);
             _worlds?.SetECSContext(_em);
             _research?.SetECSContext(_em);
+            _buildings?.SetECSContext(_em);
         }
 
         void Update()
@@ -372,7 +375,7 @@ namespace MobileIdleBuilder
             _inspector?.Tick();
             HandleBackButton();
             UpdatePlacementConfirmPopup();
-            RefreshBuildingAffordabilityIfChanged();
+            _buildings?.Tick();
             RefreshBannerClearance();
             if (_craftQueueView != null && IsRecipePanelOpen) _craftQueueView.Tick(GameClock.UtcNow);
 
@@ -441,7 +444,7 @@ namespace MobileIdleBuilder
 
             // Panel content
             _recipeList       = root.Q<ScrollView>("recipe-list");
-            _buildingsList    = root.Q<ScrollView>("buildings-list");
+            _buildings?.Initialize(root, this);   // Build menu tabs + cards
             _codexList        = root.Q<ScrollView>("codex-list");
             _research?.Initialize(root, researchService);   // tree/list toggle, world tabs, cards
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
@@ -638,8 +641,7 @@ namespace MobileIdleBuilder
         private void OpenBuildingsPanel()
         {
             CloseAllPanels();
-            BuildBuildingsList();
-            SetElementVisible(_buildingsPanel, true);
+            _buildings?.Open();
         }
 
         private void OpenCodexPanel()
@@ -745,8 +747,7 @@ namespace MobileIdleBuilder
             _research?.OnResearchUnlocked();
 
             // Refresh buildings panel if it is open (newly unlocked buildings will appear)
-            if (_buildingsPanel != null && !_buildingsPanel.ClassListContains("hidden"))
-                BuildBuildingsList();
+            _buildings?.RefreshIfOpen();
 
             // Refresh recipe panel — newly learned recipes will appear
             if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
@@ -1361,244 +1362,9 @@ namespace MobileIdleBuilder
         // Buildings list
         // ============================================================
 
-        // Builder (#487): role tabs over a horizontally scrolling row of cards (BuilderMenu).
-        private VisualElement _builderTabs;
-        private readonly Dictionary<string, VisualElement> _builderPages = new();
-        private string _builderTab;
-        private const string BuilderTabPref = "builder_tab";
-
-        private void EnsureBuilderTabs()
-        {
-            if (_builderTabs != null || _buildingsPanel == null || _buildingsList == null) return;
-            _builderTab = PlayerPrefs.GetString(BuilderTabPref, null);
-            _builderTabs = BuilderMenu.MakeTabBar(tab =>
-            {
-                _builderTab = tab;
-                PlayerPrefs.SetString(BuilderTabPref, tab);
-                BuilderMenu.ShowTab(_builderTabs, _builderPages, tab);
-                _buildingsList.scrollOffset = Vector2.zero;
-            });
-            _buildingsPanel.Insert(_buildingsPanel.IndexOf(_buildingsList), _builderTabs);
-            _buildingsList.mode = ScrollViewMode.Horizontal;
-            _buildingsList.horizontalScrollerVisibility = ScrollerVisibility.Auto;
-            _buildingsList.verticalScrollerVisibility = ScrollerVisibility.Hidden;
-            _buildingsList.AddToClassList("builder-cards");
-        }
-
-        private void BuildBuildingsList()
-        {
-            EnsureBuilderTabs();
-            _buildingsList.Clear();
-            _builderPages.Clear();
-            _buildingAffordRows.Clear();
-            _lastAffordEntropy = long.MinValue; // force a re-evaluate next Update
-            foreach (var tab in BuilderMenu.Tabs)
-            {
-                var page = new VisualElement { name = BuilderMenu.PageName(tab) };
-                page.AddToClassList(BuilderMenu.PageClass);
-                page.AddToClassList("builder-page");
-                _builderPages[tab] = page;
-                _buildingsList.Add(page);
-            }
-
-            long currentEntropy = 0;
-            if (_ecsReady && !_progressQuery.IsEmpty)
-                currentEntropy = _em.GetComponentData<PlayerProgressData>(
-                    _progressQuery.GetSingletonEntity()).BaseCurrency;
-
-            // ---- Conveyor Belt entry (always first in Logistics, always free) ----
-            if (conveyorController != null)
-            {
-                // Named so tutorial steps can point at it (TutorialPulseResolver).
-                var placeBtn = new Button { text = "Place", name = TutorialPulseResolver.PlaceButtonName("conveyor") };
-                ListTapRouter.Register(_buildingsList, placeBtn, () =>
-                {
-                    SetElementVisible(_buildingsPanel, false);
-                    conveyorController.BeginConveyorMode();
-                });
-
-                // Stream worlds (Chemistry): the same tool draws water channels from a Spring.
-                bool streams = WorldRules.StreamTransport(SaveManager.Instance?.Current);
-                string beltName = streams ? "Channel" : "Conveyor Belt";
-                string beltInfo = streams
-                    ? "Draw a stream from a Spring past your buildings; each takes what its reaction needs"
-                    : "Draw paths to move items between buildings.\n\n" +
-                      "Path splitting: hold a placed belt to split it. Its items share out 2 or 3 ways, and each " +
-                      "side can take a bigger share (1-5). Turn sides off until one is left to make it a plain bend.";
-                _builderPages["logistics"].Add(BuilderMenu.MakeCard(beltName, null, GlyphIcon.Kind.Flip,
-                    MakeCostLabel(0, true), placeBtn, InfoButton(beltName, beltInfo)));
-            }
-
-            if (placementController != null)
-            {
-                AddFieldPurchaseRows(currentEntropy);
-
-                var ws = WorldService.Instance;
-                string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
-                foreach (var entry in placementController.availableBuildings)
-                {
-                    // Skip buildings that belong to another world (the Molecular Synthesizer is built in Chemistry)
-                    var bso = entry.building;
-                    if (bso != null && !WorldGate.BuildingInWorld(bso, activeWorldId)) continue;
-
-                    // Skip buildings whose required research has not been purchased yet
-                    if (bso != null && !bso.availableFromStart && bso.requiredResearch != null)
-                    {
-                        if (researchService == null || !researchService.IsUnlocked(bso.requiredResearch.id))
-                            continue;
-                    }
-
-                    string detail = entry.defaultRecipe != null
-                        ? $"Produces: {entry.defaultRecipe.displayName}"
-                        : "";
-                    if (!string.IsNullOrEmpty(bso?.description))
-                        detail = string.IsNullOrEmpty(detail) ? bso.description : $"{detail}\n\n{bso.description}";
-                    if (IsObsolete(bso))
-                        detail = $"Obsolete. {bso.obsoleteCondition}\n\n{detail}";
-
-                    int rawCost = entry.building?.entropyCost ?? 0;
-                    float reduction = !_prestigeQuery.IsEmpty
-                        ? _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity()).CostReduction
-                        : 0f;
-                    long cost = EntropyWallet.ReducedCost(rawCost, reduction);
-                    bool canAfford = currentEntropy >= cost;
-
-                    var costLabel = MakeCostLabel(cost, canAfford);
-
-                    var placeBtn = new Button { text = "Place" };
-                    if (bso != null) placeBtn.name = TutorialPulseResolver.PlaceButtonName(bso.id);
-                    placeBtn.SetEnabled(canAfford);
-
-                    // Track cost rows so Update() can re-enable them the moment entropy catches up.
-                    if (cost > 0)
-                        _buildingAffordRows.Add((placeBtn, costLabel, cost));
-
-                    var captured = entry;
-                    ListTapRouter.Register(_buildingsList, placeBtn, () =>
-                    {
-                        SetElementVisible(_buildingsPanel, false);
-                        placementController.BeginPlacement(captured);
-                    });
-
-                    string name = entry.building?.displayName ?? "Building";
-                    _builderPages[BuilderMenu.TabOf(bso)].Add(BuilderMenu.MakeCard(name,
-                        BuilderMenu.CardSprite(bso, entry.defaultRecipe), GlyphIcon.Kind.Build,
-                        costLabel, placeBtn, InfoButton(name, detail)));
-                }
-            }
-
-            var withCards = new HashSet<string>();
-            foreach (var kv in _builderPages) if (kv.Value.childCount > 0) withCards.Add(kv.Key);
-            _builderTab = BuilderMenu.PickTab(_builderTab, withCards);
-            BuilderMenu.ShowTab(_builderTabs, _builderPages, _builderTab);
-        }
-
-        // The (i) on a Builder card: the building's details in a card (#487). Routed through ListTapRouter like
-        // the Place button, since the ScrollView swallows a Button's own click on touch.
-        private Button InfoButton(string title, string detail)
-        {
-            if (string.IsNullOrEmpty(detail)) return null;
-            var info = new Button();
-            ListTapRouter.Register(_buildingsList, info, () =>
-                ConfirmPrompt.Show(title, detail, "OK", onConfirm: null, cancelLabel: "Close", destructive: false));
-            return info;
-        }
-
-        /// <summary>
-        /// Fields for sale after Field Synthesis (see <see cref="FieldPurchaseService"/>). Quark fields
-        /// sell as a pair. The price shown is the next one; it climbs steeply with every purchase.
-        /// </summary>
-        private void AddFieldPurchaseRows(long currentEntropy)
-        {
-            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
-            if (_fieldGenerator == null) return;
-
-            var ws = WorldService.Instance;
-            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
-            foreach (var field in _fieldGenerator.KnownFields)
-            {
-                // Graphite and nitrogen are bought in Chemistry, quark pairs in Physics.
-                if (!WorldGate.FieldInWorld(field, activeWorldId)) continue;
-                if (!FieldPurchaseService.IsAvailable(field)) continue;
-
-                long cost      = FieldPurchaseService.NextPrice(field);
-                bool canAfford = currentEntropy >= cost;
-                var costLabel  = MakeCostLabel(cost, canAfford);
-
-                var placeBtn = new Button { text = "Place", name = TutorialPulseResolver.PlaceButtonName(field.id) };
-                placeBtn.SetEnabled(canAfford);
-                _buildingAffordRows.Add((placeBtn, costLabel, cost));
-
-                var captured = field;
-                ListTapRouter.Register(_buildingsList, placeBtn, () =>
-                {
-                    SetElementVisible(_buildingsPanel, false);
-                    placementController.BeginFieldPlacement(captured);
-                });
-
-                string name = FieldPurchaseName(field);
-                var drops = field.outputItems;
-                var picture = field.fieldIcon != null ? field.fieldIcon
-                            : drops.Count > 0 && drops[0] != null ? drops[0].icon : null;
-                _builderPages["harvest"].Add(BuilderMenu.MakeCard(name, picture, GlyphIcon.Kind.Domains,
-                    costLabel, placeBtn, InfoButton(name, FieldPurchaseDetail(field))));
-            }
-        }
-
-        internal static string FieldPurchaseName(FieldSO field)
-            => field.purchaseGroupSize > 1 ? $"{field.displayName} Pair" : field.displayName;
-
-        internal static string FieldPurchaseDetail(FieldSO field)
-        {
-            string what = field.purchaseGroupSize > 1
-                ? $"{field.purchaseGroupSize} fields side by side"
-                : "One field on an empty tile";
-            return $"{what}. Each one costs {field.purchaseCostMultiplier:0.#}x the last.";
-        }
-
-        // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the
-        // cost column blank (#197).
-        /// <summary>True once the research that replaces <paramref name="bso"/> is done (e.g. Nucleon Harvesting
-        /// for the Strong Force Combiner). The building stays placeable; the Build menu just says so.</summary>
-        private bool IsObsolete(BuildingSO bso) =>
-            bso != null && bso.isObsoleteable && !string.IsNullOrEmpty(bso.obsoletedByResearch)
-            && researchService != null && researchService.IsUnlocked(bso.obsoletedByResearch);
-
+        // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the cost blank (#197).
         internal static string FormatBuildCost(long cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
 
-        private static Label MakeCostLabel(long cost, bool canAfford)
-        {
-            var costLabel = new Label(FormatBuildCost(cost));
-            costLabel.AddToClassList("building-card-cost");
-            costLabel.AddToClassList(canAfford
-                ? "building-card-recipe--affordable"
-                : "building-card-recipe--unaffordable");
-            return costLabel;
-        }
-
-        /// <summary>
-        /// Re-evaluates entropy affordability for the open Build panel whenever the player's
-        /// entropy changes, so a button that was unaffordable at open becomes clickable the
-        /// instant automation earns enough — no need to close and reopen the panel.
-        /// </summary>
-        private void RefreshBuildingAffordabilityIfChanged()
-        {
-            if (_buildingsPanel == null || _buildingsPanel.ClassListContains("hidden")) return;
-            if (!_ecsReady || _progressQuery.IsEmpty || _buildingAffordRows.Count == 0) return;
-
-            long entropy = _em.GetComponentData<PlayerProgressData>(
-                _progressQuery.GetSingletonEntity()).BaseCurrency;
-            if (entropy == _lastAffordEntropy) return;
-            _lastAffordEntropy = entropy;
-
-            foreach (var (btn, costLabel, cost) in _buildingAffordRows)
-            {
-                bool afford = entropy >= cost;
-                btn.SetEnabled(afford);
-                costLabel.EnableInClassList("building-card-recipe--affordable", afford);
-                costLabel.EnableInClassList("building-card-recipe--unaffordable", !afford);
-            }
-        }
 
         private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
         {
