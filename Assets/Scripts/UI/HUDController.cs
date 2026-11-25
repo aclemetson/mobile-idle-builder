@@ -63,8 +63,8 @@ namespace MobileIdleBuilder
 
         // ---- Panel content ----
         private ScrollView _recipeList, _buildingsList, _codexList,
-                           _researchList, _upgradesList, _achievementsList;
-        private Label      _prestigeSummary, _prestigeCurrency, _placementLabel, _achievementsTitle;
+                           _researchList, _upgradesList;
+        private Label      _prestigeSummary, _prestigeCurrency, _placementLabel;
         // Research timer UI (live countdown + skip on the in-progress card)
         private Label      _researchCountdownLabel;
         // Research tree (#337): shown instead of the list once the tutorial is done; the list stays one tap away.
@@ -155,12 +155,8 @@ namespace MobileIdleBuilder
         private VisualElement _tooltipPopup;
         private Label         _tooltipTitle, _tooltipBody;
 
-        // ---- Achievements category tabs ----
-        private AchievementCategory _achActiveCategory = AchievementCategory.Daily;
-        private Button _achTabDaily, _achTabWeekly, _achTabMonthly, _achTabProgression;
-        private Label  _achResetLabel;
-        private UnityEngine.UIElements.IVisualElementScheduledItem _achResetTicker;
-        private Button _achClaimAllBtn;
+        // ---- Achievements panel (tabs, list, claim all: AchievementsSubController, #286) ----
+        private AchievementsSubController _achievements;
 
         // ---- Achievements gate ----
         private Button    _btnAchievements;
@@ -197,6 +193,7 @@ namespace MobileIdleBuilder
             _shop         = GetComponent<HUDPremiumShopSubController>();
             _settings     = GetComponent<HUDSettingsSubController>();
             _worlds       = GetComponent<WorldsSubController>();
+            _achievements = GetComponent<AchievementsSubController>() ?? gameObject.AddComponent<AchievementsSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
@@ -293,11 +290,6 @@ namespace MobileIdleBuilder
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged += OnDeconstructingChanged;
 
-            if (achievementService != null)
-            {
-                achievementService.OnAchievementUnlocked += OnAchievementUnlocked;
-                achievementService.OnPeriodReset         += OnAchievementPeriodReset;
-            }
 
 
             BindLiveServices();
@@ -358,11 +350,6 @@ namespace MobileIdleBuilder
             if (deconstructController != null)
                 deconstructController.OnDeconstructingChanged -= OnDeconstructingChanged;
 
-            if (achievementService != null)
-            {
-                achievementService.OnAchievementUnlocked -= OnAchievementUnlocked;
-                achievementService.OnPeriodReset         -= OnAchievementPeriodReset;
-            }
 
 
             if (researchService != null)
@@ -479,15 +466,7 @@ namespace MobileIdleBuilder
             _researchList     = root.Q<ScrollView>("research-list");
             SetUpResearchTree();
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
-            _achievementsList    = root.Q<ScrollView>("achievements-list");
-
-            // Achievements category tabs
-            _achTabDaily       = root.Q<Button>("ach-tab-daily");
-            _achTabWeekly      = root.Q<Button>("ach-tab-weekly");
-            _achTabMonthly     = root.Q<Button>("ach-tab-monthly");
-            _achTabProgression = root.Q<Button>("ach-tab-progression");
-            _achResetLabel     = root.Q<Label>("ach-reset-label");
-            _achClaimAllBtn    = root.Q<Button>("ach-claim-all-btn");
+            _achievements?.Initialize(root, achievementService);   // tabs, list, claim all, close
 
             // Achievements gate
             _btnAchievements        = root.Q<Button>("btn-achievements");
@@ -506,7 +485,6 @@ namespace MobileIdleBuilder
             _btnConfirmPlace       = root.Q<Button>("btn-confirm-place");
             _btnCancelCandidate    = root.Q<Button>("btn-cancel-candidate");
             _btnRotateCandidate    = root.Q<Button>("btn-rotate-candidate");
-            _achievementsTitle = root.Q<Label>("achievements-title");
 
             // Output selector
             _outputSelector        = root.Q("output-selector");
@@ -572,16 +550,6 @@ namespace MobileIdleBuilder
                 btnRewards.clicked += () => TryOpenPanel(OpenRewardsPanel);
             root.Q<Button>("btn-achievements").clicked += () => TryOpenPanel(OpenAchievementsPanel);
 
-            // Achievement category tabs
-            if (_achTabDaily       != null) _achTabDaily.clicked       += () => SwitchAchCategory(AchievementCategory.Daily);
-            if (_achTabWeekly      != null) _achTabWeekly.clicked      += () => SwitchAchCategory(AchievementCategory.Weekly);
-            if (_achTabMonthly     != null) _achTabMonthly.clicked     += () => SwitchAchCategory(AchievementCategory.Monthly);
-            if (_achTabProgression != null) _achTabProgression.clicked += () => SwitchAchCategory(AchievementCategory.Progression);
-            if (_achClaimAllBtn    != null) _achClaimAllBtn.clicked    += () =>
-            {
-                achievementService?.ClaimAllRewards();
-                BuildAchievementsList();
-            };
             root.Q<Button>("btn-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => TryOpenPanel(OpenWorldsPanel));
             root.Q<Button>("btn-tournament").clicked   += () => TryOpenPanel(OpenTournamentPanel);
             root.Q<Button>("btn-shop").clicked         += () => TryOpenPanel(OpenShopPanel);
@@ -610,7 +578,6 @@ namespace MobileIdleBuilder
             root.Q<Button>("btn-close-megastructure")?.RegisterCallback<ClickEvent>(_ => SetElementVisible(_megastructurePanel, false));
             var btnCloseRewards = root.Q<Button>("btn-close-rewards");
             if (btnCloseRewards != null) btnCloseRewards.clicked += () => SetElementVisible(_rewardsPanel, false);
-            root.Q<Button>("btn-close-achievements").clicked += () => SetElementVisible(_achievementsPanel, false);
             root.Q<Button>("btn-close-pve").clicked              += () => SetElementVisible(_tournamentPanel,          false);
             root.Q<Button>("btn-close-prestige").clicked         += () => SetElementVisible(_prestigePanel,     false);
             root.Q<Button>("btn-close-worlds")?.RegisterCallback<UnityEngine.UIElements.ClickEvent>(_ => SetElementVisible(_worldsPanel, false));
@@ -1339,61 +1306,19 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyAchievementsGate()
         {
-            bool unlocked = AchievementsUnlocked;
             _btnAchievements?.SetEnabled(true);
             SetElementVisible(_achievementsLockedHint, false);
-            foreach (var tab in new[] { _achTabWeekly, _achTabMonthly, _achTabProgression })
-                tab?.EnableInClassList("achievements-tab--locked", !unlocked);
+            _achievements?.ApplyGate(AchievementsUnlocked);
         }
 
-        private void OpenAchievementsPanel() => OpenAchievementsPanel(FirstClaimableCategory());
-
-        /// <summary>The first tab with a reward waiting, so the menu opens where the red dot is; Daily otherwise.</summary>
-        private AchievementCategory FirstClaimableCategory()
-        {
-            foreach (AchievementCategory c in new[] { AchievementCategory.Daily, AchievementCategory.Weekly,
-                                                      AchievementCategory.Monthly, AchievementCategory.Progression })
-                if (achievementService != null && achievementService.HasClaimable(c)) return c;
-            return AchievementCategory.Daily;
-        }
+        private void OpenAchievementsPanel() =>
+            OpenAchievementsPanel(_achievements != null ? _achievements.FirstClaimableCategory() : AchievementCategory.Daily);
 
         private void OpenAchievementsPanel(AchievementCategory category)
         {
             DismissAchievementsHint();
             CloseAllPanels();
-            _achActiveCategory = category;
-            // A period may have ended since the last check (long session); a reset rebuilds via OnPeriodReset.
-            achievementService?.RequestPeriodCheck("menu opened");
-            BuildAchievementsList();
-            SetElementVisible(_achievementsPanel, true);
-
-            // Keep the reset countdown live while the panel is open (paused when it closes).
-            if (_achResetLabel == null) return;
-            if (_achResetTicker == null)
-                _achResetTicker = _achResetLabel.schedule.Execute(TickAchievementResetLabel).Every(1000);
-            else
-                _achResetTicker.Resume();
-        }
-
-        private void TickAchievementResetLabel()
-        {
-            if (_achievementsPanel == null || _achievementsPanel.ClassListContains("hidden"))
-            {
-                _achResetTicker?.Pause();
-                return;
-            }
-            achievementService?.CheckPeriodsIfDue();   // countdown hit zero: reset now, not on next launch
-            UpdateAchievementResetLabel();
-        }
-
-        // Sets only the label, so the tick does not rebuild the list and reset its scroll position.
-        private void UpdateAchievementResetLabel()
-        {
-            if (_achResetLabel == null) return;
-            _achResetLabel.text = _achActiveCategory == AchievementCategory.Progression
-                                  || !AchievementService.CategoryUnlocked(_achActiveCategory)
-                ? ""
-                : achievementService?.GetResetCountdown(_achActiveCategory) ?? "";
+            _achievements?.Open(category);
         }
 
         private void StartAchievementsHintPulse() =>
@@ -1429,20 +1354,6 @@ namespace MobileIdleBuilder
                 yield return new WaitForSecondsRealtime(0.7f);
             }
         }
-
-        private void SwitchAchCategory(AchievementCategory category)
-        {
-            _achActiveCategory = category;
-            BuildAchievementsList();
-        }
-
-        private void OnAchievementUnlocked(AchievementSO _)
-        {
-            if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
-                BuildAchievementsList();
-        }
-
-        private void OnAchievementPeriodReset() => OnAchievementUnlocked(null);
 
         // ============================================================
         // Tournament panel (PvE; TournamentPanelController owns pve-panel)
@@ -2176,163 +2087,6 @@ namespace MobileIdleBuilder
         }
 
         // ============================================================
-        // Achievements list
-        // ============================================================
-
-        private void BuildAchievementsList()
-        {
-            if (_achievementsList == null) return;
-            _achievementsList.Clear();
-
-            // Update category tab highlights
-            UpdateAchievementTabHighlights();
-
-            UpdateAchievementResetLabel();
-
-            var all = achievementService?.GetAll();
-            if (all == null || all.Count == 0)
-            {
-                _achievementsList.Add(new Label("No achievements defined."));
-                if (_achievementsTitle != null) _achievementsTitle.text = "Achievements (0 / 0)";
-                return;
-            }
-
-            int completed = achievementService.CompletedCount;
-            if (_achievementsTitle != null)
-                _achievementsTitle.text = $"Achievements ({completed} / {all.Count})";
-
-            // The Daily tab opens with the 28-day login calendar (the old Daily panel, merged in 2026-11-20).
-            if (_achActiveCategory == AchievementCategory.Daily)
-            {
-                var card = _daily?.BuildLoginCard(() => OnAchievementUnlocked(null)); // rebuilds only while open
-                if (card != null) _achievementsList.Add(card);
-            }
-
-            if (!AchievementService.CategoryUnlocked(_achActiveCategory))
-            {
-                var locked = new Label("Unlocks after your first prestige.");
-                locked.AddToClassList("ach-locked-msg");
-                _achievementsList.Add(locked);
-                SetElementVisible(_achClaimAllBtn, achievementService.ClaimableCount > 0);
-                return;
-            }
-
-            foreach (var achievement in all)
-            {
-                if (achievement == null || achievement.category != _achActiveCategory) continue;
-
-                bool isDone      = achievementService.IsCompleted(achievement.id);
-                bool isClaimable = achievementService.IsClaimable(achievement.id);
-                bool isHidden    = achievement.isHidden && !isDone;
-
-                var row = new VisualElement();
-                row.AddToClassList("ach-card");
-                if (isDone && !isClaimable) row.AddToClassList("ach-card--completed");
-                else if (isClaimable)       row.AddToClassList("ach-card--claimable");
-
-                var innerRow = new VisualElement();
-                innerRow.AddToClassList("ach-card-row");
-
-                var checkLabel = new Label(isDone ? "" : "○");
-                checkLabel.AddToClassList("ach-card-check");
-                if (isDone) GlyphIcon.SetOn(checkLabel, GlyphIcon.Kind.Check);
-                if (isDone) checkLabel.AddToClassList("ach-card-check--done");
-
-                var body = new VisualElement();
-                body.AddToClassList("ach-card-body");
-
-                var nameLabel = new Label(isHidden ? "???" : achievement.displayName);
-                nameLabel.AddToClassList("ach-card-name");
-
-                var descLabel = new Label(isHidden ? "Complete a hidden objective to reveal." : achievement.description);
-                descLabel.AddToClassList("ach-card-desc");
-
-                body.Add(nameLabel);
-                body.Add(descLabel);
-
-                // Currency reward hint
-                if (!isHidden && (achievement.paidCurrencyReward > 0 || achievement.prestigeCurrencyReward > 0))
-                {
-                    var parts = new System.Collections.Generic.List<string>();
-                    if (achievement.paidCurrencyReward    > 0) parts.Add($"♦ {achievement.paidCurrencyReward}");
-                    if (achievement.prestigeCurrencyReward > 0) parts.Add($"✦ {achievement.prestigeCurrencyReward}");
-                    var rewardLabel = new Label(string.Join("  ", parts));
-                    rewardLabel.AddToClassList("ach-card-reward");
-                    body.Add(rewardLabel);
-                }
-
-                // Cosmetic rewards (legacy)
-                if (!isHidden && achievement.rewards != null && achievement.rewards.Length > 0)
-                {
-                    var cosmeticNames = string.Join(", ", System.Array.ConvertAll(
-                        achievement.rewards, r => r != null ? r.displayName : "?"));
-                    var cosmeticLabel = new Label($"Unlocks: {cosmeticNames}");
-                    cosmeticLabel.AddToClassList("ach-card-desc");
-                    body.Add(cosmeticLabel);
-                }
-
-                innerRow.Add(checkLabel);
-                innerRow.Add(body);
-
-                // Claim button
-                if (isClaimable)
-                {
-                    var claimBtn = new Button { text = "Claim" };
-                    claimBtn.AddToClassList("ach-claim-btn");
-                    string capturedId = achievement.id;
-                    claimBtn.clicked += () =>
-                    {
-                        achievementService?.ClaimReward(capturedId);
-                        BuildAchievementsList();
-                    };
-                    innerRow.Add(claimBtn);
-                }
-
-                row.Add(innerRow);
-
-                // Progress bar (in-progress achievements with quantity > 1)
-                if (!isHidden && !isDone && achievement.triggerQuantity > 1)
-                {
-                    int progress = achievementService.GetProgress(achievement.id);
-                    float ratio  = Mathf.Clamp01((float)progress / achievement.triggerQuantity);
-
-                    var barWrap = new VisualElement();
-                    barWrap.AddToClassList("ach-progress-bar");
-                    var fill = new VisualElement();
-                    fill.AddToClassList("ach-progress-fill");
-                    fill.style.width = new StyleLength(new Length(ratio * 100f, LengthUnit.Percent));
-                    barWrap.Add(fill);
-                    row.Add(barWrap);
-
-                    var progLabel = new Label($"{progress:N0} / {achievement.triggerQuantity:N0}");
-                    progLabel.AddToClassList("ach-card-desc");
-                    row.Add(progLabel);
-                }
-
-                _achievementsList.Add(row);
-            }
-
-            // Claim All button visibility
-            bool anyClaimable = achievementService?.ClaimableCount > 0;
-            SetElementVisible(_achClaimAllBtn, anyClaimable);
-        }
-
-        private void UpdateAchievementTabHighlights()
-        {
-            AchievementTabActive(_achTabDaily,       _achActiveCategory == AchievementCategory.Daily);
-            AchievementTabActive(_achTabWeekly,      _achActiveCategory == AchievementCategory.Weekly);
-            AchievementTabActive(_achTabMonthly,     _achActiveCategory == AchievementCategory.Monthly);
-            AchievementTabActive(_achTabProgression, _achActiveCategory == AchievementCategory.Progression);
-        }
-
-        private static void AchievementTabActive(Button tab, bool active)
-        {
-            if (tab == null) return;
-            if (active) tab.AddToClassList("achievements-tab--active");
-            else        tab.RemoveFromClassList("achievements-tab--active");
-        }
-
-        // ============================================================
         // Placement overlay
         // ============================================================
 
@@ -2661,8 +2415,7 @@ namespace MobileIdleBuilder
             if (service == null || !service.IsClaimable(id)) return;
             var a = service.GetAll()?.FirstOrDefault(x => x != null && x.id == id);
             service.ClaimReward(id);
-            if (_achievementsPanel != null && !_achievementsPanel.ClassListContains("hidden"))
-                BuildAchievementsList();
+            _achievements?.RefreshIfOpen();
             if (a != null)
                 _banner?.ShowNotification("♦", $"Claimed: {a.displayName}");   // not ✓: blank on Android
         }
