@@ -26,24 +26,20 @@ namespace MobileIdleBuilder
         protected override void OnUpdate()
         {
             _drained.Clear();
-            var drained = _drained;
 
-            Entities
-                .WithAll<RecipeProcessData>()
-                .WithoutBurst()
-                .ForEach((ref DynamicBuffer<CraftedOutputEvent> crafted) =>
-                {
-                    if (crafted.Length == 0) return;
+            foreach (var crafted in SystemAPI.Query<DynamicBuffer<CraftedOutputEvent>>().WithAll<RecipeProcessData>())
+            {
+                if (crafted.Length == 0) continue;
 
-                    for (int i = 0; i < crafted.Length; i++)
-                        if (crafted[i].Quantity > 0)
-                            drained.Add(crafted[i]);
+                for (int i = 0; i < crafted.Length; i++)
+                    if (crafted[i].Quantity > 0)
+                        _drained.Add(crafted[i]);
 
-                    crafted.Clear();
-                }).Run();
+                crafted.Clear();
+            }
 
-            // Notified only after the ForEach completes: TierProgress writes the PlayerProgressData
-            // singleton, and a structural/singleton write from inside an in-flight ForEach trips ECS
+            // Notified only after the query loop ends: TierProgress writes the PlayerProgressData
+            // singleton, and a structural/singleton write from inside an in-flight query loop trips ECS
             // safety checks.
             for (int i = 0; i < _drained.Count; i++)
             {

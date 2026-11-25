@@ -300,11 +300,12 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Surge_LongBoostRunning_WaitsForTheLock()
+        public void Surge_LongBoostRunning_DoesNotWait()
         {
+            // The surge stacks with any timed boost (2026-11-24), so a 3 h speed burst does not delay it.
             var save = TutorialDoneSave();
             save.speedBoostExpiryUtc = Now.AddHours(3).ToString("O");
-            Assert.AreEqual(TimeSpan.FromHours(3), SurgeInputs(save).SurgeReadyIn);
+            Assert.AreEqual(NotificationPlanner.SurgeMinAway, SurgeInputs(save).SurgeReadyIn);
         }
 
         [Test]
