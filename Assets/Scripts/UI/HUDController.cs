@@ -1975,7 +1975,9 @@ namespace MobileIdleBuilder
                 string beltName = streams ? "Channel" : "Conveyor Belt";
                 string beltInfo = streams
                     ? "Draw a stream from a Spring past your buildings; each takes what its reaction needs"
-                    : "Draw paths to move items between buildings. Hold a belt to split it into 2 or 3 directions.";
+                    : "Draw paths to move items between buildings.\n\n" +
+                      "Path splitting: hold a placed belt to split it. Its items share out 2 or 3 ways, and each " +
+                      "side can take a bigger share (1-5). Turn sides off until one is left to make it a plain bend.";
                 _builderPages["logistics"].Add(BuilderMenu.MakeCard(beltName, null, GlyphIcon.Kind.Flip,
                     MakeCostLabel(0, true), placeBtn, InfoButton(beltName, beltInfo)));
             }
