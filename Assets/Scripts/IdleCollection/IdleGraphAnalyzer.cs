@@ -88,7 +88,8 @@ namespace MobileIdleBuilder
             Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
             float surplusSaleFraction = 0f,
             Func<int, bool> isFilter = null,
-            Func<BuildingSaveData, float> getCollectorRate = null)
+            Func<BuildingSaveData, float> getCollectorRate = null,
+            Func<BuildingSaveData, IEnumerable<(Vector2Int cell, int facing)>> getOutputPorts = null)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
@@ -146,11 +147,11 @@ namespace MobileIdleBuilder
                 }
 
             // Where one chain's items end up: the building at its tail, shared out at every split on the way.
-            void Route(ConveyorSaveData chain, float weight, List<(int to, float w)> into, int depth)
+            void Route(ConveyorSaveData chain, float weight, List<(int to, float w)> into, int depth, int from = 0)
             {
                 int len = chain.cells.Length / 2;
                 float w = weight;
-                for (int c = 0; c < len && w > 0f; c++)
+                for (int c = from; c < len && w > 0f; c++)
                 {
                     var cell = new Vector2Int(chain.cells[c * 2], chain.cells[c * 2 + 1]);
                     if (!splitMap.TryGetValue(cell, out var sp)) continue;
@@ -216,6 +217,37 @@ namespace MobileIdleBuilder
                 int from = indexOf[producer];
                 foreach (var (to, w) in routed)
                     if (to != from) nodes[from].AddEdge(to, w, nodes, from);   // a belt looping back to its source is ignored
+            }
+
+            // ---- Producers feeding a belt mid-way (#206: a merge at a harvester's exit) ----
+            // An output port facing a belt that runs through its tile feeds it there (ConveyorSystem pass 4), so the
+            // producer gets an edge to wherever the belt goes from that cell. A belt only ending there takes nothing.
+            if (getOutputPorts != null)
+            {
+                var fedCells = new HashSet<(int, Vector2Int)>();   // a merge cell is on every chain through it
+                foreach (var chain in conveyors)
+                {
+                    if (chain?.cells == null) continue;
+                    int len = chain.cells.Length / 2;
+                    for (int c = 1; c < len - 1; c++)
+                    {
+                        var cell = new Vector2Int(chain.cells[c * 2], chain.cells[c * 2 + 1]);
+                        for (int d = 0; d < 4; d++)
+                        {
+                            if (!cellToBuilding.TryGetValue(Step(cell, d), out var b) || !CanProduce(b)) continue;
+                            bool faces = false;
+                            foreach (var (pc, facing) in getOutputPorts(b))
+                                if (Step(pc, facing) == cell) { faces = true; break; }
+                            if (!faces) continue;
+                            int from = indexOf[b];
+                            if (!fedCells.Add((from, cell))) continue;
+                            routed.Clear();
+                            Route(chain, 1f, routed, 0, c);
+                            foreach (var (to, w) in routed)
+                                if (to != from) nodes[from].AddEdge(to, w, nodes, from);
+                        }
+                    }
+                }
             }
 
             // ---- Filters are see-through (#321) ---------------------------------

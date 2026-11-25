@@ -74,6 +74,8 @@ namespace MobileIdleBuilder
         // but not merged with) points at a neighbour that also has a belt — they look aligned but
         // items do not flow across. Rebuilt in RefreshAll alongside the belts.
         private readonly List<GameObject> _gapMarkers = new();
+        // Seams the belt being drawn would leave (#208), shown before it is confirmed.
+        private readonly List<GameObject> _previewGapMarkers = new();
         private Material _gapMaterial;
         private bool     _ownsGapMaterial;
         private static readonly Color GapColor = new Color(0.95f, 0.25f, 0.20f);
@@ -169,6 +171,7 @@ namespace MobileIdleBuilder
             _itemSpriteIds.Clear();
             ClearGapMarkers();
             ClearSinglePreview();
+            ClearPreviewSeams();
 
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
             if (_streamMaterial != null) Destroy(_streamMaterial);
@@ -601,6 +604,22 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
         // "Not connected" seam markers
         // ----------------------------------------------------------------
+
+        /// <summary>Shows the seams a belt being drawn would leave (#208); replaces any shown before.</summary>
+        public void ShowPreviewSeams(List<(int2 cell, int exit)> seams)
+        {
+            ClearPreviewSeams();
+            if (seams == null || gridRenderer == null) return;
+            float cs = gridRenderer.CellSize;
+            foreach (var (cell, exit) in seams)
+                _previewGapMarkers.Add(SpawnGapMarker(cell.x, cell.y, exit, cs));
+        }
+
+        public void ClearPreviewSeams()
+        {
+            foreach (var go in _previewGapMarkers) if (go) Destroy(go);
+            _previewGapMarkers.Clear();
+        }
 
         private void ClearGapMarkers()
         {

@@ -779,7 +779,8 @@ namespace MobileIdleBuilder
                 SurplusSale.CurrentFraction(),
                 id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter,
                 bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
-                    ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f);
+                    ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f,
+                bsd => OutputPorts(bsd, buildingLookup.TryGetValue(bsd.buildingId, out var fo) ? fo.building : null));
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from
@@ -788,6 +789,20 @@ namespace MobileIdleBuilder
 
             int builtChains = save.idleSnapshot?.chains?.Count ?? 0;
             GameLogger.Debug($"[Idle] RebuildIdleSnapshot — buildings={grid.buildings?.Count ?? 0} conveyors={grid.conveyors?.Count ?? 0} chains={builtChains}");
+        }
+
+        /// <summary>A saved building's output ports on the grid: (cell, facing), as BuildingPlacer places them.</summary>
+        internal static IEnumerable<(UnityEngine.Vector2Int cell, int facing)> OutputPorts(BuildingSaveData bsd, BuildingSO building)
+        {
+            if (building?.ports == null || bsd?.position == null || bsd.position.Length < 2) yield break;
+            var baseFootprint = new UnityEngine.Vector2Int(UnityEngine.Mathf.Max(1, building.footprint.x),
+                                                           UnityEngine.Mathf.Max(1, building.footprint.y));
+            foreach (var port in building.ports)
+            {
+                if (port.portType != PortType.Output) continue;
+                var (rel, dir) = PortUtils.TransformPort(port, baseFootprint, bsd.flipped, bsd.rotation);
+                yield return (new UnityEngine.Vector2Int(bsd.position[0] + rel.x, bsd.position[1] + rel.y), (int)dir);
+            }
         }
 
         /// <summary>

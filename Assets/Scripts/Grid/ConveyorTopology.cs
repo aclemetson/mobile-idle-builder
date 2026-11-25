@@ -273,6 +273,59 @@ namespace MobileIdleBuilder
         }
 
         public static int Opposite(int dir) => (dir + 2) % 4;
+
+        /// <summary>
+        /// The "not connected" seams a run along <paramref name="path"/> would leave, before it is placed (#208):
+        /// a dry run of ConveyorPlacer's adjacency block. Every NEW cell of the run (not already a belt) that
+        /// points at an existing belt beside it, and every existing belt that points into a new cell, stays a
+        /// dead end; each is added to <paramref name="into"/> as (cell, exit direction).
+        /// Belts in the run itself, a split feeding the new cell (a drawn branch) and the sides of an overpass
+        /// span never count. <paramref name="singleDir"/> is a lone belt's facing.
+        /// </summary>
+        public static void PreviewSeams(IReadOnlyDictionary<int2, int> cellExit, IReadOnlyList<int2> path,
+                                        IReadOnlyDictionary<int2, int> splitMasks,
+                                        IReadOnlyDictionary<int2, int2> bridges,
+                                        List<(int2 cell, int exit)> into, int singleDir = 0)
+        {
+            into.Clear();
+            if (path == null || path.Count == 0) return;
+            int count = path.Count;
+
+            var pathSet = new HashSet<int2>(path);
+            var spanSides = new HashSet<(int2, int)>();
+            void AddSpan(int2 a, int2 b)
+            {
+                int d = DirBetween(a, b);
+                spanSides.Add((a, d));
+                spanSides.Add((b, Opposite(d)));
+            }
+            if (bridges != null) foreach (var kv in bridges) AddSpan(kv.Key, kv.Value);
+            for (int i = 0; i + 1 < count; i++)
+                if (math.abs(path[i].x - path[i + 1].x) + math.abs(path[i].y - path[i + 1].y) > 1)
+                    AddSpan(path[i], path[i + 1]);
+
+            for (int i = 0; i < count; i++)
+            {
+                var p = path[i];
+                if (cellExit.ContainsKey(p)) continue;           // an existing belt the run reuses
+                int pExit = count == 1 ? singleDir
+                          : i < count - 1 ? DirBetween(p, path[i + 1])
+                          : DirBetween(path[i - 1], p);
+
+                for (int d = 0; d < 4; d++)
+                {
+                    int2 q = Adjacent(p, d);
+                    if (pathSet.Contains(q)) continue;
+                    if (spanSides.Contains((p, d)) || spanSides.Contains((q, Opposite(d)))) continue;
+                    if (!cellExit.TryGetValue(q, out int qExit)) continue;
+
+                    if (pExit == d) into.Add((p, pExit));
+                    if (splitMasks != null && splitMasks.TryGetValue(q, out int sm) && (sm & (1 << Opposite(d))) != 0)
+                        continue;
+                    if (qExit == Opposite(d)) into.Add((q, qExit));
+                }
+            }
+        }
     }
 
     /// <summary>

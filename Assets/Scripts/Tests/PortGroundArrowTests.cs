@@ -5,8 +5,8 @@ namespace MobileIdleBuilder.Tests
 {
     /// <summary>
     /// An arrow must mean "this port still needs a belt", matching ConveyorSystem: an output feeds a belt that
-    /// starts on the tile in front of it, and an input is fed by a belt that ends there. A belt just passing by
-    /// connects nothing, and a deleted belt must bring the arrow back. Also checks the chevron shape.
+    /// starts on or runs through the tile in front of it (#206), and an input is fed by a belt that ends there.
+    /// A deleted belt must bring the arrow back. Also checks the chevron shape.
     /// </summary>
     [TestFixture]
     public class PortGroundArrowTests
@@ -28,11 +28,12 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(Show(true, hasBelt: true, head: true));
 
         [Test]
-        public void Output_KeepsArrow_WhenABeltOnlyEndsOrPassesThere()
-        {
+        public void Output_KeepsArrow_WhenABeltOnlyEndsThere() =>
             Assert.IsTrue(Show(true, hasBelt: true, tail: true), "a belt ending here takes nothing from the output");
-            Assert.IsTrue(Show(true, hasBelt: true), "a belt passing through takes nothing from the output");
-        }
+
+        [Test]
+        public void Output_HidesWhenABeltRunsThrough() =>
+            Assert.IsFalse(Show(true, hasBelt: true), "#206: an output feeds a belt passing its tile (a merge at its exit)");
 
         [Test]
         public void Input_HidesWhenABeltEndsThere() =>
