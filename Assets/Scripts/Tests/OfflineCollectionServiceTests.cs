@@ -286,6 +286,23 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(" (+1,200 task items)", AdService.TaskSuffix(1200));
         }
 
+        [Test]
+        public void TaskSuffix_ShowsZero_WhileATaskListIsActive()
+        {
+            // #535: a reward that counted nothing must say so while the task list is on screen.
+            Assert.AreEqual(" (+0 task items)", AdService.TaskSuffix(0, tasksActive: true));
+            Assert.AreEqual(" (+5 task items)", AdService.TaskSuffix(5, tasksActive: true));
+        }
+
+        [Test]
+        public void DescribeDeliveries_NamesWhatReachedTheDemon()
+        {
+            Assert.AreEqual("nothing", OfflineCollectionService.DescribeDeliveries(null));
+            Assert.AreEqual("nothing", OfflineCollectionService.DescribeDeliveries(new System.Collections.Generic.Dictionary<int, long>()));
+            StringAssert.Contains("1,200", OfflineCollectionService.DescribeDeliveries(
+                new System.Collections.Generic.Dictionary<int, long> { { 999_999, 1200 } }));
+        }
+
         // ── Rewarded-ad idle-rate boost (+50%) ────────────────────────────────
 
         [Test]

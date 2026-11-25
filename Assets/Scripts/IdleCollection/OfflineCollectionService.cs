@@ -255,6 +255,23 @@ namespace MobileIdleBuilder
         public static long CreditDemonDeliveries(SaveData save, IdleCollectionResult result)
             => CreditDemonDeliveries(save, result?.DemonDelivered, "idle");
 
+        /// <summary>As above, naming the bonus in the log (#535: "time warp (ad)", "time warp (shop)", ...).</summary>
+        public static long CreditDemonDeliveries(SaveData save, IdleCollectionResult result, string source)
+            => CreditDemonDeliveries(save, result?.DemonDelivered, source);
+
+        /// <summary>
+        /// True when an unfinished task set is delivered in the live world, so a bonus should say how many task
+        /// items it counted even when that is 0 (#535: a silent 0 cannot be told apart from "not counted").
+        /// </summary>
+        public static bool TasksActiveHere(SaveData save)
+        {
+            if (save == null) return false;
+            string here = WorldRules.ActiveWorld(save)?.id;
+            foreach (var tasks in WorldTasks.All)
+                if (tasks != null && WorldTasks.ShownIn(tasks, here) && !WorldTasks.IsComplete(save, tasks)) return true;
+            return false;
+        }
+
         /// <summary>
         /// Credits Demon deliveries from any bonus (offline return, Time Warp, Double Offline, Entropy Surge) to
         /// the world delivery tasks. Stages it finishes are queued for <see cref="WorldTaskService"/> to announce,
@@ -273,10 +290,21 @@ namespace MobileIdleBuilder
                 finished.AddRange(WorldTasks.CreditAll(save, tasks, deliveries, out long c));
                 counted += c;
             }
-            GameLogger.Info($"[WorldTasks] {source}: {counted} item(s) counted toward the tasks.");
+            GameLogger.Info($"[WorldTasks] {source}: {counted} item(s) counted toward the tasks; reached the Demon: " +
+                            DescribeDeliveries(deliveries) + ".");
             foreach (var stage in finished)
                 GameLogger.Info($"[WorldTasks] Stage '{stage.id}' completed by {source}.");
             return counted;
+        }
+
+        /// <summary>"Oxygen 1,200, Neon 0": what a bonus offered the tasks, for the log (#535).</summary>
+        internal static string DescribeDeliveries(IDictionary<int, long> deliveries)
+        {
+            if (deliveries == null || deliveries.Count == 0) return "nothing";
+            var parts = new List<string>();
+            foreach (var kv in deliveries)
+                parts.Add($"{ItemDatabase.GetStatic(kv.Key)?.displayName ?? "#" + kv.Key} {kv.Value:N0}");
+            return string.Join(", ", parts);
         }
 
         static List<IdleCollectionSnapshot> Snapshots(SaveData save)

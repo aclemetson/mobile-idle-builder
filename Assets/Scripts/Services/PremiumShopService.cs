@@ -126,16 +126,21 @@ namespace MobileIdleBuilder
             {
                 ApplyEntropyToECS(result.EntropyEarned);
                 bridge.AddInventoryItems(result.ItemsEarned);
-                OfflineCollectionService.CreditDemonDeliveries(save, result);
+                LastTimeWarpTaskItems = OfflineCollectionService.CreditDemonDeliveries(save, result, "time warp (shop)");
             }
             else
             {
-                OfflineCollectionService.ApplyResultToSave(save, result);
+                LastTimeWarpTaskItems = OfflineCollectionService.ApplyResultToSave(save, result);
             }
+            LastTimeWarpHours = hours;
 
             SaveManager.Instance.SaveLocal();
             return PurchaseResult.Success;
         }
+
+        /// <summary>Task items the last successful Time Warp counted, and its length (for the shop's toast, #535).</summary>
+        public long  LastTimeWarpTaskItems { get; private set; }
+        public float LastTimeWarpHours     { get; private set; }
 
         /// <summary>Called by IAPService after a successful crystal purchase.</summary>
         public void AwardCrystals(long amount)
