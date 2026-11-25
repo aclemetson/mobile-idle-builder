@@ -318,6 +318,42 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ABuildingAtTheStreamsHead_DropsFromTheSide_NotLikeABelt()
+        {
+            // #543: only a Spring is pulled onto a stream's head; any other building there drops mid-tile.
+            var segs = Stream();
+            var a = Bank(0, 3f);   // at (0,1), output facing South onto the head (0,0)
+            _em.GetBuffer<BuildingOutputSlot>(a).Add(new BuildingOutputSlot { ItemID = 11, Quantity = 1 });
+
+            Tick();
+
+            var items = _em.GetBuffer<ConveyorItem>(segs[0]);
+            Assert.AreEqual(1, items.Length);
+            Assert.AreEqual(StreamRules.DropAt, items[0].Progress, 1e-4f, "dropped in the middle, not pulled in at the edge");
+        }
+
+        // ── Drawing a stream (#543) ───────────────────────────────────────
+
+        [Test]
+        public void Orient_KeepsARunFromItsSource_ReversesOneDrawnTowardIt_RefusesOneWithout()
+        {
+            var fed = new System.Collections.Generic.HashSet<int> { 10 };
+            bool Fed(int c) => fed.Contains(c);
+            Assert.AreEqual(StreamRules.Orientation.Keep,    StreamRules.Orient(new[] { 10, 11, 12 }, Fed));
+            Assert.AreEqual(StreamRules.Orientation.Reverse, StreamRules.Orient(new[] { 12, 11, 10 }, Fed), "drawn toward the Spring");
+            Assert.AreEqual(StreamRules.Orientation.Refuse,  StreamRules.Orient(new[] { 20, 21, 22 }, Fed), "no source at either end");
+            Assert.AreEqual(StreamRules.Orientation.Refuse,  StreamRules.Orient(new int[0], Fed));
+        }
+
+        [Test]
+        public void ALoneStreamTile_NeverFacesBackIntoItsSpring()
+        {
+            bool SpringNorth(int d) => d == North;
+            Assert.AreEqual(South, StreamRules.SingleTileFacing(North, SpringNorth));
+            Assert.AreEqual(East,  StreamRules.SingleTileFacing(East, SpringNorth));
+        }
+
+        [Test]
         public void OpenMouth_SellsWhatReachesIt()
         {
             Spring(10f);

@@ -95,6 +95,74 @@ namespace MobileIdleBuilder
                                           (int)(singleDir ?? OutputDirection.North));
         }
 
+        /// <summary>
+        /// Stream worlds (#543): makes a run the player drew flow away from its source before it is placed. Kept when
+        /// its first cell is fed (a Spring's output faces it, or it extends an existing stream's mouth), reversed in
+        /// place when only its last cell is, refused when neither is (a stream with no source is dry). A lone tile is
+        /// fed only by a Spring and never faces back into it. Outside stream worlds it does nothing. Player placement
+        /// only: saved streams replay through <see cref="PlaceConveyorChain(List{Vector2Int}, OutputDirection?)"/>.
+        /// </summary>
+        public bool OrientStreamRun(List<Vector2Int> path, ref OutputDirection singleDir, out string refusal)
+        {
+            refusal = null;
+            if (!_queryReady || path == null || path.Count == 0 || !WorldRules.IsStreamWorld(_em)) return true;
+
+            // Every Spring output: the cell it pours into.
+            var fedBySpring = new HashSet<int2>();
+            using (var q = _em.CreateEntityQuery(ComponentType.ReadOnly<StreamSource>(), ComponentType.ReadOnly<PlacedPortData>()))
+            using (var springs = q.ToEntityArray(Allocator.Temp))
+                foreach (var sp in springs)
+                {
+                    var ports = _em.GetBuffer<PlacedPortData>(sp, isReadOnly: true);
+                    for (int i = 0; i < ports.Length; i++)
+                        if (ports[i].PortType == (int)PortType.Output)
+                            fedBySpring.Add(AdjacentCell(new int2(ports[i].CellX, ports[i].CellY), ports[i].Facing));
+                }
+
+            SnapshotBelts(out var cellMap, out _, out _);
+            bool StreamMouth(Vector2Int c) =>
+                cellMap.TryGetValue(c, out var e) && _em.HasComponent<StreamSegment>(e)
+                && _em.GetComponentData<ConveyorSegmentData>(e).NextSegment == Entity.Null;
+            bool Fed(Vector2Int c) => fedBySpring.Contains(new int2(c.x, c.y)) || StreamMouth(c);
+
+            if (path.Count == 1)
+            {
+                var cell = new int2(path[0].x, path[0].y);
+                if (!fedBySpring.Contains(cell)) { refusal = StreamRules.NoSourceMessage; return false; }
+                // A Spring on the side the tile faces would have the water flow back into it.
+                bool SpringOnSide(int d)
+                {
+                    var n = AdjacentCell(cell, d);
+                    return SpringAt(n, cell);
+                }
+                singleDir = (OutputDirection)StreamRules.SingleTileFacing((int)singleDir, SpringOnSide);
+                return true;
+            }
+
+            switch (StreamRules.Orient(path, Fed))
+            {
+                case StreamRules.Orientation.Keep:    return true;
+                case StreamRules.Orientation.Reverse: path.Reverse(); return true;
+                default: refusal = StreamRules.NoSourceMessage; return false;
+            }
+        }
+
+        // A Spring on cell n whose output pours into cell `into`.
+        private bool SpringAt(int2 n, int2 into)
+        {
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<StreamSource>(), ComponentType.ReadOnly<PlacedPortData>());
+            using var springs = q.ToEntityArray(Allocator.Temp);
+            foreach (var sp in springs)
+            {
+                var ports = _em.GetBuffer<PlacedPortData>(sp, isReadOnly: true);
+                for (int i = 0; i < ports.Length; i++)
+                    if (ports[i].PortType == (int)PortType.Output && ports[i].CellX == n.x && ports[i].CellY == n.y
+                        && AdjacentCell(n, ports[i].Facing).Equals(into))
+                        return true;
+            }
+            return false;
+        }
+
         /// <summary>Lays the run; false (with a player-facing <paramref name="refusal"/>) when it is rejected.</summary>
         public bool PlaceConveyorChain(List<Vector2Int> path, out string refusal, OutputDirection? singleDir = null)
         {
