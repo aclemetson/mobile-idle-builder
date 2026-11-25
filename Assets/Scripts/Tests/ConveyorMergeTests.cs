@@ -146,5 +146,74 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(1, delivered, "exactly one branch delivers per frame");
             Assert.IsFalse(HasItem(north), "cursor 0 serves the north branch first");
         }
+
+        // ── A building feeding a merge cell (#206: merge at a harvester's exit) ──
+
+        private const int HarvestedId = 7;
+
+        /// <summary>A harvester at <paramref name="cell"/> whose output faces <paramref name="facing"/>, holding items.</summary>
+        private Entity Harvester(int2 cell, int facing, int quantity = 5)
+        {
+            var e = _em.CreateEntity();
+            _em.AddComponentData(e, new BuildingData { IsActive = true, ProductionSpeed = 1f });
+            _em.AddComponentData(e, new GridPosition { Cell = cell });
+            _em.AddBuffer<PlacedPortData>(e).Add(new PlacedPortData
+            {
+                PortType = (int)PortType.Output, CellX = cell.x, CellY = cell.y, Facing = facing
+            });
+            _em.AddBuffer<BuildingOutputSlot>(e).Add(new BuildingOutputSlot { ItemID = HarvestedId, Quantity = quantity });
+            return e;
+        }
+
+        [Test]
+        public void HarvesterAtAMergeCell_TakesTurnsWithTheBelt()
+        {
+            var tail  = Seg(new int2(2, 0), East, Entity.Null);
+            var merge = Seg(new int2(1, 0), East, tail);                  // the harvester's exit, a belt merged in
+            var west  = Seg(new int2(0, 0), East, merge);
+            Harvester(new int2(1, 1), South);                             // north of the merge cell, output facing it
+            PutItem(west);
+
+            // Cursor 0 scans N first: the harvester's turn.
+            Tick();
+            Assert.IsTrue(HasItem(merge), "the harvester fed the merge cell");
+            var fed = _em.GetBuffer<ConveyorItem>(merge)[0];
+            Assert.AreEqual(HarvestedId, fed.ItemID);
+            Assert.AreEqual(North, fed.EntryEdgeOr(-1), "it enters from the harvester's side");
+            Assert.IsTrue(HasItem(west), "the belt waits its turn");
+
+            ConveyorItems.Clear(_em, merge);
+            Tick();
+            Assert.IsTrue(HasItem(merge));
+            Assert.IsFalse(HasItem(west), "then the belt's turn");
+            Assert.AreEqual(ItemId, _em.GetBuffer<ConveyorItem>(merge)[0].ItemID);
+        }
+
+        [Test]
+        public void HarvesterAtAMergeCell_FeedsWhileTheBeltIsEmpty()
+        {
+            var tail  = Seg(new int2(2, 0), East, Entity.Null);
+            var merge = Seg(new int2(1, 0), East, tail);
+            Seg(new int2(0, 0), East, merge);
+            var h = Harvester(new int2(1, 1), South);
+
+            Tick();
+
+            Assert.IsTrue(HasItem(merge));
+            Assert.AreEqual(4, _em.GetBuffer<BuildingOutputSlot>(h)[0].Quantity);
+        }
+
+        [Test]
+        public void BeltEndingAtAnOutput_TakesNothing()
+        {
+            var end = Seg(new int2(1, 0), East, Entity.Null);             // a tail beside the harvester's output
+            Seg(new int2(0, 0), East, end);
+            var h = Harvester(new int2(1, 1), South);
+
+            Tick();
+
+            Assert.IsFalse(HasItem(end));
+            Assert.AreEqual(5, _em.GetBuffer<BuildingOutputSlot>(h)[0].Quantity);
+        }
     }
 }

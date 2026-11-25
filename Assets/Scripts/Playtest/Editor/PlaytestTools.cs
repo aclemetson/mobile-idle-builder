@@ -156,11 +156,17 @@ namespace MobileIdleBuilder.Playtest.Editor
                 }
                 case "tap_cell":
                 {
-                    if (!PlaytestToolUtil.CellToScreen(ReadCell(@params, "cell_x", "cell_y"), out var p, out var cellError))
+                    // Pan the cell clear of the screen edge and HUD first, as a player would (#261).
+                    var cell = ReadCell(@params, "cell_x", "cell_y");
+                    bool cellPanned = await PlaytestToolUtil.PanCellIntoView(cell, driver);
+                    if (!PlaytestToolUtil.CellToScreen(cell, out var p, out var cellError))
                         return new ErrorResponse(cellError);
+                    string covering = PlaytestToolUtil.OverUi(p) ? PlaytestUi.CoveringElement(p) ?? "UI" : null;
+                    if (covering != null)
+                        return new ErrorResponse($"UI over target: '{covering}' covers cell ({cell.x},{cell.y}). " +
+                                                 "Close it or drag the map, then call again.", new { panned = cellPanned });
                     driver.Tap(p, () => done.TrySetResult(true));
-                    detail = new { cell = new { x = @params["cell_x"], y = @params["cell_y"] }, screen = new { p.x, p.y },
-                                   overUi = PlaytestToolUtil.OverUi(p) };
+                    detail = new { cell = new { x = cell.x, y = cell.y }, screen = new { p.x, p.y }, panned = cellPanned };
                     break;
                 }
                 case "drag":
@@ -224,6 +230,7 @@ namespace MobileIdleBuilder.Playtest.Editor
             var before = Inventory();
             int taps = 0, hits = 0, missed = 0, cooldownWaits = 0;
             bool panned = false, blocked = false;
+            string covering = null;
 
             try
             {
@@ -241,7 +248,14 @@ namespace MobileIdleBuilder.Playtest.Editor
                 int next = 0;
                 while (taps < count && Time.realtimeSinceStartup - start < PlaytestToolUtil.MaxWaitSeconds - 3f)
                 {
-                    if (!fields.Exists(OnScreen)) { blocked = true; break; }   // camera moved away, or UI covers it
+                    if (!fields.Exists(OnScreen))                                // camera moved away, or UI covers it
+                    {
+                        blocked = true;
+                        foreach (var f in fields)
+                            if (PlaytestToolUtil.CellToScreen(CellOf(f, grid), out var fp, out _) && PlaytestToolUtil.OverUi(fp))
+                            { covering = PlaytestUi.CoveringElement(fp) ?? "UI"; break; }
+                        break;
+                    }
                     var ready = fields.Where(f => PlaytestState.CooldownLeft(f) <= 0f && OnScreen(f)).ToList();
                     if (ready.Count == 0)
                     {
@@ -273,13 +287,15 @@ namespace MobileIdleBuilder.Playtest.Editor
             var gained = after.Where(kv => kv.Value > (before.TryGetValue(kv.Key, out int b) ? b : 0))
                               .ToDictionary(kv => kv.Key, kv => kv.Value - (before.TryGetValue(kv.Key, out int b) ? b : 0));
             string message = blocked
-                ? $"Stopped after {taps} taps: no '{target}' tile is on screen clear of UI. Close open panels or the " +
-                  "drawer, or drag the map, then call again. Not a game bug by itself."
+                ? (covering != null
+                    ? $"UI over target: stopped after {taps} taps; '{covering}' covers the '{target}' tiles. "
+                    : $"Stopped after {taps} taps: no '{target}' tile is on screen clear of UI. ") +
+                  "Close open panels or the drawer, or drag the map, then call again. Not a game bug by itself."
                 : taps < count
                     ? $"Collected with {taps} of {count} taps before the call limit; call again for the rest."
                     : $"Collected with {taps} taps.";
             return new SuccessResponse(message,
-                new { taps, hits, missed, cooldownWaits, panned, blocked, gained, after = PlaytestToolUtil.BriefDelta() });
+                new { taps, hits, missed, cooldownWaits, panned, blocked, covering, gained, after = PlaytestToolUtil.BriefDelta() });
         }
 
         private static Vector2Int CellOf(FieldInstance f, GridRenderer grid) =>
@@ -733,6 +749,36 @@ namespace MobileIdleBuilder.Playtest.Editor
             }
             screen = PlaytestDriver.ToTopLeft(new Vector2(sp.x, sp.y));
             error  = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Pans the camera so <paramref name="cell"/> sits well inside the screen (10% margin) and clear of HUD
+        /// chrome, if it is not already (#261: tap_cell said "off screen" instead of panning). Counts as one
+        /// action, like collect's pan. True when it panned.
+        /// </summary>
+        public static async Task<bool> PanCellIntoView(Vector2Int cell, PlaytestDriver driver)
+        {
+            var grid = UnityEngine.Object.FindAnyObjectByType<GridRenderer>();
+            var cam  = UnityEngine.Object.FindAnyObjectByType<CameraController>();
+            if (grid == null || cam == null || Camera.main == null) return false;
+            if (cell.x < 0 || cell.y < 0 || cell.x >= grid.Width || cell.y >= grid.Height) return false;
+
+            var world = new Vector3(cell.x * grid.CellSize, 0f, cell.y * grid.CellSize);
+            bool InView()
+            {
+                var sp = Camera.main.WorldToScreenPoint(world);
+                float mx = Screen.width * 0.1f, my = Screen.height * 0.1f;
+                if (sp.z <= 0f || sp.x < mx || sp.y < my || sp.x > Screen.width - mx || sp.y > Screen.height - my) return false;
+                return !OverUi(PlaytestDriver.ToTopLeft(new Vector2(sp.x, sp.y)));
+            }
+            if (InView()) return false;
+
+            cam.PanTo(world);
+            await WaitFor(InView, 3f);
+            cam.ResumeFollow();
+            PlaytestBenchmark.Active?.CountAction();
+            if (driver.TurnBased) await RunGame(driver, driver.ActionSeconds);
             return true;
         }
 

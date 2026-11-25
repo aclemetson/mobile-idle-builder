@@ -131,7 +131,9 @@ Drivers keep context small:
   `playtest_screenshot` only when a new screen or panel appears, when the summary shows something
   you can't place, or when something looks wrong. Never take two screenshots of an unchanged screen.
 - **Use `collect`** for every field-gathering step, and `tap_element` for HUD buttons. Use `tap`
-  with coordinates only when neither fits.
+  with coordinates only when neither fits. `tap_cell` pans the cell into view first.
+- **Close the left drawer** after using one of its entries; left open, it covers the map. When
+  `collect` or `tap_cell` says "UI over target", close the element it names, then call again.
 - **Log findings as they happen** with `playtest_benchmark note`: one line, severity, and the
   screenshot path. The reviewer only sees what you logged, plus the auto-detected milestones.
 - **Don't write prose.** No running commentary between tool calls; act, check the summary, move on.

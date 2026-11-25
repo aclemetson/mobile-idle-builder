@@ -164,5 +164,71 @@ namespace MobileIdleBuilder.Tests
         {
             Assert.AreEqual(S, ConveyorAutoTurn.HeadEntry(S, _ => false));
         }
+
+        // ── Preview seams (#208) ─────────────────────────────────────────────
+
+        static List<(int2 cell, int exit)> Seams(Dictionary<int2, int> exit, int2[] path,
+                                                 Dictionary<int2, int> splits = null,
+                                                 Dictionary<int2, int2> bridges = null, int singleDir = 0)
+        {
+            var into = new List<(int2, int)>();
+            ConveyorTopology.PreviewSeams(exit, path, splits, bridges, into, singleDir);
+            return into;
+        }
+
+        [Test]
+        public void PreviewSeams_RunPointingAtABeltBeside_ShowsItsEnd()
+        {
+            // Existing belt along y = 1; the new run comes up from below and stops under it.
+            var exit = new Dictionary<int2, int> { { C(0, 1), E }, { C(1, 1), E }, { C(2, 1), E } };
+            var seams = Seams(exit, new[] { C(1, -1), C(1, 0) });
+            CollectionAssert.AreEqual(new[] { (C(1, 0), N) }, seams);
+        }
+
+        [Test]
+        public void PreviewSeams_ExistingBeltPointingIntoTheRun_ShowsItsEnd()
+        {
+            var exit = new Dictionary<int2, int> { { C(0, 0), E } };   // a lone belt pointing east at (1,0)
+            var seams = Seams(exit, new[] { C(1, -1), C(1, 0), C(1, 1) });
+            CollectionAssert.AreEqual(new[] { (C(0, 0), E) }, seams);
+        }
+
+        [Test]
+        public void PreviewSeams_EndingOnABelt_IsAMergeNotASeam()
+        {
+            var exit = new Dictionary<int2, int> { { C(0, 1), E }, { C(1, 1), E } };
+            Assert.IsEmpty(Seams(exit, new[] { C(1, -1), C(1, 0), C(1, 1) }));
+        }
+
+        [Test]
+        public void PreviewSeams_SideBySideBelts_NoSeam()
+        {
+            var exit = new Dictionary<int2, int> { { C(0, 1), E }, { C(1, 1), E } };
+            Assert.IsEmpty(Seams(exit, new[] { C(0, 0), C(1, 0), C(2, 0) }));
+        }
+
+        [Test]
+        public void PreviewSeams_SplitFeedingTheRun_IsABranch()
+        {
+            var exit   = new Dictionary<int2, int> { { C(0, 0), N } };
+            var splits = new Dictionary<int2, int> { { C(0, 0), (1 << N) | (1 << E) } };
+            Assert.IsEmpty(Seams(exit, new[] { C(1, 0), C(2, 0) }, splits));
+        }
+
+        [Test]
+        public void PreviewSeams_SingleBelt_UsesItsFacing()
+        {
+            var exit = new Dictionary<int2, int> { { C(0, 1), E } };
+            CollectionAssert.AreEqual(new[] { (C(0, 0), N) }, Seams(exit, new[] { C(0, 0) }, singleDir: N));
+            Assert.IsEmpty(Seams(exit, new[] { C(0, 0) }, singleDir: E));
+        }
+
+        [Test]
+        public void PreviewSeams_UnderAnOverpassSpan_NoSeam()
+        {
+            // The run's span jumps from (0,0) to (3,0) over a belt at (1,0)..(2,0) running north.
+            var exit = new Dictionary<int2, int> { { C(1, 0), N }, { C(2, 0), N } };
+            Assert.IsEmpty(Seams(exit, new[] { C(-1, 0), C(0, 0), C(3, 0), C(4, 0) }));
+        }
     }
 }

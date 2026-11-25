@@ -194,6 +194,7 @@ namespace MobileIdleBuilder
             {
                 _singleDir = NextDir(_singleDir);
                 conveyorVisualizer?.ShowSinglePreview(_trace.Start.x, _trace.Start.y, (int)_singleDir);
+                RefreshPreviewSeams();
                 return;
             }
             if (_trace.SegmentCount == 0) return;
@@ -350,6 +351,7 @@ namespace MobileIdleBuilder
             gridRenderer.ClearConveyorGhost();
             ClearHover();
             conveyorVisualizer?.ShowSinglePreview(_trace.Start.x, _trace.Start.y, (int)_singleDir);
+            RefreshPreviewSeams();
             SetHasCandidate(true);
             OnTraceChanged?.Invoke();
         }
@@ -358,6 +360,25 @@ namespace MobileIdleBuilder
         {
             _isSingle = false;
             conveyorVisualizer?.ClearSinglePreview();
+            conveyorVisualizer?.ClearPreviewSeams();
+        }
+
+        // Seams the belt being drawn would leave (#208): shown while previewing, gone on confirm or cancel.
+        private readonly List<(Unity.Mathematics.int2 cell, int exit)> _previewSeams = new();
+
+        private void RefreshPreviewSeams()
+        {
+            if (conveyorVisualizer == null) return;
+            _previewSeams.Clear();
+            if (conveyorPlacer != null && _trace != null && _trace.HasStart && !IsDestroyMode)
+            {
+                if (_isSingle)
+                    conveyorPlacer.PreviewSeams(new List<Vector2Int> { _trace.Start }, _previewSeams, _singleDir);
+                else if (_trace.SegmentCount > 0)
+                    conveyorPlacer.PreviewSeams(_trace.Path(), _previewSeams);
+            }
+            if (_previewSeams.Count == 0) conveyorVisualizer.ClearPreviewSeams();
+            else conveyorVisualizer.ShowPreviewSeams(_previewSeams);
         }
 
         // ----------------------------------------------------------------
@@ -380,6 +401,7 @@ namespace MobileIdleBuilder
                 if (pulseLast) gridRenderer.PulseConveyorEndpoint(_trace.Last.x, _trace.Last.y);
             }
             SetHasCandidate(_isSingle || _trace.SegmentCount > 0);
+            RefreshPreviewSeams();
             OnTraceChanged?.Invoke();
         }
 
@@ -500,6 +522,7 @@ namespace MobileIdleBuilder
             _trace?.Clear();
             RaiseNext = false;
             gridRenderer.ClearConveyorGhost();
+            conveyorVisualizer?.ClearPreviewSeams();
             ClearHover();
             SetHasCandidate(false);
             SetHasStart(false);

@@ -82,6 +82,19 @@ namespace MobileIdleBuilder
                 ? null : PlayerReason(reason);
         }
 
+        /// <summary>
+        /// The seams the run along <paramref name="path"/> would leave if placed now (#208): where it would only
+        /// run up to an existing belt without joining it. Fills <paramref name="into"/> with (cell, exit direction).
+        /// </summary>
+        public void PreviewSeams(List<Vector2Int> path, List<(int2 cell, int exit)> into, OutputDirection? singleDir = null)
+        {
+            into.Clear();
+            if (!_queryReady || path == null || path.Count == 0) return;
+            SnapshotBelts(out _, out var cellExit, out var splitMasks);
+            ConveyorTopology.PreviewSeams(cellExit, ToInt2(path), splitMasks, Bridges(), into,
+                                          (int)(singleDir ?? OutputDirection.North));
+        }
+
         /// <summary>Lays the run; false (with a player-facing <paramref name="refusal"/>) when it is rejected.</summary>
         public bool PlaceConveyorChain(List<Vector2Int> path, out string refusal, OutputDirection? singleDir = null)
         {
