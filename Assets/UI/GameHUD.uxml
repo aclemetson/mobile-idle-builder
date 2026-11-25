@@ -430,6 +430,10 @@
                         <ui:Button name="btn-quality-high"   text="High"   class="quality-btn quality-btn--active" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Building Progress Bars" class="settings-label" />
+                    <ui:Toggle name="toggle-progress-bars" value="true" class="settings-toggle" />
+                </ui:VisualElement>
                 <ui:Label text="NOTIFICATIONS" class="drawer-section-title" />
                 <ui:VisualElement class="settings-row">
                     <ui:Label text="Push Notifications" class="settings-label" />
