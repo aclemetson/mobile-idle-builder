@@ -157,9 +157,15 @@ namespace MobileIdleBuilder
                     if (!splitMap.TryGetValue(cell, out var sp)) continue;
                     int next = c < len - 1
                         ? DirBetween(cell, new Vector2Int(chain.cells[c * 2 + 2], chain.cells[c * 2 + 3])) : -1;
+                    // A side leads on along the chain (next), into a branch chain, or straight into a building that
+                    // takes items (a split right in front of an input, as ConveyorSystem delivers it).
+                    BuildingSaveData SideConsumer(int d) =>
+                        d != next && !chainByHead.ContainsKey(Step(cell, d))
+                        && cellToBuilding.TryGetValue(Step(cell, d), out var b) && CanConsume(b) ? b : null;
                     float total = 0f;
                     for (int d = 0; d < 4; d++)
-                        if (BeltSplitRules.Has(sp.Mask, d) && (d == next || chainByHead.ContainsKey(Step(cell, d))))
+                        if (BeltSplitRules.Has(sp.Mask, d)
+                            && (d == next || chainByHead.ContainsKey(Step(cell, d)) || SideConsumer(d) != null))
                             total += BeltSplitRules.ClampWeight(sp.Weight(d));
                     if (total <= 0f) continue;
                     float trunk = 0f;
@@ -170,6 +176,8 @@ namespace MobileIdleBuilder
                         if (d == next) trunk = share;
                         else if (depth < 16 && chainByHead.TryGetValue(Step(cell, d), out var branch))
                             Route(branch, share, into, depth + 1);
+                        else if (SideConsumer(d) is { } consumerSide)
+                            into.Add((indexOf[consumerSide], share));
                     }
                     w = trunk;
                 }
