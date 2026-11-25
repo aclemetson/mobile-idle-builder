@@ -82,20 +82,35 @@ namespace MobileIdleBuilder.Tests
         // ── What the lock covers ────────────────────────────────────────────
 
         [Test]
-        public void EveryAdExceptDoubleOffline_IsLocked()
+        public void EveryAdExceptDoubleOfflineAndSurge_IsLocked()
         {
             foreach (AdPlacement p in Enum.GetValues(typeof(AdPlacement)))
-                Assert.AreEqual(p != AdPlacement.DoubleOffline, BoostLock.LocksAd(p), p.ToString());
+                Assert.AreEqual(p != AdPlacement.DoubleOffline && p != AdPlacement.EntropySurge,
+                                BoostLock.LocksAd(p), p.ToString());
         }
 
         [Test]
         public void BlocksAd_OnlyWhileABoostRuns()
         {
             var save = new SaveData();
-            Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.EntropySurge, Now));
+            Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.SpeedBoost, Now));
             save.speedBoostExpiryUtc = In(30);
-            Assert.IsTrue(BoostLock.BlocksAd(save, AdPlacement.EntropySurge, Now));
+            Assert.IsTrue(BoostLock.BlocksAd(save, AdPlacement.SpeedBoost, Now));
             Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.DoubleOffline, Now));
+        }
+
+        [Test]
+        public void EntropySurge_StacksWithEveryBoost()
+        {
+            var save = new SaveData
+            {
+                speedBoostExpiryUtc     = In(30),
+                adsIdleBoostExpiryUtc   = In(60),
+                cyclotronBoostExpiryUtc = In(5),
+                cyclotronBoostMultiplier = 2f,
+            };
+            Assert.IsTrue(BoostLock.IsLocked(save, Now));
+            Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.EntropySurge, Now));
         }
 
         [TestCase(0,    "0:00")]

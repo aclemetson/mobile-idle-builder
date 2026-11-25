@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
     /// One boost at a time: while any timed boost runs, no shop bonus (Speed-Ups, Time Warp, entropy
     /// packs, prestige-currency packs) and no ad reward can be taken. Still allowed: crystal packs (IAP,
     /// currency not a boost), the research crystal skip, the Double Offline ad on the idle-return screen,
+    /// the Entropy Surge (a one-off payout priced on net worth, so it stacks with any boost, 2026-11-24)
     /// and the Cyclotron Kick minigame itself (gameplay, not a purchase). Pure over SaveData so the rule is
     /// unit-tested; PremiumShopService and AdService enforce it, the shop and ad panels display it.
     /// </summary>
@@ -47,8 +48,11 @@ namespace MobileIdleBuilder
 
         public static bool IsLocked(SaveData save, DateTime now) => Active(save, now) != TimedBoost.None;
 
-        /// <summary>Whether the lock applies to this ad placement. Double Offline stays available.</summary>
-        public static bool LocksAd(AdPlacement p) => p != AdPlacement.DoubleOffline;
+        /// <summary>
+        /// Whether the lock applies to this ad placement. Double Offline and the Entropy Surge stay available:
+        /// the surge pays a share of net worth, which no running boost inflates, so stacking it is harmless.
+        /// </summary>
+        public static bool LocksAd(AdPlacement p) => p != AdPlacement.DoubleOffline && p != AdPlacement.EntropySurge;
 
         /// <summary>Whether <paramref name="p"/> is blocked right now.</summary>
         public static bool BlocksAd(SaveData save, AdPlacement p, DateTime now) => LocksAd(p) && IsLocked(save, now);
