@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: overpasses
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: overpasses
+  displayName: Overpasses
+  description: Raise a belt over others. While drawing a belt, tap Up to lay the
+    next straight stretch as an overpass that crosses up to 4 tiles of belts.
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
+  depthInTree: 2
+  block: foundations
+  treeX: -1
+  treeY: -1
+  requiredWorld: 
+  world: world_physics
+  costBaseCurrency: 600000
+  costPrestigeCurrency: 0
+  durationSeconds: 120
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems: []
+  unlocksRecipes: []
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 8e5db0410ea749147a2292eb0a0100d8, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Lift the field lattice off the floor and it carries its current through
+    the air: belts can cross without touching.'

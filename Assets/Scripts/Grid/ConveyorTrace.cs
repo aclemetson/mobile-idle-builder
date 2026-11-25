@@ -13,6 +13,10 @@ namespace MobileIdleBuilder
     /// cheaper of the L and the detour by router cost wins, the same rule as the old start/end placement).
     /// Cells already on the trace count as blocked, so a belt never crosses itself. A node on an existing
     /// belt (other than the start) merges into it and ends the trace.
+    ///
+    /// A raised tap (<see cref="TryAdd(Vector2Int, bool)"/>) lays an overpass instead: a straight span from the last
+    /// node to the tapped tile, crossing the tiles between. The path then holds just its two ramps, side by side in
+    /// the list though not neighbours on the grid (<see cref="OverpassRules.IsSpan"/>).
     /// </summary>
     public sealed class ConveyorTrace
     {
@@ -42,23 +46,45 @@ namespace MobileIdleBuilder
         private readonly Func<Vector2Int, bool> _isBelt;
         private readonly Func<Vector2Int, Vector2Int, Func<int, int, int>> _extraCostFor;
         private readonly Func<List<Vector2Int>, string> _rejectReason;
+        private readonly Func<Vector2Int, Vector2Int, string> _spanReject;
 
         private readonly List<Vector2Int>       _nodes    = new();
         private readonly List<List<Vector2Int>> _segments = new();
         private readonly List<bool>             _bends    = new(); // per segment: horizontal-first L
+        private readonly List<bool>             _spans    = new(); // per segment: an overpass
 
         /// <param name="isFree">A cell a new belt may be laid on (in bounds, unoccupied).</param>
         /// <param name="isBelt">A cell holding an existing belt.</param>
         /// <param name="extraCostFor">Router extra cost for a segment from a to b (may return null).</param>
         /// <param name="rejectReason">Why a joined path can't be placed, or null when it can.</param>
+        /// <param name="spanReject">Why an overpass from a to b can't be laid (locked, too long, over a building), or null.</param>
         public ConveyorTrace(Func<Vector2Int, bool> isFree, Func<Vector2Int, bool> isBelt,
                              Func<Vector2Int, Vector2Int, Func<int, int, int>> extraCostFor = null,
-                             Func<List<Vector2Int>, string> rejectReason = null)
+                             Func<List<Vector2Int>, string> rejectReason = null,
+                             Func<Vector2Int, Vector2Int, string> spanReject = null)
         {
             _isFree       = isFree ?? throw new ArgumentNullException(nameof(isFree));
             _isBelt       = isBelt ?? throw new ArgumentNullException(nameof(isBelt));
             _extraCostFor = extraCostFor;
             _rejectReason = rejectReason;
+            _spanReject   = spanReject;
+        }
+
+        /// <summary>Player-facing reasons a raised tap is refused (short: the banner doesn't wrap).</summary>
+        public const string SpanStartsOnBeltMessage = "Start an overpass on a new tile.";
+        public const string SpanAfterSpanMessage    = "Lay a belt tile between overpasses.";
+        public const string SpanLandsOnBeltMessage  = "An overpass lands on a free tile.";
+
+        /// <summary>True when the last segment is an overpass.</summary>
+        public bool LastIsSpan => _spans.Count > 0 && _spans[_spans.Count - 1];
+
+        /// <summary>Every tile the trace's overpasses cross (none of them on the path itself).</summary>
+        public List<Vector2Int> CrossedCells()
+        {
+            var cells = new List<Vector2Int>();
+            for (int s = 0; s < _segments.Count; s++)
+                if (_spans[s]) cells.AddRange(OverpassRules.CrossedCells(_segments[s][0], _segments[s][1]));
+            return cells;
         }
 
         public IReadOnlyList<Vector2Int> Nodes => _nodes;
@@ -79,9 +105,13 @@ namespace MobileIdleBuilder
         /// <summary>Every cell on the trace (nodes and route cells).</summary>
         public HashSet<Vector2Int> Cells() => new(Path());
 
-        public AddResult TryAdd(Vector2Int cell)
+        public AddResult TryAdd(Vector2Int cell) => TryAdd(cell, false);
+
+        /// <summary>Adds a node; <paramref name="raised"/> lays the segment to it as an overpass.</summary>
+        public AddResult TryAdd(Vector2Int cell, bool raised)
         {
             LastRejectReason = null;
+            if (raised && _nodes.Count > 0) return TryAddSpan(cell);
 
             if (_nodes.Count == 0)
             {
@@ -108,8 +138,39 @@ namespace MobileIdleBuilder
 
             _segments.Add(segment);
             _bends.Add(defaultBend);
+            _spans.Add(false);
             _nodes.Add(cell);
             return _isBelt(cell) ? AddResult.Merged : AddResult.Added;
+        }
+
+        private AddResult TryAddSpan(Vector2Int cell)
+        {
+            if (IsEnded)      return AddResult.AlreadyEnded;
+            if (cell == Last) return AddResult.SameAsLast;
+            if (Cells().Contains(cell)) return AddResult.CrossesItself;
+
+            string reason =
+                _isBelt(Last)  ? SpanStartsOnBeltMessage :
+                LastIsSpan     ? SpanAfterSpanMessage :
+                !_isFree(cell) ? SpanLandsOnBeltMessage :
+                _spanReject?.Invoke(Last, cell);
+            if (reason == null)
+            {
+                var segment  = new List<Vector2Int> { Last, cell };
+                var segments = new List<List<Vector2Int>>(_segments) { segment };
+                var nodes    = new List<Vector2Int>(_nodes) { cell };
+                reason = _rejectReason?.Invoke(Join(segments, nodes));
+                if (reason == null)
+                {
+                    _segments.Add(segment);
+                    _bends.Add(true);
+                    _spans.Add(true);
+                    _nodes.Add(cell);
+                    return AddResult.Added;
+                }
+            }
+            LastRejectReason = reason;
+            return AddResult.Rejected;
         }
 
         /// <summary>Removes the last node and its segment (or the start, when it is the only node).</summary>
@@ -121,6 +182,7 @@ namespace MobileIdleBuilder
             {
                 _segments.RemoveAt(_segments.Count - 1);
                 _bends.RemoveAt(_bends.Count - 1);
+                _spans.RemoveAt(_spans.Count - 1);
             }
             return true;
         }
@@ -131,7 +193,7 @@ namespace MobileIdleBuilder
         /// </summary>
         public bool FlipLastBend()
         {
-            if (_segments.Count == 0) return false;
+            if (_segments.Count == 0 || LastIsSpan) return false;   // an overpass is straight
             int i = _segments.Count - 1;
             bool bend = !_bends[i];
 
@@ -154,6 +216,7 @@ namespace MobileIdleBuilder
             _nodes.Clear();
             _segments.Clear();
             _bends.Clear();
+            _spans.Clear();
             LastRejectReason = null;
         }
 

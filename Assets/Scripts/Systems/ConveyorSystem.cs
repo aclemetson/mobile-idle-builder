@@ -72,10 +72,17 @@ namespace MobileIdleBuilder
             var segMap      = new NativeHashMap<int2, Entity>(segEntities.Length  * 2, Allocator.Temp);
             var buildingMap = new NativeHashMap<int2, Entity>(bldgEntities.Length * 4, Allocator.Temp);
 
+            // Overpasses: each ramp-down, with its ramp-up and the side the span arrives on (not a neighbour).
+            var rampDowns = new Dictionary<int2, (Entity up, int side)>();
             for (int i = 0; i < segEntities.Length; i++)
             {
                 var seg = EntityManager.GetComponentData<ConveyorSegmentData>(segEntities[i]);
                 segMap.TryAdd(seg.Cell, segEntities[i]);
+                if (EntityManager.HasComponent<BeltBridge>(segEntities[i]))
+                {
+                    var b = EntityManager.GetComponentData<BeltBridge>(segEntities[i]);
+                    rampDowns[b.Exit] = (segEntities[i], ConveyorTopology.DirBetween(b.Exit, seg.Cell));
+                }
             }
 
             for (int i = 0; i < bldgEntities.Length; i++)
@@ -114,7 +121,9 @@ namespace MobileIdleBuilder
                 if (buf.Length == 0) continue;
 
                 var   seg  = EntityManager.GetComponentData<ConveyorSegmentData>(e);
-                float step = dt * speedMult / seg.TransportTime;
+                float len  = Len(e);                                   // tiles (an overpass span is several)
+                float step = dt * speedMult / (seg.TransportTime * len);
+                float sp   = spacing / len;                            // item spacing in this segment's progress
 
                 // Streams (Chemistry): a channel no Spring feeds is dry and nothing on it moves; a stream's
                 // mouth never holds items back (a Calorimeter takes them, else they are sold as surplus).
@@ -124,14 +133,14 @@ namespace MobileIdleBuilder
                 float frontLimit = EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap)
                     ? SplitFrontLimit(e, seg, segMap, spacing)
                     : seg.NextSegment != Entity.Null
-                    ? BeltMotion.FrontLimitBehind(Rear(seg.NextSegment), spacing)
+                    ? FrontLimitInto(e, seg.NextSegment, spacing)
                     : isStream || TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
-                        ? BeltMotion.Open : BeltMotion.TailRest(spacing);
+                        ? BeltMotion.Open : BeltMotion.TailRest(sp);
 
                 for (int k = 0; k < buf.Length; k++)
                 {
                     var item  = buf[k];
-                    float lim = k == 0 ? frontLimit : buf[k - 1].Progress - spacing;
+                    float lim = k == 0 ? frontLimit : buf[k - 1].Progress - sp;
                     item.Progress = BeltMotion.Advance(item.Progress, step, lim);
                     buf[k] = item;
                 }
@@ -174,7 +183,7 @@ namespace MobileIdleBuilder
                 else if (seg.NextSegment != Entity.Null)
                 {
                     // Defer to the per-target round-robin below (handles single and merge cells alike).
-                    if (BeltMotion.HasRoom(Rear(seg.NextSegment), item.Progress - 1f, spacing))
+                    if (RoomInto(seg.NextSegment, e, item.Progress, spacing))
                         mergeTargets.Add(seg.NextSegment);
                     // else: back-pressure — item waits
                 }
@@ -265,7 +274,10 @@ namespace MobileIdleBuilder
                 {
                     int dir   = (cursor + k) % 4;
                     int2 nc   = AdjacentCell(tSeg.Cell, dir);
-                    if (!segMap.TryGetValue(nc, out Entity inSeg)) continue;
+                    Entity inSeg;
+                    if (rampDowns.TryGetValue(tSeg.Cell, out var rd) && rd.side == dir)
+                        inSeg = rd.up;                                    // a ramp-down takes its overpass on the span side
+                    else if (!segMap.TryGetValue(nc, out inSeg)) continue;
 
                     var inData = EntityManager.GetComponentData<ConveyorSegmentData>(inSeg);
                     if (splitChoice.TryGetValue(inSeg, out int splitDir))
@@ -278,13 +290,14 @@ namespace MobileIdleBuilder
                     {
                         if (EntityManager.HasComponent<BeltSplit>(inSeg)) continue;                // a split waiting on another side
                         if (inData.OutputBlocked) continue;                                         // dead-end: not connected
-                        int2 inExitCell = AdjacentCell(inData.Cell, inData.ExitDir);
-                        if (inExitCell.x != tSeg.Cell.x || inExitCell.y != tSeg.Cell.y) continue; // not an inbound
+                        // Linked to us (ConveyorTopology): its output points here, or it's our overpass. A belt
+                        // running under a ramp points at it but isn't linked.
+                        if (inData.NextSegment != target) continue;
                     }
                     if (!ConveyorItems.Has(EntityManager, inSeg)) continue;
                     float frontProgress = ConveyorItems.Front(EntityManager, inSeg).Progress;
                     if (frontProgress < 1f) continue;
-                    if (!BeltMotion.HasRoom(targetRear, frontProgress - 1f, spacing)) continue;
+                    if (!RoomInto(target, inSeg, frontProgress, spacing)) continue;
 
                     chosen    = inSeg;
                     chosenDir = dir;
@@ -300,7 +313,7 @@ namespace MobileIdleBuilder
                 EntityManager.GetBuffer<ConveyorItem>(target).Add(new ConveyorItem
                 {
                     ItemID   = chosenItem.ItemID,
-                    Progress = Mathf.Max(0f, chosenItem.Progress - 1f),
+                    Progress = CarryInto(target, chosen, chosenItem.Progress),
                     InEdge   = ConveyorItem.EncodeEdge(chosenDir)   // the edge it came through (merge arm)
                 });
                 ConveyorItems.RemoveFront(EntityManager, chosen);
@@ -321,7 +334,7 @@ namespace MobileIdleBuilder
                 var e   = segEntities[i];
                 var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
                 if (!seg.IsChainHead) continue;
-                if (!BeltMotion.HasRoom(Rear(e), 0f, spacing)) continue; // no room at the entry edge yet
+                if (!BeltMotion.HasRoom(Rear(e), 0f, spacing / Len(e))) continue; // no room at the entry edge yet
 
                 // Scan all 4 neighbours for a building whose output port faces this segment.
                 // We cannot rely solely on EntryDir because the belt's travel direction may be
@@ -403,11 +416,12 @@ namespace MobileIdleBuilder
                 // Enter exactly one spacing behind the rearmost item (or at the edge of an empty head), so
                 // a full-speed source fills the belt at its rated spacing whatever the frame timing.
                 float? rear = Rear(head);
-                if (!BeltMotion.HasRoom(rear, 0f, spacing)) continue;
+                float  sp   = spacing / Len(head);
+                if (!BeltMotion.HasRoom(rear, 0f, sp)) continue;
                 EntityManager.GetBuffer<ConveyorItem>(head).Add(new ConveyorItem
                 {
                     ItemID   = itemID,
-                    Progress = rear == null ? 0f : rear.Value - spacing
+                    Progress = rear == null ? 0f : rear.Value - sp
                 });
             }
 
@@ -466,7 +480,7 @@ namespace MobileIdleBuilder
             for (int d = 0; d < 4; d++)
             {
                 if (!BeltSplitRules.Has(split.Mask, d) || !segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)) continue;
-                float lim = BeltMotion.FrontLimitBehind(Rear(t), spacing);
+                float lim = FrontLimitInto(e, t, spacing);
                 if (lim > best) best = lim;
             }
             return best;
@@ -479,7 +493,7 @@ namespace MobileIdleBuilder
         {
             bool Room(int d) =>
                 segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)
-                && BeltMotion.HasRoom(Rear(t), front.Progress - 1f, spacing);
+                && RoomInto(t, e, front.Progress, spacing);
 
             var split = EntityManager.GetComponentData<BeltSplit>(e);
             int planned = front.OutEdge - 1;
@@ -687,6 +701,36 @@ namespace MobileIdleBuilder
             order.Sort((a, b) => depth[a].CompareTo(depth[b]));
             return order;
         }
+
+        // ----------------------------------------------------------------
+        // Overpasses (BeltBridge): a span's one segment is several tiles long. Progress runs 0..1 over all of it,
+        // so its items step and sit closer in progress; these convert at a hand-off between segments of different
+        // lengths, keeping belt speed and spacing in tiles everywhere.
+        // ----------------------------------------------------------------
+
+        /// <summary>Length of a segment in tiles: 1, or an overpass span's <see cref="BeltBridge.Length"/>.</summary>
+        private float Len(Entity e) =>
+            EntityManager.HasComponent<BeltBridge>(e) ? math.max(1, EntityManager.GetComponentData<BeltBridge>(e).Length) : 1f;
+
+        /// <summary>How far <paramref name="cur"/>'s front item may go: one spacing (in tiles) behind <paramref name="next"/>'s rear.</summary>
+        private float FrontLimitInto(Entity cur, Entity next, float spacing)
+        {
+            float? rear = Rear(next);
+            if (rear == null) return BeltMotion.Open;
+            float ln = Len(next);
+            return 1f + (rear.Value - spacing / ln) * ln / Len(cur);
+        }
+
+        /// <summary>True when <paramref name="next"/> has room for <paramref name="from"/>'s front item (at <paramref name="frontProgress"/>).</summary>
+        private bool RoomInto(Entity next, Entity from, float frontProgress, float spacing)
+        {
+            float ln = Len(next);
+            return BeltMotion.HasRoom(Rear(next), (frontProgress - 1f) * Len(from) / ln, spacing / ln);
+        }
+
+        /// <summary>The handed-off item's progress on <paramref name="next"/>, keeping its overshoot in tiles.</summary>
+        private float CarryInto(Entity next, Entity from, float progress) =>
+            Mathf.Max(0f, (progress - 1f) * Len(from) / Len(next));
 
         /// <summary>Progress of the rearmost item on <paramref name="seg"/>, or null when it carries none.</summary>
         private float? Rear(Entity seg)

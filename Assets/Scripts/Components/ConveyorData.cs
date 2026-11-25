@@ -74,6 +74,20 @@ namespace MobileIdleBuilder
     }
 
     /// <summary>
+    /// An overpass (2026-11-24): this belt tile is the ramp up of a raised straight span, and hands its items to
+    /// the ramp-down tile at <see cref="Exit"/> instead of its neighbour. The tiles in between stay free for belts
+    /// underneath (buildings can't go there, <see cref="GridOccupancy.IsUnderOverpass"/>). The segment is
+    /// <see cref="Length"/> tiles long (the ramp-up tile plus the tiles crossed): its items move that much slower
+    /// in progress and sit that much closer in it, so they travel at belt speed and the span carries as much as a
+    /// belt. Unlocked by the Overpasses research (<see cref="OverpassRules"/>).
+    /// </summary>
+    public struct BeltBridge : IComponentData
+    {
+        public int2 Exit;     // the ramp-down tile
+        public int  Length;   // tiles from the ramp-up's entry edge to the ramp-down's entry edge (crossed + 1)
+    }
+
+    /// <summary>
     /// A belt split (2026-11-24): this belt tile hands its items to 2 or 3 sides instead of one, by weighted turns.
     /// Set by press-and-hold on a belt (BeltSplitCard). Replaces the Belt Splitter buildings. The tile's
     /// <see cref="ConveyorSegmentData.ExitDir"/> stays one of the outputs (the primary), so straight-chain logic

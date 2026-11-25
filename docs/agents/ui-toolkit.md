@@ -77,6 +77,10 @@ Covered by `TutorialSellPolicyTests`.
 
 The drawer's nav ScrollView (`drawer-nav-scroll drawer-grid`) wraps into a 3-column grid of `drawer-tile` buttons. Each tile keeps its `btn-*` name (all wiring, `TutorialPulseResolver` and reminder dots are unchanged) and holds a `GlyphIcon` (`drawer-tile__icon`, 28px; the menu kinds Build to Shop, drawn as vectors in `GlyphIcon.cs`) plus a caption label (`drawer-tile__caption`). Set a tile's label with `DrawerTile.SetCaption` (the Cyclotron's live "Cyclotron (42m)" does); never `button.text`, which would draw over the tile. The reminder dot sits on the tile's top-right corner. Covered by `DrawerTilesTests`.
 
+## Overpass Up button (conveyor bar)
+
+`btn-conveyor-up` in `GameHUD.uxml`'s conveyor bar, shown by `HUDController.UpdateConveyorBar` while tracing once the Overpasses research is done (`ConveyorPlacementController.CanRaise`). It toggles `RaiseNext` (class `conveyor-mode-btn--on`, label `ConveyorRaiseLabel`); the next tap lays one overpass and turns it off. Holding a ramp shows `BeltSplitCard.RampMessage` instead of the split card.
+
 ## Belt split card (press-and-hold a belt)
 
 `PlayerInputRouter` starts the same hold as building edit mode on a belt tile (not a stream). At `LongPress.HoldSeconds` it opens `BeltSplitCard`, built in code on the HUD root with the confirm-prompt card styles (`belt-split-*` in `GameHUD.uss`). The card has one row per side: the way in is greyed "(in)"; the others toggle on or off (2-3 outputs) with a − / + weight 1-5. Every change applies at once through `ConveyorPlacer.SetSplit`, so the fork's arms show on the belt under the card. Down to one side it becomes a plain belt leaving that way, and "No split" does the same. Drawing a belt from a split tile adds that side as an output. Pure texts are in `BeltSplitText`. Tests: `BeltSplitTests`.

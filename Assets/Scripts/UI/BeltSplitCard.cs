@@ -37,6 +37,7 @@ namespace MobileIdleBuilder
         public static bool Show(VisualElement root, ConveyorPlacer placer, Vector2Int cell)
         {
             if (root == null || placer == null) return false;
+            if (placer.IsOverpassRamp(cell)) { InventoryPopupController.NotifyWarning(RampMessage); return false; }
             if (!placer.TryGetSplitInfo(cell, out int inbound, out int mask, out int[] weights, out _)) return false;
             s_open?.Close();
             var card = new BeltSplitCard(root, placer, cell) { _inbound = inbound, _mask = mask, _weights = weights };
@@ -44,6 +45,9 @@ namespace MobileIdleBuilder
             s_open = card;
             return true;
         }
+
+        /// <summary>Holding an overpass ramp: ramps carry the span, so they don't split.</summary>
+        public const string RampMessage = "Overpass ramps can't split.";
 
         /// <summary>Closes the open card (Android back).</summary>
         public static void CloseOpen() => s_open?.Close();
