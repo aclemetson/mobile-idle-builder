@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -219,6 +220,7 @@ namespace MobileIdleBuilder
             grid.buildings.Clear();
             grid.conveyors.Clear();
             grid.blockedOutputs = null;
+            grid.splits         = null;
 
             // --- Buildings ---
             // The entropy sink IS persisted (its entry mirrors the live baked entity, and the idle
@@ -269,12 +271,37 @@ namespace MobileIdleBuilder
                 segMap[e] = _em.GetComponentData<ConveyorSegmentData>(e);
             convEntities.Dispose();
 
+            // Belt splits: their branches start on a tile the split feeds (not a chain head), so each branch is
+            // also saved as a chain from its first tile; the splits themselves are re-applied after loading.
+            var cellToSeg   = new Dictionary<int2, Entity>(segMap.Count);
+            foreach (var kv in segMap) cellToSeg[kv.Value.Cell] = kv.Key;
+            var chainStarts = new List<Entity>();
+            var splitList   = new List<BeltSplitData>();
             foreach (var kv in segMap)
             {
-                if (!kv.Value.IsChainHead) continue;
+                if (kv.Value.IsChainHead) chainStarts.Add(kv.Key);
+                if (!_em.HasComponent<BeltSplit>(kv.Key)) continue;
+                var split = _em.GetComponentData<BeltSplit>(kv.Key);
+                splitList.Add(new BeltSplitData
+                {
+                    X = kv.Value.Cell.x, Y = kv.Value.Cell.y, Mask = split.Mask,
+                    W0 = split.W0, W1 = split.W1, W2 = split.W2, W3 = split.W3,
+                });
+                for (int d = 0; d < 4; d++)
+                {
+                    if (!BeltSplitRules.Has(split.Mask, d)) continue;
+                    var c = kv.Value.Cell + (d == 0 ? new int2(0, 1) : d == 1 ? new int2(1, 0) : d == 2 ? new int2(0, -1) : new int2(-1, 0));
+                    if (cellToSeg.TryGetValue(c, out var branch) && branch != kv.Value.NextSegment
+                        && !segMap[branch].IsChainHead && !chainStarts.Contains(branch))
+                        chainStarts.Add(branch);
+                }
+            }
+            grid.splits = BeltSplitRules.Flatten(splitList);
 
+            foreach (var start in chainStarts)
+            {
                 var cells = new List<int>();
-                var cur   = kv.Key;
+                var cur   = start;
                 int guard = 0;
                 while (cur != Entity.Null && segMap.TryGetValue(cur, out var seg) && guard++ < 10000)
                 {
@@ -285,8 +312,8 @@ namespace MobileIdleBuilder
 
                 var csd = new ConveyorSaveData { cells = cells.ToArray() };
                 // A lone segment has no neighbours to derive facing from on reload, so persist its
-                // chosen direction (kv.Value is the chain head = the only segment here).
-                if (cells.Count == 2) csd.singleDir = kv.Value.ExitDir;
+                // chosen direction (the chain's first segment = the only segment here).
+                if (cells.Count == 2) csd.singleDir = segMap[start].ExitDir;
                 grid.conveyors.Add(csd);
             }
 
@@ -374,6 +401,11 @@ namespace MobileIdleBuilder
             var grid = EnsureActiveGrid(save);
             if (grid == null) return;
             if (!forceApply && SaveManager.Instance.IsNewGame) return;
+
+            // Belt Splitter buildings became belt splits (2026-11-24): turn any still saved into split tiles.
+            int convertedSplitters = SplitterMigration.Convert(grid);
+            if (convertedSplitters > 0)
+                GameLogger.Info($"[GridSaveService] Converted {convertedSplitters} Belt Splitter building(s) into belt splits.");
 
             bool hasBuildings = grid.buildings?.Count > 0;
             bool hasConveyors = grid.conveyors?.Count > 0;
@@ -507,6 +539,10 @@ namespace MobileIdleBuilder
                         blockedCells.Add(new Vector2Int(grid.blockedOutputs[i], grid.blockedOutputs[i + 1]));
                     conveyorPlacer.ApplyBlockedOutputs(blockedCells);
                 }
+
+                // Belt splits last: every branch belt exists now, so the split links into all of them.
+                if (grid.splits != null && grid.splits.Length >= BeltSplitRules.Stride)
+                    conveyorPlacer.ApplySplits(BeltSplitRules.Parse(grid.splits));
             }
 
             // --- Restore fields ---
@@ -733,7 +769,6 @@ namespace MobileIdleBuilder
                 getRecipeInfo,
                 SurplusSale.CurrentFraction(),
                 id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter,
-                id => buildingLookup.TryGetValue(id, out var fs) && fs.building.isSplitter,
                 bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
                     ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f);
 

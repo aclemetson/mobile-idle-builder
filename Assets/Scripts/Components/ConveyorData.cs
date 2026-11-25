@@ -61,6 +61,45 @@ namespace MobileIdleBuilder
 
         /// <summary>The recorded entry edge, or <paramref name="fallbackEdge"/> when none was recorded.</summary>
         public int EntryEdgeOr(int fallbackEdge) => InEdge > 0 ? InEdge - 1 : fallbackEdge;
+
+        /// <summary>
+        /// On a belt split (<see cref="BeltSplit"/>): the side this item will leave by, as <c>OutputDirection + 1</c>;
+        /// 0 = not chosen yet (or not on a split). Picked by weighted turns when the item reaches the split, so it
+        /// visibly curves toward its branch; re-picked at the edge if that branch has no room.
+        /// </summary>
+        public byte OutEdge;
+
+        /// <summary>The planned exit, or <paramref name="fallbackDir"/> when none is planned.</summary>
+        public int ExitEdgeOr(int fallbackDir) => OutEdge > 0 ? OutEdge - 1 : fallbackDir;
+    }
+
+    /// <summary>
+    /// A belt split (2026-11-24): this belt tile hands its items to 2 or 3 sides instead of one, by weighted turns.
+    /// Set by press-and-hold on a belt (BeltSplitCard). Replaces the Belt Splitter buildings. The tile's
+    /// <see cref="ConveyorSegmentData.ExitDir"/> stays one of the outputs (the primary), so straight-chain logic
+    /// still works; the other outputs are extra. Weights 1..5 per side (default 1 = even). Credits are runtime-only
+    /// smooth-weighted-round-robin state (<see cref="BeltSplitRules.Pick"/>), not saved.
+    /// </summary>
+    public struct BeltSplit : IComponentData
+    {
+        public byte Mask;               // bit d set = an output toward OutputDirection d
+        public byte W0, W1, W2, W3;     // weight per direction (N, E, S, W); 0 where not an output
+        public int  C0, C1, C2, C3;     // weighted-turn credits per direction
+
+        public int Weight(int dir) => dir switch { 0 => W0, 1 => W1, 2 => W2, 3 => W3, _ => 0 };
+
+        public void SetWeight(int dir, int w)
+        {
+            byte b = (byte)w;
+            switch (dir) { case 0: W0 = b; break; case 1: W1 = b; break; case 2: W2 = b; break; case 3: W3 = b; break; }
+        }
+
+        public int Credit(int dir) => dir switch { 0 => C0, 1 => C1, 2 => C2, 3 => C3, _ => 0 };
+
+        public void SetCredit(int dir, int c)
+        {
+            switch (dir) { case 0: C0 = c; break; case 1: C1 = c; break; case 2: C2 = c; break; case 3: C3 = c; break; }
+        }
     }
 
     /// <summary>

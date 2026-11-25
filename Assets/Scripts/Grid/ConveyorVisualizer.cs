@@ -58,6 +58,8 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int, int), bool> _inputPorts = new();
         private readonly HashSet<(int, int)>               _beltCells  = new();
         private readonly List<int>                         _inbound    = new(4);
+        private readonly Dictionary<(int, int), int>       _splitMasks = new();   // belt splits: cell -> output mask
+        private readonly List<int>                         _forkExits  = new(3);
         private readonly bool[] _feeds = new bool[4];
         private readonly bool[] _sinks = new bool[4];
         // One property block for every visual made here; SetPropertyBlock copies it, so reuse is safe.
@@ -237,7 +239,8 @@ namespace MobileIdleBuilder
 
                 Vector3 cellCenter = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
                 int     inEdge     = OppositeDir(seg.EntryDir);
-                int     exitDir    = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                int     beltExit   = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                bool    isSplit    = em.HasComponent<BeltSplit>(e);
 
                 for (int k = 0; k < items.Length; k++)
                 {
@@ -261,8 +264,9 @@ namespace MobileIdleBuilder
 
                     // Follow the belt's own centreline (round the arc on a corner), inset 5% at each edge. On a
                     // merge, each item rides the arm it came in on, so side items curve onto the belt.
-                    int   entry = item.EntryEdgeOr(inEdge);
-                    float t     = Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress));
+                    int   entry   = item.EntryEdgeOr(inEdge);
+                    int   exitDir = isSplit ? item.ExitEdgeOr(beltExit) : beltExit;   // a split's item heads for its branch
+                    float t       = Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress));
                     Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, t);
                     pos.y       = 0.3f;
                     sphere.transform.localPosition = pos;
@@ -408,9 +412,12 @@ namespace MobileIdleBuilder
             // is omitted, so the neighbour it points at is not drawn as a merge junction.
             var exitMap = _exitMap;
             exitMap.Clear();
+            _splitMasks.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (em.HasComponent<BeltSplit>(entities[i]))
+                    _splitMasks[(seg.Cell.x, seg.Cell.y)] = em.GetComponentData<BeltSplit>(entities[i]).Mask;
                 if (seg.OutputBlocked) continue;
                 exitMap[(seg.Cell.x, seg.Cell.y)] = seg.ExitDir;
             }
@@ -432,8 +439,17 @@ namespace MobileIdleBuilder
                 if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
                 else                        _tailVisualExit.Remove(cell);
 
-                var inbound = ComputeInboundEdges(seg.Cell, exitMap, _inbound);   // read by Build, not kept
-                _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
+                var inbound = ComputeInboundEdges(seg.Cell, exitMap, _splitMasks, _inbound);   // read by Build, not kept
+                if (_splitMasks.TryGetValue(cell, out int splitMask))
+                {
+                    // A belt split: the reverse of a merge, one branch per output side (drawn even before a
+                    // branch belt exists, so the player sees where it will go).
+                    _forkExits.Clear();
+                    for (int d = 0; d < 4; d++) if (BeltSplitRules.Has(splitMask, d)) _forkExits.Add(d);
+                    _spawnedBelts[cell] = SpawnFork(seg.Cell.x, seg.Cell.y, OppositeDir(seg.EntryDir), _forkExits, cs);
+                }
+                else
+                    _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
             }
 
             entities.Dispose();
@@ -618,17 +634,40 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Fills <paramref name="edges"/> with the directions (0..3) from which conveyor flow enters this cell.</summary>
-        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap, List<int> edges)
+        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap,
+                                                     Dictionary<(int, int), int> splitMasks, List<int> edges)
         {
             edges.Clear();
             for (int d = 0; d < 4; d++)
             {
                 int2 nc = Adjacent(cell, d);
+                // A split feeds every neighbour on its mask.
+                if (splitMasks.TryGetValue((nc.x, nc.y), out int sm) && BeltSplitRules.Has(sm, OppositeDir(d)))
+                {
+                    edges.Add(d);
+                    continue;
+                }
                 if (!exitMap.TryGetValue((nc.x, nc.y), out int nExit)) continue;
                 int2 nExitCell = Adjacent(nc, nExit);
                 if (nExitCell.x == cell.x && nExitCell.y == cell.y) edges.Add(d);
             }
             return edges;
+        }
+
+        // A belt split's tile: the fork mesh in the belts' own material.
+        private GameObject SpawnFork(int x, int y, int inEdgeDir, List<int> exits, float cs)
+        {
+            var root = new GameObject($"BeltSplit_{x}_{y}");
+            root.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+            root.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+            var flow = new GameObject("Flow", typeof(MeshFilter), typeof(MeshRenderer));
+            flow.transform.SetParent(root.transform, worldPositionStays: false);
+            flow.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.BuildFork(cs, inEdgeDir, exits);
+            var mr = flow.GetComponent<MeshRenderer>();
+            mr.sharedMaterial    = GetFlowMaterial();
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            mr.receiveShadows    = false;
+            return root;
         }
 
         // ----------------------------------------------------------------

@@ -1971,7 +1971,7 @@ namespace MobileIdleBuilder
                 string beltName = streams ? "Channel" : "Conveyor Belt";
                 string beltInfo = streams
                     ? "Draw a stream from a Spring past your buildings; each takes what its reaction needs"
-                    : "Draw paths to move items between buildings";
+                    : "Draw paths to move items between buildings. Hold a belt to split it into 2 or 3 directions.";
                 _builderPages["logistics"].Add(BuilderMenu.MakeCard(beltName, null, GlyphIcon.Kind.Flip,
                     MakeCostLabel(0, true), placeBtn, InfoButton(beltName, beltInfo)));
             }

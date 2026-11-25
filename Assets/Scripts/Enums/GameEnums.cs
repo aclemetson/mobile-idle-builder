@@ -61,7 +61,7 @@ namespace MobileIdleBuilder
         RadioactiveContainment, // lead shell
         BasicGenerator,     // energy spire
         PowerRelay,         // broadcast pylon
-        BeltSplitter,       // river forking around a rock
+        BeltSplitter,       // retired 2026-11-24 (belt splits replaced the building); kept for serialized values
         FusionReactor,      // star in a magnetic bottle
         NucleonHarvester,   // two field wells feeding one nucleon
         Spring              // rock pool welling up into a stream (Chemistry). Appended: serialized ints stay put.

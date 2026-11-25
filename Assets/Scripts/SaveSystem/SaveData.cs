@@ -215,6 +215,8 @@ namespace MobileIdleBuilder
         public int[] blockedOutputs;             // flattened [x0,y0,...] of belt cells whose forward output
                                                  // is an intentional dead-end (ran up to a belt without merging)
         public bool  startersPlaced;             // the site's starting buildings (SiteSO.startingBuildings) were placed this run
+        public int[] splits;                     // belt splits, flattened [x, y, mask, w0, w1, w2, w3, ...]
+                                                 // (BeltSplitRules.Stride per split); null = none
     }
 
     [Serializable]
