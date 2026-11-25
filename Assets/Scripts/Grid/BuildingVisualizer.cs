@@ -117,6 +117,15 @@ namespace MobileIdleBuilder
         private Material _outHoleMat;
         private Material _inHoleMat;
 
+        /// <summary>The grid this visualizer draws on.</summary>
+        public GridRenderer Grid => gridRenderer;
+
+        void Awake()
+        {
+            // World-space progress bars above producing buildings (#211); drawn from ECS, no scene wiring.
+            if (GetComponent<BuildingProgressBars>() == null) gameObject.AddComponent<BuildingProgressBars>();
+        }
+
         void Start()
         {
             var world = World.DefaultGameObjectInjectionWorld;

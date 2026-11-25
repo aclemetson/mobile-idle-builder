@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
 
         private Slider _sliderPanSensitivity;
         private Toggle _toggleInvertTilt;
+        private Toggle _toggleProgressBars;
 
         private Button _btnSendFeedback;
         private Button _btnPrivacyPolicy;
@@ -61,6 +62,7 @@ namespace MobileIdleBuilder
             if (_toggleNotifications != null) _toggleNotifications.UnregisterValueChangedCallback(OnNotificationsChanged);
             if (_sliderPanSensitivity != null) _sliderPanSensitivity.UnregisterValueChangedCallback(OnPanSensitivityChanged);
             if (_toggleInvertTilt    != null) _toggleInvertTilt.UnregisterValueChangedCallback(OnInvertTiltChanged);
+            if (_toggleProgressBars  != null) _toggleProgressBars.UnregisterValueChangedCallback(OnProgressBarsChanged);
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         -= OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        -= OnPrivacyPolicy;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         -= OnGoogleSignIn;
@@ -97,6 +99,7 @@ namespace MobileIdleBuilder
             _toggleNotifications  = root.Q<Toggle>("toggle-notifications");
             _sliderPanSensitivity = root.Q<Slider>("slider-pan-sensitivity");
             _toggleInvertTilt     = root.Q<Toggle>("toggle-invert-tilt");
+            _toggleProgressBars   = root.Q<Toggle>("toggle-progress-bars");
             _btnSendFeedback      = root.Q<Button>("btn-send-feedback");
             _btnPrivacyPolicy     = root.Q<Button>("btn-privacy-policy");
             _versionLabel         = root.Q<Label>("settings-version");
@@ -119,6 +122,7 @@ namespace MobileIdleBuilder
             if (_toggleNotifications != null) _toggleNotifications.RegisterValueChangedCallback(OnNotificationsChanged);
             if (_sliderPanSensitivity != null) _sliderPanSensitivity.RegisterValueChangedCallback(OnPanSensitivityChanged);
             if (_toggleInvertTilt    != null) _toggleInvertTilt.RegisterValueChangedCallback(OnInvertTiltChanged);
+            if (_toggleProgressBars  != null) _toggleProgressBars.RegisterValueChangedCallback(OnProgressBarsChanged);
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         += OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        += OnPrivacyPolicy;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         += OnGoogleSignIn;
@@ -144,6 +148,8 @@ namespace MobileIdleBuilder
                 _sliderPanSensitivity.SetValueWithoutNotify(s.panSensitivity);
             if (_toggleInvertTilt != null)
                 _toggleInvertTilt.SetValueWithoutNotify(s.invertTilt);
+            if (_toggleProgressBars != null)
+                _toggleProgressBars.SetValueWithoutNotify(s.showProgressBars);
 
             ApplyQualityButtonStyles(s.graphicsQuality);
         }
@@ -198,6 +204,9 @@ namespace MobileIdleBuilder
 
         private void OnInvertTiltChanged(ChangeEvent<bool> evt)
             => SettingsService.Instance?.SetInvertTilt(evt.newValue);
+
+        private void OnProgressBarsChanged(ChangeEvent<bool> evt)
+            => SettingsService.Instance?.SetShowProgressBars(evt.newValue);
 
         // ── Account (cross-device saves) ──────────────────────────────────────
 
