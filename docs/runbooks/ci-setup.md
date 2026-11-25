@@ -281,9 +281,16 @@ window EDM4U documents), after generation and before `pod install`.
 Podfile, so a dropped pod fails the cheap Ubuntu job with the pod named instead of the 10x
 macOS one.
 
+### Dev console
+
+The TestFlight lane builds with `BuildScript.BuildIOSDevelopment()`, which adds the
+`DEVELOPMENT_BUILD` define (dev console and dev tooling, shake to open) without making a
+debuggable player, the same as the Android internal lane's `BuildAndroidDevelopment()`.
+`BuildIOS()` is the plain build for a future App Store lane.
+
 ### Build number
 
-`BuildScript.BuildIOS()` sets `CFBundleVersion` from the existing
+`BuildScript.BuildIOS()` (and `BuildIOSDevelopment()`) sets `CFBundleVersion` from the existing
 `AndroidBundleVersionCode`, so one monotonic counter feeds both stores. There is no
 separate pre-merge iOS guard; TestFlight rejecting a duplicate build number is the
 backstop (the same role the Play upload plays for Android).
