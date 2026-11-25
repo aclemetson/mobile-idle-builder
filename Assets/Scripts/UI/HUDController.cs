@@ -69,9 +69,10 @@ namespace MobileIdleBuilder
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
-        private ScrollView _codexList,
-                           _upgradesList;
-        private Label      _prestigeSummary, _prestigeCurrency;
+        private ScrollView _upgradesList;
+        // ---- Codex + Prestige panels (#286): CodexPanelSubController, PrestigePanelSubController ----
+        private CodexPanelSubController    _codex;
+        private PrestigePanelSubController _prestigeUi;
         // ---- Research panel (list/tree, tabs, cards, skip: ResearchPanelSubController, #286) ----
         private ResearchPanelSubController _research;
 
@@ -79,10 +80,9 @@ namespace MobileIdleBuilder
         private BuildingsPanelSubController _buildings;
 
         // ---- HUD chrome ----
-        private VisualElement _drawerPanel;
-        private VisualElement _drawerBackdrop;
-        private bool          _drawerOpen;
-        private readonly DrawerTapGuard _drawerTapGuard = new DrawerTapGuard(DrawerSlideMs / 1000.0);
+        // Left drawer + panel docking (DrawerSubController, #286)
+        private DrawerSubController _drawer;
+        private bool DrawerIsOpen => _drawer != null && _drawer.IsOpen;
 
         private DialogueController _dialogue;
 
@@ -149,6 +149,20 @@ namespace MobileIdleBuilder
             _buildings    = GetComponent<BuildingsPanelSubController>() ?? gameObject.AddComponent<BuildingsPanelSubController>();
             _recipes      = GetComponent<RecipesPanelSubController>() ?? gameObject.AddComponent<RecipesPanelSubController>();
             _modeBars     = GetComponent<ModeBarsSubController>() ?? gameObject.AddComponent<ModeBarsSubController>();
+            _codex        = GetComponent<CodexPanelSubController>() ?? gameObject.AddComponent<CodexPanelSubController>();
+            _prestigeUi   = GetComponent<PrestigePanelSubController>() ?? gameObject.AddComponent<PrestigePanelSubController>();
+            _drawer       = GetComponent<DrawerSubController>() ?? gameObject.AddComponent<DrawerSubController>();
+            _drawer.Opened += () =>
+            {
+                OnDrawerOpened?.Invoke();
+                // Hint active: btn-achievements is now visible, so pulse it instead of the drawer handle.
+                if (_achievementsHintPulse != null) SwapAchievementsHintPulse("btn-achievements");
+            };
+            _drawer.Closed += () =>
+            {
+                // Hint still active but the drawer is hidden: back to pulsing the drawer handle.
+                if (_achievementsHintPulse != null) SwapAchievementsHintPulse("btn-drawer-handle");
+            };
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
@@ -291,6 +305,7 @@ namespace MobileIdleBuilder
             _worlds?.SetECSContext(_em);
             _research?.SetECSContext(_em);
             _buildings?.SetECSContext(_em);
+            _prestigeUi?.SetECSContext(_em);
         }
 
         void Update()
@@ -327,19 +342,12 @@ namespace MobileIdleBuilder
         {
             // The element the slide panels, the hint pill and the overlay instances share; its shape
             // (wider than tall) switches the panels to their landscape layout (.hud--landscape, GameHUD.uss).
-            _hudFrame    = root.Q("root") ?? root;
-            _dialogueBox = root.Q("dialogue-box");
-            _hintRestore = root.Q("tutorial-hint-restore");
-            _hudFrame.RegisterCallback<GeometryChangedEvent>(_ =>
-                _hudFrame.EnableInClassList("hud--landscape", IsLandscape(_hudFrame.layout.width, _hudFrame.layout.height)));
+            var hudFrame = root.Q("root") ?? root;
+            hudFrame.RegisterCallback<GeometryChangedEvent>(_ =>
+                hudFrame.EnableInClassList("hud--landscape", IsLandscape(hudFrame.layout.width, hudFrame.layout.height)));
 
-            // HUD chrome
-            _drawerPanel    = root.Q("left-drawer");
-            _drawerBackdrop = root.Q("drawer-backdrop");
-            // Closed drawer is hidden, not just slid off-screen, so its ScrollView scroller
-            // can never peek in at the left edge (#196). See OpenDrawer / CloseDrawer.
-            if (_drawerPanel != null) _drawerPanel.style.visibility = Visibility.Hidden;
-            _drawerTapGuard.Attach(_drawerPanel);
+            // HUD chrome: the left drawer (handle, backdrop, slide, tap guard) and panel docking
+            _drawer?.Initialize(root);
 
             // Panels
             _recipePanel       = root.Q("recipe-panel");
@@ -368,7 +376,7 @@ namespace MobileIdleBuilder
             // Panel content
             _recipes?.Initialize(root, this);   // recipe tabs + cards
             _buildings?.Initialize(root, this);   // Build menu tabs + cards
-            _codexList        = root.Q<ScrollView>("codex-list");
+            _codex?.Initialize(root);
             _research?.Initialize(root, this);   // tree/list toggle, world tabs, cards
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievements?.Initialize(root, achievementService);   // tabs, list, claim all, close
@@ -379,8 +387,7 @@ namespace MobileIdleBuilder
             _btnMegastructure       = root.Q<Button>("btn-megastructure");
 
 
-            _prestigeSummary  = root.Q<Label>("prestige-summary");
-            _prestigeCurrency = root.Q<Label>("prestige-currency");
+            _prestigeUi?.Initialize(root, this);   // summary, preview, Confirm
             _modeBars?.Initialize(root);   // placement / conveyor / deconstruct bars, confirm popup, output selector
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
             SaveConflictPrompt.Init(root); // "Two saves found": this device vs the cloud save
@@ -401,18 +408,6 @@ namespace MobileIdleBuilder
 
         private void BindButtons(VisualElement root)
         {
-            // Drawer toggle
-            // A pan that starts on the handle also ends as a click; ignore clicks where the pointer moved.
-            var drawerHandle = root.Q<Button>("btn-drawer-handle");
-            Vector2 handleDownPos = Vector2.zero;
-            drawerHandle.RegisterCallback<PointerDownEvent>(e => handleDownPos = e.position, TrickleDown.TrickleDown);
-            drawerHandle.RegisterCallback<ClickEvent>(e =>
-            {
-                if (IsTap(handleDownPos, e.position, 12f)) ToggleDrawer();
-            });
-            if (_drawerBackdrop != null)
-                _drawerBackdrop.RegisterCallback<ClickEvent>(_ => CloseDrawer());
-
             // Drawer nav buttons — non-research buttons respect the tutorial nav gate
             root.Q<Button>("btn-recipes").clicked      += () => TryOpenPanel(OpenRecipePanel);
             root.Q<Button>("btn-buildings").clicked    += () => TryOpenPanel(OpenBuildingsPanel);
@@ -472,9 +467,6 @@ namespace MobileIdleBuilder
             // Building inspector close
             var btnCloseInspector = root.Q<Button>("btn-close-inspector");
             if (btnCloseInspector != null) btnCloseInspector.clicked += HideBuildingInspector;
-
-            // Prestige confirm
-            root.Q<Button>("btn-confirm-prestige").clicked += OnPrestigeConfirmed;
         }
 
         // ============================================================
@@ -505,59 +497,7 @@ namespace MobileIdleBuilder
         private void OpenCodexPanel()
         {
             CloseAllPanels();
-            BuildCodexList();
-            SetElementVisible(_codexPanel, true);
-        }
-
-        /// <summary>
-        /// Populates the codex with an entry (tile icon + name + lore) for every item whose
-        /// crafting recipe the player has discovered, using the same known-recipe gate as the
-        /// recipe list. Rebuilt each time the panel opens.
-        /// </summary>
-        private void BuildCodexList()
-        {
-            if (_codexList == null) return;
-            _codexList.Clear();
-
-            var recipes = RecipeDatabase.Instance?.Recipes;
-            if (recipes == null) return;
-
-            var seen = new HashSet<int>();
-            int shown = 0;
-            foreach (var recipe in recipes)
-            {
-                if (!(RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)) continue;
-
-                var item = recipe.output != null ? ItemDatabase.Instance?.Get(recipe.output.id) : null;
-                if (item == null || !seen.Add(item.itemId)) continue;
-
-                var row = new VisualElement();
-                row.AddToClassList("codex-row");
-
-                var icon = MakeItemIcon(item.icon, "codex-icon");
-                if (icon != null) row.Add(icon);
-
-                var infoCol = new VisualElement();
-                infoCol.AddToClassList("codex-info");
-
-                var name = new Label(item.displayName ?? item.symbol ?? item.id);
-                name.AddToClassList("codex-name");
-                infoCol.Add(name);
-
-                if (!string.IsNullOrEmpty(item.codexEntry))
-                {
-                    var entry = new Label(item.codexEntry);
-                    entry.AddToClassList("codex-entry");
-                    infoCol.Add(entry);
-                }
-
-                row.Add(infoCol);
-                _codexList.Add(row);
-                shown++;
-            }
-
-            if (shown == 0)
-                _codexList.Add(new Label("Craft items to fill your codex."));
+            _codex?.Open();
         }
 
         /// <summary>
@@ -752,99 +692,29 @@ namespace MobileIdleBuilder
             _tournament?.Open();
         }
 
-        /// <summary>
-        /// During a tournament run a prestige or Ascension ends the run early (#505): asks, retires on the server at
-        /// the current net worth, then runs <paramref name="then"/>. Returns false (and does nothing) when no run is
-        /// on, so the caller goes ahead. The tournament's own join prestige goes through
-        /// <see cref="RequestTournamentPrestige"/> instead.
-        /// </summary>
-        private bool LeavesTournamentFirst(System.Action then)
-        {
-            var svc = TournamentService.Instance;
-            if (svc == null || !svc.PrestigeLeavesRun) return false;
-            double nw = _ecsReady && !_progressQuery.IsEmpty
-                ? _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity()).NetWorth : 0d;
-            ConfirmPrompt.Show("End your tournament run?", TournamentRules.PrestigeLeaveMessage(nw, svc.RunRemaining),
-                "End run & prestige", onConfirm: async () =>
-                {
-                    string error = await svc.RetireAsync();
-                    if (this == null) return;
-                    if (error != null)
-                    {
-                        ShowNotification("⚠", TournamentRules.ErrorText(error) + " Prestige not done.", "warning");
-                        return;
-                    }
-                    then?.Invoke();
-                });
-            return true;
-        }
+        // Prestige requests (PrestigePanelSubController; other controllers call these on the HUD).
 
         /// <summary>The prestige that starts a tournament run: the normal prestige, exempt from the tournament lock.</summary>
         public void RequestTournamentPrestige()
         {
-            if (!_ecsReady || _progressQuery.IsEmpty) return;
-            var entity   = _progressQuery.GetSingletonEntity();
-            var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            progress.PrestigeRequested = true;
-            _em.SetComponentData(entity, progress);
-            CloseAllPanels();
+            if (_prestigeUi != null && _prestigeUi.RequestTournamentPrestige()) CloseAllPanels();
         }
 
         /// <summary>Prestige currency a prestige would pay now (the tournament join card shows it).</summary>
-        public long CurrentPrestigePreview()
-        {
-            if (!_ecsReady || _progressQuery.IsEmpty) return 0;
-            return CalculatePrestigePreview(_em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity()).NetWorth);
-        }
+        public long CurrentPrestigePreview() => _prestigeUi != null ? _prestigeUi.Preview() : 0;
 
         /// <summary>True once ECS is ready for a prestige request.</summary>
-        public bool CanRequestPrestige => _ecsReady && !_progressQuery.IsEmpty;
+        public bool CanRequestPrestige => _prestigeUi != null && _prestigeUi.CanRequest;
 
         private void OpenPrestigePanel()
         {
-            if (!_ecsReady || _progressQuery.IsEmpty || _prestigeQuery.IsEmpty) return;
-
+            if (!CanRequestPrestige) return;
             CloseAllPanels();
-
-            var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-            var prestige = _em.GetComponentData<PrestigeData>(_prestigeQuery.GetSingletonEntity());
-
-            // Mirror the rate used in PrestigeSystem
-            long preview = CalculatePrestigePreview(progress.NetWorth);
-            long held    = prestige.PrestigeCurrency - prestige.PrestigeCurrencySpent;
-
-            if (_prestigeSummary  != null) _prestigeSummary.text  = $"Net worth: {progress.NetWorth:N0}" +
-                (TournamentService.Instance != null && TournamentService.Instance.PrestigeLeavesRun
-                    ? "\nThis ends your tournament run early." : "");
-            if (_prestigeCurrency != null) _prestigeCurrency.text =
-                $"You will receive: {preview} ✦   (current: {held} ✦)";
-
-            SetElementVisible(_prestigePanel, true);
+            _prestigeUi.Open();
         }
 
         /// <summary>The Megastructure panel's Ascend button: a prestige that also applies <see cref="AscensionRules"/>.</summary>
-        public void RequestAscension()
-        {
-            if (!_ecsReady || _progressQuery.IsEmpty) return;
-            if (LeavesTournamentFirst(RequestAscension)) return;
-            AscensionRules.Pending = true;
-            OnPrestigeConfirmed();
-            ShowNotification("◉", "Ascension! The worlds begin again; the megastructure grows.");
-        }
-
-        private void OnPrestigeConfirmed()
-        {
-            if (!_ecsReady || _progressQuery.IsEmpty) return;
-            if (LeavesTournamentFirst(OnPrestigeConfirmed)) return;
-
-            var entity   = _progressQuery.GetSingletonEntity();
-            var progress = _em.GetComponentData<PlayerProgressData>(entity);
-            progress.PrestigeRequested = true;
-            _em.SetComponentData(entity, progress);
-
-            SetElementVisible(_prestigePanel, false);
-            ShowNotification("✦", "Prestige complete! Starting a new run.");
-        }
+        public void RequestAscension() => _prestigeUi?.RequestAscension();
 
         // ============================================================
         // Shared text helpers (the panel sub-controllers and tests use these)
@@ -962,7 +832,7 @@ namespace MobileIdleBuilder
                 UpdateNoticeOpen = _gameUpdate != null && _gameUpdate.IsOpen,
                 InspectorOpen    = _inspector != null && _inspector.IsOpen,
                 PanelOpen        = panelOpen,
-                DrawerOpen       = _drawerOpen,
+                DrawerOpen       = DrawerIsOpen,
             };
 
             switch (BackNavigation.TopLayer(state))
@@ -1215,52 +1085,16 @@ namespace MobileIdleBuilder
         private void RefreshBannerClearance()
         {
             if (_allPanels == null) return;
-            bool menuOpen = _drawerOpen;
+            bool menuOpen = DrawerIsOpen;
             VisualElement openPanel = null;
             foreach (var panel in _allPanels)
                 if (panel != null && !panel.ClassListContains("hidden")) { openPanel = panel; break; }
             menuOpen |= openPanel != null;
             MenuOpen = menuOpen || (_inspector != null && _inspector.IsOpen) || (_cyclotron != null && _cyclotron.IsOpen);
-            RefreshPanelDocking(_drawerOpen ? null : openPanel);
+            _drawer?.RefreshPanelDocking(DrawerIsOpen ? null : openPanel);
             if (_banner == null) return;
             _banner.SetMenuOpen(menuOpen);
             _banner.RefreshNotificationClearance();
-        }
-
-        // Smallest free strip the tutorial dialogue / "Show hint" pill will move into (panel units).
-        private const float DialogueDockMinHeight = 200f, DialogueDockMinWidth = 240f;
-        private const float PillDockMinHeight     = 52f,  PillDockMinWidth     = 120f;
-        private const float TopBarHeight          = 60f;  // --top-bar-height in tokens.uss
-
-        private VisualElement _hudFrame, _dialogueBox, _hintRestore;
-        private PanelDock _pillDock = PanelDock.None, _dialogueDock = PanelDock.None;
-
-        /// <summary>
-        /// Moves the "Show hint" pill and the tutorial dialogue onto the map beside an open slide panel (above
-        /// it in portrait, left of it in landscape), so neither covers the panel's buttons. See <see cref="PanelDock"/>.
-        /// </summary>
-        private void RefreshPanelDocking(VisualElement openPanel)
-        {
-            if (_hudFrame == null) return;
-            var frame = new Vector2(_hudFrame.layout.width, _hudFrame.layout.height);
-            if (float.IsNaN(frame.x) || float.IsNaN(frame.y)) return;
-            var rect = openPanel != null ? openPanel.layout : Rect.zero;
-            bool sized = openPanel != null && !float.IsNaN(rect.width) && rect.height > 0f;
-
-            var pill = sized ? PanelDock.For(frame, rect, TopBarHeight, PillDockMinHeight, PillDockMinWidth) : PanelDock.None;
-            var dlg  = sized ? PanelDock.For(frame, rect, TopBarHeight, DialogueDockMinHeight, DialogueDockMinWidth) : PanelDock.None;
-
-            if (pill.Where != _pillDock.Where || pill.Free != _pillDock.Free)
-            {
-                _pillDock = pill;
-                pill.PlaceBottomRight(_hintRestore, frame);
-            }
-            if (dlg.Where != _dialogueDock.Where || dlg.Free != _dialogueDock.Free)
-            {
-                _dialogueDock = dlg;
-                dlg.Fill(_dialogueBox, frame);
-                _dialogueBox?.EnableInClassList("dialogue-box--docked", dlg.Where != PanelDock.Side.None);
-            }
         }
 
         private void CloseAllPanels()
@@ -1271,47 +1105,10 @@ namespace MobileIdleBuilder
             CancelActiveModes();
         }
 
-        // Matches .left-drawer transition-duration (0.2s) in GameHUD.uss, plus a frame of slack.
-        private const long DrawerSlideMs = 250;
-
-        private void ToggleDrawer()
-        {
-            if (_drawerOpen) CloseDrawer();
-            else             OpenDrawer();
-        }
-
-        private void OpenDrawer()
-        {
-            if (_drawerPanel == null) return;
-            _drawerOpen = true;
-            _drawerTapGuard.MarkOpened();
-            _drawerPanel.style.visibility = Visibility.Visible;
-            _drawerPanel.AddToClassList("left-drawer--open");
-            SetElementVisible(_drawerBackdrop, true);
-            OnDrawerOpened?.Invoke();
-            // Hint active: btn-achievements is now visible — pulse it instead of the drawer handle
-            if (_achievementsHintPulse != null)
-                SwapAchievementsHintPulse("btn-achievements");
-        }
-
         /// <summary>Closes the left drawer (for sub-controllers that open a modal from a drawer button).</summary>
         public void CloseMenuDrawer() => CloseDrawer();
 
-        private void CloseDrawer()
-        {
-            if (_drawerPanel == null) return;
-            _drawerOpen = false;
-            _drawerPanel.RemoveFromClassList("left-drawer--open");
-            // Hide once the 0.2 s slide-out transition has finished (unless reopened meanwhile).
-            _drawerPanel.schedule.Execute(() =>
-            {
-                if (!_drawerOpen) _drawerPanel.style.visibility = Visibility.Hidden;
-            }).StartingIn(DrawerSlideMs);
-            SetElementVisible(_drawerBackdrop, false);
-            // Hint still active but drawer hidden: swap back to pulsing the drawer handle
-            if (_achievementsHintPulse != null)
-                SwapAchievementsHintPulse("btn-drawer-handle");
-        }
+        private void CloseDrawer() => _drawer?.Close();
 
         /// <summary>
         /// Cancels any active building-placement, conveyor, or deconstruct mode (and their
