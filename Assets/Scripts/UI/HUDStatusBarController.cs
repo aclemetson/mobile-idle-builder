@@ -89,6 +89,8 @@ namespace MobileIdleBuilder
             RefreshCraftStatus();
         }
 
+        private readonly HashSet<int> _seenItems = new();
+
         private void RefreshInventoryBar()
         {
             if (_drawerInventory == null) return;
@@ -108,7 +110,8 @@ namespace MobileIdleBuilder
             if (hash == _lastInventoryHash) return;
             _lastInventoryHash = hash;
 
-            var seen = new HashSet<int>();
+            var seen = _seenItems;   // reused: this runs on every inventory change (#282)
+            seen.Clear();
             for (int i = 0; i < buffer.Length; i++)
             {
                 var slot = buffer[i];
