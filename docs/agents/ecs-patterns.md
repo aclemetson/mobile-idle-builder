@@ -37,6 +37,7 @@ public partial struct MySystem : ISystem
 ```
 
 - Structural changes (destroy/create entities) inside iteration: use a temp `EntityCommandBuffer`, playback after the loop — see `PrestigeSystem.cs:72-84`.
+- **Item prices in Burst (#284):** `ItemValueTableSystem` (managed, `OrderFirst`) builds the `ItemValueTable` singleton, a blob of per-item prices by numeric id (`Starred` = baseSellValue x stars for inventory, `Demon` = SurplusSale.DemonPrice), and rebuilds it only when `ItemDatabase.Version` (load, remote overrides via `GameDataOverrides.ApplyItems`, `InjectForTesting`) or `ItemStars.Stamp` changes. `NetWorthSystem` and `EntropySinkSystem` are Burst `ISystem`s that read it (missing table = unknown-item prices: 0 / 1). A new runtime write to item values must bump `ItemDatabase.Version`; an ECS test that needs real prices adds `ItemValueTableSystem` to its world.
 - Managed calls (services, logging) are allowed only in **non-Burst** systems — `PrestigeSystem` calls `AchievementService.Instance?.NotifyPrestige()` because it is not Burst-compiled. Never call managed code from a `[BurstCompile]` method.
 - Ordering: declare `[UpdateAfter(typeof(...))]` if you depend on another system's writes in the same frame.
 
