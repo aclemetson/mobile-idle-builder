@@ -1051,6 +1051,7 @@ namespace MobileIdleBuilder.Editor
                         day              = r.day,
                         crystals         = r.crystals,
                         entropy          = r.entropy,
+                        entropyMinutes   = r.entropy_minutes,
                         prestigeCurrency = r.prestige_currency
                     });
             rewardList.Sort((a, b) => a.day.CompareTo(b.day)); // index by 0-based streak
