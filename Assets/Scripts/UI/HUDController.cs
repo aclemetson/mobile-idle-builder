@@ -20,7 +20,9 @@ namespace MobileIdleBuilder
         // For the panel sub-controllers (#286).
         internal BuildingPlacementController PlacementController => placementController;
         internal ConveyorPlacementController ConveyorController  => conveyorController;
-        internal ResearchService             Research            => researchService;
+        // Live singletons first: after a scene reload the serialized copies are duplicates about to be destroyed.
+        internal ResearchService             Research            => ResearchService.Instance != null ? ResearchService.Instance : researchService;
+        internal ManualCraftService          Craft               => ManualCraftService.Instance != null ? ManualCraftService.Instance : craftService;
 
         // Sub-controllers (siblings on same GameObject)
         private HUDStatusBarController              _statusBar;
@@ -67,7 +69,7 @@ namespace MobileIdleBuilder
         private VisualElement[] _allPanels;
 
         // ---- Panel content ----
-        private ScrollView _recipeList, _codexList,
+        private ScrollView _codexList,
                            _upgradesList;
         private Label      _prestigeSummary, _prestigeCurrency, _placementLabel;
         // ---- Research panel (list/tree, tabs, cards, skip: ResearchPanelSubController, #286) ----
@@ -115,8 +117,8 @@ namespace MobileIdleBuilder
         private VisualElement _deconstructOverlay;
 
         // ---- Recipe-menu craft queue (#310) ----
-        private CraftQueueView _craftQueueView;
-        private bool IsRecipePanelOpen => _recipePanel != null && !_recipePanel.ClassListContains("hidden");
+        // ---- Recipes panel (tabs, cards, craft buttons, queue strip: RecipesPanelSubController, #286) ----
+        private RecipesPanelSubController _recipes;
 
         // ---- Tutorial events ----
         public event System.Action OnDrawerOpened;
@@ -175,6 +177,7 @@ namespace MobileIdleBuilder
             _achievements = GetComponent<AchievementsSubController>() ?? gameObject.AddComponent<AchievementsSubController>();
             _research     = GetComponent<ResearchPanelSubController>() ?? gameObject.AddComponent<ResearchPanelSubController>();
             _buildings    = GetComponent<BuildingsPanelSubController>() ?? gameObject.AddComponent<BuildingsPanelSubController>();
+            _recipes      = GetComponent<RecipesPanelSubController>() ?? gameObject.AddComponent<RecipesPanelSubController>();
             _stats        = GetComponent<StatsSubController>() ?? gameObject.AddComponent<StatsSubController>();
             if (GetComponent<IncomeRateTracker>() == null) gameObject.AddComponent<IncomeRateTracker>();
             _surgeOffer   = GetComponent<EntropySurgeOfferController>() ?? gameObject.AddComponent<EntropySurgeOfferController>();
@@ -278,16 +281,7 @@ namespace MobileIdleBuilder
             if (researchService != null)
                 researchService.OnResearchUnlocked += OnResearchUnlocked;
 
-            if (craftService != null)
-            {
-                _craftQueueView = new CraftQueueView(craftService);
-                // Floats over the bottom of the panel (added last so it draws and picks on top) instead
-                // of sitting above the list: above it, every show/hide shoved the rows ~230px, so a quick
-                // second tap on a 1s Proton landed on a label and did nothing on a phone.
-                _recipeList?.parent?.Add(_craftQueueView.Root);
-                _craftQueueView.Root.RegisterCallback<GeometryChangedEvent>(_ => UpdateRecipeListClearance());
-                craftService.QueueChanged += OnCraftQueueChanged;
-            }
+            _recipes?.AttachCraftService(craftService);   // craft-queue strip + queue refreshes
         }
 
         /// <summary>
@@ -336,10 +330,7 @@ namespace MobileIdleBuilder
             if (researchService != null)
                 researchService.OnResearchUnlocked -= OnResearchUnlocked;
 
-            if (craftService != null)
-                craftService.QueueChanged -= OnCraftQueueChanged;
-            _craftQueueView?.Root.RemoveFromHierarchy();
-            _craftQueueView = null;
+            _recipes?.DetachCraftService();
         }
 
         void Start()
@@ -377,7 +368,7 @@ namespace MobileIdleBuilder
             UpdatePlacementConfirmPopup();
             _buildings?.Tick();
             RefreshBannerClearance();
-            if (_craftQueueView != null && IsRecipePanelOpen) _craftQueueView.Tick(GameClock.UtcNow);
+            _recipes?.Tick(GameClock.UtcNow);
 
             // One-shot: detect first prestige in the same session and re-apply the gate
             if (!_achievementsUnlocked)
@@ -443,10 +434,10 @@ namespace MobileIdleBuilder
             };
 
             // Panel content
-            _recipeList       = root.Q<ScrollView>("recipe-list");
+            _recipes?.Initialize(root, this);   // recipe tabs + cards
             _buildings?.Initialize(root, this);   // Build menu tabs + cards
             _codexList        = root.Q<ScrollView>("codex-list");
-            _research?.Initialize(root, researchService);   // tree/list toggle, world tabs, cards
+            _research?.Initialize(root, this);   // tree/list toggle, world tabs, cards
             _upgradesList     = root.Q<ScrollView>("upgrades-list");
             _achievements?.Initialize(root, achievementService);   // tabs, list, claim all, close
 
@@ -633,8 +624,7 @@ namespace MobileIdleBuilder
         private void OpenRecipePanel()
         {
             CloseAllPanels();
-            BuildRecipeList();
-            SetElementVisible(_recipePanel, true);
+            _recipes?.Open();
             OnRecipePanelOpened?.Invoke();
         }
 
@@ -750,8 +740,7 @@ namespace MobileIdleBuilder
             _buildings?.RefreshIfOpen();
 
             // Refresh recipe panel — newly learned recipes will appear
-            if (_recipePanel != null && !_recipePanel.ClassListContains("hidden"))
-                BuildRecipeList();
+            _recipes?.RefreshIfOpen();
 
             // Reveal the megastructure nav button when its gating research lands.
             ApplyMegastructureGate();
@@ -990,120 +979,8 @@ namespace MobileIdleBuilder
         }
 
         // ============================================================
-        // Recipe list
+        // Shared text helpers (the panel sub-controllers and tests use these)
         // ============================================================
-
-        // Recipes (#488): item-type tabs over a horizontally scrolling row of cards (RecipeMenu, MenuTabs).
-        private VisualElement _recipeTabs;
-        private readonly Dictionary<string, VisualElement> _recipePages = new();
-        private string _recipeTab;
-        private string _openRecipeDropUp;   // output id of the card whose method drop-up is open
-        private const string RecipeTabPref = "recipes_tab";
-
-        private void EnsureRecipeTabs()
-        {
-            if (_recipeTabs != null || _recipePanel == null || _recipeList == null) return;
-            _recipeTab = PlayerPrefs.GetString(RecipeTabPref, null);
-            _recipeTabs = MenuTabs.MakeTabBar(RecipeMenu.Prefix, RecipeMenu.Tabs, RecipeMenu.TabLabel, tab =>
-            {
-                _recipeTab = tab;
-                _openRecipeDropUp = null;
-                PlayerPrefs.SetString(RecipeTabPref, tab);
-                MenuTabs.ShowTab(RecipeMenu.Prefix, _recipeTabs, _recipePages, tab);
-                _recipeList.scrollOffset = Vector2.zero;
-            });
-            _recipePanel.Insert(_recipePanel.IndexOf(_recipeList), _recipeTabs);
-            _recipeList.mode = ScrollViewMode.Horizontal;
-            _recipeList.horizontalScrollerVisibility = ScrollerVisibility.Auto;
-            _recipeList.verticalScrollerVisibility = ScrollerVisibility.Hidden;
-            _recipeList.AddToClassList("recipe-cards");
-        }
-
-        private void BuildRecipeList()
-        {
-            EnsureRecipeTabs();
-            _recipeList.Clear();
-            _recipePages.Clear();
-
-            var inventoryCounts = craftService?.GetInventoryCounts() ?? new Dictionary<int, int>();
-
-            var recipes = RecipeDatabase.Instance?.Recipes;
-            if (recipes == null) return;
-
-            if (recipes.Count == 0)
-            {
-                _recipeList.Add(new Label("No recipes available."));
-                return;
-            }
-
-            foreach (var tab in RecipeMenu.Tabs)
-            {
-                var page = MenuTabs.MakePage(RecipeMenu.Prefix, tab, "builder-page");
-                _recipePages[tab] = page;
-                _recipeList.Add(page);
-            }
-
-            // One card per output item (#336): hide recipes the player has never unlocked or that are made in
-            // another world (Chemistry's molecules stay out of the Physics list), then group the rest.
-            var ws = WorldService.Instance;
-            string activeWorldId = ws?.GetWorld(ws.ActiveIndex)?.id;
-            var known = new List<RecipeJson>();
-            foreach (var recipe in recipes)
-                if ((RecipeKnowledgeService.Instance?.IsKnown(recipe.id) ?? false)
-                    && WorldGate.RecipeInWorld(recipe.crafted_in, BuildingById, activeWorldId))
-                    known.Add(recipe);
-
-            foreach (var group in RecipeGrouping.Group(known))
-            {
-                var chosen = RecipeGrouping.PickMethod(group,
-                    _recipeMethodChoice.TryGetValue(group.outputId, out var rid) ? rid : null,
-                    m => !IsRecipeLocked(m));
-                var outputItem = ItemDatabase.Instance?.Get(group.outputId);
-                string tab = RecipeMenu.TabOf(outputItem != null ? outputItem.category : (ItemCategory?)null);
-                _recipePages[tab].Add(BuildRecipeCard(group, chosen, outputItem, inventoryCounts));
-            }
-
-            var withCards = new HashSet<string>();
-            foreach (var kv in _recipePages) if (kv.Value.childCount > 0) withCards.Add(kv.Key);
-            _recipeTab = MenuTabs.PickTab(_recipeTab, withCards, RecipeMenu.Tabs);
-            MenuTabs.ShowTab(RecipeMenu.Prefix, _recipeTabs, _recipePages, _recipeTab);
-        }
-
-        // Session-only memory of which method the player last picked per output item, and which groups are open.
-        private readonly Dictionary<string, string> _recipeMethodChoice = new();
-        private Dictionary<string, string> _buildingNames, _researchNames;
-
-        private bool IsRecipeLocked(RecipeJson recipe) =>
-            !string.IsNullOrEmpty(recipe.requires_research)
-            && (researchService == null || !researchService.IsUnlocked(recipe.requires_research));
-
-        private Dictionary<string, BuildingSO> _buildingsById;
-
-        private BuildingSO BuildingById(string buildingId)
-        {
-            if (_buildingsById == null)
-            {
-                _buildingsById = new Dictionary<string, BuildingSO>();
-                var all = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings;
-                if (all != null)
-                    foreach (var b in all)
-                        if (b != null && !string.IsNullOrEmpty(b.id)) _buildingsById[b.id] = b;
-            }
-            return buildingId != null && _buildingsById.TryGetValue(buildingId, out var so) ? so : null;
-        }
-
-        private string BuildingNameFor(string buildingId)
-        {
-            if (_buildingNames == null)
-            {
-                _buildingNames = new Dictionary<string, string>();
-                var all = Resources.Load<BuildingDatabaseSO>("BuildingDatabase")?.allBuildings;
-                if (all != null)
-                    foreach (var b in all)
-                        if (b != null && !string.IsNullOrEmpty(b.id)) _buildingNames[b.id] = b.displayName;
-            }
-            return _buildingNames.TryGetValue(buildingId, out var n) ? n : null;
-        }
 
         /// <summary>A research card's time: "Instant", "Instant · 2 free left" (Free Research, #491) or "⏳ 1:30".</summary>
         internal static string ResearchTimeText(int effectiveSeconds, int freeLeft) =>
@@ -1113,146 +990,6 @@ namespace MobileIdleBuilder
 
         /// <summary>The lock line on a recipe known from an earlier run but gated by research now (#490).</summary>
         internal static string ResearchLockText(string researchName) => $"Research {researchName} to unlock";
-
-        private string ResearchNameFor(string researchId)
-        {
-            if (_researchNames == null)
-            {
-                _researchNames = new Dictionary<string, string>();
-                var all = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.allResearch;
-                if (all != null)
-                    foreach (var r in all)
-                        if (r != null && !string.IsNullOrEmpty(r.id)) _researchNames[r.id] = r.displayName;
-            }
-            return _researchNames.TryGetValue(researchId, out var n) && !string.IsNullOrEmpty(n) ? n : researchId;
-        }
-
-        // Rebuilds the recipe list in place, keeping the scroll position (used after expand / method changes).
-        private void RebuildRecipeListKeepingScroll()
-        {
-            var scroll = _recipeList.scrollOffset;
-            BuildRecipeList();
-            _recipeList.scrollOffset = scroll;
-        }
-
-        // One card per item (#488): picture, name, inputs, hints, craft time and worth, then the x1/x5/x10/Max
-        // buttons for the chosen method. An item with several methods shows the chosen one and a drop-up to pick
-        // another (the choice is remembered for the session).
-        private VisualElement BuildRecipeCard(RecipeGroup group, RecipeJson recipe, ItemSO outputItem,
-                                              Dictionary<int, int> inventoryCounts)
-        {
-            bool isLocked = IsRecipeLocked(recipe);
-            int  max      = isLocked ? 0 : (craftService?.MaxCraftable(recipe) ?? 0);
-
-            var card = new VisualElement();
-            card.AddToClassList("recipe-card");
-            if (isLocked) card.AddToClassList("recipe-card--locked");   // fades the content, not the drop-up
-            else if (max < 1) card.AddToClassList("recipe-card--unavailable");
-
-            var pic = new VisualElement();
-            pic.AddToClassList("recipe-card__icon");
-            if (outputItem?.icon != null) pic.style.backgroundImage = new StyleBackground(outputItem.icon);
-            else
-            {
-                var g = new GlyphIcon(GlyphIcon.Kind.Recipes);
-                g.AddToClassList("building-tile__glyph");
-                pic.Add(g);
-            }
-            card.Add(pic);
-
-            var nameLabel = new Label(recipe.name);
-            nameLabel.AddToClassList("recipe-name");
-            nameLabel.AddToClassList("recipe-card__name");
-            card.Add(nameLabel);
-
-            var inputs = BuildIngredientsUI(recipe, inventoryCounts);
-            inputs.AddToClassList("recipe-card__inputs");
-            card.Add(inputs);
-
-            // A building-only recipe needs one of its buildings placed (any recipe, busy or idle, #309).
-            // Its speed sets the craft time, same as the building takes.
-            float speed = 1f;
-            string missingBuilding = null;
-            bool hasBuilding = craftService == null
-                || craftService.HasCraftingBuilding(recipe, out speed, out missingBuilding);
-            if (isLocked)
-                card.Add(CardHint(ResearchLockText(ResearchNameFor(recipe.requires_research)), "recipe-lock-hint"));
-            else if (!hasBuilding)
-                card.Add(CardHint($"Place {AOrAn(missingBuilding)} to craft this", "recipe-lock-hint"));
-
-            string meta = $"{ManualCraftService.UnitSeconds(recipe, speed):0.#}s";
-            if (outputItem != null)
-                meta += " · " + WorthEachText(ItemValue.PricePerItem(outputItem), ItemStars.Count(outputItem.itemId));
-            card.Add(CardHint(meta, "recipe-card__meta"));
-
-            float bonus = recipe.EscapeEntropyPerCraft(ItemDatabase.Instance);
-            if (bonus > 0f) card.Add(CardHint(EscapeBonusText(bonus), "recipe-bonus-hint"));
-
-            var spacer = new VisualElement();
-            spacer.AddToClassList("recipe-card__spacer");
-            card.Add(spacer);
-
-            bool several = group != null && group.methods.Count > 1;
-            string methodTitle = RecipeMenu.MethodTitle(recipe, BuildingNameFor);
-            if (several || recipe.requiresBuilding)
-                card.Add(CardHint(methodTitle, "recipe-card__method"));
-
-            if (several)
-            {
-                bool open = _openRecipeDropUp == group.outputId;
-                var toggle = new Button { text = RecipeMenu.WaysText(group.methods.Count, open) };
-                toggle.AddToClassList("recipe-methods-toggle");
-                toggle.AddToClassList("recipe-card__ways");
-                string outId = group.outputId;
-                ListTapRouter.Register(_recipeList, toggle, () =>
-                {
-                    _openRecipeDropUp = _openRecipeDropUp == outId ? null : outId;
-                    RebuildRecipeListKeepingScroll();
-                });
-                card.Add(toggle);
-            }
-
-            var craft = BuildCraftButtons(recipe, isLocked, hasBuilding, max);
-            craft.AddToClassList("recipe-card__craft");
-            card.Add(craft);
-
-            if (several && _openRecipeDropUp == group.outputId)
-                card.Add(BuildMethodDropUp(group, recipe));
-            return card;
-        }
-
-        private static Label CardHint(string text, string ussClass)
-        {
-            var l = new Label(text);
-            l.AddToClassList(ussClass);
-            l.AddToClassList("recipe-card__hint");
-            return l;
-        }
-
-        // The drop-up over a card: one button per method (where it is made, or locked behind what research).
-        // Picking one makes it the card's method and closes the drop-up.
-        private VisualElement BuildMethodDropUp(RecipeGroup group, RecipeJson chosen)
-        {
-            var menu = new VisualElement();
-            menu.AddToClassList("recipe-dropup");
-            foreach (var method in group.methods)
-            {
-                string text = RecipeMenu.ShortMethodTitle(method, BuildingNameFor);
-                if (IsRecipeLocked(method)) text += $" · needs {ResearchNameFor(method.requires_research)}";
-                var option = new Button { text = text };
-                option.AddToClassList("recipe-dropup__option");
-                if (method == chosen) option.AddToClassList("recipe-dropup__option--selected");
-                var m = method;
-                ListTapRouter.Register(_recipeList, option, () =>
-                {
-                    _recipeMethodChoice[group.outputId] = m.id;
-                    _openRecipeDropUp = null;
-                    RebuildRecipeListKeepingScroll();
-                });
-                menu.Add(option);
-            }
-            return menu;
-        }
 
         /// <summary>Recipe-row / inspector line for what one item sells for, e.g. "Worth ◈ 2.5 each".</summary>
         internal static string WorthEachText(float price, int stars = 0) =>
@@ -1268,103 +1005,12 @@ namespace MobileIdleBuilder
         internal static string EscapeBonusText(float entropyPerCraft) =>
             $"Releases particles: +{entropyPerCraft:0.#} entropy per craft";
 
-        // x1 / x5 / x10 / Max (#310). One the inventory can't pay for (or with no building placed) is
-        // styled unavailable but stays tappable: ListTapRouter swallows taps on disabled buttons, so a
-        // disabled one looked pressed and did nothing. Tapping it says what is missing instead.
-        private VisualElement BuildCraftButtons(RecipeJson recipe, bool isLocked, bool hasBuilding, int max, System.Action onPicked = null)
-        {
-            var group = new VisualElement();
-            group.AddToClassList("craft-qty-group");
-
-            if (isLocked)
-            {
-                var locked = new Button { text = "Locked" };
-                locked.AddToClassList("craft-btn");
-                locked.SetEnabled(false);
-                group.Add(locked);
-                return group;
-            }
-
-            foreach (int qty in CraftQuantities)
-            {
-                bool isMax = qty == CraftMax;
-                var btn = new Button { text = isMax ? "Max" : $"x{qty}" };
-                btn.AddToClassList("craft-btn");
-                btn.AddToClassList("craft-qty-btn");
-                btn.EnableInClassList("craft-btn--unavailable", !(hasBuilding && (isMax ? max >= 1 : max >= qty)));
-                // Routed from the list, not the button: a Button's own Clickable consumes the
-                // pointer-down before any manipulator added later. See ListTapRouter.
-                ListTapRouter.Register(_recipeList, btn, () => { onPicked?.Invoke(); OnCraftPressed(recipe, qty); });
-                group.Add(btn);
-            }
-            return group;
-        }
-
-        private const int CraftMax = -1;
-        private static readonly int[] CraftQuantities = { 1, 5, 10, CraftMax };
-
-        private void OnCraftPressed(RecipeJson recipe, int count)
-        {
-            if (craftService == null) BindLiveServices();   // a destroyed reload duplicate reads as null
-            if (craftService == null) return;
-            if (count == CraftMax) count = craftService.MaxCraftable(recipe);
-            // Max with nothing affordable: report what one craft needs.
-            int wanted = Mathf.Max(1, count);
-
-            switch (craftService.TryEnqueue(recipe, wanted, out string missingBuilding))
-            {
-                case ManualCraftService.EnqueueResult.NoBuilding:
-                    InventoryPopupController.NotifyWarning($"Place {AOrAn(missingBuilding)} first");
-                    break;
-                case ManualCraftService.EnqueueResult.NotEnoughMaterials:
-                case ManualCraftService.EnqueueResult.NotReady:
-                    string missing = craftService.DescribeMissing(recipe, wanted);
-                    InventoryPopupController.NotifyWarning(missing != null
-                        ? $"Need {missing} in your inventory"
-                        : "Not enough materials");
-                    break;
-            }
-        }
-
-        // Rebuild the queue strip, and the recipe list (counts and button states moved) unless a
-        // finger is down on it: replacing a button mid-press drops the tap (see ListTapRouter).
-        private void OnCraftQueueChanged()
-        {
-            _craftQueueView?.Rebuild();
-            UpdateRecipeListClearance();
-            if (IsRecipePanelOpen && !ListTapRouter.GestureInProgress)
-            {
-                var scroll = _recipeList.scrollOffset;
-                BuildRecipeList();
-                _recipeList.scrollOffset = scroll;
-            }
-        }
-
-        // While the queue strip floats over the bottom of the panel, lift the bottom of the card row by its
-        // height so the craft buttons stay clear of it (#488: the cards scroll sideways, not down).
-        private void UpdateRecipeListClearance()
-        {
-            var strip = _craftQueueView?.Root;
-            if (_recipeList == null) return;
-            bool shown = strip != null && !strip.ClassListContains("hidden") && !float.IsNaN(strip.layout.height);
-            _recipeList.style.marginBottom = shown
-                ? new StyleLength(strip.layout.height)
-                : new StyleLength(StyleKeyword.Null);
-        }
-
-        private static string AOrAn(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return "a building";
-            return ("AEIOU".IndexOf(char.ToUpperInvariant(name[0])) >= 0 ? "an " : "a ") + name;
-        }
-
         // ============================================================
-        // Buildings list
+        // Build costs
         // ============================================================
 
         // Zero-cost buildings (conveyors, Maxwell's Demon) say "Free" rather than leaving the cost blank (#197).
         internal static string FormatBuildCost(long cost) => cost > 0 ? $"◈ {cost:N0}" : "Free";
-
 
         private void OnBuildingPlaced(BuildingPlacementController.BuildingEntry entry)
         {
