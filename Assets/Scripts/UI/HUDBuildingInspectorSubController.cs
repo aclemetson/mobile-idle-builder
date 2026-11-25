@@ -412,7 +412,7 @@ namespace MobileIdleBuilder
             if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
             {
                 float bonus = _em.GetComponentData<RecipeProcessData>(_inspectorEntity).ByproductEntropy;
-                if (bonus > 0f) AddInspectorRow(_inspectorInfo, "  " + HUDController.EscapeBonusText(bonus));
+                if (bonus > 0f) AddInspectorRow(_inspectorInfo, "  " + HudText.EscapeBonusText(bonus));
             }
 
             // buildingSO fetched above (before the power-source early-out).
@@ -1343,7 +1343,7 @@ namespace MobileIdleBuilder
             string rate = noPower
                 ? "≈ ◈ 0 /s (no power)"
                 : $"≈ {NumberFormat.Entropy(perSecond)} /s at current speed";
-            return new[] { HUDController.WorthEachText(price, stars), craft, rate };
+            return new[] { HudText.WorthEachText(price, stars), craft, rate };
         }
 
         /// <summary>The collector's value row, e.g. "≈ ◈ 2.5 /s".</summary>

@@ -301,10 +301,10 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void WorthText_ShowsStarsOnlyWhenThereAreAny()
         {
-            Assert.AreEqual("", HUDController.StarBadge(0));
-            Assert.AreEqual("★3 +60%", HUDController.StarBadge(3));
-            StringAssert.DoesNotContain("★", HUDController.WorthEachText(12f));
-            StringAssert.EndsWith("· ★5 +100%", HUDController.WorthEachText(12f, 5));
+            Assert.AreEqual("", HudText.StarBadge(0));
+            Assert.AreEqual("★3 +60%", HudText.StarBadge(3));
+            StringAssert.DoesNotContain("★", HudText.WorthEachText(12f));
+            StringAssert.EndsWith("· ★5 +100%", HudText.WorthEachText(12f, 5));
             StringAssert.Contains("★2 +40%", HUDBuildingInspectorSubController.ValueLines(12f, 12d, 1f, 1d, false, 2)[0]);
         }
 

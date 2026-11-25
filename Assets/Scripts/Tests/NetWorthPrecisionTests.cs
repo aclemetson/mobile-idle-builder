@@ -82,7 +82,7 @@ namespace MobileIdleBuilder.Tests
         public void PrestigePreview_AcceptsLargeNetWorth()
         {
             // log10 formula: a huge net worth must give a finite, non-negative preview.
-            long preview = HUDController.CalculatePrestigePreview(1e15);
+            long preview = HudText.CalculatePrestigePreview(1e15);
             Assert.GreaterOrEqual(preview, 0L);
         }
     }

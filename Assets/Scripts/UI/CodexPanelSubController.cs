@@ -47,7 +47,7 @@ namespace MobileIdleBuilder
                 var row = new VisualElement();
                 row.AddToClassList("codex-row");
 
-                var icon = HUDController.MakeItemIcon(item.icon, "codex-icon");
+                var icon = HudText.MakeItemIcon(item.icon, "codex-icon");
                 if (icon != null) row.Add(icon);
 
                 var infoCol = new VisualElement();
