@@ -16,112 +16,140 @@ MonoBehaviour:
   - day: 1
     crystals: 10
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 2
     crystals: 10
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 3
     crystals: 10
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 4
     crystals: 10
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 5
     crystals: 10
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 6
     crystals: 10
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 7
     crystals: 40
     entropy: 500
+    entropyMinutes: 30
     prestigeCurrency: 0
   - day: 8
     crystals: 15
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 9
     crystals: 15
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 10
     crystals: 15
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 11
     crystals: 15
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 12
     crystals: 15
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 13
     crystals: 15
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 14
     crystals: 60
     entropy: 2000
+    entropyMinutes: 60
     prestigeCurrency: 0
   - day: 15
     crystals: 20
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 16
     crystals: 20
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 17
     crystals: 20
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 18
     crystals: 20
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 19
     crystals: 20
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 20
     crystals: 20
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 21
     crystals: 80
     entropy: 10000
+    entropyMinutes: 120
     prestigeCurrency: 0
   - day: 22
     crystals: 25
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 23
     crystals: 25
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 24
     crystals: 25
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 25
     crystals: 25
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 26
     crystals: 25
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 27
     crystals: 25
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 0
   - day: 28
     crystals: 150
     entropy: 0
+    entropyMinutes: 0
     prestigeCurrency: 1
