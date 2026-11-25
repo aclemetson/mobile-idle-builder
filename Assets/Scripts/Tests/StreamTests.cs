@@ -354,6 +354,38 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void DeletingAPieceUpstream_StopsEverythingDownstream()
+        {
+            // Spring at the head; a building on the last tile runs while the stream is whole.
+            Spring(10f);
+            var segs = Stream();
+            var down = Bank(3, 2f);
+            Tick();
+            Assert.AreEqual(1f, Status(down).Ratio, 1e-5f, "fed while the stream is whole");
+
+            // Delete tile 1, relinked the way ConveyorPlacer.RemoveSegmentAt leaves it: tile 0 ends, tile 2 starts a
+            // new chain with no Spring beside it.
+            _em.DestroyEntity(segs[1]);
+            var a = _em.GetComponentData<ConveyorSegmentData>(segs[0]);
+            a.NextSegment = Entity.Null;
+            _em.SetComponentData(segs[0], a);
+            var b = _em.GetComponentData<ConveyorSegmentData>(segs[2]);
+            b.PrevSegment = Entity.Null;
+            b.IsChainHead = true;
+            _em.SetComponentData(segs[2], b);
+            ConveyorItems.Add(_em, segs[3], 5, 0.2f);
+
+            Tick(0.1f);
+
+            Assert.AreEqual(0, _em.GetComponentData<StreamSegment>(segs[2]).HasSource, "the cut-off piece is dry");
+            Assert.AreEqual(0, _em.GetComponentData<StreamSegment>(segs[3]).HasSource);
+            Assert.AreEqual(1, Status(down).OnStream);
+            Assert.AreEqual(0f, Status(down).Ratio, "the building downstream stops");
+            Assert.AreEqual(0.2f, _em.GetBuffer<ConveyorItem>(segs[3])[0].Progress, 1e-5f, "items downstream stand still");
+            Assert.AreEqual(1, _em.GetComponentData<StreamSegment>(segs[0]).HasSource, "the piece still at the Spring flows");
+        }
+
+        [Test]
         public void OpenMouth_SellsWhatReachesIt()
         {
             Spring(10f);
