@@ -358,6 +358,7 @@ namespace MobileIdleBuilder
             {
                 var e   = segEntities[i];
                 var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+                bool isStreamSeg = EntityManager.HasComponent<StreamSegment>(e);
                 int turnDir = -1;
                 if (!seg.IsChainHead)
                 {
@@ -388,6 +389,9 @@ namespace MobileIdleBuilder
                     int facing = OppositeDir(dir);
                     if (!HasMatchingPort(candidateBldg, candidate, facing, PortType.Output)) continue;
                     if (!seg.IsChainHead && NextFeedItem(candidateBldg, facing) < 0) continue;
+                    // A stream's head takes from its Spring only (#543); any other building beside it drops its
+                    // product from the side like every bank building (StreamSideDrop).
+                    if (isStreamSeg && !EntityManager.HasComponent<StreamSource>(candidateBldg)) continue;
 
                     bldg       = candidateBldg;
                     sourceCell = candidate;
@@ -618,8 +622,8 @@ namespace MobileIdleBuilder
 
         /// <summary>
         /// A building with an output port facing a stream segment drops its next product into the middle of
-        /// that tile when there is a gap (<see cref="StreamRules.DropIndex"/>); otherwise it keeps it. Chain
-        /// heads are skipped: the head pull (pass 4) already takes from a building at the stream's start.
+        /// that tile when there is a gap (<see cref="StreamRules.DropIndex"/>); otherwise it keeps it. At a
+        /// stream's head the Spring is pulled by pass 4 instead; every other building drops here (#543).
         /// </summary>
         private void StreamSideDrop(NativeArray<Entity> segs, NativeHashMap<int2, Entity> buildingMap, float spacing)
         {
@@ -629,12 +633,12 @@ namespace MobileIdleBuilder
                 var e = segs[i];
                 if (!EntityManager.HasComponent<StreamSegment>(e)) continue;
                 var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
-                if (seg.IsChainHead) continue;
 
                 for (int dir = 0; dir < 4; dir++)
                 {
                     int2 cell = AdjacentCell(seg.Cell, dir);
                     if (!buildingMap.TryGetValue(cell, out Entity bldg)) continue;
+                    if (seg.IsChainHead && EntityManager.HasComponent<StreamSource>(bldg)) continue;   // pass 4 pulls it
                     if (EntityManager.HasBuffer<OutputPortFilter>(bldg)) continue;
                     if (!HasMatchingPort(bldg, cell, OppositeDir(dir), PortType.Output)) continue;
                     if (!EntityManager.HasBuffer<BuildingOutputSlot>(bldg)) continue;

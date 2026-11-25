@@ -209,14 +209,20 @@ namespace MobileIdleBuilder
 
             bool placed;
             string refusal;
-            if (_isSingle)
+            var path = _isSingle ? new List<Vector2Int> { _trace.Start } : _trace.Path();
+            var dir  = _singleDir;
+            // Stream worlds (#543): water flows away from its Spring, so the run is turned round or refused here.
+            if (!conveyorPlacer.OrientStreamRun(path, ref dir, out refusal))
+                placed = false;
+            else if (_isSingle)
             {
                 conveyorVisualizer?.ClearSinglePreview();
-                placed = conveyorPlacer.PlaceConveyorChain(new List<Vector2Int> { _trace.Start }, out refusal, _singleDir);
+                _singleDir = dir;
+                placed = conveyorPlacer.PlaceConveyorChain(path, out refusal, _singleDir);
             }
             else
             {
-                placed = conveyorPlacer.PlaceConveyorChain(_trace.Path(), out refusal);
+                placed = conveyorPlacer.PlaceConveyorChain(path, out refusal);
             }
 
             if (!placed)
