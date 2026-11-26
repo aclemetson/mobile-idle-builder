@@ -40,7 +40,7 @@ BUILD A FACTORY OUT OF PHYSICS
 
 DISCOVER THE PERIODIC TABLE
 - Research your way from hydrogen to heavier elements, then on to molecules
-- Unlock new worlds: Physics, then Chemistry, then Biology, each with its own maps and rules
+- Unlock five worlds: Particle Physics, Chemistry, Biology, Metallurgy and Engineering, each with its own maps and rules
 - Real science drives the tech tree. Learn how atoms are made just by playing
 
 IDLE AND OFFLINE PROGRESS
@@ -67,7 +67,8 @@ Quantum Foundry is in active development. Tell us what you think with Send Feedb
 ```
 
 Check before each release: the tournament Strings shop line needs the build that ships it (in
-`docs/whats-new.md` as of 2026-11-25); the world list should match what players can reach.
+`docs/whats-new.md` as of 2026-11-25); the five-world list (from the 5-world restructure on
+`integration/2026-11-23`) must be in the build the listing describes.
 
 ### Category and tags (Store settings)
 - Category: **Simulation**
@@ -83,8 +84,14 @@ Check before each release: the tournament Strings shop line needs the build that
 | Tablet screenshots | optional (7" and 10") | not yet |
 
 Regenerate the icon and feature graphic with `python scripts/store/feature_graphic.py` (Pillow; Inter font
-from the Unity Editor install). Screenshot order: busy factory, fusion/decay making an element, research
-tree, Chemistry molecules, tournament board, Dyson Sphere.
+from the Unity Editor install).
+
+Screenshots so far (Editor, 1080x2340 captures cropped to 1080x1920 because Play rejects ratios over 2:1):
+`01-factory.png` (first_helium fixture, camera FOV 75), `02-research.png` (list view; the tree view is too
+cramped in portrait), `03-worlds.png` (all five worlds). Still wanted: a busy late-game factory in
+Chemistry or Metallurgy, and the tournament board with real names. The fixtures are early-game and
+`block load` stages start on empty maps, so these need a real late save (device) or a hand-built layout.
+Back up the Editor save before capturing: Play mode overwrites the cloud save on stop.
 
 ### Translations
 English (en-US) is the default language; other languages use Play Console's machine translation
