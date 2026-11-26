@@ -53,6 +53,7 @@ PRIVATE = {"beta", "staff"}
 ROLES = ["Developer", "Moderator", "Beta Tester", "League Regular", "Android", "iPhone",
          "Patch Notes Ping", "League Ping", "Beta News Ping"]
 PING_ROLES = ["Patch Notes Ping", "League Ping", "Beta News Ping"]
+ROLE_ALIASES = {"Patch Notes Ping": ["Patch Notes"], "League Ping": ["League"], "Beta News Ping": ["Beta News"]}
 STATUS_TAGS = {"bug-reports": ["Tracked", "Needs info", "Fixed", "Won't fix"],
                "beta-feedback": ["Tracked", "Needs info", "Fixed", "Won't fix"],
                "suggestions": ["Planned", "Done", "Not planned"]}
@@ -111,6 +112,24 @@ def overwrite(chan: dict, target_id: str) -> tuple[int, int]:
     return 0, 0
 
 
+def can_send(chan: dict, gid: str, member_roles: list[dict]) -> bool:
+    """Discord's permission order for a member holding member_roles (always including @everyone)."""
+    perms = 0
+    for r in member_roles:
+        perms |= int(r["permissions"])
+    if perms & P["ADMIN"]:
+        return True
+    a, d = overwrite(chan, gid)
+    perms = (perms & ~d) | a
+    ra = rd = 0
+    for r in member_roles:
+        if r["id"] != gid:
+            x, y = overwrite(chan, r["id"])
+            ra, rd = ra | x, rd | y
+    perms = (perms & ~rd) | ra
+    return bool(perms & P["SEND"])
+
+
 def has(bits: int, *names: str) -> bool:
     return all(bits & P[n] for n in names)
 
@@ -138,7 +157,7 @@ def main(argv) -> int:
     check(guild.get("mfa_level") == 1, "2FA required for moderator actions")
     check(guild.get("explicit_content_filter") == 2, "sensitive content filter: all members")
     check(guild.get("default_message_notifications") == 1, "default notifications: only @mentions", "WARN")
-    check("MEMBER_VERIFICATION_GATE_ENABLED" in feats, "members must accept rules before they can talk")
+    rules_gate = "MEMBER_VERIFICATION_GATE_ENABLED" in feats
     check("GUILD_ONBOARDING" in feats or "GUILD_ONBOARDING_EVER_ENABLED" in feats, "Onboarding is on", "WARN")
 
     roles = guild["roles"]
@@ -155,18 +174,25 @@ def main(argv) -> int:
     sysc = chan_name(guild.get("system_channel_id"))
     check(sysc is None or sysc.endswith("mod-log"), f"system messages go to #mod-log or nowhere (is {sysc})", "WARN")
 
+    check(rules_gate, "members must accept rules before they can talk", "WARN" if player else "FAIL")
     print("== Roles")
     found = {}
     for name in ROLES:
         r = find(roles, norm(name))
-        if check(r is not None, f"role {name} exists" + ("" if r else f" (server roles: {', '.join(x['name'] for x in roles if x['id'] != gid)})")):
+        for alias in ROLE_ALIASES.get(name, []):
+            r = r or next((x for x in roles if norm(x["name"]) == norm(alias)), None)
+        if check(r is not None, f"role {name} exists" + (f" (as '{r['name']}')" if r and norm(r['name']) != norm(name) else "") + ("" if r else f" (server roles: {', '.join(x['name'] for x in roles if x['id'] != gid)})")):
             found[name] = r
     pos = [found[n]["position"] for n in ["Developer", "Moderator", "Beta Tester"] if n in found]
     check(pos == sorted(pos, reverse=True), "order: Developer above Moderator above Beta Tester")
-    ep = int(everyone["permissions"])
+    player = next((x for x in roles if norm(x["name"]) == "player"), None)
+    member_roles = [everyone] + ([player] if player else [])
+    print("  info  posting model: " + ("Player role (Onboarding gives Player; @everyone reads only)" if player
+                                       else "@everyone posts after accepting the rules"))
+    ep = int(everyone["permissions"]) | (int(player["permissions"]) if player else 0)
     lacking = [n for n in ["VIEW_CHANNEL", "SEND", "SEND_IN_THREADS", "READ_HISTORY", "ADD_REACTIONS", "ATTACH", "EMBED_LINKS"]
                if not ep & P[n]]
-    check(not lacking, "@everyone can view, post and read history (the rules gate stops them until they accept)"
+    check(not lacking, ("Player" if player else "@everyone") + " can view, post and read history"
           + (f"; missing {', '.join(lacking)}" if lacking else ""))
     for bad in ["MENTION_EVERYONE", "CREATE_INVITE", "ADMIN", "MANAGE_MESSAGES", "BAN", "KICK"]:
         check(not ep & P[bad], f"@everyone lacks {bad}")
@@ -192,7 +218,7 @@ def main(argv) -> int:
     for var, name in [("DISCORD_BETA_PING_ROLE_ID", "Beta News Ping"), ("DISCORD_PATCH_PING_ROLE_ID", "Patch Notes Ping")]:
         rid = (env.get(var) or "").strip()
         r = next((x for x in roles if x["id"] == rid), None)
-        check(r is not None and norm(r["name"]).endswith(norm(name)),
+        check(r is not None and found.get(name) is not None and r["id"] == found[name]["id"],
               f"{var} is the {name} role (it is {r['name'] if r else 'no role / unset'})")
     bot_perms = 0
     for r in bot_roles:
@@ -225,7 +251,9 @@ def main(argv) -> int:
                 where = by_id.get((elsewhere or {}).get("parent_id"), {}).get("name", "no category") if elsewhere else None
                 report("FAIL", f"#{name} in {cat_name.upper()}" + (f" (found in {where})" if elsewhere else " (not found)"))
                 continue
-            if not check(ch["type"] in types,
+            if name == "patch-notes" and ch["type"] == TEXT:
+                report("WARN", "#patch-notes is a text channel; make it an Announcement channel so other servers can follow it")
+            elif not check(ch["type"] in types,
                          f"#{name} in {cat_name.upper()}" + (f" (type {ch['type']}, want {sorted(types)})" if ch and ch["type"] not in types else "")):
                 continue
             named[name] = ch
@@ -233,12 +261,10 @@ def main(argv) -> int:
                 _, deny = overwrite(ch, gid)
                 check(bool(deny & P["VIEW_CHANNEL"]), f"#{name} is private (synced with its category)")
             if read_only:
-                denied = overwrite(ch, gid)[1] & P["SEND"]
-                if ch.get("parent_id") in by_id and not ch.get("permission_overwrites"):
-                    denied = overwrite(by_id[ch["parent_id"]], gid)[1] & P["SEND"]
-                if name == "beta-announcements" and "Beta Tester" in found:
-                    denied = denied or overwrite(ch, found["Beta Tester"]["id"])[1] & P["SEND"]
-                check(bool(denied), f"#{name} is read-only (@everyone: Send Messages denied)")
+                who = member_roles + ([found["Beta Tester"]] if cat_name == "beta" and "Beta Tester" in found else [])
+                check(not can_send(ch, gid, who), f"#{name} is read-only for members"
+                      + ("" if not can_send(ch, gid, who) else
+                         f" (deny Send Messages for {'Player' if player else '@everyone'} on the channel)"))
     if "general" in named:
         check(named["general"].get("rate_limit_per_user", 0) > 0, "#general has slowmode", "WARN")
     if "ci-alerts" in named and "Moderator" in found:
