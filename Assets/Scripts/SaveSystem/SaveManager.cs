@@ -275,10 +275,11 @@ namespace MobileIdleBuilder
 
             // Feature flags share the UGS session established above. Fetch now, before we decide
             // whether to honor the cloud-save kill-switch below. A failed/offline fetch is a no-op
-            // (cached/default values stay in effect).
+            // (cached/default values stay in effect). The splash gate usually fetched moments ago, so
+            // that fetch is reused (one Remote Config fetch per launch, #209).
             if (FeatureFlagService.Instance != null)
             {
-                var flagTask = FeatureFlagService.Instance.FetchAsync();
+                var flagTask = FeatureFlagService.Instance.FetchIfStaleAsync();
                 yield return new WaitUntil(() => flagTask.IsCompleted);
             }
 

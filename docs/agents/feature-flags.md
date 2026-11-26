@@ -4,7 +4,7 @@ Externally-controlled toggles that change behavior **without an app-store rebuil
 environment (dev vs prod). Use these to ship a feature hidden, kill a misbehaving system, or stage a
 rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/Cloud Save, so no new vendor.
 
-> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23; game-data publisher (#210) and maintenance schedule (#224) 2026-11-26.
+> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23; game-data publisher (#210), maintenance schedule (#224) and single UGS session (#209) 2026-11-26.
 
 ## How it works
 
@@ -31,7 +31,9 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 - `Assets/Scripts/RemoteConfig/FeatureFlagService.cs` — singleton: self-bootstraps via
   `[RuntimeInitializeOnLoadMethod]` (no scene placement — no serialized fields, can't be lost in a refactor),
   loads cache, `FetchAsync`.
-- Fetch hook: `SaveManager.ReconcileWithCloud` (after UGS init, before the cloud-save gate).
+- Fetch hook: `SaveManager.ReconcileWithCloud` (after UGS init, before the cloud-save gate), via
+  `FetchIfStaleAsync`: it reuses the splash gate's fetch when that is under 2 min old
+  (`FeatureFlagResolver.IsFresh`), so a returning player fetches once per launch (#209).
 - Tests: `Assets/Scripts/Tests/FeatureFlagResolverTests.cs`.
 
 ## Shipped flags
@@ -100,9 +102,12 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
   maintenance is active it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
   splash, which re-shows the overlay.
 - **Fail-open:** any fetch failure/timeout ⇒ NOT in maintenance (offline players are never locked out).
-- **Account-link-safe:** a brand-new user (no session) gets a throwaway anon session just to read the flag,
-  then `SignOut(clearCredentials: true)` when maintenance is off, so GameScene's Google/anon sign-in is
-  untouched. Env name is shared via `UgsEnvironment.Name`.
+- **Account-link-safe, one sign-in per launch (#209):** the gate only restores an existing cached session and
+  never creates a player. A brand-new install (no session token) skips the check. GameScene's normal Google/anon
+  sign-in then does the first fetch, and `MaintenanceWatcher` acts on any new successful fetch
+  (`FeatureFlagService.FetchCount`) straight away, so a new player who arrives during maintenance is sent back to
+  the splash right after signing in. Cached values alone never trip the watcher. Env name is shared via
+  `UgsEnvironment.Name`.
 - Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`; the active/scheduled decision
   and poll clamp are `MaintenancePollSchedule.IsActive` / `IsScheduledAhead` / `ClampPollSeconds` (`MaintenancePollScheduleTests`).
 - **Planned window:** set `maintenance.startsUtc` at least one poll interval (5 min) ahead, then `maintenance.enabled`

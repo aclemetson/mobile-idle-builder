@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         float _lastCheck;
         bool  _resumeRequested;
         bool  _scheduleArmed;   // saw maintenance switched on with a start still ahead
+        int   _seenFetchCount;  // FeatureFlagService.FetchCount last acted on
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Bootstrap()
@@ -61,6 +62,14 @@ namespace MobileIdleBuilder
                     continue;
                 }
 
+                // A fetch made elsewhere (SaveManager's first fetch after sign-in, which is the only check a new
+                // install gets, #209) is fresh data: act on it now instead of at the next poll.
+                if (SceneManager.GetActiveScene().name == GameSceneName && NewFetchSaysActive())
+                {
+                    TripToMaintenance("in-game fetch");
+                    continue;
+                }
+
                 float poll = MaintenancePollSchedule.ClampPollSeconds(FeatureFlags.MaintenancePollSeconds);
                 if (!MaintenancePollSchedule.IsDue(Time.realtimeSinceStartup, _lastCheck, _resumeRequested, poll))
                     continue;
@@ -79,11 +88,25 @@ namespace MobileIdleBuilder
                 var fetch = svc.FetchAsync();
                 yield return new WaitUntil(() => fetch.IsCompleted);
                 _lastCheck = Time.realtimeSinceStartup;   // the next poll counts from the finished check
+                _seenFetchCount = svc.FetchCount;
 
                 if (MaintenancePollSchedule.IsActive(FeatureFlags.MaintenanceEnabled,
                         FeatureFlags.MaintenanceStartsUtc, MaintenanceGate.NowUtc()))
                     TripToMaintenance(onResume ? "resume check" : "poll");
             }
+        }
+
+        /// <summary>
+        /// True when a successful fetch happened since the last one this watcher handled and its values put
+        /// maintenance in force. Cached values alone never trip, which keeps the splash gate's fail-open.
+        /// </summary>
+        bool NewFetchSaysActive()
+        {
+            var svc = FeatureFlagService.Instance;
+            if (svc == null || svc.FetchCount == _seenFetchCount) return false;
+            _seenFetchCount = svc.FetchCount;
+            return MaintenancePollSchedule.IsActive(FeatureFlags.MaintenanceEnabled,
+                FeatureFlags.MaintenanceStartsUtc, MaintenanceGate.NowUtc());
         }
 
         /// <summary>
