@@ -63,7 +63,9 @@ namespace MobileIdleBuilder
             body.Add(name);
 
             var sb = new StringBuilder($"♦ {reward.crystals}");
-            if (reward.entropy > 0)          sb.Append($"   e {reward.entropy:N0}");
+            // Scales with production (entropyMinutes): priced from the idle snapshot each redraw.
+            long entropy = DailyEventService.EntropyFor(reward, SaveManager.Instance?.Current);
+            if (entropy > 0)                 sb.Append($"   {NumberFormat.Entropy(entropy)}");
             if (reward.prestigeCurrency > 0) sb.Append($"   ✦ {reward.prestigeCurrency}");
             var rewardLabel = new Label(sb.ToString());
             rewardLabel.AddToClassList("ach-card-reward");
@@ -97,9 +99,19 @@ namespace MobileIdleBuilder
             var reward = svc.CurrentLoginReward;
             if (svc.ClaimLoginReward())
                 _hud?.ShowNotification("🎁", reward != null
-                    ? $"Login reward claimed — +♦{reward.crystals}!"
+                    ? $"Login reward claimed: {RewardSummary(reward.crystals, svc.LastClaimedEntropy, reward.prestigeCurrency)}"
                     : "Login reward claimed!");
             // ClaimLoginReward fires OnChanged, which redraws the tab.
+        }
+
+        /// <summary>"+♦40, +◈ 1.2M, +✦1": every currency a login reward granted.</summary>
+        internal static string RewardSummary(int crystals, long entropy, int prestigeCurrency)
+        {
+            var parts = new System.Collections.Generic.List<string>();
+            if (crystals > 0)         parts.Add($"+♦{crystals}");
+            if (entropy > 0)          parts.Add("+" + NumberFormat.Entropy(entropy));
+            if (prestigeCurrency > 0) parts.Add($"+✦{prestigeCurrency}");
+            return parts.Count > 0 ? string.Join(", ", parts) : "nothing";
         }
 
         private void OnDestroy()

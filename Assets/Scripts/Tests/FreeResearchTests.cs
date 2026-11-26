@@ -46,10 +46,10 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void CardTime_SaysInstant_WhileFreeOnesRemain()
         {
-            Assert.AreEqual("Instant", HUDController.ResearchTimeText(0, 0));
-            Assert.AreEqual("Instant", HUDController.ResearchTimeText(0, 2), "already instant: no free one is used");
-            Assert.AreEqual("Instant · 2 free left", HUDController.ResearchTimeText(90, 2));
-            Assert.AreEqual("⏳ " + HUDController.FormatResearchTimer(90), HUDController.ResearchTimeText(90, 0));
+            Assert.AreEqual("Instant", HudText.ResearchTimeText(0, 0));
+            Assert.AreEqual("Instant", HudText.ResearchTimeText(0, 2), "already instant: no free one is used");
+            Assert.AreEqual("Instant · 2 free left", HudText.ResearchTimeText(90, 2));
+            Assert.AreEqual("⏳ " + HudText.FormatResearchTimer(90), HudText.ResearchTimeText(90, 0));
         }
     }
 }

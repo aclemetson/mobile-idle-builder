@@ -281,9 +281,16 @@ window EDM4U documents), after generation and before `pod install`.
 Podfile, so a dropped pod fails the cheap Ubuntu job with the pod named instead of the 10x
 macOS one.
 
+### Dev console
+
+The TestFlight lane builds with `BuildScript.BuildIOSDevelopment()`, which adds the
+`DEVELOPMENT_BUILD` define (dev console and dev tooling, shake to open) without making a
+debuggable player, the same as the Android internal lane's `BuildAndroidDevelopment()`.
+`BuildIOS()` is the plain build for a future App Store lane.
+
 ### Build number
 
-`BuildScript.BuildIOS()` sets `CFBundleVersion` from the existing
+`BuildScript.BuildIOS()` (and `BuildIOSDevelopment()`) sets `CFBundleVersion` from the existing
 `AndroidBundleVersionCode`, so one monotonic counter feeds both stores. There is no
 separate pre-merge iOS guard; TestFlight rejecting a duplicate build number is the
 backstop (the same role the Play upload plays for Android).
@@ -349,8 +356,18 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
 | `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
-| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | UGS service account | internal: Remote Config update prompt + **Cloud Code deploy** (needs the "Cloud Code Editor" project role) |
-| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy |
+| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | key of the UGS service account **`ci-cd-automation`** (the secret names predate the rename) | internal: Remote Config update prompt, **Cloud Code deploy**, Diagnostics symbol upload (Basic header = base64 of `keyId:secret`, built in the workflow) |
+| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy + symbol upload |
+| `DISCORD_BOT_TOKEN` | Foundry Bot token (Discord Developer Portal) | Discord Forum Sync |
+| `DISCORD_BETA_WEBHOOK` / `DISCORD_PATCH_NOTES_WEBHOOK` / `DISCORD_STAFF_WEBHOOK` | channel webhook URLs | beta announcement (internal), Discord Announce, failure alerts (all release workflows) |
+| `DISCORD_GUILD_ID`, `DISCORD_*_FORUM_ID`, `DISCORD_*_PING_ROLE_ID` (variables) | Discord IDs (Developer Mode > Copy ID) | Discord Forum Sync, announcements |
+
+The `ci-cd-automation` service account (Unity Cloud Dashboard > Administration > Service accounts) needs
+these **project** roles: a Remote Config edit role, **Cloud Code Editor**, and
+**LiveOps > Observability Symbols Uploader**.
+
+The Discord secrets, variables and workflows (`discord-sync.yml`, `discord-announce.yml`, the `discord-alert` jobs) are
+set up in `docs/community/discord-server.md` ("Automation"). All of them skip while unset.
 
 ## Local Testing
 

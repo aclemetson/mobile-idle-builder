@@ -147,6 +147,31 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(10, SaveManager.Instance.Current.paidCurrency);
         }
 
+        // ── Production-scaled entropy (2026-11-24) ────────────────────────────
+
+        [Test]
+        public void ScaledEntropy_PaysTheLargerOfFloorAndProduction()
+        {
+            Assert.AreEqual(500,       DailyEventService.ScaledEntropy(500, 0), "no production: the flat floor");
+            Assert.AreEqual(1_200_000, DailyEventService.ScaledEntropy(500, 1_200_000));
+            Assert.AreEqual(0,         DailyEventService.ScaledEntropy(0, -5), "never negative");
+        }
+
+        [Test]
+        public void EntropyFor_WithoutMinutes_IsTheFlatAmount()
+        {
+            var reward = new DailyRewardEntry { day = 7, crystals = 40, entropy = 500 };
+            Assert.AreEqual(500, DailyEventService.EntropyFor(reward, new SaveData()));
+            Assert.AreEqual(0,   DailyEventService.EntropyFor(null, new SaveData()));
+        }
+
+        [Test]
+        public void RewardSummary_ListsEveryCurrency()
+        {
+            Assert.AreEqual("+♦40, +◈ 1.20M", DailyEventsSubController.RewardSummary(40, 1_200_000, 0));
+            Assert.AreEqual("+♦150, +✦1",    DailyEventsSubController.RewardSummary(150, 0, 1));
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         static void RunAwake(MonoBehaviour mb)

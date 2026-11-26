@@ -9,7 +9,7 @@ namespace MobileIdleBuilder
     /// Builder menu layout (#487): role tabs over a horizontally scrolling row of building cards. Each card shows
     /// the building's picture (a render from BuildingIconRenderer, else its main product's icon, else the Build
     /// glyph), its name, price and a Place button, with an (i) button for the details. Pure helpers and the card /
-    /// tab factories live here; HUDController.BuildBuildingsList fills them.
+    /// tab factories live here; BuildingsPanelSubController fills them.
     ///
     /// Tab pages carry the <see cref="PageClass"/> class and are named "builder-page-{tab}" beside the tab buttons
     /// "builder-tab-{tab}", so TutorialPulseResolver can guide to a hidden tab first.

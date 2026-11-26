@@ -4,7 +4,7 @@ Externally-controlled toggles that change behavior **without an app-store rebuil
 environment (dev vs prod). Use these to ship a feature hidden, kill a misbehaving system, or stage a
 rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/Cloud Save, so no new vendor.
 
-> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23.
+> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23; game-data publisher (#210), maintenance schedule (#224) and single UGS session (#209) 2026-11-26.
 
 ## How it works
 
@@ -31,7 +31,9 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 - `Assets/Scripts/RemoteConfig/FeatureFlagService.cs` — singleton: self-bootstraps via
   `[RuntimeInitializeOnLoadMethod]` (no scene placement — no serialized fields, can't be lost in a refactor),
   loads cache, `FetchAsync`.
-- Fetch hook: `SaveManager.ReconcileWithCloud` (after UGS init, before the cloud-save gate).
+- Fetch hook: `SaveManager.ReconcileWithCloud` (after UGS init, before the cloud-save gate), via
+  `FetchIfStaleAsync`: it reuses the splash gate's fetch when that is under 2 min old
+  (`FeatureFlagResolver.IsFresh`), so a returning player fetches once per launch (#209).
 - Tests: `Assets/Scripts/Tests/FeatureFlagResolverTests.cs`.
 
 ## Shipped flags
@@ -49,6 +51,8 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
 | `maintenance.message` | string | (generic) | Body text shown on the maintenance screen. |
 | `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |
+| `maintenance.startsUtc` | string | `""` | ISO-8601 UTC start of a scheduled window (#224). With `maintenance.enabled` on and a future start, players still get in, and everyone in GameScene who has fetched since is sent to the splash at that moment, with no fetch. Blank (or unreadable) ⇒ maintenance applies at once. |
+| `maintenance.pollSeconds` | int | `300` | Mid-session re-fetch interval, clamped to 60-1800 s (`MaintenancePollSchedule.ClampPollSeconds`). Lower it ahead of an unscheduled window; it takes effect after the client's next fetch. |
 | `analytics.enabled` | bool | `false` | Master switch for `TelemetryService` (UGS Analytics). **Default off** ⇒ telemetry is opt-in: flip on to open a collection phase. See `analytics.md`. |
 | `analytics.phase` | string | `"default"` | Label stamped on every event as `collection_phase` so collection windows stay segmentable in Data Explorer. |
 | `gamedata.updatedUtc` | string | `""` | ISO-8601 UTC publish stamp of the current game values. Drives the one-shot update-notice modal (`GameUpdateNotice.ShouldShow` vs `SaveData.lastSeenGameDataUtc`); blank ⇒ never shown. Bump it to announce a balance change to everyone on next launch. |
@@ -60,6 +64,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
 | `links.feedbackEmail` | string | `"aclemetson12492@gmail.com"` | Recipient of Settings > Support > **Send Feedback** (`mailto:` prefilled with version, player id, device; built by `HUDSettingsSubController.BuildFeedbackMailto`). Read at tap time. |
 | `links.privacyPolicyUrl` | string | GitHub Pages `privacy-policy.html` URL | Opened by Settings > Support > **Privacy Policy**. Source is `docs/privacy-policy.html`, served from `develop:/docs`. Read at tap time. |
+| `links.discordUrl` | string | `"https://discord.gg/aVt8Z9ntkC"` | Community invite (#533), the server's permanent invite. Settings > Support > **Join our Discord** shows only when this is an https `discord.gg/...` or `discord.com/invite/...` link (`HUDSettingsSubController.IsDiscordInvite`); blank or anything else hides it. Checked each time Settings opens. |
 | `update.enabled` | bool | `false` | Master switch for the boot-time update prompt. See "App update prompt" below. Default off: a fetch failure never prompts. |
 | `update.latest.android` / `update.latest.ios` | string | `""` | Newest published build version (semver, matches `Application.version`). An older build shows "Update" / "Later". Written by CI in **development** after each Play internal / TestFlight upload; set by hand in **production** when a release goes live. Blank: no prompt. |
 | `update.minimum.android` / `update.minimum.ios` | string | `""` | Oldest supported version. A build below it gets a blocking prompt (no "Later"). Set by hand for breaking save/economy changes. Blank: never forced. |
@@ -79,6 +84,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 - **Allow-list:** only fields in the `Set*Field` switches of `GameDataOverrides.cs` are honored (ids/refs/arrays are never overridable, so the importer's cross-references stay intact). Unknown field/id ⇒ ignored. See `Assets/Data/overrides.sample.json` for the documented field set.
 - **Applied at boot** in-place onto the shared loaded SOs by their owners (`GameBootstrap` → GameConfig, `ItemDatabase`, `ResearchService`), so every consumer sees the override with no per-consumer change.
 - **Timing:** fetched/cached via this same Feature Flag service (remote > cache > default), so a freshly-published blob takes effect on the **next cold start** — pair it with a `gamedata.updatedUtc` bump to notify players.
+- **Publishing (#210):** don't edit the keys by hand. `live-ops/gamedata.json` (version, notice text, overrides) is the source. The `publish-gamedata.yml` workflow validates it on PRs (`scripts/gamedata_publish.py`: fields from the `Set*Field` switches, ids from `game_data.json`, finite non-negative numbers; tests in `scripts/test_gamedata_publish.py`). On manual dispatch it writes all `gamedata.*` keys in one PUT: development by default, production only with `confirm=production`; `announce` stamps `gamedata.updatedUtc`. See `live-ops/README.md`. `set-remote-config.ps1` keeps a key's dashboard type, so `gamedata.version` stays an int.
 - **Not yet overridable:** buildings and fields (no central runtime registry — they're reached only via `BuildingPlacementController.availableBuildings` / `FieldGenerator`; a follow-up can extend `GameDataOverrides` once a registry exists).
 
 ## Maintenance mode
@@ -88,16 +94,28 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
 
 - **Splash gate** (`MaintenanceGate.IsUnderMaintenanceAsync`, called from `SplashScreenController`): runs a
   time-boxed UGS init + flag fetch before `SceneLoader.GoTo("GameScene")`. Checked for **every** user.
-- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene, and
-  immediately when the app returns from the background (at most one check per 10 s;
-  `MaintenancePollSchedule`, #224); if
-  maintenance flips on it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
+- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every `maintenance.pollSeconds` (5 min) while
+  in GameScene, and immediately when the app returns from the background (at most one check per 10 s;
+  `MaintenancePollSchedule`, #224). A window scheduled with `maintenance.startsUtc` is armed from the
+  fetched flags and trips at its start on the server clock (`ServerClock`, device clock fallback). Only an armed
+  schedule trips without a fetch, so a player who got in through fail-open with stale cached flags is not bounced. If
+  maintenance is active it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
   splash, which re-shows the overlay.
 - **Fail-open:** any fetch failure/timeout ⇒ NOT in maintenance (offline players are never locked out).
-- **Account-link-safe:** a brand-new user (no session) gets a throwaway anon session just to read the flag,
-  then `SignOut(clearCredentials: true)` when maintenance is off, so GameScene's Google/anon sign-in is
-  untouched. Env name is shared via `UgsEnvironment.Name`.
-- Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`.
+- **Account-link-safe, one sign-in per launch (#209):** the gate only restores an existing cached session and
+  never creates a player. A brand-new install (no session token) skips the check. GameScene's normal Google/anon
+  sign-in then does the first fetch, and `MaintenanceWatcher` acts on any new successful fetch
+  (`FeatureFlagService.FetchCount`) straight away, so a new player who arrives during maintenance is sent back to
+  the splash right after signing in. Cached values alone never trip the watcher. Env name is shared via
+  `UgsEnvironment.Name`.
+- Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`; the active/scheduled decision
+  and poll clamp are `MaintenancePollSchedule.IsActive` / `IsScheduledAhead` / `ClampPollSeconds` (`MaintenancePollScheduleTests`).
+- **Planned window:** set `maintenance.startsUtc` at least one poll interval (5 min) ahead, then `maintenance.enabled`
+  on. Foreground players leave at the start, give or take a second. Backgrounded apps check when resumed. **Emergency:**
+  `maintenance.enabled` on with a blank start reaches players within one poll (5 min worst case, sooner if
+  `maintenance.pollSeconds` was lowered beforehand). Each trip logs its reason and lag behind the scheduled start
+  (`[Maintenance] Active mid-session (...)`), for the on-device latency measurement. A push channel (Cloud
+  Code project messages) is not built: the schedule covers planned windows without extra traffic.
 
 ## App update prompt
 
@@ -107,7 +125,7 @@ On boot, an out-of-date build pauses on the splash and offers a link to update.
 - **Where:** `SplashScreenController.ContinueOrPromptUpdate`, after the maintenance gate answers (and after a maintenance Retry succeeds). It uses the flags the gate just fetched, or the cached ones if the gate timed out. UI: `update-panel` in `SplashScreen.uxml` (reuses the maintenance panel classes; `.update-buttons`, `.update-later-btn` in `SplashScreen.uss`). Update calls `Application.OpenURL` and stays on the panel; Later loads GameScene.
 - **CI writer:** `scripts/set-remote-config.ps1 -EnvironmentId <id> -Key <key> -Value <value>` (Remote Config Admin API, service-account Basic auth; GETs the environment's settings config, changes one key, PUTs the whole array back; `-DryRun` available). Called after the upload in `release-internal.yml` (`update.latest.android`) and `release-ios.yml` (`update.latest.ios`), both in **development**. The step is skipped while the secrets are missing and never fails the release (`continue-on-error`). `prod-release.yml` uploads a Play **draft**, so production's `update.latest.*` is set by hand when the release goes live.
 - **What's new (#502):** `release-internal.yml` (upload job) runs `scripts/whats_new.py <version> <json>`. That strips HTML comments from `docs/whats-new.md`, caps it at 1,200 chars and skips when blank. Then `set-remote-config.ps1 -JsonFile` writes `whatsnew.notes` + `whatsnew.version` in **one PUT** (so a player on an older build never sees newer notes with an older version). Rewrite `docs/whats-new.md` in each integration -> release PR. A hotfix that leaves it unchanged republishes the same text, which nobody sees twice. Use `- ` bullets: the game font has no bullet glyph.
-- **Secrets:** `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` (a UGS service account with a Remote Config edit role; the workflows map them onto the script's generic `UGS_SERVICE_KEY_ID` / `UGS_SERVICE_SECRET`, so another account can reuse the script), `UGS_PROJECT_ID`, `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` (not used by CI yet: production versions are set by hand).
+- **Secrets:** `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` (the UGS service account `ci-cd-automation`, which has a Remote Config edit role; the workflows map them onto the script's generic `UGS_SERVICE_KEY_ID` / `UGS_SERVICE_SECRET`, so another account can reuse the script), `UGS_PROJECT_ID`, `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` (not used by CI yet: production versions are set by hand).
 
 ## Adding a flag
 

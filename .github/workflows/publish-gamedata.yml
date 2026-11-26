@@ -1,0 +1,119 @@
+name: Publish Game Data
+
+# Publishes live-ops/gamedata.json to the gamedata.* Remote Config keys (#210):
+#   gamedata.version, gamedata.noticeTitle, gamedata.noticeMessage, gamedata.overrides
+#   and, with "announce", gamedata.updatedUtc = now (every player sees the update notice once).
+# Players pick the values up on their next cold start (docs/agents/feature-flags.md, "Game-data overrides").
+#
+# Pull requests that touch the file or the validator run only the validation, so a bad overrides blob fails
+# the PR. Publishing is manual (workflow_dispatch). Manual workflows run only once this file is on main
+# (the default branch), and they publish the file from the branch you pick in the Run workflow form.
+# Production also needs the confirm input set to "production".
+on:
+  pull_request:
+    paths:
+      - 'live-ops/**'
+      - 'scripts/gamedata_publish.py'
+      - 'scripts/test_gamedata_publish.py'
+      - 'scripts/set-remote-config.ps1'
+      - 'Assets/Scripts/RemoteConfig/GameDataOverrides.cs'
+      - '.github/workflows/publish-gamedata.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: UGS environment to publish to
+        type: choice
+        options: [development, production]
+        default: development
+      announce:
+        description: Bump gamedata.updatedUtc so players see the update notice
+        type: boolean
+        default: true
+      dry_run:
+        description: Validate and show the payload, but do not write Remote Config
+        type: boolean
+        default: false
+      confirm:
+        description: Type "production" to allow a production publish
+        type: string
+        default: ''
+
+concurrency:
+  group: publish-gamedata-${{ github.event.pull_request.number || inputs.environment }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate game data
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            /live-ops/
+            /scripts/
+            /Assets/Scripts/RemoteConfig/
+            /Assets/Data/game_data.json
+            /Assets/Data/overrides.sample.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Unit tests
+        run: python3 -m unittest scripts/test_gamedata_publish.py
+
+      - name: Validate live-ops/gamedata.json
+        run: python3 scripts/gamedata_publish.py validate
+
+  publish:
+    name: Publish to ${{ inputs.environment }}
+    needs: validate
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+      ENV_ID: ${{ inputs.environment == 'production' && secrets.UGS_ENV_ID_PRODUCTION || secrets.UGS_ENV_ID_DEVELOPMENT }}
+    steps:
+      - name: Check the production confirmation
+        if: inputs.environment == 'production' && inputs.confirm != 'production'
+        run: |
+          echo '::error::Publishing to production needs the confirm input set to "production".'
+          exit 1
+
+      - name: Check the secrets
+        run: |
+          missing=""
+          for v in UGS_SERVICE_KEY_ID UGS_SERVICE_SECRET UGS_PROJECT_ID ENV_ID; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then echo "::error::Missing secret(s):$missing"; exit 1; fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            /live-ops/
+            /scripts/
+            /Assets/Scripts/RemoteConfig/
+            /Assets/Data/game_data.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Build the payload
+        run: |
+          flags=""
+          [ "${{ inputs.announce }}" = "true" ] && flags="--announce"
+          python3 scripts/gamedata_publish.py build "$RUNNER_TEMP/gamedata.json" $flags
+          cat "$RUNNER_TEMP/gamedata.json"
+
+      - name: Write Remote Config
+        shell: pwsh
+        run: |
+          $dry = '${{ inputs.dry_run }}' -eq 'true'
+          ./scripts/set-remote-config.ps1 -EnvironmentId $env:ENV_ID -JsonFile (Join-Path $env:RUNNER_TEMP 'gamedata.json') -DryRun:$dry
+          "Published live-ops/gamedata.json @ $env:GITHUB_SHA to ${{ inputs.environment }} (announce: ${{ inputs.announce }}, dry run: $dry)" >> $env:GITHUB_STEP_SUMMARY

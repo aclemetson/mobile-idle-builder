@@ -145,7 +145,11 @@ namespace MobileIdleBuilder
             int idx     = save.loginStreakIndex % rewards.Length;
             var reward  = rewards[idx];
 
-            GrantReward(save, reward.crystals, reward.entropy, reward.prestigeCurrency);
+            // Refresh the idle snapshot from the live world first, so the entropy is priced on today's factory.
+            SaveManager.Instance.SaveLocal();
+            long entropy = EntropyFor(reward, save);
+            LastClaimedEntropy = entropy;
+            GrantReward(save, reward.crystals, entropy, reward.prestigeCurrency);
 
             save.loginStreakIndex   = (save.loginStreakIndex + 1) % rewards.Length;
             save.lastLoginRewardUtc = now.Date.ToString("o");
@@ -154,9 +158,30 @@ namespace MobileIdleBuilder
             OnChanged?.Invoke();
             GameLogger.Info(
                 $"[DailyEvents] Login reward day {reward.day} claimed — " +
-                $"+{reward.crystals} crystals, +{reward.entropy} entropy, +{reward.prestigeCurrency} PC.");
+                $"+{reward.crystals} crystals, +{entropy} entropy, +{reward.prestigeCurrency} PC.");
             return true;
         }
+
+        /// <summary>Entropy the last successful <see cref="ClaimLoginReward(DateTime)"/> granted (for the toast).</summary>
+        public long LastClaimedEntropy { get; private set; }
+
+        /// <summary>
+        /// Entropy a login reward pays right now: <see cref="DailyRewardEntry.entropyMinutes"/> of full current
+        /// production (the idle snapshot, as Time Warp prices it), never less than the flat
+        /// <see cref="DailyRewardEntry.entropy"/>. A flat 500 meant nothing once a factory earns millions (2026-11-24).
+        /// </summary>
+        public static long EntropyFor(DailyRewardEntry reward, SaveData save)
+        {
+            if (reward == null) return 0;
+            long scaled = 0;
+            if (reward.entropyMinutes > 0 && save != null)
+                scaled = OfflineCollectionService.ComputeForDuration(save, GameBootstrap.Instance?.gameConfig,
+                    PersistentUpgradeService.Instance, reward.entropyMinutes * 60f)?.EntropyEarned ?? 0;
+            return ScaledEntropy(reward.entropy, scaled);
+        }
+
+        /// <summary>The larger of the flat floor and the production-scaled amount (pure, for tests).</summary>
+        internal static long ScaledEntropy(long floor, long scaled) => Math.Max(Math.Max(floor, scaled), 0);
 
         void GrantReward(SaveData save, int crystals, long entropy, int prestigeCurrency)
         {

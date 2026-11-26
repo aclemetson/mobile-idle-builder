@@ -35,5 +35,12 @@ namespace MobileIdleBuilder
             foreach (var kvp in overrides)
                 target[kvp.Key] = kvp.Value;
         }
+
+        /// <summary>
+        /// Whether a fetch made at <paramref name="lastFetch"/> (realtime, -1 = never) is still young enough
+        /// to reuse at <paramref name="now"/> (#209).
+        /// </summary>
+        public static bool IsFresh(float lastFetch, float now, float maxAgeSeconds)
+            => lastFetch >= 0f && now >= lastFetch && now - lastFetch < maxAgeSeconds;
     }
 }

@@ -80,6 +80,17 @@ jobs:
         shell: powershell
         run: Remove-Item -Force "secrets\user.keystore" -ErrorAction SilentlyContinue
 
+      # IL2CPP symbols to Unity Diagnostics for readable crash reports. Reads Library/, so it must run
+      # before Save Library. Never blocks the release; see docs/runbooks/cloud-diagnostics-setup.md.
+      - name: Upload symbols to Unity Diagnostics
+        continue-on-error: true
+        shell: powershell
+        env:
+          UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
+          UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+          UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci\upload-symbols.ps1
+
       - name: Save Library
         if: always()
         shell: powershell
@@ -96,6 +107,14 @@ jobs:
         with:
           name: android-aab-${{ github.run_number }}
           path: build/Android/*.aab
+          retention-days: 90
+
+      # IL2CPP debug symbols for crash symbolication; see docs/runbooks/cloud-diagnostics-setup.md.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-symbols-${{ github.run_number }}
+          path: build/Android/*.symbols.zip
+          if-no-files-found: warn
           retention-days: 90
 
   # ── Job 2: Release — tag, Play Store, GitHub Release (ubuntu, Docker OK) ─────
@@ -121,6 +140,25 @@ jobs:
         id: aab
         run: echo "path=$(ls dist/*.aab | head -1)" >> "$GITHUB_OUTPUT"
 
+      # Native debug symbols for Play's crash/ANR view. Optional: missing or over Play's 800 MB limit
+      # uploads the AAB without them.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: android-symbols-${{ github.run_number }}
+          path: symbols/
+
+      - name: Find symbols
+        id: sym
+        run: |
+          f=$(ls symbols/*.symbols.zip 2>/dev/null | head -1)
+          if [ -n "$f" ] && [ "$(stat -c %s "$f")" -lt 790000000 ]; then
+            echo "path=$f" >> "$GITHUB_OUTPUT"
+            echo "Uploading debug symbols: $f ($(du -h "$f" | cut -f1))"
+          else
+            echo "::warning::No debug symbols uploaded (missing or over 790 MB): ${f:-none}"
+          fi
+
       - name: Create and push git tag
         run: |
           git config user.name  "github-actions[bot]"
@@ -138,6 +176,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           packageName: com.clemtek.mobileidlebuilder
           releaseFiles: ${{ steps.aab.outputs.path }}
+          debugSymbols: ${{ steps.sym.outputs.path }}
           track: production
           status: draft
 
@@ -150,6 +189,26 @@ jobs:
             --title "v${VERSION}" \
             --generate-notes \
             --latest
+
+  # -- Staff alert on Discord when any job above fails (#533). Skips while DISCORD_STAFF_WEBHOOK is unset. --
+  discord-alert:
+    name: Discord failure alert
+    needs: [build, release]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts
+            docs
+          persist-credentials: false
+      - name: Post alert
+        env:
+          DISCORD_STAFF_WEBHOOK: ${{ secrets.DISCORD_STAFF_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/discord/notify.py alert --webhook-env DISCORD_STAFF_WEBHOOK --text "Prod Release failed on ${{ github.ref_name }}" --url "$RUN_URL"
 
   # ── iOS build placeholder (enable when macOS runner + Apple Dev account ready) ─
   # ios-build:

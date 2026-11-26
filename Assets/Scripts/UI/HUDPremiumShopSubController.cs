@@ -183,8 +183,15 @@ namespace MobileIdleBuilder
                     null,
                     () =>
                     {
-                        var result = PremiumShopService.Instance?.TryBuyTimeWarp(captured) ?? PurchaseResult.InvalidTier;
-                        if (result == PurchaseResult.Success) Refresh();
+                        var shop   = PremiumShopService.Instance;
+                        var result = shop?.TryBuyTimeWarp(captured) ?? PurchaseResult.InvalidTier;
+                        if (result != PurchaseResult.Success) return;
+                        Refresh();
+                        // Same toast as the ad's Time Warp, task count included (#535).
+                        GetComponent<HUDController>()?.ShowNotification("▶",
+                            $"Banked {shop.LastTimeWarpHours:F0}h of production" + AdService.TaskSuffix(
+                                shop.LastTimeWarpTaskItems,
+                                OfflineCollectionService.TasksActiveHere(SaveManager.Instance?.Current)));
                     });
 
                 _tierList.Add(card);

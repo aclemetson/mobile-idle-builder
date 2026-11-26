@@ -73,7 +73,8 @@ jobs:
           # Pinned so builds are reproducible and "latest" needs no API lookup. Bump on purpose.
           cliVersion: v0.1.76
           targetPlatform: iOS
-          buildMethod: MobileIdleBuilder.Editor.BuildScript.BuildIOS
+          # TestFlight is the iOS testing lane: build with the dev console, like the Android internal track.
+          buildMethod: MobileIdleBuilder.Editor.BuildScript.BuildIOSDevelopment
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -141,3 +142,23 @@ jobs:
           path: archive-ios.log
           retention-days: 14
           if-no-files-found: ignore
+
+  # -- Staff alert on Discord when any job above fails (#533). Skips while DISCORD_STAFF_WEBHOOK is unset. --
+  discord-alert:
+    name: Discord failure alert
+    needs: [build, release]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts
+            docs
+          persist-credentials: false
+      - name: Post alert
+        env:
+          DISCORD_STAFF_WEBHOOK: ${{ secrets.DISCORD_STAFF_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/discord/notify.py alert --webhook-env DISCORD_STAFF_WEBHOOK --text "Release iOS failed on ${{ github.ref_name }}" --url "$RUN_URL"

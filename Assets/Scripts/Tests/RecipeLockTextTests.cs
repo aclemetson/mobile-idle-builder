@@ -12,7 +12,7 @@ namespace MobileIdleBuilder.Tests
     {
         [Test]
         public void LockText_NamesTheResearch() =>
-            Assert.AreEqual("Research Proton Synthesis to unlock", HUDController.ResearchLockText("Proton Synthesis"));
+            Assert.AreEqual("Research Proton Synthesis to unlock", HudText.ResearchLockText("Proton Synthesis"));
 
         [Test]
         public void EveryRecipeGate_IsAResearchWithADisplayName()

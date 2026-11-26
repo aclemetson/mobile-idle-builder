@@ -226,6 +226,51 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void NoSpring_BankBuildingIsDry()
+        {
+            Stream();
+            var a = Bank(1, 3f);
+
+            Tick();
+
+            Assert.AreEqual(1, Status(a).OnStream);
+            Assert.AreEqual(0f, Status(a).Ratio, "a stream no Spring feeds powers nothing");
+        }
+
+        [Test]
+        public void BuildingBesideADryChannelAndAStream_TakesFromTheStream()
+        {
+            Spring(10f);
+            Stream();
+            var a = Bank(1, 3f);
+            // A longer dry channel on the far bank (y = 2), so it is walked first (heads first).
+            const int len = 8;
+            var dry = new Entity[len];
+            for (int k = 0; k < len; k++)
+            {
+                dry[k] = _em.CreateEntity();
+                _em.AddComponentData(dry[k], new GridPosition { Cell = new int2(1 + k, 2) });
+                _em.AddComponentData(dry[k], new StreamSegment());
+                _em.AddBuffer<ConveyorItem>(dry[k]);
+            }
+            for (int k = 0; k < len; k++)
+                _em.AddComponentData(dry[k], new ConveyorSegmentData
+                {
+                    Cell = new int2(1 + k, 2), EntryDir = East, ExitDir = East, TransportTime = 1f,
+                    NextSegment = k + 1 < len ? dry[k + 1] : Entity.Null,
+                    PrevSegment = k > 0 ? dry[k - 1] : Entity.Null,
+                    IsChainHead = k == 0,
+                });
+            _em.GetBuffer<PlacedPortData>(a).Add(new PlacedPortData { PortType = (int)PortType.Input, CellX = 1, CellY = 1, Facing = South });
+
+            Tick();
+
+            Assert.AreEqual(1f, Status(a).Ratio, 1e-5f);
+            using var q = _em.CreateEntityQuery(typeof(StreamGridState));
+            Assert.AreEqual(3f, q.GetSingleton<StreamGridState>().Draw, 1e-5f, "its draw counts once");
+        }
+
+        [Test]
         public void BankBuilding_TakesOnlyWhatItsRecipeUses()
         {
             Spring(10f);
@@ -270,6 +315,74 @@ namespace MobileIdleBuilder.Tests
             var items = _em.GetBuffer<ConveyorItem>(segs[2]);
             Assert.AreEqual(1, items.Length);
             Assert.AreEqual(11, items[0].ItemID);
+        }
+
+        [Test]
+        public void ABuildingAtTheStreamsHead_DropsFromTheSide_NotLikeABelt()
+        {
+            // #543: only a Spring is pulled onto a stream's head; any other building there drops mid-tile.
+            var segs = Stream();
+            var a = Bank(0, 3f);   // at (0,1), output facing South onto the head (0,0)
+            _em.GetBuffer<BuildingOutputSlot>(a).Add(new BuildingOutputSlot { ItemID = 11, Quantity = 1 });
+
+            Tick();
+
+            var items = _em.GetBuffer<ConveyorItem>(segs[0]);
+            Assert.AreEqual(1, items.Length);
+            Assert.AreEqual(StreamRules.DropAt, items[0].Progress, 1e-4f, "dropped in the middle, not pulled in at the edge");
+        }
+
+        // ── Drawing a stream (#543) ───────────────────────────────────────
+
+        [Test]
+        public void Orient_KeepsARunFromItsSource_ReversesOneDrawnTowardIt_RefusesOneWithout()
+        {
+            var fed = new System.Collections.Generic.HashSet<int> { 10 };
+            bool Fed(int c) => fed.Contains(c);
+            Assert.AreEqual(StreamRules.Orientation.Keep,    StreamRules.Orient(new[] { 10, 11, 12 }, Fed));
+            Assert.AreEqual(StreamRules.Orientation.Reverse, StreamRules.Orient(new[] { 12, 11, 10 }, Fed), "drawn toward the Spring");
+            Assert.AreEqual(StreamRules.Orientation.Refuse,  StreamRules.Orient(new[] { 20, 21, 22 }, Fed), "no source at either end");
+            Assert.AreEqual(StreamRules.Orientation.Refuse,  StreamRules.Orient(new int[0], Fed));
+        }
+
+        [Test]
+        public void ALoneStreamTile_NeverFacesBackIntoItsSpring()
+        {
+            bool SpringNorth(int d) => d == North;
+            Assert.AreEqual(South, StreamRules.SingleTileFacing(North, SpringNorth));
+            Assert.AreEqual(East,  StreamRules.SingleTileFacing(East, SpringNorth));
+        }
+
+        [Test]
+        public void DeletingAPieceUpstream_StopsEverythingDownstream()
+        {
+            // Spring at the head; a building on the last tile runs while the stream is whole.
+            Spring(10f);
+            var segs = Stream();
+            var down = Bank(3, 2f);
+            Tick();
+            Assert.AreEqual(1f, Status(down).Ratio, 1e-5f, "fed while the stream is whole");
+
+            // Delete tile 1, relinked the way ConveyorPlacer.RemoveSegmentAt leaves it: tile 0 ends, tile 2 starts a
+            // new chain with no Spring beside it.
+            _em.DestroyEntity(segs[1]);
+            var a = _em.GetComponentData<ConveyorSegmentData>(segs[0]);
+            a.NextSegment = Entity.Null;
+            _em.SetComponentData(segs[0], a);
+            var b = _em.GetComponentData<ConveyorSegmentData>(segs[2]);
+            b.PrevSegment = Entity.Null;
+            b.IsChainHead = true;
+            _em.SetComponentData(segs[2], b);
+            ConveyorItems.Add(_em, segs[3], 5, 0.2f);
+
+            Tick(0.1f);
+
+            Assert.AreEqual(0, _em.GetComponentData<StreamSegment>(segs[2]).HasSource, "the cut-off piece is dry");
+            Assert.AreEqual(0, _em.GetComponentData<StreamSegment>(segs[3]).HasSource);
+            Assert.AreEqual(1, Status(down).OnStream);
+            Assert.AreEqual(0f, Status(down).Ratio, "the building downstream stops");
+            Assert.AreEqual(0.2f, _em.GetBuffer<ConveyorItem>(segs[3])[0].Progress, 1e-5f, "items downstream stand still");
+            Assert.AreEqual(1, _em.GetComponentData<StreamSegment>(segs[0]).HasSource, "the piece still at the Spring flows");
         }
 
         [Test]

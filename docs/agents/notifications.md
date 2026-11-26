@@ -45,7 +45,7 @@ Both use the same OS permission and the same Settings toggle.
 | `BoostEnded` | boosts | `BoostLock.Remaining` (when every timed boost has ended) | speed burst, Idle ad boost, Cyclotron boost |
 | `DailyReward` | rewards | next UTC midnight if today's reward was claimed, else in 4 h (before the reset) | `lastLoginRewardUtc` |
 | `RewardsExpiring` | rewards | 2 h before the daily/weekly/monthly reset, only if `AchievementService.HasClaimable` for it | achievement resets |
-| `SurgeReady` | boosts | latest of: Entropy Surge cooldown, `BoostLock` (when it blocks the ad) and `SurgeMinAway` (2 h); the surge has no daily cap since #489. Only after the first prestige and with `ads.enabled` on | `adLastWatch`, `adWatchCounts` (`NotificationInputs.SurgeReadyDelay`) |
+| `SurgeReady` | boosts | latest of: Entropy Surge cooldown, `BoostLock` (never blocks the surge since 2026-11-24, kept as a guard) and `SurgeMinAway` (2 h); the surge has no daily cap since #489. Only after the first prestige and with `ads.enabled` on | `adLastWatch`, `adWatchCounts` (`NotificationInputs.SurgeReadyDelay`) |
 | `Comeback24h` / `Comeback72h` | reminders | now + 24 h / 72 h (after the tutorial) | none |
 
 The rules live in `NotificationPlanner` and are covered by the tests:
