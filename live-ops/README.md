@@ -23,7 +23,12 @@ numbers and to announce the change, without a store release. Players get the new
 4. Cold-start a build pointed at that environment and check the card and the changed value.
 
 The workflow writes all keys in one Remote Config PUT through `scripts/set-remote-config.ps1`, using the
-`UGS_GAME_CONFIG_SERVICE_*` service account that the release workflows already use. Publishing replaces
+`ci-project` service account (`UGS_PROJECT_SERVICE_KEY_ID` / `_SECRET`, Remote Config Admin), the same one
+the release workflows use for Remote Config. A production publish waits for approval on the `production`
+GitHub environment, which holds `UGS_ENV_ID_PRODUCTION` (docs/runbooks/secrets.md).
+
+A development publish can run from any branch, which is how to try values on an internal build before
+merging them. Publish `main` again afterwards to put development back on the merged values. Publishing replaces
 `gamedata.overrides` entirely, so edits made by hand in the dashboard are overwritten. Keep this file as
 the only source.
 
