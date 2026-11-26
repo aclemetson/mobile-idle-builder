@@ -409,5 +409,137 @@ namespace MobileIdleBuilder.Tests
             var json = JsonUtility.ToJson(new SaveData { devConsoleUsed = true });
             Assert.IsTrue(JsonUtility.FromJson<SaveData>(json).devConsoleUsed, "the flag is sticky across saves");
         }
+
+        // ── Beta events (#567) ────────────────────────────────────────────────
+
+        [Test]
+        public void RecordTutorialStep_EmitsStepIdIndexAndPlaytime()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "beta-1", playerId: "u");
+            _svc.RecordTutorialStep("place_harvester", 2);
+
+            var p = sink.First("tutorial_step");
+            Assert.IsNotNull(p);
+            Assert.AreEqual("place_harvester", p["step_id"]);
+            Assert.AreEqual(2, p["step_index"]);
+            Assert.IsInstanceOf<long>(p["playtime_total_sec"], "registered as Int; must be integral");
+            Assert.AreEqual("beta-1", p["collection_phase"]);
+        }
+
+        [Test]
+        public void RecordAdReward_EmitsPlacementGrantedAndAdFree()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordAdReward("TimeWarp", granted: false, adFree: true);
+
+            var p = sink.First("ad_reward");
+            Assert.IsNotNull(p);
+            Assert.AreEqual("TimeWarp", p["placement"]);
+            Assert.AreEqual(false, p["granted"]);
+            Assert.AreEqual(true, p["ad_free"]);
+        }
+
+        [Test]
+        public void RecordIapPurchase_EmitsProductPriceAndCurrency()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordIapPurchase("crystals_tier2", 4.99, "EUR");
+
+            var p = sink.First("iap_purchase");
+            Assert.IsNotNull(p);
+            Assert.AreEqual("crystals_tier2", p["product_id"]);
+            Assert.AreEqual(4.99, (double)p["price"], 1e-9);
+            Assert.AreEqual("EUR", p["currency"]);
+        }
+
+        [Test]
+        public void RecordPveLeague_EmitsActionTierAndRank()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordPveLeague("finished", 2, 7);
+
+            var p = sink.First("pve_league");
+            Assert.IsNotNull(p);
+            Assert.AreEqual("finished", p["action"]);
+            Assert.AreEqual(2, p["league_tier"]);
+            Assert.AreEqual(7, p["rank"]);
+        }
+
+        [Test]
+        public void RecordFeedbackOpened_EmitsSource()
+        {
+            var sink = new RecordingSink();
+            _svc.StartForTesting(sink, phase: "p", playerId: "u");
+            _svc.RecordFeedbackOpened("settings_discord");
+
+            var p = sink.First("feedback_opened");
+            Assert.IsNotNull(p);
+            Assert.AreEqual("settings_discord", p["source"]);
+        }
+
+        [Test]
+        public void BetaEvents_AreNotSent_BeforeCollectionStarts()
+        {
+            var sink = new RecordingSink();
+            _svc.SetSinkForTesting(sink);
+            _svc.RecordTutorialStep("s", 0);
+            _svc.RecordAdReward("TimeWarp", true, false);
+            _svc.RecordIapPurchase("ad_free", 9.99, "USD");
+            _svc.RecordPveLeague("joined", 0, 0);
+            _svc.RecordFeedbackOpened("settings_email");
+
+            Assert.AreEqual(0, sink.Events.Count);
+        }
+
+        [Test]
+        public void AddPlaytime_AccumulatesWholeSeconds_AndKeepsTheFraction()
+        {
+            var save = new SaveData();
+            float carry = 0f;
+            for (int i = 0; i < 25; i++) TelemetryService.AddPlaytime(save, ref carry, 0.1f);   // 2.5 s
+
+            Assert.AreEqual(2L, save.playtimeSec);
+            Assert.AreEqual(0.5f, carry, 1e-3f);
+        }
+
+        [Test]
+        public void AddPlaytime_CapsALongFrame_AtOneSecond()
+        {
+            var save = new SaveData();
+            float carry = 0f;
+            TelemetryService.AddPlaytime(save, ref carry, 3600f);   // a resume from the background
+
+            Assert.AreEqual(1L, save.playtimeSec);
+        }
+
+        [Test]
+        public void AddPlaytime_NullSave_IsANoOp()
+        {
+            float carry = 0f;
+            Assert.DoesNotThrow(() => TelemetryService.AddPlaytime(null, ref carry, 5f));
+            Assert.AreEqual(0f, carry);
+        }
+
+        [Test]
+        public void SaveData_PlaytimeSec_RoundTripsThroughJson()
+        {
+            var json = JsonUtility.ToJson(new SaveData { playtimeSec = 1234 });
+            Assert.AreEqual(1234L, JsonUtility.FromJson<SaveData>(json).playtimeSec);
+        }
+
+        [Test]
+        public void LeagueTier_IsLadderPosition_OrMinusOne()
+        {
+            var cfg = new PveConfig { leagues = new[] { new PveLeagueDef { id = "quark" }, new PveLeagueDef { id = "atom" } } };
+
+            Assert.AreEqual(0, TournamentService.LeagueTier(cfg, "quark"));
+            Assert.AreEqual(1, TournamentService.LeagueTier(cfg, "atom"));
+            Assert.AreEqual(-1, TournamentService.LeagueTier(cfg, "unknown"));
+            Assert.AreEqual(-1, TournamentService.LeagueTier(null, "quark"));
+        }
     }
 }

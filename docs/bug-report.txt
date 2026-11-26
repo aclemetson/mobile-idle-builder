@@ -1,0 +1,5 @@
+- In the tutorial, it's possible to accidentally purchase a research out of order, making it so you do not have entropy to correct it and you are unable to click the fields to earn more entropy. We need to fix this soft lock and any other we can think of.
+- Let's enable the user to move fields once placed
+- In chemistry mode, let's make sure the user doesn't accidentally treat the stream like the physics conveyors. the stream should only ever flow from source to sink, and the buildings placed around it can only pick up and place like an assembly line.
+- Let's make sure the streams in chemistry mode stop working if they are not connected to a source. water must flow from a source, so if a stream "powers" a building but the stream isn't connected to a source, then it should stop working.
+- Let's make sure our dev console can come up on our iOS platforms. If we don't have access to "shake", let's determine what we can do for this. If this is because we hid it behind the dev environment, that should be fine.

@@ -70,6 +70,9 @@ namespace MobileIdleBuilder
         // set, so the next boundary retries.
         int    _pendingEvents;
 
+        // Lifetime play time (SaveData.playtimeSec): fractional seconds not yet added to the save.
+        float _playtimeCarry;
+
         // Run-length / playtime tracking (realtimeSinceStartup is monotonic and pause-independent).
         float _sessionStartTime;
         float _runStartTime;
@@ -165,6 +168,22 @@ namespace MobileIdleBuilder
                 yield return new WaitForSecondsRealtime(SnapshotIntervalSeconds);
                 if (_collecting) CaptureSnapshot();
             }
+        }
+
+        // Lifetime play time runs whether or not analytics is collecting, so the first tutorial_step of a
+        // player whose collection starts later still carries their real total. Unscaled: dialogue pauses
+        // Time.timeScale but the player is still playing. Update does not run while backgrounded.
+        void Update() => AddPlaytime(SaveManager.Instance?.Current, ref _playtimeCarry, Time.unscaledDeltaTime);
+
+        /// <summary>Adds <paramref name="dt"/> seconds to <c>save.playtimeSec</c>, keeping the fraction in <paramref name="carry"/>.</summary>
+        public static void AddPlaytime(SaveData save, ref float carry, float dt)
+        {
+            if (save == null || dt <= 0f) return;
+            carry += Mathf.Min(dt, 1f);        // a frame hitch or a resume from background is not play time
+            if (carry < 1f) return;
+            long whole = (long)carry;
+            save.playtimeSec += whole;
+            carry -= whole;
         }
 
         // UGS batches events in memory and uploads on its own cadence, so anything recorded since the
@@ -310,6 +329,72 @@ namespace MobileIdleBuilder
             var p = NewParams();
             p["command"] = command ?? "";
             Emit("dev_console_used", p);
+        }
+
+        // ── Beta events (#567) ────────────────────────────────────────────────
+
+        /// <summary>
+        /// The tutorial entered a step (tutorial funnel). <paramref name="stepId"/> is the step's id, prefixed
+        /// with the world id for a world flow ("chemistry/…"); the completion of a flow is reported as
+        /// <c>complete</c> with step_index = the flow's step count. playtime_total_sec is lifetime play time.
+        /// </summary>
+        public void RecordTutorialStep(string stepId, int stepIndex)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["step_id"]            = stepId ?? "";
+            p["step_index"]         = stepIndex;
+            p["playtime_total_sec"] = SaveManager.Instance?.Current?.playtimeSec ?? 0L;
+            Emit("tutorial_step", p);
+        }
+
+        /// <summary>
+        /// A rewarded ad finished (or, for an Ad-Free owner, the reward was asked for without an ad).
+        /// <paramref name="granted"/> is false when the ad was skipped or there was nothing to collect.
+        /// </summary>
+        public void RecordAdReward(string placement, bool granted, bool adFree)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["placement"] = placement ?? "";
+            p["granted"]   = granted;
+            p["ad_free"]   = adFree;
+            Emit("ad_reward", p);
+        }
+
+        /// <summary>A store purchase completed and was granted. Price is the store's localized price in <paramref name="currency"/> (ISO code).</summary>
+        public void RecordIapPurchase(string productId, double price, string currency)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["product_id"] = productId ?? "";
+            p["price"]      = price;
+            p["currency"]   = currency ?? "";
+            Emit("iap_purchase", p);
+        }
+
+        /// <summary>
+        /// PvE league participation: <c>joined</c> (rank 0) when the player enters a week, <c>finished</c> with the
+        /// final rank when that week's reward is applied. league_tier is the league's position in the ladder (0 = first;
+        /// -1 if unknown).
+        /// </summary>
+        public void RecordPveLeague(string action, int leagueTier, int rank)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["action"]      = action ?? "";
+            p["league_tier"] = leagueTier;
+            p["rank"]        = rank;
+            Emit("pve_league", p);
+        }
+
+        /// <summary>The player opened a feedback channel. <paramref name="source"/>: <c>settings_email</c>, <c>settings_discord</c>.</summary>
+        public void RecordFeedbackOpened(string source)
+        {
+            if (!ShouldRecord) return;
+            var p = NewParams();
+            p["source"] = source ?? "";
+            Emit("feedback_opened", p);
         }
 
         /// <summary>
@@ -601,6 +686,11 @@ namespace MobileIdleBuilder
             RecordTier(3);
             RecordMegastructureStage(1);
             RecordGameUpdateNotice(FeatureFlags.GameDataVersion);
+            RecordTutorialStep("dev_test_step", 0);
+            RecordAdReward("dev_test_placement", granted: true, adFree: false);
+            RecordIapPurchase("dev_test_product", 0.99, "USD");
+            RecordPveLeague("joined", 0, 0);
+            RecordFeedbackOpened("dev_test");
             // Sends prestige_completed AND an internal player_snapshot:
             RecordPrestige(runCount: 1, netWorthBefore: 12345f, prestigeCurrencyEarned: 42,
                            buildingCount: 7, highestTier: 3);
