@@ -43,15 +43,20 @@ For each row in the table:
 3. **Product ID**: exactly as in the table.
 4. **Availability**: all countries (or match the app).
 5. **Price Schedule**: pick the tier closest to the target price; Apple fills in other countries.
-6. **App Store Localization** (English (U.S.) at least): Display Name and Description, for example:
-   - `crystals_tier1`: "600 Crystals" / "A small pouch of crystals for boosts and the shop."
-   - `crystals_tier2`: "3,200 Crystals" / "A bag of crystals for boosts and the shop."
-   - `crystals_tier3`: "7,500 Crystals" / "A chest of crystals for boosts and the shop."
-   - `crystals_tier4`: "20,000 Crystals" / "A vault of crystals for boosts and the shop."
-   - `ad_free`: "Ad-Free" / "Get every ad reward without watching ads, plus +20% entropy income forever."
-7. **Review Information**: a screenshot of the shop showing the product as it appears in the game
-   (iPhone shop screen; one screenshot can be reused for the four packs), plus an optional note for the
-   reviewer.
+6. **App Store Localization** (English (U.S.) at least): Display Name and Description. Keep the display
+   names the same as the in-game shop cards (reviewers compare them):
+   - `crystals_tier1`: "Starter Pack" / "600 crystals to spend on boosts and the shop."
+   - `crystals_tier2`: "Explorer Pack" / "3,200 crystals to spend on boosts and the shop."
+   - `crystals_tier3`: "Founder Pack" / "7,500 crystals to spend on boosts and the shop."
+   - `crystals_tier4`: "Quantum Pack" / "20,000 crystals to spend on boosts and the shop."
+   - `ad_free`: "Ad-Free Forever" / "Every ad reward without the ad, plus +20% entropy income forever."
+7. **Review Information**: the screenshot of the shop showing the product, from `docs/store/iap-review/`
+   (1290x2796, the 6.7" iPhone size; Editor captures of Shop > Buy):
+   - `shop-ad-free.png`: Ad-Free Forever (top card) and the first three packs. Use it for `ad_free`,
+     `crystals_tier1`, `crystals_tier2` and `crystals_tier3`.
+   - `shop-crystal-packs.png`: the list scrolled down to all four packs. Use it for `crystals_tier4`.
+   Review notes (optional): "Shop > Buy tab, opened from the menu button at the top left."
+   Retake them if the shop's look or the product names change.
 8. `ad_free` only: **Family Sharing** is optional. Turning it on cannot be undone.
 
 Each product should reach status **Ready to Submit**. That is enough for TestFlight and sandbox testing.
