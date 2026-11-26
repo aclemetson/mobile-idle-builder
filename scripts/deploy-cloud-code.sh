@@ -15,7 +15,7 @@
 # compiles the shared PvE rules, so it always matches the client built from the same commit.
 set -euo pipefail
 
-ENV_ID="${1:?usage: deploy-cloud-code.sh <environment-id> [--dry-run]}"
+ENV_ARG="${1:?usage: deploy-cloud-code.sh <environment-name | environment-id> [--dry-run]}"
 DRY_RUN="${2:-}"
 : "${UGS_CLI_SERVICE_KEY_ID:?UGS_CLI_SERVICE_KEY_ID is not set}"
 : "${UGS_CLI_SERVICE_SECRET_KEY:?UGS_CLI_SERVICE_SECRET_KEY is not set}"
@@ -36,8 +36,10 @@ dotnet publish "$SLN_DIR/PveModule/PveModule.csproj" -c Release -r linux-x64 --s
 (cd "$OUT/publish" && zip -qr "$OUT/PveModule.ccm" .)
 echo "Built $OUT/PveModule.ccm ($(du -h "$OUT/PveModule.ccm" | cut -f1))"
 
-echo "== Resolving the environment name for $ENV_ID"
-ENV_NAME="$(ugs env list --project-id "$UGS_PROJECT_ID" --json | python3 -c '
+if [[ "$ENV_ARG" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+  ENV_ID="$ENV_ARG"
+  echo "== Resolving the environment name for $ENV_ID"
+  ENV_NAME="$(ugs env list --project-id "$UGS_PROJECT_ID" --json | python3 -c '
 import json, sys
 env_id = sys.argv[1].lower()
 def walk(o):
@@ -50,7 +52,10 @@ def walk(o):
         for v in o: walk(v)
 walk(json.load(sys.stdin))
 sys.exit("environment id not found in this project")
-' "$ENV_ID")"
+  ' "$ENV_ID")"
+else
+  ENV_NAME="$ENV_ARG"
+fi
 echo "Environment: $ENV_NAME"
 
 DEPLOY_ARGS=(deploy "$OUT/PveModule.ccm" --project-id "$UGS_PROJECT_ID" --environment-name "$ENV_NAME" --json)

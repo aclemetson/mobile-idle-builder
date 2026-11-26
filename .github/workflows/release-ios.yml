@@ -89,8 +89,8 @@ jobs:
     needs: build
     runs-on: macos-latest
     env:
-      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
-      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_PROJECT_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_PROJECT_SERVICE_KEY_SECRET }}
       UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
       UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
     # 90 (not 60): the Unity + 9-pod CocoaPods workspace archive can take ~50 min

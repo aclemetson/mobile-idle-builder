@@ -86,8 +86,8 @@ jobs:
         continue-on-error: true
         shell: powershell
         env:
-          UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
-          UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+          UGS_SERVICE_KEY_ID: ${{ secrets.UGS_SYMBOLS_SERVICE_KEY_ID }}
+          UGS_SERVICE_SECRET: ${{ secrets.UGS_SYMBOLS_SERVICE_KEY_SECRET }}
           UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
         run: powershell -ExecutionPolicy Bypass -File .\scripts\ci\upload-symbols.ps1
 
