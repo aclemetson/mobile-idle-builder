@@ -73,10 +73,11 @@ Both platforms report to the **`development`** UGS environment for internal buil
   placeholders into a temp copy and runs it; the committed script stays unedited, so a newer download can
   replace it as is (the wrapper fails loudly if a placeholder line changed). The step is `continue-on-error`
   and skips when the secrets are missing. Unity docs: "Upload debugging symbols from
-  CI/CD pipelines". It reuses the `ci-cd-automation` service account, which needs the project role
-  **LiveOps > Observability Symbols Uploader** (project level, or uploads get 403). No new secrets: the
+  CI/CD pipelines". It uses the `ci-symbols` service account, whose only role is the project role
+  **LiveOps > Observability Symbols Uploader** (project level, or uploads get 403). The
   workflow builds the Authorization header (`Basic ` + base64 of `keyId:secret`) from
-  `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `..._SECRET_KEY` and takes the project ID from `UGS_PROJECT_ID`. The
+  `UGS_SYMBOLS_SERVICE_KEY_ID` / `..._SECRET` and takes the project ID from `UGS_PROJECT_ID`. This step runs on
+  the self-hosted runner, which is why it gets a key that can do nothing else. The
   Windows script comes from Dashboard > project > View Diagnostics > Debugging Symbols > Download CI script,
   and is committed as `scripts/ci/usymtool.ps1`. The script fetches a fresh 7-day
   upload token on every run and calls `Editor/Data/Tools/usymtool.exe` with `USYM_UPLOAD_AUTH_TOKEN` and

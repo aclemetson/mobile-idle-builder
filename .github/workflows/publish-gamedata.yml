@@ -72,11 +72,14 @@ jobs:
     name: Publish to ${{ inputs.environment }}
     needs: validate
     if: github.event_name == 'workflow_dispatch'
+    # A production publish waits for approval on the protected `production` environment, which also holds
+    # UGS_ENV_ID_PRODUCTION. A development publish runs with no environment.
+    environment: ${{ inputs.environment == 'production' && 'production' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
-      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_PROJECT_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_PROJECT_SERVICE_KEY_SECRET }}
       UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
       ENV_ID: ${{ inputs.environment == 'production' && secrets.UGS_ENV_ID_PRODUCTION || secrets.UGS_ENV_ID_DEVELOPMENT }}
     steps:
