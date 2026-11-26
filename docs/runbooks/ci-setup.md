@@ -356,8 +356,12 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
 | `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
-| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | UGS service account | internal: Remote Config update prompt + **Cloud Code deploy** (needs the "Cloud Code Editor" project role) |
-| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy |
+| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | key of the UGS service account **`ci-cd-automation`** (the secret names predate the rename) | internal: Remote Config update prompt, **Cloud Code deploy**, Diagnostics symbol upload (Basic header = base64 of `keyId:secret`, built in the workflow) |
+| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy + symbol upload |
+
+The `ci-cd-automation` service account (Unity Cloud Dashboard > Administration > Service accounts) needs
+these **project** roles: a Remote Config edit role, **Cloud Code Editor**, and
+**LiveOps > Observability Symbols Uploader**.
 
 ## Local Testing
 

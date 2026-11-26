@@ -146,7 +146,7 @@ jobs:
   # development environment's PveModule always matches the newest internal APK. Runs beside the Unity build
   # (it doesn't need it), and a failure here never blocks the Play upload. Tests -> dotnet publish -> .ccm ->
   # `ugs deploy`; see scripts/deploy-cloud-code.sh and docs/runbooks/pve-backend-setup.md ("CI deploy").
-  # The service account needs the "Cloud Code Editor" project role.
+  # The ci-cd-automation service account needs the "Cloud Code Editor" project role.
   cloud-code:
     name: Cloud Code Deploy (development)
     if: >-

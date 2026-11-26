@@ -67,10 +67,12 @@ Both platforms report to the **`development`** UGS environment for internal buil
   API resolves before adding the call (a good spot is `SaveManager.ReconcileWithCloud` after auth, in a
   no-throw guarded block). Low priority — native reports already carry device/OS/app-version.
 - **Automated symbol upload** as a CI step after each build (Unity docs: "Upload debugging symbols from
-  CI/CD pipelines"). Setup: in the Dashboard create a service account with the project role
-  **LiveOps > Observability Symbols Uploader** (project level, or uploads get 403), copy its Basic
-  Authorization header, and download the Windows `usymtool.ps1` script from the Dashboard. Store the header and
-  project ID as GitHub secrets (`UNITY_SA_AUTH_HEADER`, `UNITY_PROJECT_ID`). The script fetches a fresh 7-day
+  CI/CD pipelines"). It reuses the `ci-cd-automation` service account, which needs the project role
+  **LiveOps > Observability Symbols Uploader** (project level, or uploads get 403). No new secrets: the
+  workflow builds the Authorization header (`Basic ` + base64 of `keyId:secret`) from
+  `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `..._SECRET_KEY` and takes the project ID from `UGS_PROJECT_ID`. The
+  Windows script comes from Dashboard > project > View Diagnostics > Debugging Symbols > Download CI script,
+  and is committed as `scripts/ci/usymtool.ps1`. The script fetches a fresh 7-day
   upload token on every run and calls `Editor/Data/Tools/usymtool.exe` with `USYM_UPLOAD_AUTH_TOKEN` and
   `USYM_UPLOAD_URL_SOURCE=https://perf-events.cloud.unity3d.com/url`. Do not pass `-projectId` to usymtool:
   that switches to a different upload mode and ignores the token. Success prints
