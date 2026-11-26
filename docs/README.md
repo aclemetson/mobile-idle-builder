@@ -48,6 +48,7 @@ The HTML pages are served by GitHub Pages. The game is Quantum Foundry. The repo
 |---|---|
 | [runbooks/ci-setup.md](runbooks/ci-setup.md) | The CI/CD pipeline (paused): runner, signing, Play internal track, TestFlight, re-enabling |
 | [runbooks/google-play-iap-testing.md](runbooks/google-play-iap-testing.md) | Testing in-app purchases on Google Play |
+| [runbooks/app-store-iap-testing.md](runbooks/app-store-iap-testing.md) | Setting up and testing in-app purchases on the App Store |
 | [runbooks/levelplay-ads-setup.md](runbooks/levelplay-ads-setup.md) | Rewarded ads go-live |
 | [runbooks/cloud-diagnostics-setup.md](runbooks/cloud-diagnostics-setup.md) | Crash and exception reporting |
 | [runbooks/store-privacy-declarations.md](runbooks/store-privacy-declarations.md) | Play Data safety and App Store privacy answers |
