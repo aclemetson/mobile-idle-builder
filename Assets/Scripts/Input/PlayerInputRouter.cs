@@ -17,7 +17,8 @@ namespace MobileIdleBuilder
     /// Press-and-hold on a placed building (still, for <see cref="LongPress.HoldSeconds"/>) puts it into
     /// edit mode (<see cref="BuildingPlacementController.BeginEdit"/>), with a ring showing the hold's
     /// progress. A press released before that is an ordinary tap; once edit mode starts, the release is
-    /// swallowed so it never also opens the inspector.
+    /// swallowed so it never also opens the inspector. Holding a bare field tile the same way moves the
+    /// field (<see cref="BuildingPlacementController.BeginFieldMove"/>, #542), except during the tutorial.
     ///
     /// Scene setup: attach to any GameObject, wire placementController, buildingInspector and
     /// gridRenderer. CharacterMover is no longer needed.
@@ -41,6 +42,7 @@ namespace MobileIdleBuilder
         // ---- Press-and-hold on a building → edit mode (LongPress) ----
         private Entity           _holdEntity = Entity.Null;
         private Vector2Int?      _holdBelt;     // press-and-hold on a belt opens the split card (2026-11-24)
+        private Vector2Int?      _holdField;    // press-and-hold on a bare field tile moves the field (#542)
         private ConveyorPlacer   _conveyorPlacer;
         private float            _holdStart;
         private bool             _holdConsumed; // the hold entered edit mode: this press's release is not a tap
@@ -134,6 +136,8 @@ namespace MobileIdleBuilder
 
         // ── Press-and-hold → building edit mode ──────────────────────────────
 
+        private static bool TutorialActive => SaveManager.Instance?.Current?.tutorial?.isActive ?? false;
+
         private bool AnyModeActive() =>
             (placementController   != null && placementController.IsPlacing)           ||
             (conveyorController    != null && conveyorController.IsPlacing)            ||
@@ -150,6 +154,16 @@ namespace MobileIdleBuilder
             {
                 _holdEntity = entity;
                 _holdStart  = Time.unscaledTime;
+                return;
+            }
+
+            // A bare field tile (a Harvester on it is a building, handled above): holding it moves the field.
+            if (placementController != null && !TutorialActive && ScreenToGridCell(_pressStart, out int fx, out int fy)
+                && FieldGenerator.GetFieldAt(fx, fy) != null
+                && (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(fx, fy)))
+            {
+                _holdField = new Vector2Int(fx, fy);
+                _holdStart = Time.unscaledTime;
                 return;
             }
 
@@ -170,7 +184,7 @@ namespace MobileIdleBuilder
         /// </summary>
         private void UpdateHold()
         {
-            if (_holdEntity == Entity.Null && _holdBelt == null) return;
+            if (_holdEntity == Entity.Null && _holdBelt == null && _holdField == null) return;
             // A pan, a second finger (pinch/rotate) or a glide stop can't become an edit either.
             if (_tap.IsDisqualified || AnyModeActive()) { CancelHold(); return; }
 
@@ -179,6 +193,7 @@ namespace MobileIdleBuilder
             {
                 var entity = _holdEntity;
                 var belt   = _holdBelt;
+                var field  = _holdField;
                 CancelHold();
                 _holdConsumed = true;
                 buildingInspector?.ClearSelection();
@@ -188,6 +203,7 @@ namespace MobileIdleBuilder
                     var root = hud != null ? hud.GetComponent<UIDocument>()?.rootVisualElement : null;
                     BeltSplitCard.Show(root, _conveyorPlacer, belt.Value);
                 }
+                else if (field.HasValue) placementController.BeginFieldMove(field.Value);
                 else placementController.BeginEdit(entity);
                 return;
             }
@@ -200,6 +216,7 @@ namespace MobileIdleBuilder
         {
             _holdEntity = Entity.Null;
             _holdBelt   = null;
+            _holdField  = null;
             _holdRing?.Hide();
         }
 

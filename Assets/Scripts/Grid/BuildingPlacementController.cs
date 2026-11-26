@@ -104,8 +104,17 @@ namespace MobileIdleBuilder
         /// <summary>The field being bought and placed, or null while placing a building.</summary>
         public FieldSO PendingField => IsPlacing ? _pendingField : null;
 
-        /// <summary>True while placing a multi-tile field purchase (a quark pair), which can turn 90°.</summary>
-        private bool IsPlacingFieldGroup => _pendingField != null && _pendingField.purchaseGroupSize > 1;
+        /// <summary>True while placing a multi-tile field (a quark pair, bought or moved), which can turn 90°.</summary>
+        private bool IsPlacingFieldGroup => _pendingField != null && FieldGroupSize > 1;
+
+        // ---- Field move (#542): the cells of the placed field (or quark pair) being moved, anchor first ----
+        private List<Vector2Int> _moveFieldCells;
+
+        /// <summary>True while a placed field (or quark pair) is being moved rather than bought.</summary>
+        public bool IsMovingField => IsPlacing && _moveFieldCells != null;
+
+        /// <summary>Tiles in the pending field footprint: the moved group's size, else the purchase group size.</summary>
+        private int FieldGroupSize => _moveFieldCells?.Count ?? Mathf.Max(1, _pendingField?.purchaseGroupSize ?? 1);
 
         /// <summary>True when the flip button / F key should be shown.</summary>
         public bool CanFlip => HasPortLayout;
@@ -336,6 +345,70 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
+        /// Puts a placed field back into placement mode so it can be moved (press and hold on a bare field
+        /// tile, #542). A quark pair moves as one unit and can turn. Moving is free, like a building's. A
+        /// field with a Harvester on it stays put (the Harvester would be left on bare ground), and fields
+        /// don't move during the tutorial, whose steps point at them. Returns false, with a banner saying
+        /// why, when the field can't move.
+        /// </summary>
+        public bool BeginFieldMove(Vector2Int cell)
+        {
+            var field = FieldGenerator.GetFieldAt(cell.x, cell.y);
+            if (field == null) return false;
+
+            if (SaveManager.Instance?.Current?.tutorial?.isActive ?? false)
+            {
+                InventoryPopupController.NotifyWarning(FieldMoveTutorialMessage);
+                return false;
+            }
+
+            var group = FieldGenerator.FieldGroupAt(cell, IsGridOccupied);
+            if (group.Count == 0) return false;
+            if (group.Exists(IsGridOccupied))
+            {
+                InventoryPopupController.NotifyWarning(FieldMoveOccupiedMessage);
+                return false;
+            }
+
+            if (IsPlacing) CancelPlacement();
+
+            BeginPlacementCore(default, field, group);
+
+            // A pair standing one above the other starts upright.
+            _rotation = group.Count > 1 && group[1].x == group[0].x ? 1 : 0;
+            SetCandidate(group[0]);
+            return true;
+        }
+
+        internal const string FieldMoveTutorialMessage = "Fields can't move during the tutorial.";
+        internal const string FieldMoveOccupiedMessage = "Move the Harvester off this field first.";
+
+        private static bool IsGridOccupied(Vector2Int c) =>
+            GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y);
+
+        private bool IsMovedFieldCell(Vector2Int c) => _moveFieldCells != null && _moveFieldCells.Contains(c);
+
+        /// <summary>✓ while moving a field: re-homes the field (or pair) on the candidate cells (free).</summary>
+        private void ConfirmFieldMove(int x, int y)
+        {
+            var from = _moveFieldCells;
+            var to   = FootprintCells(x, y);
+
+            bool changed = false;
+            for (int i = 0; i < to.Count; i++)
+                if (to[i] != from[i]) { changed = true; break; }
+
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            bool moved = changed && _fieldGenerator != null && _fieldGenerator.MoveFields(from, to);
+
+            CancelPlacement();
+            if (!moved) return;
+
+            GameLogger.Info($"[BuildingPlacementController] Moved {from.Count} field tile(s) from {from[0]} to {to[0]}.");
+            SaveManager.Instance?.SaveLocal();
+        }
+
+        /// <summary>
         /// The edit bar's Remove button: asks to confirm (with the refund), then deletes the edited building
         /// and leaves edit mode. Cancelling the prompt keeps editing.
         /// </summary>
@@ -403,10 +476,13 @@ namespace MobileIdleBuilder
             return null;
         }
 
-        private void BeginPlacementCore(BuildingEntry entry, FieldSO field)
+        /// <param name="moveFieldCells">Set when moving a placed field (#542); set before OnPlacingChanged fires
+        /// so the HUD sees <see cref="IsMovingField"/>.</param>
+        private void BeginPlacementCore(BuildingEntry entry, FieldSO field, List<Vector2Int> moveFieldCells = null)
         {
             _pending           = entry;
             _pendingField      = field;
+            _moveFieldCells    = moveFieldCells;
             _placementPowerNodes = null;
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
@@ -448,6 +524,7 @@ namespace MobileIdleBuilder
             _awaitingSelection = false;
             IsPlacing          = false;
             _pendingField      = null;
+            _moveFieldCells    = null;
             if (_hasCandidate) { _hasCandidate = false; OnCandidateChanged?.Invoke(false); }
             cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
@@ -563,6 +640,12 @@ namespace MobileIdleBuilder
             if (IsEditing)
             {
                 ConfirmMove(x, y);
+                return;
+            }
+
+            if (IsMovingField)
+            {
+                ConfirmFieldMove(x, y);
                 return;
             }
 
@@ -876,7 +959,7 @@ namespace MobileIdleBuilder
 
         private Vector2Int GetBaseFootprint()
         {
-            if (_pendingField != null) return new Vector2Int(Mathf.Max(1, _pendingField.purchaseGroupSize), 1);
+            if (_pendingField != null) return new Vector2Int(FieldGroupSize, 1);
             if (_pending.building == null) return Vector2Int.one;
             var fp = _pending.building.footprint;
             return new Vector2Int(Mathf.Max(1, fp.x), Mathf.Max(1, fp.y));
@@ -895,12 +978,13 @@ namespace MobileIdleBuilder
         {
             if (_pendingField != null)
             {
-                // A bought field needs bare ground: no building, belt or existing field.
+                // A bought or moved field needs bare ground: no building, belt or other field (a moved
+                // field's own old cells are free, so it can shift by a tile or turn in place).
                 foreach (var c in FootprintCells(x, y))
                 {
                     if (!gridRenderer.IsInBounds(c.x, c.y)) return PlacementBlock.OffGrid;
                     if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return PlacementBlock.Occupied;
-                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return PlacementBlock.OnField;
+                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null && !IsMovedFieldCell(c)) return PlacementBlock.OnField;
                 }
                 return PlacementBlock.None;
             }
