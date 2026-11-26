@@ -214,6 +214,8 @@ jobs:
       UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
       UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
       UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
+      DISCORD_BETA_WEBHOOK: ${{ secrets.DISCORD_BETA_WEBHOOK }}
+      DISCORD_BETA_PING_ROLE_ID: ${{ vars.DISCORD_BETA_PING_ROLE_ID }}
 
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -259,7 +261,7 @@ jobs:
       # AppUpdateCheck on the splash). Skipped until the UGS secrets exist; a Remote
       # Config failure never fails the release.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: env.UGS_SERVICE_KEY_ID != ''
+        if: env.UGS_SERVICE_KEY_ID != '' || env.DISCORD_BETA_WEBHOOK != ''
         with:
           sparse-checkout: |
             scripts
@@ -282,3 +284,30 @@ jobs:
           python3 scripts/whats_new.py "${{ needs.build.outputs.version }}" $out
           if ($LASTEXITCODE -ne 0) { exit 1 }
           if (Test-Path $out) { ./scripts/set-remote-config.ps1 -EnvironmentId "$env:UGS_ENV_ID_DEVELOPMENT" -JsonFile $out }
+
+      # Beta announcement (#533): "<version> beta build is ready" + the what's-new notes in #beta-announcements,
+      # pinging the opt-in Beta News Ping role. Skipped while DISCORD_BETA_WEBHOOK is unset; never fails the release.
+      - name: Announce the beta build on Discord
+        if: env.DISCORD_BETA_WEBHOOK != ''
+        continue-on-error: true
+        run: python3 scripts/discord/notify.py release --kind beta --version "${{ needs.build.outputs.version }}" --webhook-env DISCORD_BETA_WEBHOOK --ping-role-env DISCORD_BETA_PING_ROLE_ID
+
+  # -- Staff alert on Discord when any job above fails (#533). Skips while DISCORD_STAFF_WEBHOOK is unset. --
+  discord-alert:
+    name: Discord failure alert
+    needs: [build, cloud-code, upload]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts
+            docs
+          persist-credentials: false
+      - name: Post alert
+        env:
+          DISCORD_STAFF_WEBHOOK: ${{ secrets.DISCORD_STAFF_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/discord/notify.py alert --webhook-env DISCORD_STAFF_WEBHOOK --text "Release Internal failed on ${{ github.ref_name }}" --url "$RUN_URL"

@@ -54,7 +54,7 @@ The HTML pages are served by GitHub Pages. The game is Quantum Foundry. The repo
 | [runbooks/cloud-diagnostics-setup.md](runbooks/cloud-diagnostics-setup.md) | Crash and exception reporting |
 | [runbooks/store-privacy-declarations.md](runbooks/store-privacy-declarations.md) | Play Data safety and App Store privacy answers |
 | [store/store-listing.md](store/store-listing.md) | Store listing text, tags, keywords and graphics |
-| [community/discord-server.md](community/discord-server.md) | Discord server: roles, channels, permissions, bots, incentives, rules, set-up checklist |
+| [community/discord-server.md](community/discord-server.md) | Discord server: security, roles, channels, onboarding, templates, bot + CI automation, rules, set-up checklist |
 | [analytics/README.md](analytics/README.md) | Telemetry dashboard (CSV export) |
 
 ## Legal
