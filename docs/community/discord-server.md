@@ -11,7 +11,7 @@ Keep this file in step with the real server. Change the server, then update this
 Turn on **Community** (Server Settings > Enable Community). That unlocks the Rules screen, Onboarding,
 forum channels, announcement channels and Server Insights.
 
-| Setting | Value | Why |
+<!-- | Setting | Value | Why |v -->
 |---|---|---|
 | Verification level | **Medium** (registered on Discord for 5+ minutes) | stops most throwaway spam accounts |
 | Explicit media content filter | Filter messages from **all members** | a game for all ages |
@@ -159,23 +159,38 @@ Questions:
 
 ## Channels
 
-| Category | Channel | Type | Who can post | Purpose |
-|---|---|---|---|---|
-| **START HERE** | `#welcome` | text, read-only | Developer | what the game is, store links, how to get roles |
-| | `#rules` | rules screen | Developer | the rules below |
-| | `#announcements` | announcement | Developer | releases, events, beta phases; other servers can follow it |
-| **GAME** | `#patch-notes` | announcement | Developer, bot | what's new in each release, posted by CI (see Bots) |
-| | `#general` | text | Player | general chat |
-| | `#strategy` | forum, tags: Physics, Chemistry, Biology, Metallurgy, Engineering, Prestige, Leagues | Player | builds, layouts, prestige timing |
-| | `#screenshots` | text (media) | Player | factory screenshots and clips; good source of marketing material (ask first) |
-| | `#league-results` | text | bot, Developer | weekly PvE league results, posted by the #529 job; players react and discuss in threads |
-| **FEEDBACK** | `#bug-reports` | forum, tags: Crash, Save/Cloud, UI, Balance, Purchases/Ads, Android, iPhone, Fixed | Player | one post per bug; template asks for version, device and steps (Settings shows the version) |
-| | `#suggestions` | forum, tags: Gameplay, UI, Content, Leagues, Planned, Not planned, Done | Player | one post per idea; reactions to vote |
-| **BETA** (Beta Tester only) | `#beta-announcements` | text | Developer | new beta builds, survey links |
-| | `#beta-feedback` | forum | Beta Tester | beta-only feedback; triaged into GitHub issues labelled `beta` |
-| **VOICE** | `Factory Floor` | voice | Player | hang out; optional, can be added later |
-| **STAFF** (hidden) | `#mod-log` | text | Moderator, bots | AutoMod alerts and moderation actions |
-| | `#mod-chat` | text | Moderator, Developer | moderation discussion |
+Create the categories first. **Private** means: turn on "Private Category" / "Private Channel" when you
+create it and add only the roles listed (Discord then sets View Channel ❌ for @everyone and ✅ for those roles).
+**Public** means: leave it off; read-only channels get the Send Messages ❌ override from the table above.
+Channels inside a category inherit its privacy; keep them synced.
+
+| Category | Privacy | Who can see it |
+|---|---|---|
+| **START HERE** | Public | everyone, including new arrivals before Onboarding |
+| **GAME** | Public | everyone |
+| **FEEDBACK** | Public | everyone |
+| **BETA** | **Private** | Beta Tester, Moderator |
+| **VOICE** | Public | everyone (Player can join) |
+| **STAFF** | **Private** | Moderator (+ Bots on `#mod-log`) |
+
+| Category | Channel | Privacy | Type | Who can post | Purpose |
+|---|---|---|---|---|---|
+| **START HERE** | `#welcome` | Public | text, read-only | Developer | what the game is, store links, how to get roles |
+| | `#rules` | Public | text, read-only | Developer | the rules below; pick it as the Rules channel when enabling Community |
+| | `#announcements` | Public | announcement, read-only | Developer | releases, events, beta phases; other servers can follow it |
+| **GAME** | `#patch-notes` | Public | announcement, read-only (threads allowed) | Developer, webhook | what's new in each release, posted by CI (see Bots) |
+| | `#general` | Public | text | Player | general chat |
+| | `#strategy` | Public | forum, tags: Physics, Chemistry, Biology, Metallurgy, Engineering, Prestige, Leagues | Player | builds, layouts, prestige timing |
+| | `#screenshots` | Public | text (or media channel) | Player | factory screenshots and clips; good source of marketing material (ask first) |
+| | `#league-results` | Public | text, read-only (threads allowed) | webhook, Developer | weekly PvE league results, posted by the #529 job; players react and discuss in threads |
+| **FEEDBACK** | `#bug-reports` | Public | forum, tags: Crash, Save/Cloud, UI, Balance, Purchases/Ads, Android, iPhone, Fixed | Player | one post per bug; template asks for version, device and steps (Settings shows the version) |
+| | `#suggestions` | Public | forum, tags: Gameplay, UI, Content, Leagues, Planned, Not planned, Done | Player | one post per idea; reactions to vote |
+| **BETA** | `#beta-announcements` | **Private** | text, read-only for Beta Tester | Developer | new beta builds, survey links |
+| | `#beta-feedback` | **Private** | forum | Beta Tester | beta-only feedback; triaged into GitHub issues labelled `beta` |
+| **VOICE** | `Factory Floor` | Public | voice | Player | hang out; optional, can be added later |
+| **STAFF** | `#mod-log` | **Private** | text | Moderator, bots | AutoMod alerts and moderation actions |
+| | `#mod-chat` | **Private** | text | Moderator, Developer | moderation discussion |
+| | `#discord-updates` | **Private** | text | Discord | pick it as the "Community updates" channel when enabling Community (Discord's own notices to admins) |
 
 Start small. Add `VOICE` and `League Regular` once there are enough people to use them.
 
