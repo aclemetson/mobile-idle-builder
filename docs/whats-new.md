@@ -5,9 +5,12 @@
   hotfix and nobody sees the same notes twice. Plain text, one "- " point per line (the game font has no bullet glyph), under 1,200 characters.
   HTML comments like this one are stripped. See scripts/whats_new.py.
 -->
-- Weekly tournaments now pay Strings. Spend them in the new Shop tab of the Tournament panel on permanent upgrades, leaderboard name colours and titles, and belt themes.
-- The Builder and Recipes menus have tabs and swipeable cards with pictures. Items with several recipes let you pick one from the card. The side drawer is a grid of icons.
-- Entropy Surge: every watch gives 10% of your net worth in entropy, or sometimes 10 crystals. No daily limit, just the 15-minute wait. It replaces Entropy Boost.
-- New: Ad-Free Forever. Every ad reward without the ad, plus +20% entropy income.
-- New prestige upgrade, Free Research: the first research of each run finishes instantly. More levels for Assembly Line, Quantum Yield, Memory Resonance, Entropy Echo and every world's upgrades.
-- Fixed: the Research header no longer disappears in list mode.
+- Buildings show a progress bar while they work.
+- Press and hold a field to move it.
+- Belts: a split right in front of a building's input now feeds it, and belts can merge at a building's exit.
+- Chemistry streams only flow away from their Spring.
+- The login reward's entropy now grows with your income.
+- Entropy Surge can be taken during any other boost.
+- Join our Discord from Settings > Support.
+- Faster startup and a smaller install.
+- Fixed: Time Warp now counts items toward world tasks, and the tutorial can no longer get stuck on a research you can't afford.
