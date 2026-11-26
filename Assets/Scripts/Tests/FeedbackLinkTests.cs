@@ -39,7 +39,9 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(FeatureFlags.FeedbackEmailDefault,    FeatureFlags.FeedbackEmail);
             Assert.AreEqual(FeatureFlags.PrivacyPolicyUrlDefault, FeatureFlags.PrivacyPolicyUrl);
             StringAssert.StartsWith("https://", FeatureFlags.PrivacyPolicyUrl);
-            Assert.AreEqual("", FeatureFlags.DiscordUrl, "no invite ships in the build; the button stays hidden");
+            Assert.AreEqual(FeatureFlags.DiscordUrlDefault, FeatureFlags.DiscordUrl);
+            Assert.IsTrue(HUDSettingsSubController.IsDiscordInvite(FeatureFlags.DiscordUrlDefault),
+                "the shipped invite must pass the check, or the Settings button stays hidden");
         }
 
         [TestCase("https://discord.gg/AbCd123")]

@@ -89,8 +89,8 @@ namespace MobileIdleBuilder
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
-        // Community invite (#533). Blank hides the Settings button, so the server can go live without a build.
-        public const string DiscordUrlDefault       = "";
+        // Community invite (#533): the server's permanent invite. Remote Config can swap it; blank hides the button.
+        public const string DiscordUrlDefault       = "https://discord.gg/aVt8Z9ntkC";
         // App update prompt on the splash (AppUpdateCheck). Off by default so a fetch failure never prompts;
         // blank versions never prompt. CI writes update.latest.* after each store upload
         // (scripts/set-remote-config.ps1); update.minimum.* is set by hand to force an update.

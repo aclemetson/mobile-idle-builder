@@ -4,6 +4,8 @@ The structure of the Quantum Foundry Discord: roles, channels, permissions, bots
 Issue #533. It is the community hub the beta plan relies on (`docs/testing/beta-plan.md`): tester recruiting,
 the beta feedback channel, patch notes and weekly league results.
 
+**Invite (permanent):** https://discord.gg/aVt8Z9ntkC
+
 Keep this file in step with the real server. Change the server, then update this file (or the other way round).
 
 ## Server settings
@@ -260,9 +262,10 @@ Never ask for passwords, emails or payment details in public channels.
 - [ ] Set up Onboarding questions and the default channels
 - [ ] Set up AutoMod rules; point alerts to `#mod-log`
 - [ ] Forum post guidelines and tags for `#bug-reports`, `#suggestions`, `#beta-feedback`
-- [ ] Create a **non-expiring, unlimited-use** invite from `#welcome` (a custom vanity URL needs a high boost level)
-- [ ] Put the invite in Remote Config `links.discordUrl` (development, then production): the **Join our Discord**
-      button appears in Settings > Support on the next launch, no build needed. Only `https://discord.gg/...` or
-      `https://discord.com/invite/...` links show the button
-- [ ] Add the invite to the store listing's full description and the press kit when they mention it
+- [x] Create a **non-expiring, unlimited-use** invite: **https://discord.gg/aVt8Z9ntkC** (2026-11-25)
+- [x] Ship it as the `links.discordUrl` default, so **Join our Discord** shows in Settings > Support from the
+      next build. To change or hide it without a build, set `links.discordUrl` in Remote Config (blank hides
+      the button; only `https://discord.gg/...` or `https://discord.com/invite/...` links show it)
+- [x] Mention it in the store listing's full description (`docs/store/store-listing.md`); add it to the press
+      kit when that exists
 - [ ] Webhooks for `#patch-notes` and `#league-results`; store their URLs as GitHub secrets
