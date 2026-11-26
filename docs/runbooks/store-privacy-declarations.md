@@ -18,12 +18,16 @@ data type ships. Issues: #163 (Play Console), #176 (App Store).
 | Purchase history | Google Play Billing / StoreKit via Unity IAP | yes | no | Deliver purchases, refunds |
 | Push notification token | Unity Push Notifications | yes | no | Notifications |
 
-> **Privacy policy gap (2026-11-25):** `docs/privacy-policy.html` does not yet list the player name, the push
-> token, or iOS (App Store / StoreKit / Apple). Add them before submitting either form.
+Policy URL: https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html (GitHub Pages, served from
+`develop:/docs`, so a policy edit is live only once it reaches `develop`). The policy covers every row above
+as of 2026-11-25.
 
 Everything goes over HTTPS (all UGS, LevelPlay and store endpoints), so **encrypted in transit: yes**.
-Deletion: by email request, as described in the privacy policy (`Your choices and deleting your data`); use
-the policy URL for the Play "delete account" link.
+Deletion: by email request. For the Play "delete account" URL use
+https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html#delete.
+
+The Google account email is stored only on the device (PlayerPrefs, shown in Settings), so it is not
+"collected" in the store sense.
 
 ## Google Play: Policy and programs -> App content
 
