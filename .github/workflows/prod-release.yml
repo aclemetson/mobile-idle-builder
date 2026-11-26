@@ -129,6 +129,25 @@ jobs:
         id: aab
         run: echo "path=$(ls dist/*.aab | head -1)" >> "$GITHUB_OUTPUT"
 
+      # Native debug symbols for Play's crash/ANR view. Optional: missing or over Play's 800 MB limit
+      # uploads the AAB without them.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: android-symbols-${{ github.run_number }}
+          path: symbols/
+
+      - name: Find symbols
+        id: sym
+        run: |
+          f=$(ls symbols/*.symbols.zip 2>/dev/null | head -1)
+          if [ -n "$f" ] && [ "$(stat -c %s "$f")" -lt 790000000 ]; then
+            echo "path=$f" >> "$GITHUB_OUTPUT"
+            echo "Uploading debug symbols: $f ($(du -h "$f" | cut -f1))"
+          else
+            echo "::warning::No debug symbols uploaded (missing or over 790 MB): ${f:-none}"
+          fi
+
       - name: Create and push git tag
         run: |
           git config user.name  "github-actions[bot]"
@@ -146,6 +165,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           packageName: com.clemtek.mobileidlebuilder
           releaseFiles: ${{ steps.aab.outputs.path }}
+          debugSymbols: ${{ steps.sym.outputs.path }}
           track: production
           status: draft
 
