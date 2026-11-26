@@ -4,7 +4,7 @@ Externally-controlled toggles that change behavior **without an app-store rebuil
 environment (dev vs prod). Use these to ship a feature hidden, kill a misbehaving system, or stage a
 rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/Cloud Save, so no new vendor.
 
-> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23.
+> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23; game-data publisher (#210) 2026-11-26.
 
 ## How it works
 
@@ -80,6 +80,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 - **Allow-list:** only fields in the `Set*Field` switches of `GameDataOverrides.cs` are honored (ids/refs/arrays are never overridable, so the importer's cross-references stay intact). Unknown field/id ⇒ ignored. See `Assets/Data/overrides.sample.json` for the documented field set.
 - **Applied at boot** in-place onto the shared loaded SOs by their owners (`GameBootstrap` → GameConfig, `ItemDatabase`, `ResearchService`), so every consumer sees the override with no per-consumer change.
 - **Timing:** fetched/cached via this same Feature Flag service (remote > cache > default), so a freshly-published blob takes effect on the **next cold start** — pair it with a `gamedata.updatedUtc` bump to notify players.
+- **Publishing (#210):** don't edit the keys by hand. `live-ops/gamedata.json` (version, notice text, overrides) is the source. The `publish-gamedata.yml` workflow validates it on PRs (`scripts/gamedata_publish.py`: fields from the `Set*Field` switches, ids from `game_data.json`, finite non-negative numbers; tests in `scripts/test_gamedata_publish.py`). On manual dispatch it writes all `gamedata.*` keys in one PUT: development by default, production only with `confirm=production`; `announce` stamps `gamedata.updatedUtc`. See `live-ops/README.md`. `set-remote-config.ps1` keeps a key's dashboard type, so `gamedata.version` stays an int.
 - **Not yet overridable:** buildings and fields (no central runtime registry — they're reached only via `BuildingPlacementController.availableBuildings` / `FieldGenerator`; a follow-up can extend `GameDataOverrides` once a registry exists).
 
 ## Maintenance mode
