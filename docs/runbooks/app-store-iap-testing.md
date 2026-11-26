@@ -77,8 +77,10 @@ New products can take up to an hour to become loadable.
 
 Install the latest build from TestFlight, then:
 
-1. Open the shop > **Crystals** tab. All four packs and Ad-Free should show **store prices** (local
-   currency). Placeholder or missing prices mean the products did not load: re-check steps 1-2.
+1. Open the shop > **Buy** tab. The prices come from the store (`localizedPriceString`); if a product did
+   not load, the card falls back to the built-in US price (`PremiumShopCalculator`), so a US account can't
+   tell from the price alone. Check for `[IAP] Store initialized.` in the log (section 5) and that Buy opens
+   Apple's purchase sheet. If not, re-check steps 1-2.
 2. Buy each crystal pack. The ◆ balance goes up by the pack amount.
 3. Buy **Ad-Free**. The card shows **Owned** and rewarded ads grant without playing an ad.
 4. Delete the app, reinstall from TestFlight, sign in to the same game account, tap **Restore Purchases**.
