@@ -39,6 +39,7 @@ The HTML pages are served by GitHub Pages. The game is Quantum Foundry. The repo
 |---|---|
 | [agents/testing.md](agents/testing.md) | Test layout, how to run the suites, what each change needs |
 | [../Playtests/README.md](../Playtests/README.md) | AI playtest harness: briefs, fixtures, MCP tools |
+| [testing/beta-plan.md](testing/beta-plan.md) | Beta phases, goals and exit criteria, metrics, tools, recruiting post and surveys |
 | [testing/dev-testing-guide.md](testing/dev-testing-guide.md) | Dev console and test-mode checklist |
 | [testing/device-checklist-0.4.html](testing/device-checklist-0.4.html) | On-device test checklist (0.4) |
 
