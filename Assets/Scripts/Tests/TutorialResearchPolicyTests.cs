@@ -92,5 +92,14 @@ namespace MobileIdleBuilder.Tests
             Assert.IsFalse(TutorialResearchPolicy.IsRescue(_flow, true, 6, "c", balance: 10, cost: 50), "collection open");
             Assert.IsFalse(TutorialResearchPolicy.IsRescue(_flow, false, 2, "a", balance: 10, cost: 50), "tutorial off");
         }
+
+        [Test]
+        public void Rescue_AlsoOnAResearchStepThatOnlyLimitsCollection()
+        {
+            // The open fields give items, not entropy, and the Demon takes nothing on a research step.
+            _flow.steps[2] = Step(ConditionType.ResearchUnlocked, filter: "Quark", research: "a");
+            Assert.IsTrue(TutorialResearchPolicy.IsRescue(_flow, true, 2, "a", balance: 10, cost: 50));
+            Assert.IsFalse(TutorialResearchPolicy.IsRescue(_flow, true, 2, "a", balance: 50, cost: 50), "affordable");
+        }
     }
 }
