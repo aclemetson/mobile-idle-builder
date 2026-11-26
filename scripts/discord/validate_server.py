@@ -137,6 +137,19 @@ def can_send(chan: dict, gid: str, member_roles: list[dict]) -> bool:
     return bool(effective(chan, gid, member_roles) & P["SEND"])
 
 
+def describe(chan: dict, roles: list[dict], gid: str, me_id: str, by_id: dict) -> str:
+    """The channel's overwrites in words, for failure messages."""
+    names = {r["id"]: ("@everyone" if r["id"] == gid else r["name"]) for r in roles}
+    names[me_id] = "Foundry Bot (member)"
+    def bits(v):
+        return ",".join(n for n, b in P.items() if int(v) & b) or "-"
+    parts = [f"{names.get(o['id'], o['id'])}: +{bits(o['allow'])} -{bits(o['deny'])}"
+             for o in chan.get("permission_overwrites", [])]
+    parent = by_id.get(chan.get("parent_id"))
+    synced = parent is not None and sorted(map(json.dumps, chan.get("permission_overwrites", []))) ==         sorted(map(json.dumps, parent.get("permission_overwrites", [])))
+    return f"[{'synced' if synced else 'NOT synced'} with category; overrides: " + ("; ".join(parts) or "none") + "]"
+
+
 def has(bits: int, *names: str) -> bool:
     return all(bits & P[n] for n in names)
 
@@ -271,7 +284,8 @@ def main(argv) -> int:
                 who = member_roles + ([found["Beta Tester"]] if cat_name == "beta" and "Beta Tester" in found else [])
                 check(not can_send(ch, gid, who), f"#{name} is read-only for members"
                       + ("" if not can_send(ch, gid, who) else
-                         f" (deny Send Messages for {'Player' if player else '@everyone'} on the channel)"))
+                         f" (deny Send Messages for {'Player' if player else '@everyone'} on the channel) "
+                         + describe(ch, roles, gid, me["id"], by_id)))
     if "general" in named:
         check(named["general"].get("rate_limit_per_user", 0) > 0, "#general has slowmode", "WARN")
     if "ci-alerts" in named and "Moderator" in found:
@@ -308,7 +322,7 @@ def main(argv) -> int:
             need = ["VIEW_CHANNEL", "READ_HISTORY", "SEND_IN_THREADS", "MANAGE_THREADS"]
             missing = [n for n in need if not allow & P[n]]
             check(not missing, f"bot's effective permissions on #{name} "
-                  + (f"missing {', '.join(missing)}" if missing else "ok"))
+                  + (f"missing {', '.join(missing)} " + describe(ch, roles, gid, me["id"], by_id) if missing else "ok"))
         threads = get(f"/channels/{cid}/threads/archived/public?limit=2", token)
         check("_error" not in threads, f"bot can read #{name} posts" + (f" (HTTP {threads.get('_error')})" if "_error" in threads else ""))
 
