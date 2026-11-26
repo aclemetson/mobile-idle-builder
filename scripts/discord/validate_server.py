@@ -174,7 +174,6 @@ def main(argv) -> int:
     sysc = chan_name(guild.get("system_channel_id"))
     check(sysc is None or sysc.endswith("mod-log"), f"system messages go to #mod-log or nowhere (is {sysc})", "WARN")
 
-    check(rules_gate, "members must accept rules before they can talk", "WARN" if player else "FAIL")
     print("== Roles")
     found = {}
     for name in ROLES:
@@ -189,6 +188,7 @@ def main(argv) -> int:
     member_roles = [everyone] + ([player] if player else [])
     print("  info  posting model: " + ("Player role (Onboarding gives Player; @everyone reads only)" if player
                                        else "@everyone posts after accepting the rules"))
+    check(rules_gate, "members must accept rules before they can talk", "WARN" if player else "FAIL")
     ep = int(everyone["permissions"]) | (int(player["permissions"]) if player else 0)
     lacking = [n for n in ["VIEW_CHANNEL", "SEND", "SEND_IN_THREADS", "READ_HISTORY", "ADD_REACTIONS", "ATTACH", "EMBED_LINKS"]
                if not ep & P[n]]
