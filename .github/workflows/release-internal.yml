@@ -141,7 +141,10 @@ jobs:
         with:
           name: android-aab-${{ github.run_number }}
           path: build/Android/*.aab
-          retention-days: 30
+          # Short on purpose: the repo is public, so any signed-in GitHub user can download artifacts, and this
+          # is an unreleased build. The upload job below uses it right away; 3 days covers re-running a failed
+          # upload over a weekend. Play Console keeps every uploaded bundle (App bundle explorer).
+          retention-days: 3
 
       # IL2CPP debug symbols (BuildScript.ConfigureAndroidDebugSymbols) for symbolicating crash reports in
       # Cloud Diagnostics and Play Console. See docs/runbooks/cloud-diagnostics-setup.md.
