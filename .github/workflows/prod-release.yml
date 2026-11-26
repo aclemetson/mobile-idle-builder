@@ -98,6 +98,14 @@ jobs:
           path: build/Android/*.aab
           retention-days: 90
 
+      # IL2CPP debug symbols for crash symbolication; see docs/runbooks/cloud-diagnostics-setup.md.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-symbols-${{ github.run_number }}
+          path: build/Android/*.symbols.zip
+          if-no-files-found: warn
+          retention-days: 90
+
   # ── Job 2: Release — tag, Play Store, GitHub Release (ubuntu, Docker OK) ─────
   release:
     name: Tag + Play Store + GitHub Release
