@@ -110,6 +110,10 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
   `UgsEnvironment.Name`.
 - Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`; the active/scheduled decision
   and poll clamp are `MaintenancePollSchedule.IsActive` / `IsScheduledAhead` / `ClampPollSeconds` (`MaintenancePollScheduleTests`).
+- **Always a new campaign:** each maintenance window (scheduled or emergency) is a **newly created** Remote Config
+  Game Override (campaign). Never edit and re-enable an existing one, even a finished one with the same keys. Found
+  in the #224 device tests (2026-11-26). After the window, disable the override and leave it; the next window gets
+  a new one.
 - **Planned window:** set `maintenance.startsUtc` at least one poll interval (5 min) ahead, then `maintenance.enabled`
   on. Foreground players leave at the start, give or take a second. Backgrounded apps check when resumed. **Emergency:**
   `maintenance.enabled` on with a blank start reaches players within one poll (5 min worst case, sooner if
