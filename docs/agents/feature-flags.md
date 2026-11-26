@@ -4,7 +4,7 @@ Externally-controlled toggles that change behavior **without an app-store rebuil
 environment (dev vs prod). Use these to ship a feature hidden, kill a misbehaving system, or stage a
 rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/Cloud Save, so no new vendor.
 
-> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23.
+> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23; game-data publisher (#210), maintenance schedule (#224) and single UGS session (#209) 2026-11-26.
 
 ## How it works
 
@@ -31,7 +31,9 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 - `Assets/Scripts/RemoteConfig/FeatureFlagService.cs` — singleton: self-bootstraps via
   `[RuntimeInitializeOnLoadMethod]` (no scene placement — no serialized fields, can't be lost in a refactor),
   loads cache, `FetchAsync`.
-- Fetch hook: `SaveManager.ReconcileWithCloud` (after UGS init, before the cloud-save gate).
+- Fetch hook: `SaveManager.ReconcileWithCloud` (after UGS init, before the cloud-save gate), via
+  `FetchIfStaleAsync`: it reuses the splash gate's fetch when that is under 2 min old
+  (`FeatureFlagResolver.IsFresh`), so a returning player fetches once per launch (#209).
 - Tests: `Assets/Scripts/Tests/FeatureFlagResolverTests.cs`.
 
 ## Shipped flags
@@ -49,6 +51,8 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `maintenance.enabled` | bool | `false` | Master maintenance switch. See "Maintenance mode" below. Default off ⇒ fail-open. |
 | `maintenance.message` | string | (generic) | Body text shown on the maintenance screen. |
 | `maintenance.untilUtc` | string | `""` | ISO-8601 UTC estimated-return time; blank ⇒ no time line shown. |
+| `maintenance.startsUtc` | string | `""` | ISO-8601 UTC start of a scheduled window (#224). With `maintenance.enabled` on and a future start, players still get in, and everyone in GameScene who has fetched since is sent to the splash at that moment, with no fetch. Blank (or unreadable) ⇒ maintenance applies at once. |
+| `maintenance.pollSeconds` | int | `300` | Mid-session re-fetch interval, clamped to 60-1800 s (`MaintenancePollSchedule.ClampPollSeconds`). Lower it ahead of an unscheduled window; it takes effect after the client's next fetch. |
 | `analytics.enabled` | bool | `false` | Master switch for `TelemetryService` (UGS Analytics). **Default off** ⇒ telemetry is opt-in: flip on to open a collection phase. See `analytics.md`. |
 | `analytics.phase` | string | `"default"` | Label stamped on every event as `collection_phase` so collection windows stay segmentable in Data Explorer. |
 | `gamedata.updatedUtc` | string | `""` | ISO-8601 UTC publish stamp of the current game values. Drives the one-shot update-notice modal (`GameUpdateNotice.ShouldShow` vs `SaveData.lastSeenGameDataUtc`); blank ⇒ never shown. Bump it to announce a balance change to everyone on next launch. |
@@ -80,6 +84,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 - **Allow-list:** only fields in the `Set*Field` switches of `GameDataOverrides.cs` are honored (ids/refs/arrays are never overridable, so the importer's cross-references stay intact). Unknown field/id ⇒ ignored. See `Assets/Data/overrides.sample.json` for the documented field set.
 - **Applied at boot** in-place onto the shared loaded SOs by their owners (`GameBootstrap` → GameConfig, `ItemDatabase`, `ResearchService`), so every consumer sees the override with no per-consumer change.
 - **Timing:** fetched/cached via this same Feature Flag service (remote > cache > default), so a freshly-published blob takes effect on the **next cold start** — pair it with a `gamedata.updatedUtc` bump to notify players.
+- **Publishing (#210):** don't edit the keys by hand. `live-ops/gamedata.json` (version, notice text, overrides) is the source. The `publish-gamedata.yml` workflow validates it on PRs (`scripts/gamedata_publish.py`: fields from the `Set*Field` switches, ids from `game_data.json`, finite non-negative numbers; tests in `scripts/test_gamedata_publish.py`). On manual dispatch it writes all `gamedata.*` keys in one PUT: development by default, production only with `confirm=production`; `announce` stamps `gamedata.updatedUtc`. See `live-ops/README.md`. `set-remote-config.ps1` keeps a key's dashboard type, so `gamedata.version` stays an int.
 - **Not yet overridable:** buildings and fields (no central runtime registry — they're reached only via `BuildingPlacementController.availableBuildings` / `FieldGenerator`; a follow-up can extend `GameDataOverrides` once a registry exists).
 
 ## Maintenance mode
@@ -89,16 +94,28 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
 
 - **Splash gate** (`MaintenanceGate.IsUnderMaintenanceAsync`, called from `SplashScreenController`): runs a
   time-boxed UGS init + flag fetch before `SceneLoader.GoTo("GameScene")`. Checked for **every** user.
-- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every 5 min while in GameScene, and
-  immediately when the app returns from the background (at most one check per 10 s;
-  `MaintenancePollSchedule`, #224); if
-  maintenance flips on it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
+- **Mid-session** (`MaintenanceWatcher`, self-bootstrapped): polls every `maintenance.pollSeconds` (5 min) while
+  in GameScene, and immediately when the app returns from the background (at most one check per 10 s;
+  `MaintenancePollSchedule`, #224). A window scheduled with `maintenance.startsUtc` is armed from the
+  fetched flags and trips at its start on the server clock (`ServerClock`, device clock fallback). Only an armed
+  schedule trips without a fetch, so a player who got in through fail-open with stale cached flags is not bounced. If
+  maintenance is active it flushes the save (`SaveManager.SaveLocal` + `SaveToCloud`) and returns to the
   splash, which re-shows the overlay.
 - **Fail-open:** any fetch failure/timeout ⇒ NOT in maintenance (offline players are never locked out).
-- **Account-link-safe:** a brand-new user (no session) gets a throwaway anon session just to read the flag,
-  then `SignOut(clearCredentials: true)` when maintenance is off, so GameScene's Google/anon sign-in is
-  untouched. Env name is shared via `UgsEnvironment.Name`.
-- Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`.
+- **Account-link-safe, one sign-in per launch (#209):** the gate only restores an existing cached session and
+  never creates a player. A brand-new install (no session token) skips the check. GameScene's normal Google/anon
+  sign-in then does the first fetch, and `MaintenanceWatcher` acts on any new successful fetch
+  (`FeatureFlagService.FetchCount`) straight away, so a new player who arrives during maintenance is sent back to
+  the splash right after signing in. Cached values alone never trip the watcher. Env name is shared via
+  `UgsEnvironment.Name`.
+- Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`; the active/scheduled decision
+  and poll clamp are `MaintenancePollSchedule.IsActive` / `IsScheduledAhead` / `ClampPollSeconds` (`MaintenancePollScheduleTests`).
+- **Planned window:** set `maintenance.startsUtc` at least one poll interval (5 min) ahead, then `maintenance.enabled`
+  on. Foreground players leave at the start, give or take a second. Backgrounded apps check when resumed. **Emergency:**
+  `maintenance.enabled` on with a blank start reaches players within one poll (5 min worst case, sooner if
+  `maintenance.pollSeconds` was lowered beforehand). Each trip logs its reason and lag behind the scheduled start
+  (`[Maintenance] Active mid-session (...)`), for the on-device latency measurement. A push channel (Cloud
+  Code project messages) is not built: the schedule covers planned windows without extra traffic.
 
 ## App update prompt
 
