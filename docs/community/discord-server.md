@@ -27,7 +27,7 @@ Order matters: a role can only manage roles below it. Top to bottom:
 | Role | Who | Permissions beyond @everyone |
 |---|---|---|
 | **Developer** | the owner | Administrator |
-| **Moderator** | trusted volunteers (start with none or one) | Manage Messages, Timeout Members, Kick Members, Manage Threads, View Audit Log, Mention @everyone off |
+| **Moderator** | trusted volunteers (start with none or one) | Manage Messages, Timeout Members, Kick Members, Manage Threads, View Audit Log (full list below) |
 | **Bots** | AutoMod helpers, webhooks | only what each bot needs; never Administrator |
 | **Beta Tester** | testers in an active beta phase | sees the **BETA** category |
 | **League Regular** | optional cosmetic: players who post league results often | none (a colour and recognition) |
@@ -36,6 +36,115 @@ Order matters: a role can only manage roles below it. Top to bottom:
 
 Ping roles (opt-in, no permissions): **Patch Notes Ping**, **League Ping**, **Beta News Ping**, picked in
 onboarding so announcements only ping people who asked for them.
+
+### Role settings (Server Settings > Roles > the role > Display)
+
+| Role | Colour | Display separately | Anyone can @mention | How it's given |
+|---|---|---|---|---|
+| Developer | teal `#22D3EE` (the game's accent) | yes | no | by hand (owner) |
+| Moderator | green `#34D399` | yes | yes (members can call a mod) | by hand |
+| Bots | grey `#9CA3AF` | yes | no | automatically when a bot joins (give its own role this one's place) |
+| Beta Tester | amber `#FBBF24` | yes | no | by hand, after adding the tester to Play / TestFlight |
+| League Regular | purple `#A78BFA` | no | no | by hand, weekly |
+| Player | none (default name colour) | no | no | Onboarding |
+| Android / iPhone | none | no | no | Onboarding |
+| Patch Notes / League / Beta News Ping | none | no | **yes** (used for announcements) | Onboarding |
+| @everyone | n/a | n/a | n/a | everyone |
+
+### Server-level permissions (Server Settings > Roles > the role > Permissions)
+
+✅ = on. Blank = off (leave it on "inherit"; a role never needs to turn something off, because @everyone
+starts with almost nothing). Developer has **Administrator**, which includes everything, so it is not listed.
+Beta Tester, League Regular, platform and ping roles have **no** server-level permissions: Beta Tester access
+comes from the channel overrides below.
+
+| Permission (Discord's name) | @everyone | Player | Moderator | Bots (AutoMod helper, e.g. Carl-bot) |
+|---|---|---|---|---|
+| **General** | | | | |
+| View Channels | ✅ | ✅ | ✅ | ✅ |
+| Manage Channels | | | | |
+| Manage Roles | | | | ✅ only if it gives reaction roles (keep its role above those roles) |
+| Create Expressions | | | | |
+| Manage Expressions | | | | |
+| View Audit Log | | | ✅ | ✅ if it logs |
+| View Server Insights | | | | |
+| Manage Webhooks | | | | |
+| Manage Server | | | | |
+| **Membership** | | | | |
+| Create Invite | | ✅ | ✅ | |
+| Change Nickname | | ✅ | ✅ | |
+| Manage Nicknames | | | ✅ | |
+| Kick, Approve, and Reject Members | | | ✅ | |
+| Ban Members | | | | |
+| Timeout Members | | | ✅ | ✅ if it moderates |
+| **Text channels** | | | | |
+| Send Messages and Create Posts | | ✅ | ✅ | ✅ |
+| Send Messages in Threads and Posts | | ✅ | ✅ | ✅ |
+| Create Public Threads | | ✅ | ✅ | |
+| Create Private Threads | | | ✅ | |
+| Embed Links | | ✅ | ✅ | ✅ |
+| Attach Files | | ✅ | ✅ | ✅ |
+| Add Reactions | | ✅ | ✅ | ✅ |
+| Use External Emoji | | ✅ | ✅ | ✅ |
+| Use External Stickers | | ✅ | ✅ | |
+| Mention @everyone, @here, and All Roles | | | | |
+| Manage Messages | | | ✅ | ✅ if it moderates |
+| Pin Messages | | | ✅ | |
+| Bypass Slowmode | | | ✅ | ✅ |
+| Manage Threads and Posts | | | ✅ | |
+| Read Message History | ✅ | ✅ | ✅ | ✅ |
+| Send Text-to-Speech Messages | | | | |
+| Send Voice Messages | | ✅ | ✅ | |
+| Create Polls | | ✅ | ✅ | |
+| **Voice** | | | | |
+| Connect | | ✅ | ✅ | |
+| Speak | | ✅ | ✅ | |
+| Video | | ✅ | ✅ | |
+| Use Soundboard / Use External Sounds | | | | |
+| Use Voice Activity | | ✅ | ✅ | |
+| Priority Speaker | | | ✅ | |
+| Mute Members / Deafen Members / Move Members | | | ✅ | |
+| Set Voice Channel Status | | | ✅ | |
+| **Apps** | | | | |
+| Use Application Commands | | ✅ | ✅ | ✅ |
+| Use Activities | | | | |
+| Use External Apps | | | | |
+| **Events** | | | | |
+| Create Events / Manage Events | | | ✅ | |
+| **Advanced** | | | | |
+| Administrator | | | | never |
+
+Why these choices:
+- @everyone can read but not post: new arrivals see `#welcome` and `#rules`, then Onboarding gives **Player**.
+- Nobody but the Developer can @everyone; announcements ping the opt-in ping roles instead.
+- Ban Members stays with the Developer, so a compromised or rogue Moderator can't mass-ban. Moderators use
+  timeouts and kicks.
+- Soundboard, text-to-speech and external apps are off: noise and spam vectors with little upside.
+- Webhooks (patch notes, league results) don't use a role: each is created on its channel by the Developer.
+
+### Channel overrides (channel > Edit Channel > Permissions)
+
+Set these on the **category** and let channels sync, except where a single channel differs.
+
+| Category / channel | Role | Override |
+|---|---|---|
+| START HERE: `#welcome`, `#announcements` | @everyone | Send Messages ❌, Add Reactions ✅ |
+| | Player | Send Messages ❌ (read-only) |
+| `#rules` | (rules screen) | Discord manages it |
+| GAME: `#patch-notes`, `#league-results` | Player | Send Messages ❌, Send Messages in Threads ✅ (discuss in threads), Create Public Threads ✅ |
+| GAME: `#general`, `#screenshots`, `#strategy` | (none) | inherit the server settings |
+| `#general` | Player | Slowmode 5 seconds (channel setting, not a permission) |
+| FEEDBACK: `#bug-reports`, `#suggestions` | Player | inherit (posting creates a forum post). Require a tag on posts (forum setting) |
+| BETA category | @everyone | View Channel ❌ |
+| | Beta Tester | View Channel ✅ |
+| | Moderator | View Channel ✅ |
+| `#beta-announcements` | Beta Tester | Send Messages ❌ |
+| VOICE category | (none) | inherit |
+| STAFF category | @everyone | View Channel ❌ |
+| | Moderator | View Channel ✅ |
+| | Bots | View Channel ✅ (only `#mod-log`, for logging) |
+
+The Developer sees and does everything through Administrator, so it never needs an override.
 
 ## Onboarding
 
