@@ -101,6 +101,7 @@ namespace MobileIdleBuilder
             GameLogger.Debug($"[Idle] Boost-weighted seconds={weighted:F0} of capped={cappedSeconds:F0}");
 
             var result = ComputePayout(snapshots, (float)weighted, rate);
+            result.EntropyEarned = AdFree.ApplyIncome(save, result.EntropyEarned);   // +20% when ad-free (#503)
             result.ElapsedSeconds = elapsedSeconds;
             result.CappedSeconds  = cappedSeconds;
             result.MaxSeconds     = effectiveCap;
@@ -189,6 +190,7 @@ namespace MobileIdleBuilder
                 : new System.Collections.Generic.List<IdleCollectionSnapshot> { save.idleSnapshot };
 
             var   result = ComputePayout(snapshots, seconds, 1f);
+            result.EntropyEarned = AdFree.ApplyIncome(save, result.EntropyEarned);   // +20% when ad-free (#503)
             result.ElapsedSeconds = seconds;
             result.CappedSeconds  = seconds;
             return result.HasAnyOutput ? result : null;
@@ -261,22 +263,20 @@ namespace MobileIdleBuilder
         public static long CreditDemonDeliveries(SaveData save, IDictionary<int, long> deliveries, string source)
         {
             if (save == null || deliveries == null || deliveries.Count == 0) return 0;
-            var finished = WorldTasks.CreditAll(save, WorldTasks.Data, deliveries, out long counted);
+            // The sets delivered in the world those deliveries came from (the live world's Demon).
+            string here = WorldRules.ActiveWorld(save)?.id;
+            var finished = new List<WorldTaskStage>();
+            long counted = 0;
+            foreach (var tasks in WorldTasks.All)
+            {
+                if (tasks == null || !WorldTasks.ShownIn(tasks, here) || WorldTasks.IsComplete(save, tasks)) continue;
+                finished.AddRange(WorldTasks.CreditAll(save, tasks, deliveries, out long c));
+                counted += c;
+            }
             GameLogger.Info($"[WorldTasks] {source}: {counted} item(s) counted toward the tasks.");
             foreach (var stage in finished)
                 GameLogger.Info($"[WorldTasks] Stage '{stage.id}' completed by {source}.");
             return counted;
-        }
-
-        /// <summary>
-        /// What the Demon receives in <paramref name="seconds"/> of live production at full rate (no idle-rate
-        /// cut), from the latest snapshots. Entropy Surge pays N minutes of live automation income, so the items
-        /// behind that income count toward the tasks too.
-        /// </summary>
-        public static Dictionary<int, long> LiveDemonDeliveries(SaveData save, float seconds)
-        {
-            var result = ComputePayout(Snapshots(save), seconds, 1f);
-            return result.DemonDelivered;
         }
 
         static List<IdleCollectionSnapshot> Snapshots(SaveData save)

@@ -25,6 +25,8 @@ namespace MobileIdleBuilder
     public class WorldTaskSO : ScriptableObject
     {
         public string worldId;
+        [Tooltip("World where the deliveries are made (Maxwell's Demon lives there). The task strip shows only in it.")]
+        public string deliverIn = "world_physics";
         public string displayName;
         public WorldTaskStage[] stages = Array.Empty<WorldTaskStage>();
     }

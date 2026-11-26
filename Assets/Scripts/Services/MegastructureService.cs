@@ -187,7 +187,20 @@ namespace MobileIdleBuilder
 
         // ── Reward queries ─────────────────────────────────────────────────────
 
-        public float GetOutputBonus()       => SumReward(MegastructureRewardType.OutputMultiplier);
+        /// <summary>Output bonus from completed stages plus the Expansion levels bought with Ascension material.</summary>
+        public float GetOutputBonus()       => SumReward(MegastructureRewardType.OutputMultiplier)
+                                               + AscensionRules.ExpansionBonus(SaveManager.Instance?.Current?.megastructureExpansion ?? 0);
+
+        /// <summary>Spends megastructure material on the next Expansion level and applies its bonus. False if short.</summary>
+        public bool BuyExpansion()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (!AscensionRules.BuyExpansion(save)) return false;
+            ApplyBonusToECS();
+            SaveManager.Instance.SaveLocal();
+            OnChanged?.Invoke();
+            return true;
+        }
         public float GetSpeedBonus()         => SumReward(MegastructureRewardType.SpeedMultiplier);
         public float GetPrestigeGainBonus()  => SumReward(MegastructureRewardType.PrestigeGainMultiplier);
 

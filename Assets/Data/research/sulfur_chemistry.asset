@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: sulfur_chemistry
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: sulfur_chemistry
+  displayName: Sulfur Chemistry
+  description: 'Sulfur Chemistry: Native Sulfur, Hydrogen Sulfide, Sulfuric Acid.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 89fc5926f2437fd4f9105e0a5fb6e653, type: 2}
+  depthInTree: 11
+  block: chem_sulfur_phosphorus
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 2730000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 9ec80825d56dbb04482633e6bbabf610, type: 2}
+  - {fileID: 11400000, guid: 90abde828b592824ea9a98ed20d8665f, type: 2}
+  - {fileID: 11400000, guid: 8d0524d5fdb0aa741b4852d2fc7f4067, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: c9b202be8abdc5e4f9fc114e7af36c27, type: 2}
+  - {fileID: 11400000, guid: 3f4feccd033875b499ebc7328c2e3d9a, type: 2}
+  - {fileID: 11400000, guid: 881f1447bac3d084e9b4c6b0d5350cb3, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 3207e21981d7768419c5d1b1a7793f31, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Sulfur Chemistry

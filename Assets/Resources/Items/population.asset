@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Many organisms of one kind, breeding and competing. Life at the scale
     where evolution takes hold.
   codexUnlocked: 0
-  baseSellValue: 9.81e+9
+  baseSellValue: 354000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

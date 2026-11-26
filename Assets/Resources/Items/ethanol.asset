@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_chemistry
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "A hydrocarbon with an oxygen-hydrogen head \u2014 the first alcohol.
     Solvent, fuel, and a stepping stone to more complex organics."
   codexUnlocked: 0
-  baseSellValue: 107000
+  baseSellValue: 8830
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

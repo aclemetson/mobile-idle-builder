@@ -121,18 +121,11 @@ namespace MobileIdleBuilder.PlayModeTests
         }
 
         [Test]
-        public void Json_RoundTrip_PreservesDomainsIntroSeen()
+        public void Json_LegacySaveWithTheRetiredDomainsIntroFlag_StillLoads()
         {
-            var save = new SaveData { domainsIntroSeen = true };
-            var loaded = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(save));
-            Assert.IsTrue(loaded.domainsIntroSeen);
-        }
-
-        [Test]
-        public void Json_LegacySaveWithoutDomainsIntroSeen_DefaultsFalse()
-        {
-            var save = JsonUtility.FromJson<SaveData>("{\"prestigeCount\":3}");
-            Assert.IsFalse(save.domainsIntroSeen, "legacy save deserializes to default false");
+            // domainsIntroSeen left SaveData when Quantum Domains were retired (2026-11-24); old saves carry it.
+            var save = JsonUtility.FromJson<SaveData>("{\"prestigeCount\":3,\"domainsIntroSeen\":true}");
+            Assert.AreEqual(3, save.prestigeCount);
         }
 
         [Test]

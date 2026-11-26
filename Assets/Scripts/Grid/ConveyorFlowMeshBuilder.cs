@@ -300,6 +300,66 @@ namespace MobileIdleBuilder
             }
         }
 
+        // ----------------------------------------------------------------
+        // Overpasses (BeltBridge)
+        // ----------------------------------------------------------------
+
+        /// <summary>Unit vector of a direction (N = +z, E = +x).</summary>
+        public static Vector3 Dir(int dir) => DirVec(dir);
+
+        /// <summary>
+        /// How far a point on a ramp tile (relative to the tile centre) is lifted. A ramp up climbs over the half of the
+        /// tile toward the span; a ramp down comes down over the half the span arrives on. Smooth at both ends, and
+        /// <see cref="OverpassRules.DeckHeight"/> at the span edge, so ramps meet the deck.
+        /// </summary>
+        public static float RampLift(Vector3 local, int spanDir, float cellSize, bool rampUp)
+        {
+            float a = Vector3.Dot(new Vector3(local.x, 0f, local.z), DirVec(spanDir)) / (cellSize * 0.5f);
+            float t = Mathf.Clamp01(rampUp ? a : -a);
+            return OverpassRules.DeckHeight * t * t * (3f - 2f * t);
+        }
+
+        /// <summary>Lifts a ramp tile's ribbon in place (<see cref="RampLift"/>).</summary>
+        public static void LiftRamp(Mesh mesh, int spanDir, float cellSize, bool rampUp)
+        {
+            var v = mesh.vertices;
+            for (int i = 0; i < v.Length; i++) v[i].y += RampLift(v[i], spanDir, cellSize, rampUp);
+            mesh.vertices = v;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+        }
+
+        /// <summary>An axis-aligned box (the overpass's side girders), centred on <paramref name="center"/>.</summary>
+        public static Mesh BuildBox(Vector3 center, Vector3 size)
+        {
+            var h = size * 0.5f;
+            var c = new[]
+            {
+                new Vector3(-h.x, -h.y, -h.z), new Vector3(h.x, -h.y, -h.z), new Vector3(h.x, h.y, -h.z), new Vector3(-h.x, h.y, -h.z),
+                new Vector3(-h.x, -h.y,  h.z), new Vector3(h.x, -h.y,  h.z), new Vector3(h.x, h.y,  h.z), new Vector3(-h.x, h.y,  h.z),
+            };
+            int[][] faces =
+            {
+                new[] { 0, 3, 2, 1 }, new[] { 4, 5, 6, 7 }, new[] { 0, 1, 5, 4 },
+                new[] { 3, 7, 6, 2 }, new[] { 0, 4, 7, 3 }, new[] { 1, 2, 6, 5 },
+            };
+            var verts = new List<Vector3>();
+            var tris  = new List<int>();
+            foreach (var f in faces)
+            {
+                int b = verts.Count;
+                foreach (int k in f) verts.Add(center + c[k]);
+                tris.Add(b); tris.Add(b + 1); tris.Add(b + 2);
+                tris.Add(b); tris.Add(b + 2); tris.Add(b + 3);
+            }
+            var mesh = new Mesh { name = "OverpassGirder" };
+            mesh.SetVertices(verts);
+            mesh.SetTriangles(tris, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
         private static Vector3 DirVec(int dir) => dir switch
         {
             0 => new Vector3(0f, 0f, 1f),   // North

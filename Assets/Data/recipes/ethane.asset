@@ -19,10 +19,10 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 7fc0bedfe283e524c84695400bbed83a, type: 2}
-    quantity: 2
+  - item: {fileID: 11400000, guid: a9c23b7ed38de9248b1f5d967384e229, type: 2}
+    quantity: 1
   - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
-    quantity: 3
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 0c56fa4024b5d354ea0d5f95d30c3697, type: 2}
   outputQuantity: 1
@@ -35,7 +35,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7f4070ce2677724458d8725bc480b1e4, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 69f886f319651034f9b1ae2eb8053955, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: C2H4 + H2 -> C2H6

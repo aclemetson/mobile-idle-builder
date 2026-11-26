@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: nucleobases
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: nucleobases
+  displayName: Nucleobases
+  description: 'Nucleobases: Adenine, Guanine, Cytosine.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 6091998ca4dbd32428135e92673ca2a6, type: 2}
+  depthInTree: 16
+  block: chem_building_blocks
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 9480000
+  costPrestigeCurrency: 0
+  durationSeconds: 1500
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 8fd308bd9d2473f4cb71191a828fcfec, type: 2}
+  - {fileID: 11400000, guid: c88e8d2be35b2254882996a09ea8eff8, type: 2}
+  - {fileID: 11400000, guid: 9bcf5e6c853d6c148aa9dd57afd1596d, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b103edb1625705048b6d7a0f31faad21, type: 2}
+  - {fileID: 11400000, guid: 6a5feec0c48328c4e9c0aaf05b45207c, type: 2}
+  - {fileID: 11400000, guid: 16acee72fc846dc4fb1cf02f5a5aed8f, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: f73cdabf86fbef24f844683056d467a2, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'A nucleobase: the C in the genetic code.'

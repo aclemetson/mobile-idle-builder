@@ -23,6 +23,7 @@ namespace MobileIdleBuilder
             public int2 PrimaryInboundCell;    // first inbound (N,E,S,W order)
             public int  PrimaryInboundExitDir; // its ExitDir == travel dir into this cell (this cell's EntryDir); -1 if head
             public bool IsHead;                // no inbound — a source / chain head
+            public int  InboundMask;           // bit d set = flow enters from the neighbour in direction d
         }
 
         /// <summary>
@@ -31,42 +32,79 @@ namespace MobileIdleBuilder
         /// are not counted as any neighbour's inbound, so a belt that merely runs up to another (without
         /// an endpoint coinciding) stays separate instead of auto-merging. Pass null for no blocks.
         /// </summary>
+        /// <param name="splitMasks">Belt splits: cell → output mask (<see cref="BeltSplit.Mask"/>). A split feeds every
+        /// neighbour on its mask, and its primary link (NextSegment) prefers its ExitDir, else its first output.</param>
+        /// <param name="bridges">Overpasses: ramp-up cell → ramp-down cell (<see cref="BeltBridge"/>). A ramp-up outputs
+        /// only to its ramp-down, which takes it in on the side facing the span. Neither ramp links to a belt on its
+        /// span side: that belt runs underneath.</param>
         public static Dictionary<int2, CellLinks> Compute(IReadOnlyDictionary<int2, int> cellExit,
-                                                          HashSet<int2> outputBlocked = null)
+                                                          HashSet<int2> outputBlocked = null,
+                                                          IReadOnlyDictionary<int2, int> splitMasks = null,
+                                                          IReadOnlyDictionary<int2, int2> bridges = null)
         {
             var result = new Dictionary<int2, CellLinks>(cellExit.Count);
 
             bool IsBlocked(int2 c) => outputBlocked != null && outputBlocked.Contains(c);
+            int SplitMask(int2 c) => splitMasks != null && splitMasks.TryGetValue(c, out int m) ? m : 0;
+            var ramps = new Ramps(bridges);
 
             foreach (var kv in cellExit)
             {
                 int2 cell = kv.Key;
                 int  exit = kv.Value;
                 var  link = new CellLinks();
+                int  mask = SplitMask(cell);
 
-                int2 outCell = Adjacent(cell, exit);
+                bool rampUp  = ramps.UpTo(cell, out int2 rampDown);
+                int2 outCell = rampUp ? rampDown : Adjacent(cell, exit);
                 if (!IsBlocked(cell) &&
-                    !(outCell.x == cell.x && outCell.y == cell.y) && cellExit.ContainsKey(outCell))
+                    !(outCell.x == cell.x && outCell.y == cell.y) && cellExit.ContainsKey(outCell)
+                    && (rampUp || !ramps.UnderSpanSide(cell, outCell)))
                 {
                     link.HasOutput  = true;
                     link.OutputCell = outCell;
+                }
+                else if (mask != 0 && !rampUp)
+                {
+                    // A split whose primary side has no belt yet still links to its first output that does.
+                    for (int d = 0; d < 4 && !link.HasOutput; d++)
+                    {
+                        if (!BeltSplitRules.Has(mask, d)) continue;
+                        int2 oc = Adjacent(cell, d);
+                        if (!cellExit.ContainsKey(oc) || ramps.UnderSpanSide(cell, oc)) continue;
+                        link.HasOutput  = true;
+                        link.OutputCell = oc;
+                    }
                 }
 
                 int count = 0;
                 for (int d = 0; d < 4; d++)
                 {
-                    int2 nc = Adjacent(cell, d);
-                    if (!cellExit.TryGetValue(nc, out int nExit)) continue;
-                    if (IsBlocked(nc)) continue;                                // its output is disconnected
-                    int2 nExitCell = Adjacent(nc, nExit);
-                    if (nExitCell.x != cell.x || nExitCell.y != cell.y) continue; // not an inbound
+                    int2 nc   = Adjacent(cell, d);
+                    int  toUs = Opposite(d);                                    // the direction from nc to this cell
+                    bool feeds;
+                    if (ramps.DownFrom(cell, out int2 up, out int spanSide) && d == spanSide)
+                    {
+                        // A ramp-down takes the overpass in on its span side (and nothing from under it).
+                        nc    = up;
+                        feeds = cellExit.ContainsKey(up) && !IsBlocked(up);
+                    }
+                    else
+                    {
+                        if (!cellExit.TryGetValue(nc, out int nExit)) continue;
+                        if (ramps.UpTo(nc, out _) || ramps.UnderSpanSide(nc, cell)) continue; // a ramp-up feeds only its span
+                        feeds = !IsBlocked(nc) && nExit == toUs;                 // its ExitDir points here
+                        if (!feeds && BeltSplitRules.Has(SplitMask(nc), toUs)) feeds = true; // a split output points here
+                    }
+                    if (!feeds) continue;
 
                     count++;
+                    link.InboundMask |= 1 << d;
                     if (!link.HasPrimaryInbound)
                     {
                         link.HasPrimaryInbound     = true;
                         link.PrimaryInboundCell    = nc;
-                        link.PrimaryInboundExitDir = nExit;
+                        link.PrimaryInboundExitDir = toUs;   // travel direction into this cell
                     }
                 }
 
@@ -92,12 +130,32 @@ namespace MobileIdleBuilder
         /// chain). Only cells the route merely PASSES THROUGH (i >= 1) are protected from hijacking.
         /// </summary>
         public static bool CanPlace(IReadOnlyDictionary<int2, int> cellExit, IReadOnlyList<int2> path,
-                                    int maxInbounds, out string reason)
+                                    int maxInbounds, out string reason,
+                                    IReadOnlyDictionary<int2, int> splitMasks = null,
+                                    IReadOnlyDictionary<int2, int2> bridges = null)
         {
             reason = null;
             if (path == null || path.Count == 0) { reason = "empty path"; return false; }
 
             int count = path.Count;
+
+            // Overpasses: a ramp-up keeps its span, and neither ramp joins a belt on its span side (that runs under).
+            var ramps = new Ramps(bridges);
+            for (int i = 0; i + 1 < count; i++)
+            {
+                int2 a = path[i], b = path[i + 1];
+                if (ramps.UpTo(a, out int2 down) && !(down.x == b.x && down.y == b.y))
+                {
+                    reason = $"cell ({a.x},{a.y}) is an overpass ramp; its span can't be redrawn";
+                    return false;
+                }
+                bool adjacent = math.abs(a.x - b.x) + math.abs(a.y - b.y) == 1;
+                if (adjacent && ramps.UnderSpanSide(a, b))
+                {
+                    reason = $"cell ({b.x},{b.y}) is an overpass ramp; join it from the side";
+                    return false;
+                }
+            }
 
             for (int i = 1; i < count - 1; i++)
             {
@@ -107,6 +165,9 @@ namespace MobileIdleBuilder
                 if (!cellExit.ContainsKey(outCell)) continue; // no live successor — free to redirect
 
                 int desired = DirBetween(path[i], path[i + 1]);
+                // A split may be passed through along any of its outputs.
+                if (splitMasks != null && splitMasks.TryGetValue(cell, out int sm) && BeltSplitRules.Has(sm, desired))
+                    continue;
                 if (exit != desired)
                 {
                     reason = $"cell ({cell.x},{cell.y}) already outputs {(OutputDirection)exit}; cannot fork output";
@@ -140,6 +201,53 @@ namespace MobileIdleBuilder
             }
 
             return true;
+        }
+
+        /// <summary>Overpass lookups for <see cref="Compute"/> and <see cref="CanPlace"/>.</summary>
+        private readonly struct Ramps
+        {
+            private readonly IReadOnlyDictionary<int2, int2> _up;     // ramp-up -> ramp-down
+            private readonly Dictionary<int2, int2>         _down;   // ramp-down -> ramp-up
+
+            public Ramps(IReadOnlyDictionary<int2, int2> bridges)
+            {
+                _up   = bridges;
+                _down = null;
+                if (bridges == null || bridges.Count == 0) return;
+                _down = new Dictionary<int2, int2>(bridges.Count);
+                foreach (var kv in bridges) _down[kv.Value] = kv.Key;
+            }
+
+            public bool UpTo(int2 cell, out int2 rampDown)
+            {
+                rampDown = default;
+                return _up != null && _up.TryGetValue(cell, out rampDown);
+            }
+
+            /// <summary>A ramp-down: its ramp-up, and the side the span arrives on.</summary>
+            public bool DownFrom(int2 cell, out int2 rampUp, out int spanSide)
+            {
+                spanSide = -1;
+                rampUp   = default;
+                if (_down == null || !_down.TryGetValue(cell, out rampUp)) return false;
+                spanSide = DirBetween(cell, rampUp);
+                return true;
+            }
+
+            /// <summary>
+            /// True when adjacent <paramref name="from"/> and <paramref name="to"/> meet across a ramp's span side: one of
+            /// them runs under the overpass, so they never link.
+            /// </summary>
+            public bool UnderSpanSide(int2 from, int2 to)
+            {
+                if (_down == null) return false;
+                int dir = DirBetween(from, to);
+                if (UpTo(to, out int2 d1) && DirBetween(to, d1) == Opposite(dir)) return true;
+                if (DownFrom(to, out _, out int s1) && s1 == Opposite(dir)) return true;
+                if (UpTo(from, out int2 d2) && DirBetween(from, d2) == dir) return true;
+                if (DownFrom(from, out _, out int s2) && s2 == dir) return true;
+                return false;
+            }
         }
 
         /// <summary>OutputDirection of the cardinal step from 'from' to 'to'.</summary>

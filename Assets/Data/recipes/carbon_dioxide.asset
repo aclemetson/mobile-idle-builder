@@ -30,7 +30,7 @@ MonoBehaviour:
   baseCraftTime: 20
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 100
+  fixedPowerCostEV: 200
   validBuildings:
   - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   canCraftManually: 0
@@ -38,4 +38,4 @@ MonoBehaviour:
   requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: C + O2 -> CO2

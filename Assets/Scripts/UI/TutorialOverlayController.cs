@@ -24,6 +24,7 @@ namespace MobileIdleBuilder
 
         private int    _lastStepIndex = -1;
         private bool   _wasActive;
+        private TutorialFlowSO _lastFlow;   // a world switch swaps the running flow (TutorialFlows)
         private VisualElement _pulsingButton;
         private Coroutine     _pulseRoutine;
 
@@ -148,6 +149,29 @@ namespace MobileIdleBuilder
 
             var state = _tutorialQuery.GetSingleton<TutorialStateData>();
 
+            // The running flow changed (travelled to or from a world with its own tutorial): drop the old
+            // flow's UI without a "complete" toast, and enter the new flow's current step from scratch.
+            if (TutorialFlowSO.Current != _lastFlow)
+            {
+                bool hadFlow = _lastFlow != null;
+                _lastFlow = TutorialFlowSO.Current;
+                if (hadFlow)
+                {
+                    UnlockAllFields();
+                    StopPulseRoutine();
+                    tutorialHighlighter?.ClearHighlight();
+                    hudController?.HideTutorialHint();
+                    CancelHintReveal();
+                    _pendingHintText = null;
+                    _lastHintProgress = null;
+                    hudController?.SetTutorialHintProgress(null);
+                    // A step dialogue of the flow we just left (e.g. Chemistry's) must not stay open in the other world.
+                    dialogueController?.HideDialogue();
+                }
+                _wasActive     = false;
+                _lastStepIndex = -1;
+            }
+
             // Tutorial just ended — clean up all tutorial UI and stop watching.
             if (_wasActive && !state.IsActive)
             {
@@ -157,11 +181,14 @@ namespace MobileIdleBuilder
                 tutorialHighlighter?.ClearHighlight();
                 // Don't clear the hint when ended by prestige — HUDController shows the
                 // achievements unlock hint on the same frame and we must not stomp it.
-                if (!(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
+                bool worldFlow = TutorialFlows.WorldFlowActive;
+                if (worldFlow || !(SaveManager.Instance?.Current?.tutorial.hasCompletedFirstRun ?? false))
                 {
                     hudController?.HideTutorialHint();
                     // Real active -> complete transition only (_wasActive is never set by a save that loads complete).
-                    hudController?.ShowNotification("★", "Tutorial complete! The Foundry is yours.", "success");
+                    string done = TutorialFlowSO.Current?.completionMessage;
+                    if (!string.IsNullOrEmpty(done))
+                        hudController?.ShowNotification("★", done, "success");
                 }
                 dialogueController?.HideDialogue();
                 _lastHintProgress = null;
@@ -620,6 +647,8 @@ namespace MobileIdleBuilder
                 _pulsingButton.RemoveFromClassList("panel-btn--highlight");
                 _pulsingButton = null;
             }
+            _scrolledCard?.RemoveFromClassList("building-card--tutorial");
+            _scrolledCard = null;
         }
 
         /// <summary>
@@ -638,11 +667,34 @@ namespace MobileIdleBuilder
 
                 _pulsingButton = el;
                 el?.AddToClassList("panel-btn--highlight");
+                // The target itself (e.g. a Place button in the Builder list): bring its card into view
+                // and light the whole card, so a building far down the list is never missed.
+                var card = el != null && el.name == buttonId ? CardOf(el) : null;
+                if (card != null)
+                {
+                    card.AddToClassList("building-card--tutorial");
+                    if (!ReferenceEquals(card, _scrolledCard))
+                    {
+                        _scrolledCard = card;
+                        card.GetFirstAncestorOfType<ScrollView>()?.ScrollTo(card);
+                    }
+                }
                 yield return new WaitForSecondsRealtime(0.7f);
                 el?.RemoveFromClassList("panel-btn--highlight");
+                card?.RemoveFromClassList("building-card--tutorial");
                 _pulsingButton = null;
                 yield return new WaitForSecondsRealtime(0.7f);
             }
+        }
+
+        private VisualElement _scrolledCard;
+
+        /// <summary>The Builder card a Place button sits on, or null for any other button.</summary>
+        private static VisualElement CardOf(VisualElement button)
+        {
+            for (var e = button.parent; e != null; e = e.parent)
+                if (e.ClassListContains("building-card")) return e;
+            return null;
         }
 
         private bool IsPlacingInWorld() =>

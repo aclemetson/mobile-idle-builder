@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Ytterbium (Yb), element number 70 with mass number 174. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 202000
+  baseSellValue: 42500
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

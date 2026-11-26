@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "A cell with a nucleus and specialised organelles. Larger and more
     capable than its prokaryotic ancestors \u2014 the building block of complex life."
   codexUnlocked: 0
-  baseSellValue: 30200000
+  baseSellValue: 13000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

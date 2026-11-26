@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0a1c9f670886948bbbd2f31ea5750e, type: 3}
+  m_Name: hydrogen_sulfide
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.RecipeSO
+  id: hydrogen_sulfide
+  displayName: Hydrogen Sulfide
+  methodLabel: 
+  recipeId: 365
+  tier: 3
+  category: 5
+  inputs:
+  - item: {fileID: 11400000, guid: 9ec80825d56dbb04482633e6bbabf610, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
+    quantity: 1
+  neutronAdjustment: []
+  outputItem: {fileID: 11400000, guid: 90abde828b592824ea9a98ed20d8665f, type: 2}
+  outputQuantity: 1
+  byproducts: []
+  baseCraftTime: 60
+  manualCraftTime: 0
+  powerCostIsDynamic: 0
+  fixedPowerCostEV: 200
+  validBuildings:
+  - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
+  canCraftManually: 0
+  knownFromStart: 0
+  requiredResearch: {fileID: 11400000, guid: 41439204a2889224fa55ada4505d65e8, type: 2}
+  unlocksResearch: {fileID: 0}
+  isSimplified: 0
+  simplificationNote: S + H2 -> H2S

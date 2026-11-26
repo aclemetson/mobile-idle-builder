@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: gravitics
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: gravitics
+  displayName: Gravitics
+  description: 'Gravitics: Graviton Lens.'
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: c0a30fb846171314ca9e4f7da6cc4265, type: 2}
+  depthInTree: 7
+  block: engineering_systems
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_engineering
+  world: world_engineering
+  costBaseCurrency: 4740000000000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: f527515f051f9ba49b4323a464712129, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: cdb9fcbad19bbe24ca4c2548d342d0ad, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 45cac0aa7a4f2384cb0c8c625e23e162, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Gravitics

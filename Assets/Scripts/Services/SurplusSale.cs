@@ -22,11 +22,14 @@ namespace MobileIdleBuilder
         public static float CurrentFraction() =>
             Fraction(PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.SurplusResale) ?? 0f);
 
-        /// <summary>The Demon price of one item: its sell value, or 1 when it has none (as EntropySinkSystem pays).</summary>
+        /// <summary>
+        /// The Demon price of one item: its sell value, or 1 when it has none (as EntropySinkSystem pays),
+        /// times its tournament stars (<see cref="ItemStars"/>).
+        /// </summary>
         public static float DemonPrice(int itemId)
         {
             float v = ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
-            return v > 0f ? v : 1f;
+            return (v > 0f ? v : 1f) * ItemStars.Multiplier(itemId);
         }
 
         /// <summary>Entropy for <paramref name="quantity"/> items at <paramref name="demonPrice"/> each, paid at <paramref name="fraction"/>, before rounding.</summary>

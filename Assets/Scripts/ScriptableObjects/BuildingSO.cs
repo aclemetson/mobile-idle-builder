@@ -66,6 +66,18 @@ namespace MobileIdleBuilder
         public float influenceRadiusTiles;
         public float linkRadiusTiles;
 
+        [Header("Streams (worlds with WorldSO.streamTransport, e.g. Chemistry)")]
+        [Tooltip("Spring: the stream starts at this building's output and carries this much flow (L/s).")]
+        public bool isSpring;
+        public float streamFlow;
+        [Tooltip("Flow (L/s) this building takes from the stream it sits beside, upstream first. 0 = runs on any stream.")]
+        public float flowDraw;
+        [Tooltip("A placed entropy sink (Calorimeter): saved, restored and demolished like any building. Maxwell's Demon is the baked, fixed sink.")]
+        public bool isPlacedSink;
+
+        /// <summary>Maxwell's Demon: the sink baked from the SubScene, kept as a fixture (see <see cref="DemonTag"/>).</summary>
+        public bool IsFixedSink => isEntropySink && !isPlacedSink;
+
         [Header("Production")]
         public float baseOutputRate;        // items per second
         public RecipeSO[] supportedRecipes;
@@ -73,7 +85,6 @@ namespace MobileIdleBuilder
         public string[] inputSlotLabels;    // e.g. ["Protons", "Neutrons", "Electrons"]
         public bool isEntropySink;          // true = Maxwell's Demon; items in input buffer are consumed for entropy
         public bool isItemFilter;           // true = Filter (#321): routes each item to the output side its rules pick
-        public bool isSplitter;             // true = Belt Splitter: every item leaves by the next output side in turn (no filter)
         public bool assignableOutputs;      // true = the player picks which output side each product leaves by (#322)
         public string[] recipeModeLabels;   // e.g. Slow / Fast: the inspector shows one recipe group at a time (#322)
         public string[] recipeModePrefixes; // recipe id prefix for each mode, same order as recipeModeLabels

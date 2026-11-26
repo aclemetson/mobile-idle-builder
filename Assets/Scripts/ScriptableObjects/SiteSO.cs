@@ -29,7 +29,24 @@ namespace MobileIdleBuilder
         [Tooltip("Entropy cost to unlock this site. 0 = unlocked from start (origin).")]
         public long unlockCost;
 
+        [Tooltip("Retired (2026-11-24): the Physics Quantum Domains, made obsolete by worlds and Field Synthesis. " +
+                 "Kept in the list so saved site indices stay put; never unlockable, travelled to or paid idle.")]
+        public bool retired;
+
         [Tooltip("Per-field density overrides for this site. Empty = default field set.")]
         public List<SiteFieldOverride> fieldOverrides = new();
+
+        [Tooltip("Buildings placed once per run the first time this site's grid loads (Chemistry's Calorimeter). The player may move or demolish them; prestige places them again.")]
+        public List<SiteStartingBuilding> startingBuildings = new();
+    }
+
+    /// <summary>A building a site starts with each run (by BuildingSO id).</summary>
+    [System.Serializable]
+    public class SiteStartingBuilding
+    {
+        public string buildingId;
+        public int    x;
+        public int    y;
+        public int    rotation;
     }
 }

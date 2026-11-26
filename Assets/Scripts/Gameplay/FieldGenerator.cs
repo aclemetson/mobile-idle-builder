@@ -124,6 +124,17 @@ namespace MobileIdleBuilder
 
             // New game or migration from a pre-field-save build: randomize positions.
             yield return RegisterBakedBuildings();
+
+            // A save that loads straight into another site with no fields yet (dev 'visit world', or a
+            // site whose fields were cleared) gets that site's own layout, not the origin's quark fields.
+            int activeSite = SaveManager.Instance?.Current?.currentRun?.activeSiteIndex ?? 0;
+            var sites = Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites;
+            if (activeSite > 0 && sites != null && activeSite < sites.Length && sites[activeSite] != null)
+            {
+                GenerateForSite(sites[activeSite], activeSite);
+                yield break;
+            }
+
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
@@ -478,7 +489,7 @@ namespace MobileIdleBuilder
             if (world == null) return;
 
             using var query = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<EntropySinkTag>(),
+                ComponentType.ReadOnly<DemonTag>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
 

@@ -40,6 +40,8 @@ namespace MobileIdleBuilder
 
         // ---- Press-and-hold on a building → edit mode (LongPress) ----
         private Entity           _holdEntity = Entity.Null;
+        private Vector2Int?      _holdBelt;     // press-and-hold on a belt opens the split card (2026-11-24)
+        private ConveyorPlacer   _conveyorPlacer;
         private float            _holdStart;
         private bool             _holdConsumed; // the hold entered edit mode: this press's release is not a tap
         private HoldProgressRing _holdRing;
@@ -142,11 +144,23 @@ namespace MobileIdleBuilder
         {
             CancelHold();
             _holdConsumed = false;
-            if (_pressWasOnUI || AnyModeActive() || buildingInspector == null || placementController == null) return;
-            if (!buildingInspector.TryGetEditableBuildingAt(_pressStart, out var entity)) return;
+            if (_pressWasOnUI || AnyModeActive() || BeltSplitCard.IsOpen) return;
+            if (buildingInspector != null && placementController != null
+                && buildingInspector.TryGetEditableBuildingAt(_pressStart, out var entity))
+            {
+                _holdEntity = entity;
+                _holdStart  = Time.unscaledTime;
+                return;
+            }
 
-            _holdEntity = entity;
-            _holdStart  = Time.unscaledTime;
+            // A belt: holding it opens the split card.
+            _conveyorPlacer ??= FindAnyObjectByType<ConveyorPlacer>();
+            if (_conveyorPlacer != null && ScreenToGridCell(_pressStart, out int bx, out int by)
+                && _conveyorPlacer.HasBeltAt(new Vector2Int(bx, by)))
+            {
+                _holdBelt  = new Vector2Int(bx, by);
+                _holdStart = Time.unscaledTime;
+            }
         }
 
         /// <summary>
@@ -156,7 +170,7 @@ namespace MobileIdleBuilder
         /// </summary>
         private void UpdateHold()
         {
-            if (_holdEntity == Entity.Null) return;
+            if (_holdEntity == Entity.Null && _holdBelt == null) return;
             // A pan, a second finger (pinch/rotate) or a glide stop can't become an edit either.
             if (_tap.IsDisqualified || AnyModeActive()) { CancelHold(); return; }
 
@@ -164,10 +178,17 @@ namespace MobileIdleBuilder
             if (LongPress.IsComplete(held))
             {
                 var entity = _holdEntity;
+                var belt   = _holdBelt;
                 CancelHold();
                 _holdConsumed = true;
                 buildingInspector?.ClearSelection();
-                placementController.BeginEdit(entity);
+                if (belt.HasValue)
+                {
+                    var hud  = FindAnyObjectByType<HUDController>();
+                    var root = hud != null ? hud.GetComponent<UIDocument>()?.rootVisualElement : null;
+                    BeltSplitCard.Show(root, _conveyorPlacer, belt.Value);
+                }
+                else placementController.BeginEdit(entity);
                 return;
             }
 
@@ -178,6 +199,7 @@ namespace MobileIdleBuilder
         private void CancelHold()
         {
             _holdEntity = Entity.Null;
+            _holdBelt   = null;
             _holdRing?.Hide();
         }
 

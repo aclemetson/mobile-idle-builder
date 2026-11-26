@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 24 minutes
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A neutron-heavy radon that beta-decays into Francium-223, the only
     francium found in nature.
   codexUnlocked: 0
-  baseSellValue: 61400
+  baseSellValue: 4500
   isotopeSellMultiplier: 1.148
   escapesAsEntropy: 0

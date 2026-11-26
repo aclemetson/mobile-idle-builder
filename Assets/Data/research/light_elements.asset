@@ -14,18 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: light_elements
   displayName: Light Elements
-  description: Make Lithium from Helium and Deuterium, then Beryllium and Boron by
-    adding one proton at a time.
+  description: Fuse helium and deuterium into Lithium, then capture protons up to
+    Boron.
   icon: {fileID: 0}
-  branch: 1
+  branch: 4
   prerequisites:
   - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
   depthInTree: 4
-  block: foundations
+  block: first_fusion
   treeX: -1
   treeY: -1
   requiredWorld: 
-  costBaseCurrency: 224000
+  world: world_physics
+  costBaseCurrency: 256000
   costPrestigeCurrency: 0
   durationSeconds: 120
   fieldCooldownMult: 1
@@ -40,7 +41,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 04e9637445ae72b4b9c9b8a09bd7b352, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: e28b5908e0980ee4582cacc698ade90d, type: 2}
   resetsOnPrestige: 1
   codexEntry: 'The lightest solid elements: beryllium, harder than steel and lighter
     than aluminium; boron, an exotic metalloid with industrial and nuclear applications.'

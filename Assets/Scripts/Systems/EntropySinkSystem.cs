@@ -39,12 +39,15 @@ namespace MobileIdleBuilder
             bool logging = SystemAPI.TryGetSingletonBuffer<DemonDelivery>(out var deliveries);
             if (logging && deliveries.Length > MaxLoggedDeliveries) deliveries.Clear();
 
-            foreach (var (building, inputSlots) in
+            foreach (var (building, inputSlots, entity) in
                 SystemAPI.Query<RefRO<BuildingData>, DynamicBuffer<BuildingInputSlot>>()
-                    .WithAll<EntropySinkTag>())
+                    .WithAll<EntropySinkTag>().WithEntityAccess())
             {
                 if (!building.ValueRO.IsActive) continue;
                 if (inputSlots.Length == 0) continue;
+                // Only Maxwell's Demon logs deliveries for the world tasks (the Chemistry gate is fed in Physics);
+                // Chemistry's Calorimeter pays the same entropy but never counts toward them.
+                bool demon = SystemAPI.HasComponent<DemonTag>(entity);
 
                 for (int i = 0; i < inputSlots.Length; i++)
                 {
@@ -58,9 +61,10 @@ namespace MobileIdleBuilder
                         var itemSO = db.Get(itemID);
                         if (itemSO != null && itemSO.baseSellValue > 0f) sellValue = itemSO.baseSellValue;
                     }
+                    sellValue *= ItemStars.Multiplier(itemID);   // tournament stars (+20% each)
 
                     totalEntropy += (long)(sellValue * quantity * boost);
-                    if (logging) deliveries.Add(new DemonDelivery { ItemID = itemID, Quantity = quantity });
+                    if (logging && demon) deliveries.Add(new DemonDelivery { ItemID = itemID, Quantity = quantity });
                 }
 
                 inputSlots.Clear();

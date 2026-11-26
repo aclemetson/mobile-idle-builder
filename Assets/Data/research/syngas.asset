@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: syngas
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: syngas
+  displayName: Syngas
+  description: 'Syngas: Carbon Monoxide, Hydrogen Peroxide.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
+  depthInTree: 6
+  block: chem_small_molecules
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 480000
+  costPrestigeCurrency: 0
+  durationSeconds: 600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 888ff5fe8f4d0054a80dc5c719f2cd09, type: 2}
+  - {fileID: 11400000, guid: 23c4880e41f3b2143ab97670ceece5c3, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: b9182a9e2888de249809cc006fc6133d, type: 2}
+  - {fileID: 11400000, guid: d34aca21beec2ce428db67a6d54466ed, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 3dc8be268dcffa345a79b103092e1b09, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'H2O2: an oxidiser cells make and destroy every second.'

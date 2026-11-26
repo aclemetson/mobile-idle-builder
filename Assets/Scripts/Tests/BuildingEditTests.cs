@@ -247,18 +247,6 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual((int)OutputDirection.South, FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(e))[0].facing);
         }
 
-        [Test]
-        public void Apply_ResetsTheSplitterTurn()
-        {
-            var so = TwoByOne();
-            var e  = Place(so, 5, 5);
-            _em.AddComponentData(e, new SplitterState { NextFacing = (int)OutputDirection.East });
-
-            BuildingMove.Apply(_em, e, so, 6, 5, 2, false, null);
-
-            Assert.AreEqual(-1, _em.GetComponentData<SplitterState>(e).NextFacing);
-        }
-
         // ── Placement message ────────────────────────────────────────────────
 
         [Test]

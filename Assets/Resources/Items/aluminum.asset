@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: 
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     electrolysis was discovered. Lightweight and corrosion-resistant \u2014 the backbone
     of aerospace and packaging."
   codexUnlocked: 0
-  baseSellValue: 2790
+  baseSellValue: 1280
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

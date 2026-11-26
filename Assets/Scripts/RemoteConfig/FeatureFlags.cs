@@ -24,7 +24,7 @@ namespace MobileIdleBuilder
     public static class FeatureFlags
     {
         // ── Keys ──────────────────────────────────────────────────────────────
-        public const string PvpEnabledKey         = "pvp.enabled";
+        public const string PveEnabledKey         = "pve.enabled";
         public const string IapEnabledKey         = "iap.enabled";
         public const string AdsEnabledKey         = "ads.enabled";
         public const string AdsTestModeKey        = "ads.test_mode";
@@ -42,6 +42,8 @@ namespace MobileIdleBuilder
         public const string GameDataNoticeTitleKey = "gamedata.noticeTitle";
         public const string GameDataNoticeMessageKey = "gamedata.noticeMessage";
         public const string GameDataOverridesKey   = "gamedata.overrides";
+        public const string WhatsNewVersionKey     = "whatsnew.version";   // written by CI with the notes (#502)
+        public const string WhatsNewNotesKey       = "whatsnew.notes";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
         public const string UpdateEnabledKey       = "update.enabled";
@@ -55,7 +57,7 @@ namespace MobileIdleBuilder
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
-        public const bool PvpEnabledDefault         = false; // server backend not live yet
+        public const bool PveEnabledDefault         = true;  // weekly PvE tournaments (kill-switch; backend: docs/runbooks/pve-backend-setup.md)
         public const bool IapEnabledDefault         = true;
         public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
         // Test ads: no ad network, a "test ad" card instead, reward still granted. Defaults ON so a dev
@@ -81,6 +83,8 @@ namespace MobileIdleBuilder
         // Curated scalar overrides applied onto the baked ScriptableObjects at boot (config/items/research).
         // JSON blob; default empty => no overrides, the build runs its baked baseline. See GameDataOverrides.
         public const string GameDataOverridesDefault = "{}";
+        // What's-new notes (#502): CI writes both from docs/whats-new.md on each release. Blank => no notice.
+        public const string WhatsNewDefault = "";
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
@@ -94,7 +98,7 @@ namespace MobileIdleBuilder
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
         {
-            new FlagDef(PvpEnabledKey,         FlagType.Bool),
+            new FlagDef(PveEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
             new FlagDef(AdsEnabledKey,         FlagType.Bool),
             new FlagDef(AdsTestModeKey,        FlagType.Bool),
@@ -112,6 +116,8 @@ namespace MobileIdleBuilder
             new FlagDef(GameDataNoticeTitleKey,   FlagType.String),
             new FlagDef(GameDataNoticeMessageKey, FlagType.String),
             new FlagDef(GameDataOverridesKey,     FlagType.String),
+            new FlagDef(WhatsNewVersionKey,       FlagType.String),
+            new FlagDef(WhatsNewNotesKey,         FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
             new FlagDef(UpdateEnabledKey,         FlagType.Bool),
@@ -125,7 +131,7 @@ namespace MobileIdleBuilder
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
-        public static bool PvpEnabled         => GetBool(PvpEnabledKey,         PvpEnabledDefault);
+        public static bool PveEnabled         => GetBool(PveEnabledKey,         PveEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
         public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
 
@@ -161,6 +167,8 @@ namespace MobileIdleBuilder
         public static string GameDataNoticeTitle  => GetString(GameDataNoticeTitleKey,  GameDataNoticeTitleDefault);
         public static string GameDataNoticeMessage => GetString(GameDataNoticeMessageKey, GameDataNoticeMessageDefault);
         public static string GameDataOverridesJson => GetString(GameDataOverridesKey,    GameDataOverridesDefault);
+        public static string WhatsNewVersion      => GetString(WhatsNewVersionKey,      WhatsNewDefault);
+        public static string WhatsNewNotes        => GetString(WhatsNewNotesKey,        WhatsNewDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
         public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);

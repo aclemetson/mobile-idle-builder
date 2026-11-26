@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_engineering
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     at 150 million degrees \u2014 hotter than the sun's core. The heart of a fusion
     power plant or a miniature star."
   codexUnlocked: 0
-  baseSellValue: 81700000
+  baseSellValue: 5.97e+9
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

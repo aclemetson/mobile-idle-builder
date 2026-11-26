@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     metal. Every connector in space hardware is gold-plated. Its rarity is a product
     of neutron star collisions.
   codexUnlocked: 0
-  baseSellValue: 466000
+  baseSellValue: 12200
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_chemistry
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     industrial reaction in history \u2014 it enabled fertilisers that now feed half
     the world's population."
   codexUnlocked: 0
-  baseSellValue: 2880
+  baseSellValue: 935
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

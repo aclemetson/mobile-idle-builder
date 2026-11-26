@@ -280,19 +280,6 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void LiveDemonDeliveries_AreFullRate_ForEntropySurge()
-        {
-            var save = MakeSave(new IdleCollectionSnapshot { chains = new List<IdleChainEntry>
-            {
-                new IdleChainEntry { itemId = 6, itemsPerSecond = 2f, endsAtEntropySink = true,  baseSellValue = 1f },
-                new IdleChainEntry { itemId = 8, itemsPerSecond = 5f, endsAtEntropySink = false, baseSellValue = 1f },
-            }});
-            var delivered = OfflineCollectionService.LiveDemonDeliveries(save, 600f);
-            Assert.AreEqual(1200L, delivered[6], "10 minutes of 2/s, no idle-rate cut (the income is live income)");
-            Assert.IsFalse(delivered.ContainsKey(8), "items going to inventory are not Demon deliveries");
-        }
-
-        [Test]
         public void TaskSuffix_ShowsOnlyWhenItemsCounted()
         {
             Assert.AreEqual("", AdService.TaskSuffix(0));

@@ -16,6 +16,9 @@ namespace MobileIdleBuilder
     {
         public const string Physics   = "world_physics";
         public const string Chemistry = "world_chemistry";
+        public const string Biology   = "world_biology";
+        public const string Metallurgy = "world_metallurgy";
+        public const string Engineering = "world_engineering";
 
         /// <summary>True if content that needs <paramref name="worldId"/> is open on this save.</summary>
         public static bool IsOpen(string worldId, IReadOnlyCollection<string> unlockedWorlds)
@@ -39,6 +42,20 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>True if <paramref name="field"/> belongs to <paramref name="activeWorldId"/> (empty = every world).</summary>
+        /// <summary>
+        /// True if <paramref name="item"/> is shown in <paramref name="activeWorldId"/>'s inventory views (the
+        /// drawer list, the Demon/Calorimeter panel): shared items everywhere, a world's own items only there.
+        /// </summary>
+        public static bool ItemInWorld(ItemSO item, string activeWorldId)
+        {
+            if (item == null) return false;
+            if (string.IsNullOrEmpty(item.world)) return true;
+            return item.world == (string.IsNullOrEmpty(activeWorldId) ? Physics : activeWorldId);
+        }
+
+        /// <summary>The live world's id from the save (null = Physics).</summary>
+        public static string ActiveWorldId() => WorldRules.ActiveWorld(SaveManager.Instance?.Current)?.id;
+
         public static bool FieldInWorld(FieldSO field, string activeWorldId)
         {
             if (field == null) return false;

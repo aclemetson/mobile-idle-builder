@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_5
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_5
+  displayName: 'Spallation: Neodymium to Barium'
+  description: 'Spallation: Neodymium to Barium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 40f6f604e8938794ba0efe351cdb00b6, type: 2}
+  depthInTree: 19
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 6710000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 3559203236c93ea40b88a2eecb663790, type: 2}
+  - {fileID: 11400000, guid: 09365550bf87ecc4ab58ed4ce231ae58, type: 2}
+  - {fileID: 11400000, guid: 4ad0d4b065f5f854c88dacc5c0b6b800, type: 2}
+  - {fileID: 11400000, guid: 3b6bb56b48796b149bb956fec342028d, type: 2}
+  - {fileID: 11400000, guid: c10fa2a929cbd404ba52d68971ab70f3, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 97f0950c230181040a95294612311607, type: 2}
+  - {fileID: 11400000, guid: 8a5098c1498537c4ab0caa8b42275535, type: 2}
+  - {fileID: 11400000, guid: 4fa03c3b120173d47a7be41f5c900070, type: 2}
+  - {fileID: 11400000, guid: d2aadb7ffc8ea8040bdd3fd85b52eafc, type: 2}
+  - {fileID: 11400000, guid: 6f8dad16ffcdfb9479d37d8b99eca7b7, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 442e9a2d4f4441a43b925dda800457cc, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Neodymium to Barium'

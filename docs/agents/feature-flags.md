@@ -4,7 +4,7 @@ Externally-controlled toggles that change behavior **without an app-store rebuil
 environment (dev vs prod). Use these to ship a feature hidden, kill a misbehaving system, or stage a
 rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/Cloud Save, so no new vendor.
 
-> Verified against: `feature/feature-flags`, 2026-06-21.
+> Verified against: `feature/feature-flags`, 2026-06-21; PvE tournaments (TournamentService) 2026-11-23.
 
 ## How it works
 
@@ -38,7 +38,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 
 | Key | Type | Default | Gates |
 |---|---|---|---|
-| `pvp.enabled` | bool | `false` | `PVPService.RefreshState` forces Locked; HUD hides `btn-pvp`. Default off — backend not live. |
+| `pve.enabled` | bool | `true` | Weekly PvE tournaments (kill-switch, 2026-11-23). Off: HUD hides `btn-tournament` (the Tournament drawer button), `TournamentService` sends no snapshots and the panel shows Disabled. Replaced `pvp.enabled` (the dead PvP stub). |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
 | `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/runbooks/levelplay-ads-setup.md`). |
 | `ads.test_mode` | bool | `true` | **Dev builds only** (`FeatureFlags.IsDevBuild`: Editor or `DEV_ENVIRONMENT`; production builds ignore the key). On: `AdService.CreateProvider` picks `TestAdProvider`, so no ad network runs and Watch opens the "Test Ad" card (`TestAdOverlayController`, `test-ad-modal` in `GameHUD.uxml`): Finish grants the reward, Skip/back grants nothing. Read once at startup, so a change applies on the next launch. Set `true` in the development environment; never create it in production. |
@@ -55,6 +55,8 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `gamedata.version` | int | `0` | Monotonic, human-facing version label. Low-cardinality dimension on the `game_update_notice` analytics event (rollout reach). |
 | `gamedata.noticeTitle` | string | `"Game Updated"` | Title shown on the update-notice modal. |
 | `gamedata.noticeMessage` | string | (generic) | Body text shown on the update-notice modal. |
+| `whatsnew.version` | string | "" | Build version the what's-new notes are for (#502). Written by CI with `whatsnew.notes`. |
+| `whatsnew.notes` | string | "" | Player-facing release notes (#502), from `docs/whats-new.md`. Shown once per text (`SaveData.lastSeenWhatsNewHash`) on builds >= `whatsnew.version`, never to new players (`WhatsNew.Decide`, `WhatsNewTests`). They share the update-notice card (left-aligned, scrolls); when `gamedata.updatedUtc` also changed, the balance message is appended. Blank = no notice. |
 | `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
 | `links.feedbackEmail` | string | `"aclemetson12492@gmail.com"` | Recipient of Settings > Support > **Send Feedback** (`mailto:` prefilled with version, player id, device; built by `HUDSettingsSubController.BuildFeedbackMailto`). Read at tap time. |
 | `links.privacyPolicyUrl` | string | GitHub Pages `privacy-policy.html` URL | Opened by Settings > Support > **Privacy Policy**. Source is `docs/privacy-policy.html`, served from `develop:/docs`. Read at tap time. |
@@ -104,6 +106,7 @@ On boot, an out-of-date build pauses on the splash and offers a link to update.
 - **Decision** (`AppUpdateCheck.Decide`, pure, `AppUpdateCheckTests`): disabled or unparseable current version: none; current < `update.minimum.*`: **Required** (Update only); current < `update.latest.*`: **Optional** (Update / Later). Versions compare numerically via `System.Version` (`0.5.9 < 0.5.52`, missing parts = 0, `-suffix` ignored). The platform's keys are picked with `#if UNITY_IOS` (the Editor follows the active build target).
 - **Where:** `SplashScreenController.ContinueOrPromptUpdate`, after the maintenance gate answers (and after a maintenance Retry succeeds). It uses the flags the gate just fetched, or the cached ones if the gate timed out. UI: `update-panel` in `SplashScreen.uxml` (reuses the maintenance panel classes; `.update-buttons`, `.update-later-btn` in `SplashScreen.uss`). Update calls `Application.OpenURL` and stays on the panel; Later loads GameScene.
 - **CI writer:** `scripts/set-remote-config.ps1 -EnvironmentId <id> -Key <key> -Value <value>` (Remote Config Admin API, service-account Basic auth; GETs the environment's settings config, changes one key, PUTs the whole array back; `-DryRun` available). Called after the upload in `release-internal.yml` (`update.latest.android`) and `release-ios.yml` (`update.latest.ios`), both in **development**. The step is skipped while the secrets are missing and never fails the release (`continue-on-error`). `prod-release.yml` uploads a Play **draft**, so production's `update.latest.*` is set by hand when the release goes live.
+- **What's new (#502):** `release-internal.yml` (upload job) runs `scripts/whats_new.py <version> <json>`. That strips HTML comments from `docs/whats-new.md`, caps it at 1,200 chars and skips when blank. Then `set-remote-config.ps1 -JsonFile` writes `whatsnew.notes` + `whatsnew.version` in **one PUT** (so a player on an older build never sees newer notes with an older version). Rewrite `docs/whats-new.md` in each integration -> release PR. A hotfix that leaves it unchanged republishes the same text, which nobody sees twice. Use `- ` bullets: the game font has no bullet glyph.
 - **Secrets:** `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` (a UGS service account with a Remote Config edit role; the workflows map them onto the script's generic `UGS_SERVICE_KEY_ID` / `UGS_SERVICE_SECRET`, so another account can reuse the script), `UGS_PROJECT_ID`, `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` (not used by CI yet: production versions are set by hand).
 
 ## Adding a flag
@@ -124,7 +127,7 @@ Candidates surfaced by the codebase audit — add when the feature lands:
 - `events.enabled` / seasonal content — extends `DailyEventService`.
 - `megastructure.enabled`, `multisite.enabled`, `achievements.enabled` — kill-switches for shipped systems.
 - `managers.rarity.enabled` — gacha/rarity layer over `ManagerService`.
-- PVP expansion behind sub-flags: friend leaderboards, spectating.
+- Tournament expansion behind sub-flags: friend leaderboards, spectating.
 - **Tuning** (use `GetFloat`/`GetInt`): `idle.collectionRate`, `idle.capSeconds`, `prestige.base`, IAP tier
   values — would read remote overrides against `GameConfigSO` / `PremiumShopCalculator` defaults.
 

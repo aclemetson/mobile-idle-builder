@@ -25,6 +25,7 @@ MonoBehaviour:
   treeX: -1
   treeY: -1
   requiredWorld: 
+  world: world_physics
   costBaseCurrency: 250
   costPrestigeCurrency: 0
   durationSeconds: 20
@@ -34,7 +35,8 @@ MonoBehaviour:
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
   resetsOnPrestige: 1
   codexEntry: A field is only a region where the vacuum is unusually generous. Pump
     enough entropy into empty space and it learns to give up particles too, though

@@ -92,9 +92,9 @@ namespace MobileIdleBuilder.Tests
         public void BlocksAd_OnlyWhileABoostRuns()
         {
             var save = new SaveData();
-            Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.EntropyBoost, Now));
+            Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.EntropySurge, Now));
             save.speedBoostExpiryUtc = In(30);
-            Assert.IsTrue(BoostLock.BlocksAd(save, AdPlacement.EntropyBoost, Now));
+            Assert.IsTrue(BoostLock.BlocksAd(save, AdPlacement.EntropySurge, Now));
             Assert.IsFalse(BoostLock.BlocksAd(save, AdPlacement.DoubleOffline, Now));
         }
 

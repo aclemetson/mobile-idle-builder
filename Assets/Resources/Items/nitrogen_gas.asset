@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
+  world: world_chemistry
   fieldType: Element
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Four fifths of the air, held together by one of the strongest bonds
     in chemistry. Breaking it makes ammonia.
   codexUnlocked: 0
-  baseSellValue: 684
+  baseSellValue: 208
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

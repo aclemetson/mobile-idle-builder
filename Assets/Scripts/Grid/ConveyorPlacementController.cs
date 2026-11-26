@@ -67,6 +67,16 @@ namespace MobileIdleBuilder
         public event Action<bool> OnStartChanged;
         /// <summary>Raised whenever the traced points change (HUD label and Undo).</summary>
         public event Action OnTraceChanged;
+
+        /// <summary>True while the next tap lays an overpass (the Up button is on).</summary>
+        public bool RaiseNext { get; private set; }
+
+        /// <summary>True once the Overpasses research is done: the Up button shows while tracing.</summary>
+        public bool CanRaise => MaxSpan() > 0;
+
+        /// <summary>Tiles an overpass may cross now: 0 (locked), 4, or 8 with Overpasses II.</summary>
+        public static int MaxSpan() =>
+            OverpassRules.MaxSpan(id => ResearchService.Instance != null && ResearchService.Instance.IsUnlocked(id));
         /// <summary>Raised after a belt is confirmed and placed (drives the tutorial's conveyor step).</summary>
         public event Action OnChainPlaced;
 
@@ -111,7 +121,29 @@ namespace MobileIdleBuilder
                 IsConveyorCell,
                 // Router cost (#301b): keep away from free port fronts and from hugging buildings.
                 (a, b) => ConveyorPathfinder.MakeExtraCost(CollectPortFronts(), IsBuildingCell, a, b),
-                path => conveyorPlacer != null ? conveyorPlacer.RejectReason(path) : null);
+                path => conveyorPlacer != null ? conveyorPlacer.RejectReason(path) : null,
+                (a, b) =>
+                {
+                    int max = MaxSpan();
+                    var check = OverpassRules.CanSpan(a, b, max, c => IsBuildingCell(c.x, c.y) || !gridRenderer.IsInBounds(c.x, c.y),
+                        c => GridOccupancy.Instance != null && GridOccupancy.Instance.IsUnderOverpass(c.x, c.y));
+                    return OverpassRules.Message(check, max);
+                });
+        }
+
+        /// <summary>Up button: the next tap lays an overpass from the last point (tap again to turn it off).</summary>
+        public void ToggleRaise()
+        {
+            if (!IsPlacing || IsDestroyMode || !CanRaise) return;
+            RaiseNext = !RaiseNext;
+            OnTraceChanged?.Invoke();
+        }
+
+        private void SetRaise(bool on)
+        {
+            if (RaiseNext == on) return;
+            RaiseNext = on;
+            OnTraceChanged?.Invoke();
         }
 
         void OnApplicationPause(bool paused) { if (paused) _tap.Cancel(); }
@@ -272,7 +304,9 @@ namespace MobileIdleBuilder
 
             if (_isSingle) LeaveSingle(); // tapping onward turns the single belt back into a trace
 
-            var result = _trace.TryAdd(cell);
+            bool raised = RaiseNext && CanRaise;
+            var result = _trace.TryAdd(cell, raised);
+            if (raised && result == ConveyorTrace.AddResult.Added) SetRaise(false);   // one overpass per Up
             switch (result)
             {
                 case ConveyorTrace.AddResult.Started:
@@ -338,6 +372,9 @@ namespace MobileIdleBuilder
             {
                 // Existing belts on the route keep their belt visual (an existing start, or a merge end).
                 foreach (var c in _trace.Path())
+                    if (!IsConveyorCell(c)) gridRenderer.AddConveyorGhostCell(c.x, c.y);
+                // Tiles under an overpass show too, so the span reads as one piece (belts there keep their look).
+                foreach (var c in _trace.CrossedCells())
                     if (!IsConveyorCell(c)) gridRenderer.AddConveyorGhostCell(c.x, c.y);
                 gridRenderer.PaintConveyorNodes(_trace.Nodes);
                 if (pulseLast) gridRenderer.PulseConveyorEndpoint(_trace.Last.x, _trace.Last.y);
@@ -461,6 +498,7 @@ namespace MobileIdleBuilder
         {
             if (_isSingle) LeaveSingle();
             _trace?.Clear();
+            RaiseNext = false;
             gridRenderer.ClearConveyorGhost();
             ClearHover();
             SetHasCandidate(false);

@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
+  world: world_chemistry
   fieldType: Element
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Diatomic oxygen, the reactive fifth of the air. With hydrogen it burns
     to water.
   codexUnlocked: 0
-  baseSellValue: 322
+  baseSellValue: 132
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

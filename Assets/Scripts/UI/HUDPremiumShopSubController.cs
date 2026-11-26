@@ -311,6 +311,8 @@ namespace MobileIdleBuilder
 
             _contextLabel.text = "Purchase crystals with real money";
 
+            BuildAdFreeCard();
+
             for (int i = 0; i < PremiumShopCalculator.CrystalPackTiers.Length; i++)
             {
                 int captured = i;
@@ -330,6 +332,35 @@ namespace MobileIdleBuilder
 
                 _tierList.Add(card);
             }
+        }
+
+        // Ad-free (#503): one-time purchase. Owned shows as such; iOS also gets the Restore Purchases button the
+        // App Store requires for non-consumables (Google redelivers owned purchases at store init).
+        private void BuildAdFreeCard()
+        {
+            bool owned = AdFree.Owned(SaveManager.Instance?.Current);
+            string price =
+#if UNITY_PURCHASING
+                IAPService.Instance?.GetLocalizedPrice(AdFree.ProductId) ??
+#endif
+                AdFree.FallbackPrice;
+
+            var card = MakeIAPTierCard(AdFree.ShopName, AdFree.ShopDescription, owned ? "Owned" : price,
+                                       () => OnIAPBuyPressed(AdFree.ProductId));
+            card.AddToClassList("shop-tier-card--featured");
+            if (owned)
+                foreach (var b in card.Query<Button>().ToList()) { b.text = "Owned"; b.SetEnabled(false); }
+            _tierList.Add(card);
+
+#if UNITY_PURCHASING && UNITY_IOS
+            if (!owned)
+            {
+                var restore = new Button(() => IAPService.Instance?.RestorePurchases(_ => Refresh())) { text = "Restore Purchases" };
+                restore.AddToClassList("craft-btn");
+                restore.AddToClassList("shop-restore-btn");
+                _tierList.Add(restore);
+            }
+#endif
         }
 
         private void OnIAPBuyPressed(string productId)

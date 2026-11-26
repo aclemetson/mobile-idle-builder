@@ -24,31 +24,45 @@ MonoBehaviour:
   isObsoleteable: 0
   obsoleteCondition: 
   obsoletedByResearch: 
-  requiresPower: 1
+  requiresPower: 0
   isPowerSource: 0
-  basePowerCostEV: 200
+  basePowerCostEV: 0
   powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 5
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
+  - {fileID: 11400000, guid: 56339b43a2e8d5f46998f1c2f0138953, type: 2}
+  - {fileID: 11400000, guid: 874186cf46e645d44a47d6ee731f7a18, type: 2}
+  - {fileID: 11400000, guid: 537c720d1187c0f448cab28245cf99d0, type: 2}
+  - {fileID: 11400000, guid: bceb7bd46e611f04a97efdf3ed7d7dcb, type: 2}
+  - {fileID: 11400000, guid: 17e915e8d6ea13c408bdee1c06d2ce77, type: 2}
+  - {fileID: 11400000, guid: cea6cc691cca36741821755deca17571, type: 2}
+  - {fileID: 11400000, guid: 75af1cd8f9fd77040a4dd41e12dd3b29, type: 2}
+  - {fileID: 11400000, guid: c2b9bfa475383f841be4845ee14d93c0, type: 2}
+  - {fileID: 11400000, guid: 658e6fe63f4814441af3f1f641c4916c, type: 2}
+  - {fileID: 11400000, guid: f04efce98aef51747a2f4ae8a6c62480, type: 2}
+  - {fileID: 11400000, guid: b103edb1625705048b6d7a0f31faad21, type: 2}
+  - {fileID: 11400000, guid: 6a5feec0c48328c4e9c0aaf05b45207c, type: 2}
+  - {fileID: 11400000, guid: 16acee72fc846dc4fb1cf02f5a5aed8f, type: 2}
+  - {fileID: 11400000, guid: b18892f552a2dfc4d9368d2e14a5f5c1, type: 2}
+  - {fileID: 11400000, guid: ab252fdddd5051b4cad04eaacef1b922, type: 2}
+  - {fileID: 11400000, guid: 9383e5771d9d871429979679cea30a05, type: 2}
+  - {fileID: 11400000, guid: a29f7b3f95a89f14aa9f086e74a00618, type: 2}
+  - {fileID: 11400000, guid: 14aaaec39d269b342a64de0e010500f9, type: 2}
   - {fileID: 11400000, guid: 47b0f9fc00732d54092969697c2b1db8, type: 2}
-  - {fileID: 11400000, guid: d6e65c867b08ba141b15b7baa1a61316, type: 2}
   - {fileID: 11400000, guid: 8e04e359d3be2594e9a3132c666e18a7, type: 2}
-  - {fileID: 11400000, guid: 927d9182a7da9cd4db99211e29a81d99, type: 2}
   - {fileID: 11400000, guid: 6c36476a5233f714990fafb65b13d44d, type: 2}
-  - {fileID: 11400000, guid: 5aa09c03c835d3e468ddf57495f161c1, type: 2}
-  - {fileID: 11400000, guid: ff6c669c9bfca0f45af985d6a3be34de, type: 2}
-  - {fileID: 11400000, guid: a8177238ba59392429c43f8bde8a9176, type: 2}
-  inputSlotCount: 3
+  inputSlotCount: 1
   inputSlotLabels:
-  - Carbon Source
-  - Reagent
-  - Reagent
+  - Stream
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -57,16 +71,10 @@ MonoBehaviour:
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 0
-  - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 1
+    localFacing: 2
   - portType: 1
     localCell: {x: 0, y: 0}
-    localFacing: 2
+    localFacing: 0
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
@@ -77,7 +85,7 @@ MonoBehaviour:
   upgradeLevels:
   - level: 2
     outputRate: 2
-    powerCostEV: 300
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -85,7 +93,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 4
-    powerCostEV: 460
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -93,7 +101,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 8
-    powerCostEV: 680
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -127,7 +135,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 69f886f319651034f9b1ae2eb8053955, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

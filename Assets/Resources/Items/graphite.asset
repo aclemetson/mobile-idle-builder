@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
+  world: world_chemistry
   fieldType: Element
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: 'Carbon as it is mined: sheets of hexagonal rings, soft enough to write
     with. The backbone of every organic molecule.'
   codexUnlocked: 0
-  baseSellValue: 575
+  baseSellValue: 201
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

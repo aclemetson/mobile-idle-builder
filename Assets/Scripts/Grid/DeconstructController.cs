@@ -71,7 +71,7 @@ namespace MobileIdleBuilder
                 ComponentType.ReadOnly<ConveyorSegmentData>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
-            _sinkQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<EntropySinkTag>(),
+            _sinkQuery     = _em.CreateEntityQuery(ComponentType.ReadOnly<DemonTag>(),
                                                    ComponentType.ReadOnly<BuildingData>());
             _progressQuery = _em.CreateEntityQuery(ComponentType.ReadWrite<PlayerProgressData>());
             _prestigeQuery = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>());
@@ -242,7 +242,7 @@ namespace MobileIdleBuilder
             var so = FindBuildingSO(bd.BuildingType);
             string name = so != null && !string.IsNullOrEmpty(so.displayName) ? so.displayName : "this building";
 
-            if (DemolishRefund.IsProtected(_em.HasComponent<EntropySinkTag>(e), _sinkQuery.CalculateEntityCount()))
+            if (DemolishRefund.IsProtected(_em.HasComponent<DemonTag>(e), _sinkQuery.CalculateEntityCount()))
             {
                 InventoryPopupController.NotifyWarning(
                     $"{name} can't be removed: it's your only way to turn items into entropy.");

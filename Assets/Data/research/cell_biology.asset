@@ -21,24 +21,25 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   depthInTree: 7
-  block: biology_world
+  block: bio_cells
   treeX: -1
   treeY: -1
   requiredWorld: 
-  costBaseCurrency: 1080000000
+  world: world_biology
+  costBaseCurrency: 1090000000
   costPrestigeCurrency: 0
-  durationSeconds: 10800
+  durationSeconds: 1800
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
   - {fileID: 11400000, guid: cd21ebcd2c1475648b6fe7a01febb0ed, type: 2}
-  - {fileID: 11400000, guid: e830a9dae71a8c842848edddf8156ade, type: 2}
   - {fileID: 11400000, guid: 224ea2c98f090e14192df9575c0335c7, type: 2}
+  - {fileID: 11400000, guid: e830a9dae71a8c842848edddf8156ade, type: 2}
   - {fileID: 11400000, guid: 3d36bbc3894dfa44e879e5d2118f1130, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: a47c53c91099bb340be8e3463b10aed0, type: 2}
-  - {fileID: 11400000, guid: c4c4525c723042c4aa5855328c3d03be, type: 2}
   - {fileID: 11400000, guid: e23e02c8f246d984a8bdaeed432e2cfc, type: 2}
+  - {fileID: 11400000, guid: c4c4525c723042c4aa5855328c3d03be, type: 2}
   - {fileID: 11400000, guid: ddf645cbd1aed764292ed2f5058b8b9b, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: a0de88d3e739b624194a8e1ca9275fb9, type: 2}

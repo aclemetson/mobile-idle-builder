@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Zinc galvanises steel against corrosion and is half of brass alloy.
     Essential in human biology as a cofactor in hundreds of enzymes.
   codexUnlocked: 0
-  baseSellValue: 30800
+  baseSellValue: 264000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

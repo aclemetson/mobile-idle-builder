@@ -19,10 +19,10 @@
             "m_Values": [
                 "False",
                 "7",
-                "False",
+                "True",
                 "False",
                 "-1",
-                "False",
+                "True",
                 "False",
                 "False"
             ]
@@ -36,7 +36,7 @@
             ],
             "m_Values": [
                 "True",
-                "0",
+                "3",
                 "False",
                 "com.unity3d.player.UnityPlayerActivity"
             ]

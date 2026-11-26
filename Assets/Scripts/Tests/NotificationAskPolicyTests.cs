@@ -89,5 +89,37 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual("", s.notificationNextAskUtc);
             Assert.IsTrue(NotificationAskPolicy.ShouldAsk(s, NotificationPermission.NotDetermined, Now));
         }
+
+        // ── On-time reminders (Android exact alarms) ────────────────────────
+
+        [Test]
+        public void Exact_AskedOnceWhenNotificationsOnAndGrantMissing()
+        {
+            var s = Fresh();   // toggle defaults to on
+            Assert.IsTrue(NotificationAskPolicy.ShouldAskExact(s, NotificationPermission.Granted, exactNeedsGrant: true));
+            s.exactAlarmAsked = true;
+            Assert.IsFalse(NotificationAskPolicy.ShouldAskExact(s, NotificationPermission.Granted, exactNeedsGrant: true));
+        }
+
+        [Test]
+        public void Exact_NotAskedWhenAlreadyExactOrNotificationsOff()
+        {
+            var s = Fresh();
+            Assert.IsFalse(NotificationAskPolicy.ShouldAskExact(s, NotificationPermission.Granted, exactNeedsGrant: false));
+            Assert.IsFalse(NotificationAskPolicy.ShouldAskExact(s, NotificationPermission.NotDetermined, exactNeedsGrant: true));
+            Assert.IsFalse(NotificationAskPolicy.ShouldAskExact(s, NotificationPermission.Denied, exactNeedsGrant: true));
+            s.notificationsEnabled = false;
+            Assert.IsFalse(NotificationAskPolicy.ShouldAskExact(s, NotificationPermission.Granted, exactNeedsGrant: true));
+            Assert.IsFalse(NotificationAskPolicy.ShouldAskExact(null, NotificationPermission.Granted, exactNeedsGrant: true));
+        }
+
+        [Test]
+        public void Reset_ClearsExactAnswer()
+        {
+            var s = Fresh();
+            s.exactAlarmAsked = true;
+            NotificationAskPolicy.Reset(s);
+            Assert.IsFalse(s.exactAlarmAsked);
+        }
     }
 }

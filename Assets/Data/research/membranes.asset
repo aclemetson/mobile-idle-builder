@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: membranes
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: membranes
+  displayName: Membranes
+  description: 'Membranes: Phospholipid.'
+  icon: {fileID: 0}
+  branch: 5
+  prerequisites:
+  - {fileID: 11400000, guid: 189d6e03b4e9d894ea5d855a0884a6de, type: 2}
+  depthInTree: 20
+  block: chem_molecules_of_life
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 35600000
+  costPrestigeCurrency: 0
+  durationSeconds: 1800
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: e222d88ead9b6134797c0635b5bed8f7, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: a29f7b3f95a89f14aa9f086e74a00618, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 419cb6fafa94fd54eae5d89981cd3100, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'A phosphate head and two fatty tails: it folds itself into membranes.'

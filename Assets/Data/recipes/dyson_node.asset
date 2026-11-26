@@ -19,23 +19,27 @@ MonoBehaviour:
   tier: 5
   category: 7
   inputs:
-  - item: {fileID: 11400000, guid: 1b66bbcb303b5af4483e4cc80afab64b, type: 2}
-    quantity: 2
-  - item: {fileID: 11400000, guid: 39c62c7ea4b8b3e46aa6d4b79f6aa50f, type: 2}
-    quantity: 2
+  - item: {fileID: 11400000, guid: f527515f051f9ba49b4323a464712129, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 322e03abb99e3884492502befead50cc, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 15ee57d7a12401b4ea36624da0ebbcec, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 88e0fca711b528940814ceaa6e48087a, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 24bcd30ef7b5e7b44a0d68fb21137ee2, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 3000
+  baseCraftTime: 7200
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 50000000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: 843d72e51b7c3cd45b63328eecb849aa, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 45cac0aa7a4f2384cb0c8c625e23e162, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: every world's capstone

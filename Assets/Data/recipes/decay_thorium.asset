@@ -35,7 +35,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a04311d95f751514d9d93d850530272d, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
+  requiredResearch: {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 1
   simplificationNote: Th-232 decays to Ra-228; shown as Radium.

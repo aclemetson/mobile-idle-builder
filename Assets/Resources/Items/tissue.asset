@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Many like cells acting as one. A sheet of coordinated eukaryotic cells
     performing a shared function.
   codexUnlocked: 0
-  baseSellValue: 122000000
+  baseSellValue: 30500000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

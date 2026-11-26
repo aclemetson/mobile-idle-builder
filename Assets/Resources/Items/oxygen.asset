@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The third most abundant element in the universe. Highly reactive and
     essential for combustion and respiration. Makes up 21% of Earth's atmosphere.
   codexUnlocked: 0
-  baseSellValue: 625
+  baseSellValue: 351
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

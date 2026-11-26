@@ -30,6 +30,13 @@ namespace MobileIdleBuilder
         void OpenSettings();
         /// <summary>The kind of the notification the player tapped to open the app, if any.</summary>
         NotificationKind? ConsumeLaunchNotification();
+        /// <summary>
+        /// True where on-time delivery needs a grant the player has not given: Android 12+ without
+        /// "Alarms &amp; reminders" (SCHEDULE_EXACT_ALARM). False everywhere else (older Android and iOS are on time).
+        /// </summary>
+        bool ExactAlarmsNeedGrant { get; }
+        /// <summary>Opens the OS "Alarms &amp; reminders" page for this app.</summary>
+        void RequestExactAlarms();
     }
 
     public static class NotificationPlatform
@@ -78,6 +85,8 @@ namespace MobileIdleBuilder
         public void CancelAll() => GameLogger.Debug("[Notifications] (editor) cancel all");
         public void OpenSettings() => GameLogger.Info("[Notifications] (editor) would open OS notification settings");
         public NotificationKind? ConsumeLaunchNotification() => null;
+        public bool ExactAlarmsNeedGrant => false;
+        public void RequestExactAlarms() => GameLogger.Info("[Notifications] (editor) would open Alarms & reminders");
     }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -133,11 +142,28 @@ namespace MobileIdleBuilder
             notification.SmallIcon = NotificationService.AndroidSmallIcon;
             AndroidNotificationCenter.SendNotificationWithExplicitID(notification,
                 NotificationPlatform.ChannelId(n.Channel), n.Id);
+            // With "Alarms & reminders" allowed (or below Android 12) the package already set an exact
+            // allow-while-idle alarm: keep it for game events. Relaxed reminders still get a window, to save battery.
+            if (n.MaxLateness <= NotificationPlanner.PreciseWindow && UsingExact()) return;
             NarrowWindow(n);
         }
 
-        // The package schedules an inexact alarm (up to an hour late); NotificationAlarmWindow.java swaps it for
-        // one with an n.MaxLateness window. Best effort: on failure the package's alarm still fires.
+        static bool UsingExact()
+        {
+            try { return AndroidNotificationCenter.UsingExactScheduling; }
+            catch (Exception e)
+            {
+                GameLogger.Warning($"[Notifications] Exact scheduling check failed: {e.Message}");
+                return false;
+            }
+        }
+
+        public bool ExactAlarmsNeedGrant => !UsingExact();
+
+        public void RequestExactAlarms() => AndroidNotificationCenter.RequestExactScheduling();
+
+        // Without exact alarms the package schedules an inexact alarm (up to an hour late); NotificationAlarmWindow.java
+        // swaps it for one with an n.MaxLateness window. Best effort: on failure the package's alarm still fires.
         static void NarrowWindow(PlannedNotification n)
         {
             try
@@ -228,6 +254,9 @@ namespace MobileIdleBuilder
             _lastLaunchId = n.Identifier;
             return int.TryParse(n.Identifier, out int id) ? NotificationPlatform.KindFromId(id) : null;
         }
+
+        public bool ExactAlarmsNeedGrant => false;   // time-interval triggers already fire on time
+        public void RequestExactAlarms() { }
     }
 #endif
 }

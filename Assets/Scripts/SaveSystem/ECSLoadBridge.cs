@@ -139,15 +139,19 @@ namespace MobileIdleBuilder
             // and the next FlushToSave would write the stale ECS state back over the cloud data.
             // Bounded so a slow or offline network never blocks the load indefinitely.
             //
-            // Never waits on the "which save?" choice: that prompt lives on the HUD, which stays hidden
-            // until the loading screen finishes, and the prompt itself waits for the transition to end. Waiting
-            // here deadlocked both until the prompt's 30 s fallback, with the bar stuck at 99%. Instead this
-            // device's save loads now, the prompt opens over the running game, and choosing the cloud save
-            // reloads the scene from it (SaveManager.TakeCloudSave, live path).
+            // The "which save?" choice: when the loading screen can host the prompt, wait for the player's
+            // answer with no timeout, so the chosen save is the only one applied (taking the cloud save after
+            // a load needs a scene reload, and before 2026-11-21 that reload left this device's buildings in
+            // ECS under the cloud grid). Without the loading screen the prompt needs the HUD, which stays
+            // hidden until the load finishes: waiting then would deadlock (bar stuck at 99%), so this
+            // device's save loads, the prompt opens over the game, and the cloud save reloads the scene
+            // (SaveManager.TakeCloudSave, live path).
             const float kCloudTimeout = 5f;
             float cloudElapsed = 0f;
             var sm = SaveManager.Instance;
-            while (sm != null && !sm.CloudReconcileDone && !sm.AwaitingSaveChoice && cloudElapsed < kCloudTimeout)
+            while (sm != null && !sm.CloudReconcileDone && ShouldKeepWaitingForCloud(sm.AwaitingSaveChoice,
+                       SaveConflictPrompt.LoadingScreenReady || SaveConflictPrompt.IsShownOnLoadingScreen,
+                       cloudElapsed, kCloudTimeout))
             {
                 cloudElapsed += Time.unscaledDeltaTime;
                 yield return null;
@@ -191,12 +195,33 @@ namespace MobileIdleBuilder
             FindAnyObjectByType<HUDController>()?.MaybeShowGameUpdateNotice();
         }
 
+        /// <summary>
+        /// Whether the load keeps waiting for the cloud reconcile. A pending "which save?" choice that the
+        /// loading screen can host is waited on with no timeout; one that needs the HUD is not waited on at
+        /// all (the HUD is hidden until the load ends); otherwise the wait is capped at <paramref name="timeout"/>.
+        /// </summary>
+        internal static bool ShouldKeepWaitingForCloud(bool awaitingChoice, bool loadingScreenHostsChoice,
+                                                       float elapsed, float timeout)
+        {
+            if (awaitingChoice) return loadingScreenHostsChoice;
+            return elapsed < timeout;
+        }
+
         // ── Load path ─────────────────────────────────────────────────────
 
         void ApplyLoadedSave()
         {
             var save = SaveManager.Instance?.Current;
             if (save == null) return;
+
+            // Retired Quantum Domains (2026-11-24): refund their unlocks and stop their idle production, before
+            // the idle payout and the currency below read the save.
+            long domainsRefund = SiteRetirement.Migrate(save, Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites);
+            if (domainsRefund > 0)
+            {
+                save.currentRun.baseCurrency += domainsRefund;
+                GameLogger.Info($"[ECSLoadBridge] Quantum Domains retired: refunded {domainsRefund:N0} entropy.");
+            }
 
             // Restore purchased permanent upgrades first — effects depend on this. The multipliers are then
             // recomputed from the levels (the source of truth) rather than trusted from the save: older
@@ -230,7 +255,10 @@ namespace MobileIdleBuilder
             prestige.CostReduction         = save.prestigeCostReduction;
             _prestigeQuery.SetSingleton(prestige);
 
-            // Tutorial — always restore so baked defaults never clobber saved progress
+            // Tutorial — always restore so baked defaults never clobber saved progress. This is the main
+            // (Physics) tutorial's state, so make it the running flow first; LoadGrid then switches to the
+            // live world's own tutorial if it has one (TutorialFlows).
+            TutorialFlowSO.Activate(null);
             if (!_tutorialQuery.IsEmpty)
             {
                 var ts = _tutorialQuery.GetSingleton<TutorialStateData>();
@@ -372,6 +400,12 @@ namespace MobileIdleBuilder
             {
                 var ts   = _tutorialQuery.GetSingleton<TutorialStateData>();
                 var flow = TutorialFlowSO.Current;
+                // A world's own tutorial (Chemistry) is running: save it to its slot, leave the main one alone.
+                if (TutorialFlows.Store(save, ts))
+                {
+                    save.tutorial.hasCompletedFirstRun = ts.FirstRunComplete || save.tutorial.hasCompletedFirstRun;
+                    return;
+                }
                 save.tutorial.isActive            = ts.IsActive;
                 // Never downgrade: PrestigeSystem sets hasCompletedFirstRun on SaveData before
                 // ECS TutorialStateData is updated, so preserve any true already on the save.
@@ -437,6 +471,18 @@ namespace MobileIdleBuilder
             // only does Uranium-235 and the decay chain (elements-and-isotopes.md, "Isotope trim").
             { 15, 653 },  // tritium
             { 16, 808 },  // carbon_14
+            // 2026-11-23 Item Timeline phase 2: Chemistry is life chemistry; industrial products leave it.
+            { 162, 21000 },   // octane
+            { 164, 651000 },  // polymer_precursor
+            { 157, 624000 },  // catalyst
+            { 158, 7000 },    // chlorine_gas
+            { 159, 2280 },    // sodium_hydroxide
+            { 155, 6300 },    // table_salt
+            // Phase 3: Biology runs on the life chemicals; UF6 left with the old Superconductor recipe.
+            { 152, 3360 },    // amino_acid
+            { 151, 109000 },  // fatty_acid
+            { 153, 31800 },   // nucleotide
+            { 38, 20000 },    // uranium_hexafluoride
         };
 
         /// <summary>

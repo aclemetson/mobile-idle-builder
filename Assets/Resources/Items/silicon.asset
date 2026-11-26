@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: 
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A semiconductor at the heart of modern electronics. Silicon wafers
     are the foundation of processors, solar cells, and transistors.
   codexUnlocked: 0
-  baseSellValue: 2720
+  baseSellValue: 1400
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

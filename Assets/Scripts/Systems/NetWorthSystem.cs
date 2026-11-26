@@ -58,7 +58,7 @@ namespace MobileIdleBuilder
                 if (slot.Quantity <= 0) continue;
                 var itemSO = ItemDatabase.GetStatic(slot.ItemID);
                 if (itemSO == null) continue;
-                inventory += (double)itemSO.baseSellValue * slot.Quantity;
+                inventory += (double)ItemStars.StarredBase(itemSO) * slot.Quantity;
             }
 
             double stored = SumBuffers<BuildingInputSlot>(_inputQuery, s => (s.ItemID, s.Quantity))

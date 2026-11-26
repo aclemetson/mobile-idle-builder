@@ -50,6 +50,12 @@ namespace MobileIdleBuilder
                 if (pd.SpeedMultiplier  > 0f) globalSpeedMult  *= pd.SpeedMultiplier;
                 if (pd.OutputMultiplier > 0f) globalOutputMult *= pd.OutputMultiplier;
             }
+            // The live world's prestige-shop track, as ProductionSystem applies it.
+            if (SystemAPI.TryGetSingleton<ActiveWorldRules>(out var wr))
+            {
+                if (wr.SpeedMult  > 0f) globalSpeedMult  *= wr.SpeedMult;
+                if (wr.OutputMult > 0f) globalOutputMult *= wr.OutputMult;
+            }
             if (globalSpeedMult <= 0f) globalSpeedMult = 1f;
 
             foreach (var (collector, building, recipeOutputSlots, outputSlots, invConfig, entity) in
@@ -63,7 +69,11 @@ namespace MobileIdleBuilder
                 if (!building.ValueRO.IsActive) continue;
                 if (recipeOutputSlots.Length == 0) continue;
 
-                collector.ValueRW.Timer += deltaTime * globalSpeedMult;
+                // Stream worlds: an Extractor runs at the share of flow it got from its stream (StreamFlowSystem).
+                float streamRatio = SystemAPI.HasComponent<StreamStatus>(entity)
+                    ? SystemAPI.GetComponent<StreamStatus>(entity).Ratio
+                    : 1f;
+                collector.ValueRW.Timer += deltaTime * globalSpeedMult * streamRatio;
 
                 float rate     = collector.ValueRO.OutputRate > 0f ? collector.ValueRO.OutputRate : 1f;
                 float interval = 1f / rate;

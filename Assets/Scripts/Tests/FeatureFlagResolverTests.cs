@@ -112,7 +112,7 @@ namespace MobileIdleBuilder.Tests
         public void FeatureFlags_Accessors_ReturnDefaults_WhenServiceAbsent()
         {
             // No FeatureFlagService in an EditMode test → accessors must yield compile-time defaults.
-            Assert.AreEqual(FeatureFlags.PvpEnabledDefault,         FeatureFlags.PvpEnabled);
+            Assert.AreEqual(FeatureFlags.PveEnabledDefault,         FeatureFlags.PveEnabled);
             Assert.AreEqual(FeatureFlags.IapEnabledDefault,         FeatureFlags.IapEnabled);
             Assert.AreEqual(FeatureFlags.CloudSaveEnabledDefault,   FeatureFlags.CloudSaveEnabled);
             Assert.AreEqual(FeatureFlags.DailyEventsEnabledDefault, FeatureFlags.DailyEventsEnabled);

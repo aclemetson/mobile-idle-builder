@@ -80,35 +80,14 @@ namespace MobileIdleBuilder
             SystemAPI.SetSingleton(prestige);
             SystemAPI.SetSingleton(progress);
 
-            // --- Destroy all building entities (but keep permanent fixtures like Maxwell's Demon) ---
-            int buildingCount = 0;
-            var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.Temp);
-            foreach (var (_, entity) in
-                SystemAPI.Query<RefRO<BuildingData>>().WithNone<EntropySinkTag>().WithEntityAccess())
-            {
-                buildingCount++;
-                ecb.DestroyEntity(entity);
-            }
-
-            // --- Destroy every belt segment, and the item riding on it ---
-            // The default world outlives the scene reload below, so anything left here would carry
-            // into the new run: items drawn on belts that are no longer there, and belts that the
-            // next save writes back into the grid.
-            foreach (var (_, entity) in SystemAPI.Query<RefRO<ConveyorSegmentData>>().WithEntityAccess())
-                ecb.DestroyEntity(entity);
-
-            // --- Empty what the kept fixtures (Maxwell's Demon) were holding ---
-            foreach (var input in SystemAPI.Query<DynamicBuffer<BuildingInputSlot>>().WithAll<EntropySinkTag>())
-                input.Clear();
-            foreach (var output in SystemAPI.Query<DynamicBuffer<BuildingOutputSlot>>().WithAll<EntropySinkTag>())
-                output.Clear();
-
-            // --- Clear player inventory ---
+            // --- Clear player inventory (before the structural changes below invalidate the buffer) ---
             var inventory = SystemAPI.GetSingletonBuffer<InventorySlot>();
             inventory.Clear();
 
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            // --- Destroy run buildings (the Demon stays), every belt and the items on them, and empty
+            // what the Demon was holding. The default world outlives the scene reload below, so anything
+            // left here would carry into the new run. Shared with the live cloud-save swap. ---
+            int buildingCount = RunStateClearer.ClearLiveRunEntities(state.EntityManager);
 
             // --- Notify achievements (system is not Burst-compiled, so managed calls are safe) ---
             AchievementService.Instance?.NotifyPrestigeCurrencyEarned(earned);
@@ -127,7 +106,9 @@ namespace MobileIdleBuilder
             {
                 var ts = SystemAPI.GetSingleton<TutorialStateData>();
                 ts.FirstRunComplete = true;
-                ts.IsActive         = false;
+                // Ends the main tutorial only. A world's own tutorial (Chemistry) keeps its progress: the
+                // flush below stores it in that world's slot.
+                if (!TutorialFlows.WorldFlowActive) ts.IsActive = false;
                 SystemAPI.SetSingleton(ts);
             }
 
@@ -140,6 +121,15 @@ namespace MobileIdleBuilder
                 // reach the save, then wipe the whole run: grids, bought fields, research, craft queue.
                 ECSLoadBridge.Instance?.FlushToSave();
                 PrestigeRunReset.ResetRun(save, cfgEntropy + bonusEntropy);
+                // An Ascension is this prestige plus its own resets: worlds lock, delivery stages restart, the
+                // prestige currency held is spent; megastructure material is paid.
+                if (AscensionRules.Pending)
+                {
+                    AscensionRules.Pending = false;
+                    long material = AscensionRules.Apply(save);
+                    GameLogger.Info($"[Ascension] Ascension {save.ascensionCount}: +{material} megastructure material " +
+                                    $"(now {save.megastructureMaterial}).");
+                }
                 // The old scene's belts, fields and buildings are still live until the reload, so
                 // write the reset save as it is instead of flushing them back into it.
                 SaveManager.Instance.SaveLocal(skipGridFlush: true, skipECSFlush: true);

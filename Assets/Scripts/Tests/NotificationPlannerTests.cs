@@ -275,5 +275,67 @@ namespace MobileIdleBuilder.Tests
             var delay = NotificationInputs.DailyRewardDelay(null, late);
             Assert.AreEqual(TimeSpan.FromHours(2), delay);
         }
+
+        // ── Entropy Surge ───────────────────────────────────────────────────
+
+        static NotificationInputs SurgeInputs(SaveData save, bool adsOn = true) =>
+            NotificationInputs.FromSave(save, Now, Now, TimeSpan.Zero, 0f, false, null, surgeOfferEnabled: adsOn);
+
+        [Test]
+        public void Surge_Ready_WaitsTheMinimumAway()
+        {
+            var i = SurgeInputs(TutorialDoneSave());
+            Assert.AreEqual(NotificationPlanner.SurgeMinAway, i.SurgeReadyIn);
+            var surge = NotificationPlanner.Plan(i).Single(p => p.Kind == NotificationKind.SurgeReady);
+            Assert.AreEqual(NotificationChannel.Boosts, surge.Channel);
+            Assert.AreEqual(Now + NotificationPlanner.SurgeMinAway, surge.FireUtc);
+        }
+
+        [Test]
+        public void Surge_JustWatched_ShortCooldownStillUsesTheMinimum()
+        {
+            var save = TutorialDoneSave();
+            AdRewardCalculator.RecordWatch(save, AdPlacement.EntropySurge, Now);   // 15 min cooldown
+            Assert.AreEqual(NotificationPlanner.SurgeMinAway, SurgeInputs(save).SurgeReadyIn);
+        }
+
+        [Test]
+        public void Surge_LongBoostRunning_WaitsForTheLock()
+        {
+            var save = TutorialDoneSave();
+            save.speedBoostExpiryUtc = Now.AddHours(3).ToString("O");
+            Assert.AreEqual(TimeSpan.FromHours(3), SurgeInputs(save).SurgeReadyIn);
+        }
+
+        [Test]
+        public void Surge_BeforeFirstPrestigeOrAdsOff_NotPlanned()
+        {
+            var early = TutorialDoneSave();
+            early.tutorial.hasCompletedFirstRun = false;
+            Assert.IsNull(SurgeInputs(early).SurgeReadyIn);
+            Assert.IsNull(SurgeInputs(TutorialDoneSave(), adsOn: false).SurgeReadyIn);
+            Assert.IsNull(FromSave(TutorialDoneSave()).SurgeReadyIn);   // default: off
+        }
+
+        [Test]
+        public void Surge_GivesWayFirstUnderTheDailyCap()
+        {
+            var i = Inputs();
+            i.ResearchDoneIn  = TimeSpan.FromHours(1);
+            i.CraftDoneIn     = TimeSpan.FromHours(3);
+            i.BoostEndedIn    = TimeSpan.FromHours(5);
+            i.SurgeReadyIn    = TimeSpan.FromHours(2);
+            var kinds = NotificationPlanner.Plan(i).Select(p => p.Kind).ToList();
+            Assert.AreEqual(3, kinds.Count);
+            CollectionAssert.DoesNotContain(kinds, NotificationKind.SurgeReady);
+        }
+
+        [Test]
+        public void SurgeReady_AppendedAfterExistingKinds()
+        {
+            // Ids are 1000 + enum value: earlier kinds must keep theirs.
+            Assert.AreEqual(1010, new PlannedNotification(NotificationKind.DevTest, default, "", "", Now).Id);
+            Assert.AreEqual(1011, new PlannedNotification(NotificationKind.SurgeReady, default, "", "", Now).Id);
+        }
     }
 }

@@ -424,13 +424,6 @@ namespace MobileIdleBuilder
                 {
                     AddFilterSection(_inspectorEntity);
                 }
-                else if (buildingSO.isSplitter)
-                {
-                    AddInspectorRow(_inspectorRecipes, "—— Splitting ——");
-                    AddInspectorRow(_inspectorRecipes,
-                        "Every item goes out the next side in turn, so the belts share it evenly. " +
-                        "A side with no belt, or a full one, is skipped.");
-                }
                 else if (buildingSO.supportedRecipes != null)
                 {
                     // Only offer recipes whose gating research has been purchased. Research-gating
@@ -607,7 +600,29 @@ namespace MobileIdleBuilder
                 // A power problem stops the building, so it stays in view instead of hiding behind (i).
                 if (statusText != "Powered") AddInspectorRow(_inspectorStatic, $"⚡ {statusText}");
             }
+
+            // Streams (Chemistry): a Spring's flow, or the share a bank building gets from its stream.
+            if (so.isSpring)
+            {
+                AddInspectorRow(_inspectorInfo, "—— Stream ——");
+                AddInspectorRow(_inspectorInfo, $"Flow: {so.streamFlow * WorldRules.SpringFlowMultiplier(WorldRules.CurrentWorldId):0.#} L/s, shared by the buildings downstream, nearest first");
+            }
+            else if (_em.HasComponent<StreamStatus>(_inspectorEntity))
+            {
+                var st   = _em.GetComponentData<StreamStatus>(_inspectorEntity);
+                string s = StreamStatusText(st);
+                AddInspectorRow(_inspectorInfo, "—— Stream ——");
+                AddInspectorRow(_inspectorInfo, $"Draw: {so.flowDraw:0.#} L/s");
+                AddInspectorRow(_inspectorInfo, $"Status: {s}");
+                if (st.OnStream == 0 || st.Ratio < 0.999f) AddInspectorRow(_inspectorStatic, $"💧 {s}");
+            }
         }
+
+        internal static string StreamStatusText(StreamStatus st) =>
+            st.OnStream == 0  ? "Not beside a stream"
+            : st.Ratio <= 0f  ? "Dry: the stream ran out of water upstream"
+            : st.Ratio < 0.999f ? $"Short of water, {st.Ratio * 100f:0}% speed"
+            : "Flowing";
 
         // ── Upgrade UI ────────────────────────────────────────────────────────
 
@@ -1277,6 +1292,15 @@ namespace MobileIdleBuilder
                     globalSpeed = gb.SpeedMult;
                 }
             }
+            using (var wq = _em.CreateEntityQuery(ComponentType.ReadOnly<ActiveWorldRules>()))
+            {
+                if (!wq.IsEmpty)
+                {
+                    var wr = wq.GetSingleton<ActiveWorldRules>();
+                    if (wr.OutputMult > 0f) outMult     *= wr.OutputMult;
+                    if (wr.SpeedMult  > 0f) globalSpeed *= wr.SpeedMult;
+                }
+            }
             using (var pq = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>()))
             {
                 if (pq.IsEmpty) return;
@@ -1297,7 +1321,8 @@ namespace MobileIdleBuilder
             double perCraft = ItemValue.PerCraft(outs, SurplusSale.DemonPrice, outMult, process.ByproductEntropy);
             float speed = building.ProductionSpeed * powerRatio * globalSpeed;
             double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
-            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f,
+                              ItemStars.Count(outs[0].itemId));
         }
 
         /// <summary>
@@ -1313,7 +1338,8 @@ namespace MobileIdleBuilder
         /// The inspector's value rows for a crafter: price each, value per craft, value per second. Always three
         /// rows so the 0.5s rebuild keeps its layout.
         /// </summary>
-        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower)
+        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower,
+                                            int stars = 0)
         {
             string craft = outMult > 1.001f
                 ? $"×{outMult:0.##} output → {NumberFormat.Entropy(perCraft)} per craft"
@@ -1321,7 +1347,7 @@ namespace MobileIdleBuilder
             string rate = noPower
                 ? "≈ ◈ 0 /s (no power)"
                 : $"≈ {NumberFormat.Entropy(perSecond)} /s at current speed";
-            return new[] { HUDController.WorthEachText(price), craft, rate };
+            return new[] { HUDController.WorthEachText(price, stars), craft, rate };
         }
 
         /// <summary>The collector's value row, e.g. "≈ ◈ 2.5 /s".</summary>

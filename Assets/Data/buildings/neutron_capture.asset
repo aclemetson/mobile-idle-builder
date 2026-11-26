@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: neutron_capture
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: neutron_capture
-  displayName: Neutron Capture
-  description: Soaks an element in neutrons until one turns into a proton, making
-    the next element up. Slow mode (s-process) is cheap on power; Fast mode (r-process)
-    is the only way to make Gold, Platinum, Iridium, Osmium and Europium.
+  displayName: Spallation Chamber
+  description: Fires neutrons at a heavy element until a proton breaks off, leaving
+    the element one below it. Walks the metals down from Mercury to Cobalt.
   icon: {fileID: 0}
   prefab: {fileID: 0}
   buildingId: 26
@@ -32,61 +31,75 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: 4993166b625eefb4ea709019fa5409c6, type: 2}
-  - {fileID: 11400000, guid: accbf0b97a2dfd048ab5980532cc26ed, type: 2}
-  - {fileID: 11400000, guid: 1a1f8799d6c57af40bb23a7873859a42, type: 2}
-  - {fileID: 11400000, guid: cbd042a1fb6d7d540a6b9c9cd947e5dd, type: 2}
-  - {fileID: 11400000, guid: ac7a48118c1de4b45b5c1fc6ac74e8ab, type: 2}
-  - {fileID: 11400000, guid: e9efeaa09773fe44080a0d328fbab4e7, type: 2}
-  - {fileID: 11400000, guid: 6d58746f79cdd2643b9050776a46bc61, type: 2}
-  - {fileID: 11400000, guid: c536b8e7923582942be21d6c522f2e8b, type: 2}
-  - {fileID: 11400000, guid: 2df787a5cd7ef9949ae94b976941cc2c, type: 2}
-  - {fileID: 11400000, guid: 0e94f18aaa8ba8541b963a8500a7462b, type: 2}
-  - {fileID: 11400000, guid: ba26ecf3cb5f02c4f801abe502611bbe, type: 2}
-  - {fileID: 11400000, guid: 66554c6849d134e4fbda12551c818102, type: 2}
-  - {fileID: 11400000, guid: e9b23353ed98c614b9d349d135f108e5, type: 2}
-  - {fileID: 11400000, guid: 647e88b107442014e8aac9b358712330, type: 2}
-  - {fileID: 11400000, guid: 0850b0e7b69a8db4fafcecb0b62a0431, type: 2}
-  - {fileID: 11400000, guid: 5372911317f43b5419285310384b5c4e, type: 2}
-  - {fileID: 11400000, guid: fcf2b255a7e46ed4d94a4dae0a7cba38, type: 2}
-  - {fileID: 11400000, guid: 366cde23b9f42ff4eb27362f9d25b395, type: 2}
-  - {fileID: 11400000, guid: f16bbc81835b31448b3c4f6ad7b27857, type: 2}
-  - {fileID: 11400000, guid: f3466836512be2d4fa83cd5e90677c53, type: 2}
-  - {fileID: 11400000, guid: ed636e5e47015ff4e850b6f6d0a2df5b, type: 2}
-  - {fileID: 11400000, guid: 814bc6309c745c640aab5d5e4e7fa02a, type: 2}
-  - {fileID: 11400000, guid: fce32c01b750fa7428e7171ba5c4ff43, type: 2}
-  - {fileID: 11400000, guid: 3f807af68efefb847afe2e79953e8c1d, type: 2}
-  - {fileID: 11400000, guid: b625182c9a397c649a859fb735f0adde, type: 2}
-  - {fileID: 11400000, guid: 9c1b09b5877f5eb4c815e2bdfa5cb712, type: 2}
-  - {fileID: 11400000, guid: d2ccc893985a70d4aab137e947739326, type: 2}
-  - {fileID: 11400000, guid: a3da424e40a61c045aa14f36d0c2f05c, type: 2}
-  - {fileID: 11400000, guid: 7a60dbe29b190cd4c9177975cd97a0cf, type: 2}
-  - {fileID: 11400000, guid: 06368f52d399dd64ebe5fb4ae75ebd71, type: 2}
-  - {fileID: 11400000, guid: 054883ddea8164c40a85c606d83d5e8f, type: 2}
-  - {fileID: 11400000, guid: be4d4efbb269a894393ab8e80f216fb5, type: 2}
-  - {fileID: 11400000, guid: 5ca742bbee3a9bf4597da1c46ce9b0e2, type: 2}
-  - {fileID: 11400000, guid: e043d0aa3eb387042aa62d4bfa642c0d, type: 2}
-  - {fileID: 11400000, guid: 0ae5f6f5dd80ae04085c223c85aaf6c1, type: 2}
-  - {fileID: 11400000, guid: 20187d3a2a78d704aa1611fd15cfdca8, type: 2}
-  - {fileID: 11400000, guid: 70c5d5a2ccbcec048ab53d7a44ab9b69, type: 2}
-  - {fileID: 11400000, guid: 08227d24dc24b6a48b8de3ad03471753, type: 2}
-  - {fileID: 11400000, guid: e21d1973650bd0b41a849ed468448e1e, type: 2}
+  - {fileID: 11400000, guid: 496c3f45729615d45b600d4239d12776, type: 2}
+  - {fileID: 11400000, guid: 033527108d2d8e64983f872644e3d98f, type: 2}
+  - {fileID: 11400000, guid: b37d21504b437d144acf5fb5b5ce4184, type: 2}
+  - {fileID: 11400000, guid: ba64ad455feed094cafe3a879620f0c7, type: 2}
+  - {fileID: 11400000, guid: ae293cba231bdad4992d2b65a06598dc, type: 2}
+  - {fileID: 11400000, guid: 8eafd003527c1ea4f83175e9ceddde42, type: 2}
+  - {fileID: 11400000, guid: 788d00af81b4e4247bbba7b2a733da11, type: 2}
+  - {fileID: 11400000, guid: eea7c2746eed6344ea262b131943ed4a, type: 2}
+  - {fileID: 11400000, guid: 06236a20cdac58844a0a509fd5351374, type: 2}
+  - {fileID: 11400000, guid: 3261dfbec2970be468d404a4ccd45aa2, type: 2}
+  - {fileID: 11400000, guid: f06d2b56f6fc2fe48b362a221f48a569, type: 2}
+  - {fileID: 11400000, guid: 5da52415c42acf947b12500ca8df3ca8, type: 2}
+  - {fileID: 11400000, guid: 61cd8d435e613b84c86c66179eb4738f, type: 2}
+  - {fileID: 11400000, guid: 28cbaca20db4075489793ed5ef03f40b, type: 2}
+  - {fileID: 11400000, guid: 5ca0e2e36783c4e4595d0c68a396847d, type: 2}
+  - {fileID: 11400000, guid: dc8e522df98b97b41ba9c3d80df1920a, type: 2}
+  - {fileID: 11400000, guid: 025599426e698784fa4d26a263458a75, type: 2}
+  - {fileID: 11400000, guid: f0144e5fef2f1d04693862cac58c8e2c, type: 2}
+  - {fileID: 11400000, guid: 55dc1edbf4c49a242b2227b3a25cca70, type: 2}
+  - {fileID: 11400000, guid: f7494e12a7f627a4f903a719931a66a3, type: 2}
+  - {fileID: 11400000, guid: 97f0950c230181040a95294612311607, type: 2}
+  - {fileID: 11400000, guid: 8a5098c1498537c4ab0caa8b42275535, type: 2}
+  - {fileID: 11400000, guid: 4fa03c3b120173d47a7be41f5c900070, type: 2}
+  - {fileID: 11400000, guid: d2aadb7ffc8ea8040bdd3fd85b52eafc, type: 2}
+  - {fileID: 11400000, guid: 6f8dad16ffcdfb9479d37d8b99eca7b7, type: 2}
+  - {fileID: 11400000, guid: 457c2f870639dc241a986b04efcf4a93, type: 2}
+  - {fileID: 11400000, guid: f500b882c98249444923a8399184697a, type: 2}
+  - {fileID: 11400000, guid: 88a04c8acdd6fe54584c10df41b38ea4, type: 2}
+  - {fileID: 11400000, guid: c5731eaf9d7e7f444b212ca7e0bb1ea4, type: 2}
+  - {fileID: 11400000, guid: 9a59475ca1f60c344ba786f1d0670e88, type: 2}
+  - {fileID: 11400000, guid: 83797e7990015114983b8c70c56e230a, type: 2}
+  - {fileID: 11400000, guid: 35fe0fde4afa99f4ab5e1487b9374bc8, type: 2}
+  - {fileID: 11400000, guid: 99000c6403025d54e8a5dae00eff1cb5, type: 2}
+  - {fileID: 11400000, guid: 6a781a12f18bf094aa08327b41161da1, type: 2}
+  - {fileID: 11400000, guid: aae8b636027766b4d8e011fc14e60d53, type: 2}
+  - {fileID: 11400000, guid: 0f5af005a4f1c7c4f907d8d2957d4a30, type: 2}
+  - {fileID: 11400000, guid: 5d5f9a475793c03428f6fe76547e6bfe, type: 2}
+  - {fileID: 11400000, guid: fc34203400de27a48b9b7bf8dedc5d5b, type: 2}
+  - {fileID: 11400000, guid: a603e428732b4b8449103c15af9c6274, type: 2}
+  - {fileID: 11400000, guid: f1c49e2b85bd40641b2e712de6807cc5, type: 2}
+  - {fileID: 11400000, guid: db068bbb3c96e9a41b64d9e019c835be, type: 2}
+  - {fileID: 11400000, guid: 65281e983978c3c4bac3c8d2cd5845d7, type: 2}
+  - {fileID: 11400000, guid: 458c323afdb280f48b9c516c7c29909a, type: 2}
+  - {fileID: 11400000, guid: 013c83583451d6143a0013d58e7f0017, type: 2}
+  - {fileID: 11400000, guid: a40b34af682f5c340ac065358ca08ef6, type: 2}
+  - {fileID: 11400000, guid: 278b97c5376cb4b48a0d34053f7d738e, type: 2}
+  - {fileID: 11400000, guid: 641e74ebe4ecac045980d9c971d96735, type: 2}
+  - {fileID: 11400000, guid: 882831d92ffb27643858c704814e1a9e, type: 2}
+  - {fileID: 11400000, guid: a9e0dabc90d034c4d93ec2ee896fde5e, type: 2}
+  - {fileID: 11400000, guid: 19cc8727fad8b384d9f68616d7ea3a77, type: 2}
+  - {fileID: 11400000, guid: 106dc92fe2291404b8a07b9cc3c1da53, type: 2}
+  - {fileID: 11400000, guid: e53c98d3d45b7964298576b8fef89e57, type: 2}
+  - {fileID: 11400000, guid: 376919c5b9af5c2408a614a42614156d, type: 2}
+  - {fileID: 11400000, guid: b049f23da419dfe42bf146dfaecc1671, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
   - Element
   - Neutrons
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
-  recipeModeLabels:
-  - Slow (s-process)
-  - Fast (r-process)
-  recipeModePrefixes:
-  - s_capture_
-  - r_capture_
+  recipeModeLabels: []
+  recipeModePrefixes: []
   footprint: {x: 1, y: 1}
   structureKind: 0
   ports:
@@ -159,11 +172,11 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 0cfd34920e495da4782d7cfc42b81da8, type: 2}
   availableFromStart: 0
   tutorialNote: Not taught in the tutorial.
   collectsDecayParticles: 0
   decayCollectionRate: 0
-  codexEntry: Half of the elements heavier than iron were made by slow neutron capture
-    inside ageing giant stars; the other half, including most of the gold on Earth,
-    by rapid capture in neutron-star mergers.
+  codexEntry: 'Spallation: a fast particle chips nucleons off a heavy nucleus. Accelerators
+    use it to make neutron beams; here it runs the table downhill, one element at
+    a time.'

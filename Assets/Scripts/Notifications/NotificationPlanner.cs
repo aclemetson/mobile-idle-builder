@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         Comeback72h,
         ProductionCombined,   // several production alerts merged into one
         DevTest,              // dev console "notif test": never planned, scheduled by hand
+        SurgeReady,           // Entropy Surge ad offer is back (appended: ids derive from the enum value)
     }
 
     /// <summary>One notification ready to hand to the OS.</summary>
@@ -74,6 +75,7 @@ namespace MobileIdleBuilder
         public TimeSpan? BoostEndedIn;
         public TimeSpan? DailyRewardIn;
         public TimeSpan? RewardsExpiringIn;
+        public TimeSpan? SurgeReadyIn;
         /// <summary>Comeback reminders only make sense once the player knows the game (tutorial done).</summary>
         public bool IncludeComeback;
 
@@ -82,11 +84,13 @@ namespace MobileIdleBuilder
         /// (what the timers are measured against); <paramref name="idleCapSeconds"/> is
         /// <see cref="OfflineCollectionService.GetEffectiveIdleCap"/>; <paramref name="dailyRewardEnabled"/> and
         /// <paramref name="hasClaimable"/> come from the live services, which are not pure.
+        /// <paramref name="surgeOfferEnabled"/> is the ads kill switch (<see cref="FeatureFlags.AdsEnabled"/>).
         /// </summary>
         public static NotificationInputs FromSave(SaveData save, DateTime wallNowUtc, DateTime gameNow,
                                                   TimeSpan localOffset, float idleCapSeconds,
                                                   bool dailyRewardEnabled,
-                                                  Func<AchievementCategory, bool> hasClaimable)
+                                                  Func<AchievementCategory, bool> hasClaimable,
+                                                  bool surgeOfferEnabled = false)
         {
             var inputs = new NotificationInputs { NowUtc = wallNowUtc, LocalOffset = localOffset };
             if (save == null) return inputs;
@@ -115,6 +119,11 @@ namespace MobileIdleBuilder
 
             if (dailyRewardEnabled && tutorialDone)
                 inputs.DailyRewardIn = DailyRewardDelay(save.lastLoginRewardUtc, wallNowUtc);
+
+            // Same gate as the HUD offer icon (EntropySurgeOfferController.ShouldShowIcon), minus what only the
+            // live game knows (ad loaded, income measured).
+            if (surgeOfferEnabled && save.tutorial != null && save.tutorial.hasCompletedFirstRun)
+                inputs.SurgeReadyIn = SurgeReadyDelay(save, gameNow);
 
             if (hasClaimable != null)
             {
@@ -150,6 +159,22 @@ namespace MobileIdleBuilder
             var soon = NotificationPlanner.UnclaimedDailyDelay;
             return nowUtc + soon < nextReset ? soon : nextReset - nowUtc;
         }
+
+        /// <summary>
+        /// When the Entropy Surge offer is back: the latest of its cooldown, the one-boost-at-a-time lock and
+        /// <see cref="NotificationPlanner.SurgeMinAway"/>. The surge has no daily cap (#489).
+        /// The floor keeps a 15-minute cooldown from pinging every player who closes the app right after a surge.
+        /// </summary>
+        internal static TimeSpan SurgeReadyDelay(SaveData save, DateTime gameNow)
+        {
+            const AdPlacement p = AdPlacement.EntropySurge;
+            var wait = NotificationPlanner.SurgeMinAway;
+            wait = Max(wait, AdRewardCalculator.CooldownRemaining(save, p, gameNow));
+            if (BoostLock.BlocksAd(save, p, gameNow)) wait = Max(wait, BoostLock.Remaining(save, gameNow));
+            return wait;
+        }
+
+        static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
 
         static TimeSpan? Until(string isoUtc, DateTime now)
         {
@@ -187,8 +212,13 @@ namespace MobileIdleBuilder
         public static readonly TimeSpan UnclaimedDailyDelay = TimeSpan.FromHours(4);
         public static readonly TimeSpan Comeback1           = TimeSpan.FromHours(24);
         public static readonly TimeSpan Comeback2           = TimeSpan.FromHours(72);
+        /// <summary>The Entropy Surge reminder never fires sooner than this after the player leaves.</summary>
+        public static readonly TimeSpan SurgeMinAway        = TimeSpan.FromHours(2);
 
-        /// <summary>Delivery tolerance for anything tied to a game event. 10 min is the tightest Android 12+ allows without an exact-alarm permission.</summary>
+        /// <summary>
+        /// Delivery tolerance for anything tied to a game event. 10 min is the tightest Android 12+ allows without an
+        /// exact-alarm permission; with "Alarms &amp; reminders" granted these fire on time.
+        /// </summary>
         public static readonly TimeSpan PreciseWindow       = TimeSpan.FromMinutes(10);
         /// <summary>Delivery tolerance for reminders nobody waits on: the OS may batch them to save battery.</summary>
         public static readonly TimeSpan RelaxedWindow       = TimeSpan.FromHours(1);
@@ -214,6 +244,7 @@ namespace MobileIdleBuilder
             Add(candidates, inputs, NotificationKind.BoostEnded,      inputs.BoostEndedIn);
             Add(candidates, inputs, NotificationKind.DailyReward,     inputs.DailyRewardIn);
             Add(candidates, inputs, NotificationKind.RewardsExpiring, inputs.RewardsExpiringIn);
+            Add(candidates, inputs, NotificationKind.SurgeReady,      inputs.SurgeReadyIn);
             if (inputs.IncludeComeback)
             {
                 Add(candidates, inputs, NotificationKind.Comeback24h, Comeback1);
@@ -297,7 +328,8 @@ namespace MobileIdleBuilder
         public static NotificationChannel ChannelOf(NotificationKind kind) => kind switch
         {
             NotificationKind.BoostEnded      => NotificationChannel.Boosts,
-            NotificationKind.DailyReward     => NotificationChannel.Rewards,
+            NotificationKind.SurgeReady      => NotificationChannel.Boosts,
+            NotificationKind.DailyReward    => NotificationChannel.Rewards,
             NotificationKind.RewardsExpiring => NotificationChannel.Rewards,
             NotificationKind.Comeback24h     => NotificationChannel.Reminders,
             NotificationKind.Comeback72h     => NotificationChannel.Reminders,
@@ -314,8 +346,9 @@ namespace MobileIdleBuilder
             NotificationKind.BoostEnded         => 5,
             NotificationKind.RewardsExpiring    => 6,
             NotificationKind.DailyReward        => 7,
-            NotificationKind.Comeback24h        => 8,
-            _                                   => 9,
+            NotificationKind.SurgeReady         => 8,   // an ad offer: first to give way under the daily cap
+            NotificationKind.Comeback24h        => 9,
+            _                                   => 10,
         };
     }
 }

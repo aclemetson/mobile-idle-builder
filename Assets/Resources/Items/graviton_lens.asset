@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_engineering
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     tidal forces across the inner surface of a Dyson sphere, maintaining structural
     integrity against the star's gravity gradient.
   codexUnlocked: 0
-  baseSellValue: 1.11e+9
+  baseSellValue: 3.36e+10
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

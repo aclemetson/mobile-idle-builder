@@ -96,8 +96,11 @@ namespace MobileIdleBuilder
             var buffer = _em.GetBuffer<InventorySlot>(
                 _inventoryQuery.GetSingletonEntity(), isReadOnly: true);
 
+            // Items made only in another world are not listed here (WorldGate.ItemInWorld).
+            string worldId = WorldGate.ActiveWorldId();
+
             // Cheap hash over non-zero slots — skip DOM writes if nothing changed
-            int hash = 0;
+            int hash = worldId?.GetHashCode() ?? 0;
             for (int i = 0; i < buffer.Length; i++)
                 if (buffer[i].Quantity > 0)
                     hash = hash * 397 ^ (buffer[i].ItemID * 1000 + buffer[i].Quantity);
@@ -111,8 +114,9 @@ namespace MobileIdleBuilder
                 var slot = buffer[i];
                 if (slot.Quantity <= 0) continue;
 
-                seen.Add(slot.ItemID);
                 var item = ItemDatabase.GetStatic(slot.ItemID);
+                if (item != null && !WorldGate.ItemInWorld(item, worldId)) continue;
+                seen.Add(slot.ItemID);
                 string label = item != null
                     ? $"{item.symbol ?? item.displayName}  ×{slot.Quantity}"
                     : $"#{slot.ItemID}  ×{slot.Quantity}";
@@ -153,6 +157,9 @@ namespace MobileIdleBuilder
         {
             if (_powerLabel == null) return;
 
+            // Stream worlds (Chemistry) have no eV: the strip shows stream flow instead.
+            if (WorldRules.IsStreamWorld(_em)) { RefreshFlowLabel(); return; }
+
             // PowerGridState is the singleton written each frame by PowerGridSystem: global eV draw
             // (connected consumers) vs supply (all generators), plus the unpowered consumer count.
             var state = _powerQuery.GetSingleton<PowerGridState>();
@@ -176,12 +183,55 @@ namespace MobileIdleBuilder
             HUDController.SetElementVisible(_powerStatus, ShowsPowerStrip(state.Supply, state.DisconnectedCount));
         }
 
+        private EntityQuery _flowQuery;
+        private bool        _flowQueryReady;
+
+        /// <summary>"Flow used / supplied L/s" from StreamGridState; warns while any stream building is stalled.</summary>
+        private void RefreshFlowLabel()
+        {
+            if (!_flowQueryReady)
+            {
+                _flowQuery      = _em.CreateEntityQuery(ComponentType.ReadOnly<StreamGridState>());
+                _flowQueryReady = true;
+            }
+            if (_flowQuery.IsEmpty) return;
+            var state = _flowQuery.GetSingleton<StreamGridState>();
+            // Shares the power cache fields: only one of the two strips shows at a time.
+            if (Mathf.Approximately(state.Draw, _lastPowerDraw) &&
+                Mathf.Approximately(state.Supply, _lastPowerSupply) &&
+                state.StalledCount == _lastDisconnected) return;
+            _lastPowerDraw    = state.Draw;
+            _lastPowerSupply  = state.Supply;
+            _lastDisconnected = state.StalledCount;
+
+            _powerLabel.text = FormatFlowLabel(state.Draw, state.Supply, state.StalledCount);
+            _powerLabel.EnableInClassList("power-brownout", state.StalledCount > 0);
+            HUDController.SetElementVisible(_powerStatus, state.Supply > 0f || state.Draw > 0f);
+        }
+
+        internal static string FormatFlowLabel(float draw, float supply, int stalled)
+        {
+            string text = $"Flow {draw:0.#} / {supply:0.#} L/s";
+            if (stalled > 0) text = $"⚠ {text}  ({stalled} short of water)";
+            return text;
+        }
+
+        private const string PrestigeButtonText = "⬆ Prestige";
+        private string _lastPrestigeText;
+
         private void RefreshPrestigeButton()
         {
             if (_btnPrestige == null) return;
             var progress = _em.GetComponentData<PlayerProgressData>(_progressQuery.GetSingletonEntity());
-            if (progress.PrestigeAvailable == _lastPrestigeAvailable) return;
+            // During a tournament run prestige stays available (it asks first, then ends the run) and shows the time left.
+            var tournament = TournamentService.Instance;
+            string text = tournament != null && tournament.PrestigeLeavesRun
+                ? TournamentRules.PrestigeInRunText(tournament.RunRemaining)
+                : PrestigeButtonText;
+            if (progress.PrestigeAvailable == _lastPrestigeAvailable && text == _lastPrestigeText) return;
             _lastPrestigeAvailable         = progress.PrestigeAvailable;
+            _lastPrestigeText              = text;
+            _btnPrestige.text              = text;
             _btnPrestige.style.display = progress.PrestigeAvailable
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;

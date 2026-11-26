@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Strong Force Combiner
   description: Binds quarks into protons and neutrons using the strong nuclear force.
     Requires a power source within link range.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ce42824204ae30c4daf552d26939b6f7, type: 3}
   prefab: {fileID: 0}
   buildingId: 2
   tier: 1
@@ -32,6 +32,10 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
   - {fileID: 11400000, guid: 0daa7275c8aeed24cab9fe209b3b9b4e, type: 2}
@@ -42,7 +46,6 @@ MonoBehaviour:
   - Down Quarks
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []

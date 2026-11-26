@@ -50,5 +50,13 @@ namespace MobileIdleBuilder
         public float buildingPurchaseMultiplierT2 = 1.4f;
         [Tooltip("Each additional placement of the same Tier 3+ building costs base × multiplier^(n-1)")]
         public float buildingPurchaseMultiplierT3Plus = 1.3f;
+
+        [Header("Player Names")]
+        [Tooltip("Regexes a public player name may not match (PlayerNameRules). Checked against the lower-cased name and its normalised form (leetspeak mapped, separators dropped, repeated letters collapsed), so write letters with + (e.g. b+a+d).")]
+        public string[] nameFilterPatterns = System.Array.Empty<string>();
+
+        [Header("PvE Tournaments")]
+        [Tooltip("game_config.pve: league ladder, bracket sizes, promote/demote and reward bands. The PvE Cloud Code module embeds game_data.json, so redeploy it after changing these.")]
+        public PveConfig pve = new PveConfig();
     }
 }

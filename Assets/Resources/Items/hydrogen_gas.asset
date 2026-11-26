@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 1
+  world: world_chemistry
   fieldType: Element
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Hydrogen as it is found: paired into H\u2082 molecules, the lightest
     gas there is. Chemistry's first feedstock."
   codexUnlocked: 0
-  baseSellValue: 322
+  baseSellValue: 130
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_chemistry
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A powerful oxidizing acid of nitrogen, oxygen, and hydrogen. The reagent
     behind fertilizers, explosives, and etched metal.
   codexUnlocked: 0
-  baseSellValue: 28700
+  baseSellValue: 2900
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

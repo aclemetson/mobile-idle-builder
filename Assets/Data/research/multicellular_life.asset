@@ -20,13 +20,14 @@ MonoBehaviour:
   prerequisites:
   - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   depthInTree: 8
-  block: biology_world
+  block: bio_multicellular
   treeX: -1
   treeY: -1
   requiredWorld: 
-  costBaseCurrency: 1820000000
+  world: world_biology
+  costBaseCurrency: 5290000000
   costPrestigeCurrency: 0
-  durationSeconds: 14400
+  durationSeconds: 1800
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
