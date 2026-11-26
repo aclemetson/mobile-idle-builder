@@ -71,7 +71,7 @@ Order matters: a role can only manage roles below it. Top to bottom:
 |---|---|---|
 | **Developer** | the owner | Administrator |
 | **Moderator** | trusted volunteers (start with none or one) | Manage Messages, Timeout Members, Kick Members, Manage Threads, View Audit Log (full list below) |
-| **Foundry Bot** | our bot (Discord creates this role when the bot joins) | none server-wide; channel overrides on the forums only |
+| **Foundry Bot** | our bot. Invited with no permissions, so Discord gives it **no role**; its overrides are on the bot member itself | none server-wide; channel overrides on the forums only |
 | **Beta Tester** | testers in an active beta phase | sees the **BETA** category |
 | **League Regular** | optional cosmetic: players who post league results often | none (a colour and recognition) |
 | **Android** / **iPhone** | picked in Onboarding | none (shown on bug reports, helps triage) |
@@ -88,7 +88,6 @@ which Discord enforces for @everyone. That keeps Onboarding valid: Discord requi
 |---|---|---|---|---|
 | Developer | teal `#22D3EE` (the game's accent) | yes | no | by hand (owner) |
 | Moderator | green `#34D399` | yes | yes (members can call a mod) | by hand |
-| Foundry Bot | grey `#9CA3AF` | yes | no | automatically when the bot joins |
 | Beta Tester | amber `#FBBF24` | yes | no | by hand, after adding the tester to Play / TestFlight |
 | League Regular | purple `#A78BFA` | no | no | by hand, weekly |
 | Android / iPhone | none | no | no | Onboarding |
@@ -163,12 +162,12 @@ Set these on the **category** and let channels sync, except where a single chann
 | `#rules` | @everyone | Send Messages ❌ |
 | GAME: `#patch-notes`, `#league-results` | @everyone | Send Messages ❌, Create Public Threads ✅, Send Messages in Threads ✅ (discuss in threads) |
 | GAME: `#general`, `#screenshots`, `#strategy` | (none) | inherit |
-| FEEDBACK category | Foundry Bot | View Channel ✅, Read Message History ✅, Send Messages in Threads ✅, Manage Threads ✅, Embed Links ✅ |
+| FEEDBACK category | Foundry Bot (the member: Add members or roles > Foundry Bot) | View Channel ✅, Read Message History ✅, Send Messages in Threads ✅, Manage Threads ✅, Embed Links ✅ |
 | BETA category (private) | @everyone | View Channel ❌ |
 | | Beta Tester | View Channel ✅ |
 | | Moderator | View Channel ✅ |
 | `#beta-announcements` | Beta Tester | Send Messages ❌, Add Reactions ✅ |
-| `#beta-feedback` | Foundry Bot | View Channel ✅, Read Message History ✅, Send Messages in Threads ✅, Manage Threads ✅, Embed Links ✅ |
+| `#beta-feedback` | Foundry Bot (the member) | View Channel ✅, Read Message History ✅, Send Messages in Threads ✅, Manage Threads ✅, Embed Links ✅ |
 | VOICE category | (none) | inherit |
 | STAFF category (private) | @everyone | View Channel ❌ |
 | | Moderator | View Channel ✅ (not `#ci-alerts`) |
@@ -368,8 +367,9 @@ branch with **dry run** ticked (Actions > Discord Forum Sync > Run workflow).
    - **Reset Token**, copy it straight into the GitHub secret `DISCORD_BOT_TOKEN` (below). Don't paste it anywhere else.
 3. **Installation** tab: Install Link "None"; **OAuth2** tab > URL Generator: scope `bot`, **no permissions**
    (permissions = 0). Open the URL, add the bot to the server.
-4. In Discord, give the **Foundry Bot** role the FEEDBACK category and `#beta-feedback` overrides from the
-   Channel overrides table.
+4. In Discord, open the FEEDBACK category and `#beta-feedback` > Edit > Permissions > **Add members or roles** >
+   Foundry Bot (the bot user; there is no bot role) and set the overrides from the Channel overrides table.
+   `#beta-feedback` is in the private BETA category, so it needs its own entry.
 5. Create the moderator-only status tags in each forum (Forum settings table).
 6. Turn on **Developer Mode** (User Settings > Advanced) so right-click > **Copy ID** works for the IDs below.
 

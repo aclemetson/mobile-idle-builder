@@ -378,10 +378,17 @@ def main() -> int:
         return 0
     api = Api(token, env["GITHUB_TOKEN"], env["GITHUB_REPOSITORY"], env.get("DRY_RUN") == "1")
 
+    usable = []
     for f in forums:
-        chan = api.discord("GET", f"/channels/{f.channel_id}")
+        try:
+            chan = api.discord("GET", f"/channels/{f.channel_id}")
+        except RuntimeError as e:   # one forum the bot can't see never stops the others
+            print(f"::error::{f.channel_name} ({f.channel_id}) can't be read; give the bot View Channel there. {e}")
+            continue
         if chan.get("type") != 15:
-            sys.exit(f"{f.channel_name} ({f.channel_id}) is not a forum channel")
+            print(f"::error::{f.channel_name} ({f.channel_id}) is not a forum channel")
+            continue
+        usable.append(f)
         f.tags = {tag["name"].strip().lower(): tag["id"] for tag in chan.get("available_tags", [])}
         need = (["planned", "done", "not planned"] if f.key == "idea"
                 else ["tracked", "needs info", "fixed", "won't fix"])
@@ -389,6 +396,10 @@ def main() -> int:
         if missing:
             print(f"::warning::{f.channel_name} has no tag(s) {missing}; create them (moderator-only) in the forum")
 
+    broken = len(forums) - len(usable)
+    forums = usable
+    if not forums:
+        return 1
     issues = load_issue_map(api)
     threads = load_threads(api, guild_id, forums)
     by_id = {f.channel_id: f for f in forums}
@@ -402,7 +413,7 @@ def main() -> int:
             errors += 1
             print(f"::warning::post {tid}: {e}")
     print(f"done: {len(threads)} posts checked, {MAX_NEW_ISSUES_PER_RUN - budget[0]} issues opened, {errors} errors")
-    return 1 if errors else 0
+    return 1 if errors or broken else 0
 
 
 if __name__ == "__main__":
