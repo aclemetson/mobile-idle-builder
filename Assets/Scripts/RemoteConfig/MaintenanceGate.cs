@@ -12,8 +12,8 @@ namespace MobileIdleBuilder
     /// is ever loaded. Backed by the same Remote Config flags as the rest of the game.
     ///
     /// Safety: fail-open (any error/timeout => not in maintenance, so an offline player is never locked
-    /// out) and account-link-safe (a throwaway anonymous session created just to read the flag is signed
-    /// out with credentials cleared, so GameScene's normal Google/anon sign-in is untouched). See the
+    /// out) and account-link-safe: it only restores an existing cached session and never creates a player,
+    /// so a new install's first sign-in is GameScene's normal Google/anon flow (#209). See the
     /// maintenance-mode plan and project_auth_design.
     /// </summary>
     public static class MaintenanceGate
@@ -59,27 +59,25 @@ namespace MobileIdleBuilder
 
             var auth = AuthenticationService.Instance;
 
-            // Establish a session for the fetch. Remember if we minted a throwaway one (brand-new user).
-            bool createdThrowaway = false;
-            if (!auth.IsSignedIn)
+            // Brand-new install (no cached session): don't sign in here (#209). Remote Config needs a signed-in
+            // token, and a throwaway anonymous player would be a stray account plus a second sign-in. GameScene's
+            // real sign-in fetches the flags, and MaintenanceWatcher acts on that fetch straight away.
+            if (!auth.IsSignedIn && !auth.SessionTokenExists)
             {
-                createdThrowaway = !auth.SessionTokenExists;
-                await auth.SignInAnonymouslyAsync();
+                GameLogger.Info("[Maintenance] New install: no session yet, so the first in-game fetch decides.");
+                return false;
             }
+
+            // Returning player: restore the cached session once. GameScene's UGS init sees IsSignedIn and keeps
+            // it, and SaveManager reuses this fetch instead of fetching again.
+            if (!auth.IsSignedIn)
+                await auth.SignInAnonymouslyAsync();
 
             await svc.FetchAsync();
             // A window scheduled for later (maintenance.startsUtc, #224) lets the player in; MaintenanceWatcher
             // then sends them back to the splash when it starts.
             bool maintenance = MaintenancePollSchedule.IsActive(
                 FeatureFlags.MaintenanceEnabled, FeatureFlags.MaintenanceStartsUtc, NowUtc());
-
-            // Wipe a throwaway identity so GameScene's Google/anon flow runs on a clean slate.
-            // (Only when maintenance is OFF — otherwise we stay on the splash and never enter GameScene.)
-            if (createdThrowaway && !maintenance)
-            {
-                try { auth.SignOut(clearCredentials: true); }
-                catch (Exception ex) { GameLogger.Warning($"[Maintenance] Throwaway sign-out failed: {ex.Message}"); }
-            }
 
             return maintenance;
         }
