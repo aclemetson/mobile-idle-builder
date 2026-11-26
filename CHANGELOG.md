@@ -40,6 +40,8 @@ Building and belt editing that works with fingers, a startup that keeps your acc
 - **Smaller install**: unused packages removed, IL2CPP built for size, Medium managed stripping (#207, #574, #575).
 - **Maintenance windows** can be scheduled (`maintenance.startsUtc`) and the poll interval tuned remotely (#224, #572).
 - **Game-data publisher**: `live-ops/gamedata.json` is published to Remote Config by a workflow (#210, #571).
+- **Beta telemetry**: tutorial funnel (`tutorial_step`, with lifetime play time), rewarded ads by placement, store purchases, PvE league joins and finishes, and feedback-link use (#567, #580).
+- **CI security**: one UGS service account per job (Remote Config, development Cloud Code, symbol upload), so the self-hosted runner only holds the symbols key; a UGS Key Check workflow; production game-data publishes wait for approval in a protected `production` environment; internal-build AABs are kept 3 days (#534, #581, #583, #584).
 - Store readiness: iOS tracking prompt, Android crash symbols, privacy answers (#563); HUD split into sub-controllers (#286, #548-#555); Burst net-worth systems (#284, #546).
 
 ### Fixes
