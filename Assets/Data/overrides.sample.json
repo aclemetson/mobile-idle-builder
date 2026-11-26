@@ -1,5 +1,5 @@
 {
-  "_comment": "REFERENCE ONLY - not loaded at runtime. Paste the live blob (without this _comment) into the Remote Config String setting 'gamedata.overrides', then bump 'gamedata.updatedUtc' (ISO-8601 UTC) and 'gamedata.version' to notify players. Overrides overlay the baked game_data.json values at boot for the next cold start. Only allow-listed SCALAR fields are honored (see GameDataOverrides.cs); ids/refs/arrays are never overridable. Empty {} = run the baked baseline. Buildings and fields are NOT yet overridable (no central runtime registry - see follow-up note).",
+  "_comment": "REFERENCE ONLY - not loaded at runtime. To publish, copy entries into live-ops/gamedata.json and run the Publish Game Data workflow (live-ops/README.md), which writes gamedata.overrides, gamedata.version and gamedata.updatedUtc. Overrides overlay the baked game_data.json values at boot for the next cold start. Only allow-listed SCALAR fields are honored (see GameDataOverrides.cs); ids/refs/arrays are never overridable. Empty {} = run the baked baseline. Buildings and fields are NOT yet overridable (no central runtime registry - see follow-up note).",
   "config": [
     { "field": "prestigeBaseValue", "value": 5000 },
     { "field": "prestigeCurrencyScale", "value": 50 },
