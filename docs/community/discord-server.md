@@ -399,12 +399,25 @@ secret: IDs give no access on their own).
 
 ### Checking it works
 
-- `python -m unittest scripts/discord/test_discord.py` (template parsing, sanitising, tags, mention lockdown).
-- Actions > Discord Announce > version = the current one, channel = beta: the post appears in `#beta-announcements`.
-- Actions > Discord Forum Sync > dry run on: the log lists each forum post and what it would do.
-- Post a bug without the template: within 20 minutes it's tagged **Needs info** with the template reply. Edit it to
-  fill the template: next run opens a GitHub issue and tags it **Tracked**. Close the issue: the post is tagged
-  **Fixed** and archived.
+Manual and scheduled workflows only run once their file is on `main`. **Discord Check**
+(`.github/workflows/discord-check.yml`) runs on any PR that touches the Discord files, with the real secrets:
+
+1. **Validate (read-only):** `scripts/discord/validate_server.py` logs in as the bot and checks the server against
+   this doc: safety settings the API exposes, roles and their permissions, categories and channels (privacy,
+   read-only), forum status tags (moderator-only), guidelines, the bot's overrides, the ping role and forum IDs,
+   and that each webhook points at the right channel (a GET, nothing is posted). It ends with the few things a
+   bot can't read (AutoMod, raid/DM options, Onboarding questions): check those by hand.
+2. **Forum sync dry run:** the bot reads every forum post and prints what it would do.
+3. **Webhook post test:** add the label **`discord-post-test`** to the PR and each webhook posts one test message.
+   Delete them afterwards.
+
+After that, the real pipeline: the next integration -> `release/**` merge announces the beta build in
+`#beta-announcements`, and a failed release posts in `#ci-alerts`. Once on `main`: Actions > Discord Announce
+(channel beta) for a manual post, and the forum flow: post a bug without the template; within 20 minutes it's
+tagged **Needs info**. Fill the template: the next run opens an issue and tags it **Tracked**. Close the issue:
+**Fixed** and archived.
+
+Locally: `python -m unittest scripts/discord/test_discord.py`.
 
 ## AutoMod (Server Settings > AutoMod)
 
@@ -477,5 +490,5 @@ Never ask for passwords, emails or payment details in public channels.
 - [ ] Foundry Bot application, token secret, bot added with no permissions, forum overrides
 - [ ] Webhooks for `#beta-announcements`, `#patch-notes`, `#ci-alerts`; their secrets
 - [ ] GitHub variables: server ID, the three forum IDs, the two ping role IDs
-- [ ] Test: Discord Announce (beta) and Discord Forum Sync (dry run)
+- [ ] Discord Check passes on the PR; `discord-post-test` label posts in all three webhook channels
 - [ ] After promotion to `main`: confirm the scheduled sync runs (Actions > Discord Forum Sync)
