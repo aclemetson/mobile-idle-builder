@@ -63,7 +63,7 @@ ALWAYS SOMETHING TO DO
 
 Your progress is saved to the cloud, so you can pick up on a new device. Ads are optional: watch one only when you want its reward.
 
-Quantum Foundry is in active development. Tell us what you think with Send Feedback in the game's settings.
+Quantum Foundry is in active development. Tell us what you think with Send Feedback in the game's settings, or join the community on Discord: https://discord.gg/aVt8Z9ntkC
 ```
 
 Check before each release: the tournament Strings shop line needs the build that ships it (in

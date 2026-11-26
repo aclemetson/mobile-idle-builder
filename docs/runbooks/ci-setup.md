@@ -358,10 +358,16 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
 | `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | key of the UGS service account **`ci-cd-automation`** (the secret names predate the rename) | internal: Remote Config update prompt, **Cloud Code deploy**, Diagnostics symbol upload (Basic header = base64 of `keyId:secret`, built in the workflow) |
 | `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy + symbol upload |
+| `DISCORD_BOT_TOKEN` | Foundry Bot token (Discord Developer Portal) | Discord Forum Sync |
+| `DISCORD_BETA_WEBHOOK` / `DISCORD_PATCH_NOTES_WEBHOOK` / `DISCORD_STAFF_WEBHOOK` | channel webhook URLs | beta announcement (internal), Discord Announce, failure alerts (all release workflows) |
+| `DISCORD_GUILD_ID`, `DISCORD_*_FORUM_ID`, `DISCORD_*_PING_ROLE_ID` (variables) | Discord IDs (Developer Mode > Copy ID) | Discord Forum Sync, announcements |
 
 The `ci-cd-automation` service account (Unity Cloud Dashboard > Administration > Service accounts) needs
 these **project** roles: a Remote Config edit role, **Cloud Code Editor**, and
 **LiveOps > Observability Symbols Uploader**.
+
+The Discord secrets, variables and workflows (`discord-sync.yml`, `discord-announce.yml`, the `discord-alert` jobs) are
+set up in `docs/community/discord-server.md` ("Automation"). All of them skip while unset.
 
 ## Local Testing
 

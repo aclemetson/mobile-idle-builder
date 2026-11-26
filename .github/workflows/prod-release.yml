@@ -190,6 +190,26 @@ jobs:
             --generate-notes \
             --latest
 
+  # -- Staff alert on Discord when any job above fails (#533). Skips while DISCORD_STAFF_WEBHOOK is unset. --
+  discord-alert:
+    name: Discord failure alert
+    needs: [build, release]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts
+            docs
+          persist-credentials: false
+      - name: Post alert
+        env:
+          DISCORD_STAFF_WEBHOOK: ${{ secrets.DISCORD_STAFF_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/discord/notify.py alert --webhook-env DISCORD_STAFF_WEBHOOK --text "Prod Release failed on ${{ github.ref_name }}" --url "$RUN_URL"
+
   # ── iOS build placeholder (enable when macOS runner + Apple Dev account ready) ─
   # ios-build:
   #   name: iOS IPA Build
