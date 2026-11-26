@@ -1,6 +1,6 @@
 {
   "_comment": "Source for the gamedata.* Remote Config keys (#210). Edit in a PR (the Publish Game Data check validates it), merge, then run the Publish Game Data workflow. See live-ops/README.md.",
-  "version": 0,
+  "version": 1,
   "notice": {
     "title": "Game Updated",
     "message": "We've adjusted some game values to improve balance. Tap to continue."
@@ -8,6 +8,22 @@
   "overrides": {
     "config": [],
     "items": [],
-    "research": []
+    "research": [
+      {
+        "id": "recombination_i",
+        "field": "costBaseCurrency",
+        "value": 7777
+      },
+      {
+        "id": "fusion_ii",
+        "field": "costBaseCurrency",
+        "value": 7777
+      },
+      {
+        "id": "sulfur_chemistry",
+        "field": "costBaseCurrency",
+        "value": 7777
+      }
+    ]
   }
 }
