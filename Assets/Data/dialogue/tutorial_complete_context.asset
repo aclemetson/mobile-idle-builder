@@ -39,6 +39,14 @@ MonoBehaviour:
     highlightTarget: 
     action: 
   - speakerName: The Architect
+    text: 'A tip for your belts: hold any belt to split it, sending its items two
+      or three ways. The (i) on the Conveyor Belt card in the Build menu has the
+      details.'
+    portrait: {fileID: 0}
+    pauseGame: 0
+    highlightTarget: 
+    action: 
+  - speakerName: The Architect
     text: 'One more tool is coming. After your second prestige the Cyclotron opens
       in the menu: kick a particle around its ring for 30 seconds and everything
       your factory earns is multiplied, up to three times, for a few minutes. It

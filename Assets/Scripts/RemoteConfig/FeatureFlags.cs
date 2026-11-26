@@ -35,6 +35,8 @@ namespace MobileIdleBuilder
         public const string MaintenanceEnabledKey = "maintenance.enabled";
         public const string MaintenanceMessageKey = "maintenance.message";
         public const string MaintenanceUntilUtcKey = "maintenance.untilUtc";
+        public const string MaintenanceStartsUtcKey = "maintenance.startsUtc";
+        public const string MaintenancePollSecondsKey = "maintenance.pollSeconds";
         public const string AnalyticsEnabledKey    = "analytics.enabled";
         public const string AnalyticsPhaseKey      = "analytics.phase";
         public const string GameDataUpdatedUtcKey  = "gamedata.updatedUtc";
@@ -46,6 +48,7 @@ namespace MobileIdleBuilder
         public const string WhatsNewNotesKey       = "whatsnew.notes";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
+        public const string DiscordUrlKey          = "links.discordUrl";
         public const string UpdateEnabledKey       = "update.enabled";
         public const string UpdateLatestAndroidKey = "update.latest.android";
         public const string UpdateLatestIosKey     = "update.latest.ios";
@@ -71,6 +74,8 @@ namespace MobileIdleBuilder
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
         public const string MaintenanceMessageDefault = "We're performing scheduled maintenance. Please check back soon.";
         public const string MaintenanceUntilUtcDefault = ""; // ISO-8601 UTC; blank => no time line shown
+        public const string MaintenanceStartsUtcDefault = ""; // ISO-8601 UTC; blank => maintenance.enabled applies at once (#224)
+        public const int    MaintenancePollSecondsDefault = 300; // mid-session re-fetch interval, clamped by MaintenancePollSchedule
         public const bool   AnalyticsEnabledDefault  = false;     // opt-in: telemetry stays off until a collection phase is opened
         public const string AnalyticsPhaseDefault    = "default"; // label stamped on every event so phases are segmentable
         // Game-data update notice. updatedUtc drives the once-per-publish popup (blank => never show);
@@ -88,6 +93,8 @@ namespace MobileIdleBuilder
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
+        // Community invite (#533): the server's permanent invite. Remote Config can swap it; blank hides the button.
+        public const string DiscordUrlDefault       = "https://discord.gg/aVt8Z9ntkC";
         // App update prompt on the splash (AppUpdateCheck). Off by default so a fetch failure never prompts;
         // blank versions never prompt. CI writes update.latest.* after each store upload
         // (scripts/set-remote-config.ps1); update.minimum.* is set by hand to force an update.
@@ -109,6 +116,8 @@ namespace MobileIdleBuilder
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceMessageKey, FlagType.String),
             new FlagDef(MaintenanceUntilUtcKey, FlagType.String),
+            new FlagDef(MaintenanceStartsUtcKey, FlagType.String),
+            new FlagDef(MaintenancePollSecondsKey, FlagType.Int),
             new FlagDef(AnalyticsEnabledKey,   FlagType.Bool),
             new FlagDef(AnalyticsPhaseKey,     FlagType.String),
             new FlagDef(GameDataUpdatedUtcKey,    FlagType.String),
@@ -120,6 +129,7 @@ namespace MobileIdleBuilder
             new FlagDef(WhatsNewNotesKey,         FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
+            new FlagDef(DiscordUrlKey,            FlagType.String),
             new FlagDef(UpdateEnabledKey,         FlagType.Bool),
             new FlagDef(UpdateLatestAndroidKey,   FlagType.String),
             new FlagDef(UpdateLatestIosKey,       FlagType.String),
@@ -160,6 +170,8 @@ namespace MobileIdleBuilder
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);
         public static string MaintenanceMessage  => GetString(MaintenanceMessageKey,  MaintenanceMessageDefault);
         public static string MaintenanceUntilUtc => GetString(MaintenanceUntilUtcKey, MaintenanceUntilUtcDefault);
+        public static string MaintenanceStartsUtc => GetString(MaintenanceStartsUtcKey, MaintenanceStartsUtcDefault);
+        public static int    MaintenancePollSeconds => GetInt(MaintenancePollSecondsKey, MaintenancePollSecondsDefault);
         public static bool   AnalyticsEnabled => GetBool(AnalyticsEnabledKey, AnalyticsEnabledDefault);
         public static string AnalyticsPhase   => GetString(AnalyticsPhaseKey,  AnalyticsPhaseDefault);
         public static string GameDataUpdatedUtc   => GetString(GameDataUpdatedUtcKey,   GameDataUpdatedUtcDefault);
@@ -171,6 +183,7 @@ namespace MobileIdleBuilder
         public static string WhatsNewNotes        => GetString(WhatsNewNotesKey,        WhatsNewDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
+        public static string DiscordUrl           => GetString(DiscordUrlKey,           DiscordUrlDefault);
         public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);
         public static string UpdateMessage        => GetString(UpdateMessageKey,        UpdateMessageDefault);
 

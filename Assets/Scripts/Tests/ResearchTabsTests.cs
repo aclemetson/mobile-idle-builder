@@ -20,14 +20,14 @@ namespace MobileIdleBuilder.Tests
             Assert.IsNotNull(_research, "ResearchDatabase missing: run Import Game Data");
         }
 
-        string Tab(string id) => HUDController.ResearchTabOf(_research.Single(r => r.id == id));
+        string Tab(string id) => ResearchPanelSubController.TabOf(_research.Single(r => r.id == id));
 
         [Test]
         public void EveryResearch_HasAWorldTab()
         {
             var worlds = Resources.Load<WorldDatabaseSO>("WorldDatabase").allWorlds.Where(w => w != null).Select(w => w.id).ToList();
             foreach (var r in _research)
-                CollectionAssert.Contains(worlds, HUDController.ResearchTabOf(r), $"{r.id} has no world tab");
+                CollectionAssert.Contains(worlds, ResearchPanelSubController.TabOf(r), $"{r.id} has no world tab");
         }
 
         [Test]

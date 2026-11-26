@@ -494,6 +494,7 @@ namespace MobileIdleBuilder.Editor
         public int  day               = 0;
         public int  crystals          = 0;
         public long entropy           = 0;
+        public int  entropy_minutes   = 0;
         public int  prestige_currency = 0;
     }
 

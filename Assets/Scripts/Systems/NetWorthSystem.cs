@@ -1,5 +1,5 @@
 using System;
-using Unity.Collections;
+using Unity.Burst;
 using Unity.Entities;
 
 namespace MobileIdleBuilder
@@ -8,7 +8,7 @@ namespace MobileIdleBuilder
     /// Calculates PlayerProgressData.NetWorth each frame. Must run before PrestigeSystem so wall
     /// detection sees the current value.
     ///
-    /// NetWorth = inventory value (baseSellValue x quantity)
+    /// NetWorth = inventory value (baseSellValue x stars x quantity)
     ///          + stored item value (items waiting in building inputs, craft staging and outputs, at the
     ///            Demon price they would sell for; also written to PlayerProgressData.StoredItemValue for
     ///            the Statistics panel)
@@ -17,53 +17,43 @@ namespace MobileIdleBuilder
     ///          + discounts (TotalEntropyDiscounted: list price minus price paid, so purchases count at full value)
     ///          + BaseNetWorth (dev-skip floor).
     /// Maxwell's Demon is left out of the stored value: it sells its input the frame it arrives.
+    /// Prices come from <see cref="ItemValueTable"/>, so the system is Burst-compiled (#284).
     /// </summary>
+    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(PrestigeSystem))]
-    public partial class NetWorthSystem : SystemBase
+    public partial struct NetWorthSystem : ISystem
     {
-        private EntityQuery _inputQuery, _stagingQuery, _outputQuery;
-        private static readonly Func<int, float> PriceOf = SurplusSale.DemonPrice;
-
-        protected override void OnCreate()
+        public void OnCreate(ref SystemState state)
         {
-            RequireForUpdate<PlayerProgressData>();
-            RequireForUpdate<PlayerInventoryTag>();
-
-            _inputQuery   = BuildingBufferQuery<BuildingInputSlot>();
-            _stagingQuery = BuildingBufferQuery<CraftStagingSlot>();
-            _outputQuery  = BuildingBufferQuery<BuildingOutputSlot>();
+            state.RequireForUpdate<PlayerProgressData>();
+            state.RequireForUpdate<PlayerInventoryTag>();
         }
 
-        private EntityQuery BuildingBufferQuery<T>() where T : unmanaged, IBufferElementData =>
-            GetEntityQuery(new EntityQueryDesc
-            {
-                All  = new[] { ComponentType.ReadOnly<BuildingData>(), ComponentType.ReadOnly<T>() },
-                None = new[] { ComponentType.ReadOnly<EntropySinkTag>() },
-            });
-
-        protected override void OnUpdate()
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
         {
-            if (!SystemAPI.TryGetSingletonEntity<PlayerInventoryTag>(out var playerEntity)) return;
-            if (!EntityManager.HasBuffer<InventorySlot>(playerEntity)) return;
+            var playerEntity = SystemAPI.GetSingletonEntity<PlayerInventoryTag>();
+            if (!SystemAPI.HasBuffer<InventorySlot>(playerEntity)) return;
+            SystemAPI.TryGetSingleton<ItemValueTable>(out var prices);   // default (not created) = unknown-item prices
 
-            var slots = EntityManager.GetBuffer<InventorySlot>(playerEntity, isReadOnly: true);
-            // double, not float: a float holds integers exactly only up to 2^24 (~16.7M), so above
-            // that net worth drifted and the prestige-wall check and the equality early-out below
-            // stopped being reliable (#284).
+            var slots = SystemAPI.GetBuffer<InventorySlot>(playerEntity);
+            // double, not float: a float holds integers exactly only up to 2^24 (~16.7M) (#284).
             double inventory = 0d;
             for (int i = 0; i < slots.Length; i++)
             {
                 var slot = slots[i];
                 if (slot.Quantity <= 0) continue;
-                var itemSO = ItemDatabase.GetStatic(slot.ItemID);
-                if (itemSO == null) continue;
-                inventory += (double)ItemStars.StarredBase(itemSO) * slot.Quantity;
+                inventory += (double)prices.Starred(slot.ItemID) * slot.Quantity;
             }
 
-            double stored = SumBuffers<BuildingInputSlot>(_inputQuery, s => (s.ItemID, s.Quantity))
-                          + SumBuffers<CraftStagingSlot>(_stagingQuery, s => (s.ItemID, s.Quantity))
-                          + SumBuffers<BuildingOutputSlot>(_outputQuery, s => (s.ItemID, s.Quantity));
+            double stored = 0d;
+            foreach (var buf in SystemAPI.Query<DynamicBuffer<BuildingInputSlot>>().WithAll<BuildingData>().WithNone<EntropySinkTag>())
+                for (int i = 0; i < buf.Length; i++) stored += Stored(prices, buf[i].ItemID, buf[i].Quantity);
+            foreach (var buf in SystemAPI.Query<DynamicBuffer<CraftStagingSlot>>().WithAll<BuildingData>().WithNone<EntropySinkTag>())
+                for (int i = 0; i < buf.Length; i++) stored += Stored(prices, buf[i].ItemID, buf[i].Quantity);
+            foreach (var buf in SystemAPI.Query<DynamicBuffer<BuildingOutputSlot>>().WithAll<BuildingData>().WithNone<EntropySinkTag>())
+                for (int i = 0; i < buf.Length; i++) stored += Stored(prices, buf[i].ItemID, buf[i].Quantity);
 
             var progress = SystemAPI.GetSingleton<PlayerProgressData>();
             double desired = Compute(inventory, stored, progress.BaseCurrency, progress.TotalEntropySpent,
@@ -74,23 +64,8 @@ namespace MobileIdleBuilder
             SystemAPI.SetSingleton(progress);
         }
 
-        private double SumBuffers<T>(EntityQuery query, Func<T, (int itemId, int quantity)> read)
-            where T : unmanaged, IBufferElementData
-        {
-            if (query.IsEmpty) return 0d;
-            double total = 0d;
-            using var entities = query.ToEntityArray(Allocator.Temp);
-            for (int e = 0; e < entities.Length; e++)
-            {
-                var buffer = EntityManager.GetBuffer<T>(entities[e], isReadOnly: true);
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    var (itemId, quantity) = read(buffer[i]);
-                    total += StoredValue(itemId, quantity, PriceOf);
-                }
-            }
-            return total;
-        }
+        static double Stored(in ItemValueTable prices, int itemId, int quantity) =>
+            quantity <= 0 ? 0d : (double)Math.Max(0f, prices.Demon(itemId)) * quantity;
 
         /// <summary>What <paramref name="quantity"/> stored items are worth at <paramref name="priceOf"/> each; 0 for none.</summary>
         internal static double StoredValue(int itemId, int quantity, Func<int, float> priceOf) =>

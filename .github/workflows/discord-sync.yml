@@ -1,0 +1,54 @@
+name: Discord Forum Sync
+
+# Discord forums <-> GitHub issues (#533): template checks on #bug-reports / #beta-feedback, an issue per
+# complete report (and per "Planned" suggestion), and Fixed / Won't fix / Done tags when the issue closes.
+# The logic and the rules it enforces are in scripts/discord/forum_sync.py; setup in docs/community/discord-server.md.
+#
+# Scheduled and issue-triggered workflows only run from the default branch (main), so this goes live once it
+# is promoted there. Skips cleanly while DISCORD_BOT_TOKEN is unset.
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  issues:
+    types: [closed, reopened]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Print what would change, write nothing
+        type: boolean
+        default: false
+
+# One pass at a time, so two runs never open the same issue twice.
+concurrency:
+  group: discord-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Sync forums
+    # Only react to closes/reopens of issues the bot opened.
+    if: >-
+      github.event_name != 'issues' ||
+      contains(github.event.issue.labels.*.name, 'from-discord')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/discord
+          persist-credentials: false
+
+      - name: Sync
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ vars.DISCORD_GUILD_ID }}
+          DISCORD_BUG_FORUM_ID: ${{ vars.DISCORD_BUG_FORUM_ID }}
+          DISCORD_BETA_FORUM_ID: ${{ vars.DISCORD_BETA_FORUM_ID }}
+          DISCORD_IDEA_FORUM_ID: ${{ vars.DISCORD_IDEA_FORUM_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: python3 scripts/discord/forum_sync.py

@@ -333,7 +333,8 @@ namespace MobileIdleBuilder
 
             try
             {
-                await Unity.Services.CloudSave.CloudSaveService.Instance.Data.Player.DeleteAsync(k_SaveKey);
+                await Unity.Services.CloudSave.CloudSaveService.Instance.Data.Player.DeleteAsync(
+                    k_SaveKey, new Unity.Services.CloudSave.Models.Data.Player.DeleteOptions());
                 GameLogger.Info("[UGSCloudSave] Cloud save deleted.");
             }
             catch (Unity.Services.CloudSave.CloudSaveException ex) when (IsNotFound(ex))

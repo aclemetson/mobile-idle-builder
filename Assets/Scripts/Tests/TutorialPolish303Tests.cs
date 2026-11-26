@@ -15,39 +15,39 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ClampPopup_Inside_Unchanged()
         {
-            var p = HUDController.ClampPopup(new Vector2(150f, 300f), Size, Panel, 8f);
+            var p = HudText.ClampPopup(new Vector2(150f, 300f), Size, Panel, 8f);
             Assert.AreEqual(new Vector2(150f, 300f), p);
         }
 
         [Test]
         public void ClampPopup_LeftEdge_ClampsToMargin()
         {
-            var p = HUDController.ClampPopup(new Vector2(-30f, 300f), Size, Panel, 8f);
+            var p = HudText.ClampPopup(new Vector2(-30f, 300f), Size, Panel, 8f);
             Assert.AreEqual(8f, p.x);
         }
 
         [Test]
         public void ClampPopup_RightEdge_ClampsToPanelMinusSize()
         {
-            var p = HUDController.ClampPopup(new Vector2(390f, 300f), Size, Panel, 8f);
+            var p = HudText.ClampPopup(new Vector2(390f, 300f), Size, Panel, 8f);
             Assert.AreEqual(400f - 100f - 8f, p.x);
         }
 
         [Test]
         public void ClampPopup_TopEdge_ClampsToMargin()
         {
-            var p = HUDController.ClampPopup(new Vector2(150f, -20f), Size, Panel, 8f);
+            var p = HudText.ClampPopup(new Vector2(150f, -20f), Size, Panel, 8f);
             Assert.AreEqual(8f, p.y);
         }
 
         // ---- IsTap (item 3) ----
         [Test]
         public void IsTap_SmallMovement_IsTap()
-            => Assert.IsTrue(HUDController.IsTap(new Vector2(5f, 5f), new Vector2(8f, 7f), 12f));
+            => Assert.IsTrue(HudText.IsTap(new Vector2(5f, 5f), new Vector2(8f, 7f), 12f));
 
         [Test]
         public void IsTap_LargeMovement_IsPan()
-            => Assert.IsFalse(HUDController.IsTap(new Vector2(5f, 5f), new Vector2(40f, 5f), 12f));
+            => Assert.IsFalse(HudText.IsTap(new Vector2(5f, 5f), new Vector2(40f, 5f), 12f));
 
         // ---- DropBag (item 6) ----
         static Func<int, int> Rng(int seed) { var r = new System.Random(seed); return r.Next; }

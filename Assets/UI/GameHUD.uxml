@@ -430,6 +430,10 @@
                         <ui:Button name="btn-quality-high"   text="High"   class="quality-btn quality-btn--active" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Building Progress Bars" class="settings-label" />
+                    <ui:Toggle name="toggle-progress-bars" value="true" class="settings-toggle" />
+                </ui:VisualElement>
                 <ui:Label text="NOTIFICATIONS" class="drawer-section-title" />
                 <ui:VisualElement class="settings-row">
                     <ui:Label text="Push Notifications" class="settings-label" />
@@ -450,6 +454,7 @@
                 <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
+                <ui:Button name="btn-discord"        text="Join our Discord" class="drawer-nav-btn hidden" />
                 <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
                 <ui:Label text="ABOUT" class="drawer-section-title" />
                 <ui:Label name="settings-version" text="" class="settings-version" />

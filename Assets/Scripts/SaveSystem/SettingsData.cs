@@ -16,6 +16,7 @@ namespace MobileIdleBuilder
         public bool   notificationNeverAsk    = false; // "Don't ask again" was ticked
         public bool   exactAlarmAsked         = false; // Android "Alarms & reminders" card shown once (either answer)
         public bool  showPowerConnections  = false; // map-wide power-connection overlay toggle
+        public bool  showProgressBars      = true;  // progress bars above producing buildings (#211)
 
         // ── Camera ────────────────────────────────────────────────────────────
         public float panSensitivity = 1f;     // multiplier on map-drag speed (0.5 = slow .. 2 = fast)

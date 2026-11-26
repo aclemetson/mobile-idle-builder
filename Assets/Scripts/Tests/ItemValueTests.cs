@@ -69,7 +69,7 @@ namespace MobileIdleBuilder.Tests
 
         [Test]
         public void WorthEachText_Formats()
-            => Assert.AreEqual("Worth ◈ 2.5 each", HUDController.WorthEachText(2.5f));
+            => Assert.AreEqual("Worth ◈ 2.5 each", HudText.WorthEachText(2.5f));
 
         [Test]
         public void ValueLines_NoBonus_OmitsMultiplierAndHasThreeRows()

@@ -90,20 +90,20 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void FormatPowerLabel_WhenMaxIsZero_ReturnsNoPower()
         {
-            Assert.AreEqual("⚡ No power", HUDController.FormatPowerLabel(0f, 0f));
+            Assert.AreEqual("⚡ No power", HudText.FormatPowerLabel(0f, 0f));
         }
 
         [Test]
         public void FormatPowerLabel_WhenMaxIsNegative_ReturnsNoPower()
         {
             // Negative max should never occur in practice, but the method must not throw
-            Assert.AreEqual("⚡ No power", HUDController.FormatPowerLabel(0f, -1f));
+            Assert.AreEqual("⚡ No power", HudText.FormatPowerLabel(0f, -1f));
         }
 
         [Test]
         public void FormatPowerLabel_WhenMaxIsPositive_ShowsCurrentAndMax()
         {
-            string result = HUDController.FormatPowerLabel(50f, 100f);
+            string result = HudText.FormatPowerLabel(50f, 100f);
             StringAssert.StartsWith("⚡", result);
             StringAssert.Contains("50", result);
             StringAssert.Contains("100", result);
@@ -112,7 +112,7 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void FormatPowerLabel_ZeroCurrentFullMax_ShowsZeroSlashMax()
         {
-            string result = HUDController.FormatPowerLabel(0f, 200f);
+            string result = HudText.FormatPowerLabel(0f, 200f);
             StringAssert.Contains("0", result);
             StringAssert.Contains("200", result);
         }
@@ -121,18 +121,18 @@ namespace MobileIdleBuilder.Tests
         public void FormatPowerLabel_FormatsToOneDecimalPlace()
         {
             // 0.#  format: no decimal for whole numbers
-            string wholeResult = HUDController.FormatPowerLabel(10f, 20f);
+            string wholeResult = HudText.FormatPowerLabel(10f, 20f);
             Assert.AreEqual("⚡ 10 / 20 eV", wholeResult);
 
             // 0.# format: one decimal place for fractional values
-            string fracResult = HUDController.FormatPowerLabel(1.5f, 2.5f);
+            string fracResult = HudText.FormatPowerLabel(1.5f, 2.5f);
             Assert.AreEqual("⚡ 1.5 / 2.5 eV", fracResult);
         }
 
         [Test]
         public void FormatPowerLabel_FullCapacity_Formats()
         {
-            string result = HUDController.FormatPowerLabel(500f, 500f);
+            string result = HudText.FormatPowerLabel(500f, 500f);
             Assert.AreEqual("⚡ 500 / 500 eV", result);
         }
 
@@ -143,21 +143,21 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void CalculatePrestigePreview_ZeroNetWorth_ReturnsZero()
         {
-            Assert.AreEqual(0L, HUDController.CalculatePrestigePreview(0f));
+            Assert.AreEqual(0L, HudText.CalculatePrestigePreview(0f));
         }
 
         [Test]
         public void CalculatePrestigePreview_TenxPrestigeBase_ReturnsFifty()
         {
             // pbase=5000 (default), pscale=50 (default): log10(50000/5000)*50 = log10(10)*50 = 50
-            Assert.AreEqual(50L, HUDController.CalculatePrestigePreview(50000f));
+            Assert.AreEqual(50L, HudText.CalculatePrestigePreview(50000f));
         }
 
         [Test]
         public void CalculatePrestigePreview_FractionalNetWorth_TruncatesToLong()
         {
             // log10(44721/5000)*50 ≈ 47.576 → floor = 47
-            Assert.AreEqual(47L, HUDController.CalculatePrestigePreview(44721f));
+            Assert.AreEqual(47L, HudText.CalculatePrestigePreview(44721f));
         }
 
         [Test]
@@ -171,7 +171,7 @@ namespace MobileIdleBuilder.Tests
             const float pscale   = 50f;
             long expected = (long)System.Math.Max(0, System.Math.Floor(System.Math.Log10(netWorth / pbase) * pscale));
 
-            Assert.AreEqual(expected, HUDController.CalculatePrestigePreview(netWorth),
+            Assert.AreEqual(expected, HudText.CalculatePrestigePreview(netWorth),
                 "HUD preview must match what PrestigeSystem will actually award");
         }
 
@@ -183,14 +183,14 @@ namespace MobileIdleBuilder.Tests
         public void BuildInputsText_NullInputs_ReturnsEmpty()
         {
             var recipe = new RecipeJson { inputs = null };
-            Assert.AreEqual("", HUDController.BuildInputsText(recipe));
+            Assert.AreEqual("", HudText.BuildInputsText(recipe));
         }
 
         [Test]
         public void BuildInputsText_EmptyInputList_ReturnsEmpty()
         {
             var recipe = new RecipeJson { inputs = new List<RecipeIngredientJson>() };
-            Assert.AreEqual("", HUDController.BuildInputsText(recipe));
+            Assert.AreEqual("", HudText.BuildInputsText(recipe));
         }
 
         [Test]
@@ -204,7 +204,7 @@ namespace MobileIdleBuilder.Tests
                     new RecipeIngredientJson { id = "up_quark", quantity = 2 }
                 }
             };
-            string result = HUDController.BuildInputsText(recipe);
+            string result = HudText.BuildInputsText(recipe);
             Assert.AreEqual("2× up_quark", result);
         }
 
@@ -220,7 +220,7 @@ namespace MobileIdleBuilder.Tests
                     new RecipeIngredientJson { id = "electron", quantity = 2 }
                 }
             };
-            string result = HUDController.BuildInputsText(recipe);
+            string result = HudText.BuildInputsText(recipe);
             Assert.AreEqual("2× proton  +  2× neutron  +  2× electron", result);
         }
 
@@ -232,7 +232,7 @@ namespace MobileIdleBuilder.Tests
         public void BuildIngredientsUI_NullInputs_ReturnsEmptyContainer()
         {
             var recipe = new RecipeJson { inputs = null };
-            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            var result = HudText.BuildIngredientsUI(recipe, new Dictionary<int, int>());
             Assert.AreEqual(0, result.childCount);
             Assert.IsTrue(result.ClassListContains("recipe-inputs-row"));
         }
@@ -241,7 +241,7 @@ namespace MobileIdleBuilder.Tests
         public void BuildIngredientsUI_EmptyInputs_ReturnsEmptyContainer()
         {
             var recipe = new RecipeJson { inputs = new List<RecipeIngredientJson>() };
-            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            var result = HudText.BuildIngredientsUI(recipe, new Dictionary<int, int>());
             Assert.AreEqual(0, result.childCount);
             Assert.IsTrue(result.ClassListContains("recipe-inputs-row"));
         }
@@ -257,7 +257,7 @@ namespace MobileIdleBuilder.Tests
                     new RecipeIngredientJson { id = "up_quark", quantity = 2 }
                 }
             };
-            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            var result = HudText.BuildIngredientsUI(recipe, new Dictionary<int, int>());
             Assert.AreEqual(1, result.childCount);
             var lbl = result[0] as Label;
             Assert.IsNotNull(lbl);
@@ -284,7 +284,7 @@ namespace MobileIdleBuilder.Tests
                     new RecipeIngredientJson { id = "electron", quantity = 1 }
                 }
             };
-            var result = HUDController.BuildIngredientsUI(recipe, new Dictionary<int, int>());
+            var result = HudText.BuildIngredientsUI(recipe, new Dictionary<int, int>());
             // Layout: lbl, sep, lbl — 3 children
             Assert.AreEqual(3, result.childCount);
             var sep = result[1] as Label;
@@ -347,10 +347,10 @@ namespace MobileIdleBuilder.Tests
 
         [Test]
         public void FormatBuildCost_ZeroIsFree()
-            => Assert.AreEqual("Free", HUDController.FormatBuildCost(0));
+            => Assert.AreEqual("Free", HudText.FormatBuildCost(0));
 
         [Test]
         public void FormatBuildCost_PositiveShowsEntropy()
-            => Assert.AreEqual($"◈ {1500:N0}", HUDController.FormatBuildCost(1500));
+            => Assert.AreEqual($"◈ {1500:N0}", HudText.FormatBuildCost(1500));
     }
 }

@@ -65,6 +65,7 @@ namespace MobileIdleBuilder
         public void SetShowPowerConnections(bool on) { _current.showPowerConnections = on; Save(); }
         public void SetPanSensitivity(float v)       { _current.panSensitivity = v; Save(); }
         public void SetInvertTilt(bool on)           { _current.invertTilt = on; Save(); }
+        public void SetShowProgressBars(bool on)     { _current.showProgressBars = on; Save(); }
 
         /// <summary>
         /// Drops every setting back to its default and applies it. This service survives scene loads,

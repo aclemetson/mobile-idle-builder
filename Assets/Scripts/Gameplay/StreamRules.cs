@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace MobileIdleBuilder
@@ -58,5 +59,30 @@ namespace MobileIdleBuilder
 
         /// <summary>Where a dropped product enters the tile.</summary>
         public const float DropAt = 0.5f;
+
+        // ── Drawing a stream (#543): water only flows away from its source ──────────
+
+        public enum Orientation { Keep, Reverse, Refuse }
+
+        /// <summary>The banner line when a drawn stream has no source at either end.</summary>
+        public const string NoSourceMessage = "Start a stream at a Spring";
+
+        /// <summary>
+        /// Which way a drawn stream run must flow. <paramref name="isFedEnd"/> says whether a cell can start a stream:
+        /// a Spring's output faces it, or it is an existing stream's mouth (extending that stream). The run as drawn
+        /// (first cell upstream) is kept when its first cell is fed, reversed when only its last cell is, and refused
+        /// when neither is: a stream with no source is dry and would only look like a belt.
+        /// </summary>
+        public static Orientation Orient<T>(IReadOnlyList<T> path, Func<T, bool> isFedEnd)
+        {
+            if (path == null || path.Count == 0 || isFedEnd == null) return Orientation.Refuse;
+            if (isFedEnd(path[0])) return Orientation.Keep;
+            if (path.Count > 1 && isFedEnd(path[path.Count - 1])) return Orientation.Reverse;
+            return Orientation.Refuse;
+        }
+
+        /// <summary>A lone stream tile's facing: never back into the Spring that feeds it.</summary>
+        public static int SingleTileFacing(int facing, Func<int, bool> springOnSide) =>
+            springOnSide != null && springOnSide(facing) ? (facing + 2) % 4 : facing;
     }
 }

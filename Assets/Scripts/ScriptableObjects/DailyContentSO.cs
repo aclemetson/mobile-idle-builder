@@ -21,7 +21,8 @@ namespace MobileIdleBuilder
     {
         public int  day;               // 1-based calendar day
         public int  crystals;          // paid currency (◆)
-        public long entropy;           // base currency (e)
+        public long entropy;           // base currency (e): a flat amount, the floor when entropyMinutes is set
+        public int  entropyMinutes;    // pays this many minutes of current production instead, when larger
         public int  prestigeCurrency;  // ascension shards (✦)
     }
 }

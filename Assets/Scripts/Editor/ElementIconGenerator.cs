@@ -251,7 +251,7 @@ namespace MobileIdleBuilder.Editor
                 tmp.color = color;
                 tmp.alignment = align;
                 tmp.fontStyle = FontStyles.Bold;
-                tmp.enableWordWrapping = false;
+                tmp.textWrappingMode = TextWrappingModes.NoWrap;
                 tmp.margin = margin;
                 var rt = tmp.rectTransform;
                 rt.sizeDelta = new Vector2(Size, Size);

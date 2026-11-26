@@ -72,7 +72,7 @@ above do not apply.
   non-element `#6e7681`.
 - **Where they surface:** the Assembler recipe picker (`HUDBuildingInspectorSubController`), the
   manual recipe list + ingredient chips and the codex (`HUDController`). Bind via
-  `HUDController.MakeItemIcon(sprite, ussClass)`; USS classes `.item-icon` / `.recipe-input-icon`
+  `HudText.MakeItemIcon(sprite, ussClass)`; USS classes `.item-icon` / `.recipe-input-icon`
   / `.codex-icon` live in `Assets/UI/components.uss`. A null icon is skipped, never fatal.
 
 ### Blender-rendered molecule icons

@@ -59,19 +59,21 @@ dotnet test
 `release-internal.yml` deploys the module to the **development** environment whenever integration merges into a
 `release/**` branch: the same trigger and commit as the internal Android build, so the development module always
 matches the newest internal APK. Job `cloud-code` (ubuntu) runs `scripts/deploy-cloud-code.sh`: module tests, then
-`dotnet publish -c Release -r linux-x64`, zipped into `PveModule.ccm`, then `ugs deploy` with the existing UGS
-service account (`UGS_GAME_CONFIG_SERVICE_KEY_ID` / `..._SECRET_KEY`; the environment name is looked up from
-`UGS_ENV_ID_DEVELOPMENT`). The `.ccm` and the CLI's JSON result are kept as the run's `pve-module-<n>` artifact.
+`dotnet publish -c Release -r linux-x64`, zipped into `PveModule.ccm`, then `ugs deploy` with the UGS
+service account `ci-development` (`UGS_DEV_SERVICE_KEY_ID` / `..._SECRET`), to the environment **named**
+`development`. The `.ccm` and the CLI's JSON result are kept as the run's `pve-module-<n>` artifact.
 A failed deploy fails that job only; the Play upload still goes out.
 
-One-time setup: give that service account the **Cloud Code Editor** project role (Unity Cloud Dashboard >
-Administration > Service accounts > the account > Project roles). Without it the job fails with a permissions error.
+One-time setup: `ci-development` needs **Cloud Code Editor** as an *environment* role on development, plus the
+read-only *project* role **Unity Environment Viewer**: `ugs deploy` looks the environment name up with
+`GetEnvironments` even when given a name, and fails with 403 "Error calling GetEnvironments" without it. It can't
+reach production (UGS Key Check verifies that).
 
 Run it by hand (same script; `--dry-run` changes nothing):
 
 ```
 UGS_CLI_SERVICE_KEY_ID=... UGS_CLI_SERVICE_SECRET_KEY=... UGS_PROJECT_ID=... \
-  ./scripts/deploy-cloud-code.sh <environment-id> --dry-run
+  ./scripts/deploy-cloud-code.sh development --dry-run   # an environment ID also works
 ```
 
 **Keep the module backward compatible.** Installed builds lag the server: every new function parameter needs a

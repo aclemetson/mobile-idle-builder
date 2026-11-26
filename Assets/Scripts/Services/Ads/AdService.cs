@@ -262,12 +262,14 @@ namespace MobileIdleBuilder
                 if (!earned)
                 {
                     _provider?.LoadRewarded();
+                    TelemetryService.Instance?.RecordAdReward(p.ToString(), granted: false, adFree: skipAd);
                     Finish(onDone, Fail(p, AdShowOutcome.Declined, "Ad skipped — no reward."));
                     return;
                 }
 
                 bool granted = GrantReward(save, p, doubleOfflineResult, quoted, out string message);
                 if (!skipAd) _provider?.LoadRewarded();
+                TelemetryService.Instance?.RecordAdReward(p.ToString(), granted, adFree: skipAd);
 
                 if (!granted)
                 {
@@ -361,21 +363,25 @@ namespace MobileIdleBuilder
 
             if (result == null || !result.HasAnyOutput) { message = "Nothing producing to bank."; return false; }
 
-            long counted = ApplyCollectionResult(save, result);
-            message = $"Banked {hours:F0}h of production" + TaskSuffix(counted);
+            long counted = ApplyCollectionResult(save, result, "time warp (ad)");
+            message = $"Banked {hours:F0}h of production" + TaskSuffix(counted, OfflineCollectionService.TasksActiveHere(save));
             return true;
         }
 
         bool GrantDoubleOffline(SaveData save, IdleCollectionResult result, out string message)
         {
             if (result == null || !result.HasAnyOutput) { message = "Nothing to double."; return false; }
-            long counted = ApplyCollectionResult(save, result);
-            message = "Offline earnings doubled!" + TaskSuffix(counted);
+            long counted = ApplyCollectionResult(save, result, "double offline");
+            message = "Offline earnings doubled!" + TaskSuffix(counted, OfflineCollectionService.TasksActiveHere(save));
             return true;
         }
 
-        /// <summary>" (+40 task items)" when a reward counted toward the world tasks, else empty.</summary>
-        internal static string TaskSuffix(long counted) => counted > 0 ? $" (+{counted:N0} task items)" : "";
+        /// <summary>
+        /// " (+40 task items)" when a reward counted toward the world tasks. While a task list is active here it
+        /// also shows " (+0 task items)", so a reward that counted nothing says so (#535); otherwise empty.
+        /// </summary>
+        internal static string TaskSuffix(long counted, bool tasksActive = false) =>
+            counted > 0 || tasksActive ? $" (+{Math.Max(0, counted):N0} task items)" : "";
 
         // ── ECS write-through helpers (mirror PremiumShopService) ──────────────
 
@@ -387,14 +393,14 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Applies an idle-style result and returns how many items counted toward the world tasks.</summary>
-        long ApplyCollectionResult(SaveData save, IdleCollectionResult result)
+        long ApplyCollectionResult(SaveData save, IdleCollectionResult result, string source)
         {
             var bridge = ECSLoadBridge.Instance;
             if (bridge != null && bridge.IsLoaded)
             {
                 ApplyEntropyToECS(result.EntropyEarned);
                 bridge.AddInventoryItems(result.ItemsEarned);
-                return OfflineCollectionService.CreditDemonDeliveries(save, result);
+                return OfflineCollectionService.CreditDemonDeliveries(save, result, source);
             }
             return OfflineCollectionService.ApplyResultToSave(save, result);
         }

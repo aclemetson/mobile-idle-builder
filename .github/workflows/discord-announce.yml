@@ -1,0 +1,48 @@
+name: Discord Announce
+
+# Posts a release to Discord by hand (#533). Production uploads go to Play as a draft (prod-release.yml), so
+# the public #patch-notes post waits until the release is actually rolled out: run this then.
+# Beta builds are announced automatically by release-internal.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version, e.g. 0.7.0 (notes come from docs/whats-new.md on the chosen branch)
+        required: true
+      channel:
+        description: Where to post
+        type: choice
+        options: [patch-notes, beta]
+        default: patch-notes
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts
+            docs
+          persist-credentials: false
+
+      - name: Post
+        env:
+          DISCORD_PATCH_NOTES_WEBHOOK: ${{ secrets.DISCORD_PATCH_NOTES_WEBHOOK }}
+          DISCORD_BETA_WEBHOOK: ${{ secrets.DISCORD_BETA_WEBHOOK }}
+          DISCORD_PATCH_PING_ROLE_ID: ${{ vars.DISCORD_PATCH_PING_ROLE_ID }}
+          DISCORD_BETA_PING_ROLE_ID: ${{ vars.DISCORD_BETA_PING_ROLE_ID }}
+          VERSION: ${{ inputs.version }}
+          CHANNEL: ${{ inputs.channel }}
+        run: |
+          if [ "$CHANNEL" = "beta" ]; then
+            python3 scripts/discord/notify.py release --kind beta --version "$VERSION" \
+              --webhook-env DISCORD_BETA_WEBHOOK --ping-role-env DISCORD_BETA_PING_ROLE_ID
+          else
+            python3 scripts/discord/notify.py release --kind release --version "$VERSION" \
+              --webhook-env DISCORD_PATCH_NOTES_WEBHOOK --ping-role-env DISCORD_PATCH_PING_ROLE_ID
+          fi

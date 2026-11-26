@@ -19,6 +19,15 @@ namespace MobileIdleBuilder
         private static readonly Dictionary<int,    ItemSO> _byItemId = new();
         private static ItemSO[] _allItems;
 
+        /// <summary>Bumped whenever the items or their values change (load, remote overrides, tests), so
+        /// ItemValueTableSystem knows to rebuild its price table (#284).</summary>
+        public static int Version { get; private set; }
+
+        internal static void BumpVersion() => Version++;
+
+        /// <summary>Every loaded item (null before the database loads).</summary>
+        public static System.Collections.Generic.IReadOnlyList<ItemSO> AllStatic => _allItems;
+
         protected override void Awake()
         {
             base.Awake();
@@ -44,6 +53,7 @@ namespace MobileIdleBuilder
 
             // Overlay any cached remote balance overrides onto the loaded items (no-op when none published).
             GameDataOverrides.ApplyItems(_allItems);
+            Version++;
         }
 
         public IReadOnlyList<ItemSO> All => _allItems;
@@ -70,6 +80,7 @@ namespace MobileIdleBuilder
                 _byId[item.id]         = item;
                 _byItemId[item.itemId] = item;
             }
+            Version++;
         }
 #endif
     }

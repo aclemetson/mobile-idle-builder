@@ -218,11 +218,11 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void ConveyorBarLabel_FollowsTheTrace()
         {
-            Assert.AreEqual("Tap a belt to remove",          HUDController.ConveyorBarLabel(true,  true,  true,  false));
-            Assert.AreEqual("Tap a start",                   HUDController.ConveyorBarLabel(false, false, false, false));
-            Assert.AreEqual("Tap the next point",            HUDController.ConveyorBarLabel(false, true,  false, false));
-            Assert.AreEqual("Tap the next point, or place",  HUDController.ConveyorBarLabel(false, true,  true,  false));
-            Assert.AreEqual("Joins a belt: place it",        HUDController.ConveyorBarLabel(false, true,  true,  true));
+            Assert.AreEqual("Tap a belt to remove",          HudText.ConveyorBarLabel(true,  true,  true,  false));
+            Assert.AreEqual("Tap a start",                   HudText.ConveyorBarLabel(false, false, false, false));
+            Assert.AreEqual("Tap the next point",            HudText.ConveyorBarLabel(false, true,  false, false));
+            Assert.AreEqual("Tap the next point, or place",  HudText.ConveyorBarLabel(false, true,  true,  false));
+            Assert.AreEqual("Joins a belt: place it",        HudText.ConveyorBarLabel(false, true,  true,  true));
         }
     }
 }

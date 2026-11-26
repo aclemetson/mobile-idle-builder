@@ -94,16 +94,14 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
 
             if (IsOpen && ads == null) CloseCard();
-            // A timed boost started (shop, another ad, Cyclotron Kick): no other boost may be taken now.
-            if (IsOpen && ads.BoostLockRemaining(Placement) > TimeSpan.Zero) CloseCard();
 
             bool show = ShouldShowIcon(
                 FeatureFlags.AdsEnabled || (ads != null && ads.SkipsAds),   // ad-free keeps the surge (#503)
                 save?.tutorial.hasCompletedFirstRun ?? false,
                 ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded,
                 ads != null && ads.IsReady,
-                // A running timed boost hides the offer like a cooldown does (BoostLock).
-                Max(ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero, ads?.BoostLockRemaining(Placement) ?? TimeSpan.Zero),
+                // Only the cooldown hides the offer: the surge stacks with any running boost (BoostLock, 2026-11-24).
+                ads?.CooldownRemaining(Placement) ?? TimeSpan.Zero,
                 IsOpen,
                 _menuOpen);
             SetIconVisible(show);
@@ -186,7 +184,5 @@ namespace MobileIdleBuilder
         }
 
         void OnDisable() => UIInputBlocker.SetModal(_modalOwner, false);
-
-        static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
     }
 }

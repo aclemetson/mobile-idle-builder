@@ -48,6 +48,7 @@ namespace MobileIdleBuilder
         static int          s_sourceCount = -1;
         static int          s_syncedVersion = -1;
         static int          s_version;      // bumped by every write through this class
+        static int          s_rebuilds;     // bumped whenever the lookup below is rebuilt (Stamp)
 
         /// <summary>Stars on the item with numeric id <paramref name="itemId"/> in the live save.</summary>
         public static int Count(int itemId)
@@ -57,6 +58,15 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Value multiplier for the item with numeric id <paramref name="itemId"/> (1 without stars or a save).</summary>
+        /// <summary>
+        /// Changes whenever any item's star multiplier may have changed (the live save, its star lists or a grant),
+        /// so ItemValueTableSystem rebuilds its price table only then (#284). Cheap: reference and count compares.
+        /// </summary>
+        public static int Stamp
+        {
+            get { Sync(LiveSave()); return s_rebuilds; }
+        }
+
         public static float Multiplier(int itemId)
         {
             Sync(LiveSave());
@@ -103,6 +113,7 @@ namespace MobileIdleBuilder
                 && count == s_sourceCount && s_version == s_syncedVersion) return;
 
             s_source = save; s_sourceIds = ids; s_sourceCount = count; s_syncedVersion = s_version;
+            s_rebuilds++;
             s_bonusPerStar = BaseBonusPerStar + TournamentTrack.StarBonus(save);
             s_byItemId.Clear();
             if (save == null || ids == null) return;
@@ -122,6 +133,7 @@ namespace MobileIdleBuilder
         /// <summary>Drops the cached lookup (tests, or after the item database reloads).</summary>
         public static void Invalidate()
         {
+            s_rebuilds++;
             s_source = null; s_sourceIds = null; s_sourceCount = -1; s_syncedVersion = -1;
             s_bonusPerStar = BaseBonusPerStar;
             s_byItemId.Clear();

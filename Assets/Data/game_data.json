@@ -17926,7 +17926,7 @@
       ]
     },
     {
-      "_comment": "Last tutorial line (#275): names the goals that left the tutorial. 2026-11-19: also introduces the Chemistry task list and the Cyclotron.",
+      "_comment": "Last tutorial line (#275): names the goals that left the tutorial. 2026-11-19: also introduces the Chemistry task list and the Cyclotron; 2026-11-24: belt path splitting tip.",
       "id": "tutorial_complete_context",
       "lines": [
         {
@@ -17948,6 +17948,14 @@
         {
           "speaker_name": "The Architect",
           "text": "To open Chemistry, work through the task list that appears at the top of the screen. Each stage asks for elements: send them to Maxwell's Demon and they count toward it while still paying entropy. Progress carries over when you prestige, so it takes a few runs. Tap the list to see what the current stage needs.",
+          "portrait_path": "TODO",
+          "pause_game": false,
+          "highlight_target": "",
+          "action": ""
+        },
+        {
+          "speaker_name": "The Architect",
+          "text": "A tip for your belts: hold any belt to split it, sending its items two or three ways. The (i) on the Conveyor Belt card in the Build menu has the details.",
           "portrait_path": "TODO",
           "pause_game": false,
           "highlight_target": "",
@@ -18063,7 +18071,7 @@
     }
   ],
 
-  "_comment_daily_rewards": "28-day login reward calendar (UTC). Index by loginStreakIndex (0-based); loops after day 28. crystals = paid currency, entropy = base currency, prestige_currency = ascension shards.",
+  "_comment_daily_rewards": "28-day login reward calendar (UTC). Index by loginStreakIndex (0-based); loops after day 28. crystals = paid currency, entropy = base currency (a flat floor), entropy_minutes = pays that many minutes of current full production when larger (2026-11-24), prestige_currency = ascension shards.",
   "daily_rewards": [
     { "day": 1,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 2,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
@@ -18071,21 +18079,21 @@
     { "day": 4,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 5,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 6,  "crystals": 10,  "entropy": 0,     "prestige_currency": 0 },
-    { "day": 7,  "crystals": 40,  "entropy": 500,   "prestige_currency": 0 },
+    { "day": 7,  "crystals": 40,  "entropy": 500,   "entropy_minutes": 30,  "prestige_currency": 0 },
     { "day": 8,  "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 9,  "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 10, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 11, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 12, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 13, "crystals": 15,  "entropy": 0,     "prestige_currency": 0 },
-    { "day": 14, "crystals": 60,  "entropy": 2000,  "prestige_currency": 0 },
+    { "day": 14, "crystals": 60,  "entropy": 2000,  "entropy_minutes": 60,  "prestige_currency": 0 },
     { "day": 15, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 16, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 17, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 18, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 19, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 20, "crystals": 20,  "entropy": 0,     "prestige_currency": 0 },
-    { "day": 21, "crystals": 80,  "entropy": 10000, "prestige_currency": 0 },
+    { "day": 21, "crystals": 80,  "entropy": 10000, "entropy_minutes": 120, "prestige_currency": 0 },
     { "day": 22, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 23, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },
     { "day": 24, "crystals": 25,  "entropy": 0,     "prestige_currency": 0 },

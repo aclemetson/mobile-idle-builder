@@ -39,6 +39,7 @@ The HTML pages are served by GitHub Pages. The game is Quantum Foundry. The repo
 |---|---|
 | [agents/testing.md](agents/testing.md) | Test layout, how to run the suites, what each change needs |
 | [../Playtests/README.md](../Playtests/README.md) | AI playtest harness: briefs, fixtures, MCP tools |
+| [testing/beta-plan.md](testing/beta-plan.md) | Beta phases, goals and exit criteria, metrics, tools, recruiting post and surveys |
 | [testing/dev-testing-guide.md](testing/dev-testing-guide.md) | Dev console and test-mode checklist |
 | [testing/device-checklist-0.4.html](testing/device-checklist-0.4.html) | On-device test checklist (0.4) |
 
@@ -48,8 +49,12 @@ The HTML pages are served by GitHub Pages. The game is Quantum Foundry. The repo
 |---|---|
 | [runbooks/ci-setup.md](runbooks/ci-setup.md) | The CI/CD pipeline (paused): runner, signing, Play internal track, TestFlight, re-enabling |
 | [runbooks/google-play-iap-testing.md](runbooks/google-play-iap-testing.md) | Testing in-app purchases on Google Play |
+| [runbooks/app-store-iap-testing.md](runbooks/app-store-iap-testing.md) | Setting up and testing in-app purchases on the App Store |
 | [runbooks/levelplay-ads-setup.md](runbooks/levelplay-ads-setup.md) | Rewarded ads go-live |
 | [runbooks/cloud-diagnostics-setup.md](runbooks/cloud-diagnostics-setup.md) | Crash and exception reporting |
+| [runbooks/store-privacy-declarations.md](runbooks/store-privacy-declarations.md) | Play Data safety and App Store privacy answers |
+| [store/store-listing.md](store/store-listing.md) | Store listing text, tags, keywords and graphics |
+| [community/discord-server.md](community/discord-server.md) | Discord server: security, roles, channels, onboarding, templates, bot + CI automation, rules, set-up checklist |
 | [analytics/README.md](analytics/README.md) | Telemetry dashboard (CSV export) |
 
 ## Legal
