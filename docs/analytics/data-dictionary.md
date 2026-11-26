@@ -46,6 +46,12 @@ the `collect endpoint:` line. See `docs/agents/analytics.md`.
 | Manual-collection engagement | `player_snapshot.field_collections` over `playtime_total_sec` | Are players actively tapping fields, or ignoring manual collection once idle income kicks in? | field tap cooldown, drop value, early-game idle pacing |
 | Field cooldown reached | `player_snapshot.field_cooldown_sec` | How far have players driven the tap cooldown down via research + Quick Hands? Is the floor too easy/hard to hit? | `FieldSO.tapCooldownSeconds`, research `field_cooldown_mult`, Quick Hands per-level reduction |
 | Power grid connectivity | `player_snapshot.power_nodes_total` vs `power_nodes_linked` | What fraction of placed power buildings are stranded (not chained to a generator)? A large gap means link ranges are too tight or relays are hard to wire in. | `link_radius_tiles` per power building (generator / relay) + per-upgrade-level scaling |
+| Tutorial funnel | `tutorial_step.step_id` / `step_index` count per step (Data Explorer funnel) | Where do new players drop out of the tutorial? | step hints, dialogue length, the early cost curve |
+| Time to first Carbon | `tutorial_step.playtime_total_sec` where `step_id = complete` (lifetime play time, CSV) | Does the tutorial land in its 45-60 min target? | quark-to-Carbon craft times, research gate costs |
+| Ad use by placement | `ad_reward.placement` x `granted` (Ad-Free owners show as `ad_free = true`) | Which rewarded placements do players actually use, and how often do they skip? | placement rewards, caps, cooldowns |
+| Purchases vs progress | `iap_purchase.product_id` joined by `player_id` to the latest `player_snapshot` | At what point in progression do players buy, and what? | crystal pack sizes, shop pricing |
+| League participation | `pve_league.action` (joined vs finished) by `league_tier`; `rank` distribution (CSV) | How many players enter and finish a league week, and in which leagues? | league bracket sizes, reward bands, run length |
+| Feedback reach | `feedback_opened.source` count vs players | Do testers find the feedback link? | where the feedback entry point lives |
 
 ## Excluding dev-console sessions
 

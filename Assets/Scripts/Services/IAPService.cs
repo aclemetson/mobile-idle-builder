@@ -159,6 +159,12 @@ namespace MobileIdleBuilder
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
         {
             string id = args.purchasedProduct.definition.id;
+            if (id == AdFree.ProductId || CrystalAmounts.ContainsKey(id))
+            {
+                var meta = args.purchasedProduct.metadata;
+                TelemetryService.Instance?.RecordIapPurchase(id, meta != null ? (double)meta.localizedPrice : 0d,
+                                                            meta?.isoCurrencyCode ?? "");
+            }
             if (id == AdFree.ProductId)
             {
                 var save = SaveManager.Instance?.Current;
