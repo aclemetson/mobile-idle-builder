@@ -8,15 +8,17 @@ how to rotate it. Issue #534.
 
 ## Rules
 
-- No secret is ever committed. `/secrets/`, `*.keystore` and `google-services.json` are gitignored; the history scan
-  below found nothing.
+- No secret is ever committed. `/secrets/`, `*.keystore` and `google-services.json` are gitignored. The history scan
+  below found one client key (the Firebase API key, which ships in the app anyway) and no credentials.
 - CI secrets live in GitHub Actions secrets only. GitHub cannot show a secret's value again, so the
   **master copy of every value lives in a password manager** (and the local `secrets/` folder for files). If the
   password manager doesn't have it, rotate it rather than trying to recover it.
 - Client-side IDs that ship inside the app (LevelPlay App Keys, Google OAuth client IDs, Firebase identifiers,
   UGS project ID) are **not secrets**. Anyone can pull them out of the APK. They stay in source.
 - Repo protections, checked 2026-11-26: secret scanning **on**, push protection **on**, Dependabot security updates
-  **on**. Non-provider patterns and validity checks are **off** (see "To do").
+  **on**. Non-provider patterns and validity checks are **off**: enabling them through the API on 2026-11-26 was
+  accepted but they stayed disabled, most likely because they need GitHub Secret Protection (paid) on a personal
+  account. Check Settings > Advanced Security if the plan changes.
 
 ## Inventory
 
@@ -63,12 +65,28 @@ Repository **variables** (not secret): `APPLE_TEAM_ID`, `DISCORD_GUILD_ID`, `DIS
 LevelPlay App Keys (`LevelPlayAdProvider.cs`), Google Sign-In client IDs (`Assets/GoogleSignIn/`), Firebase identifiers
 (`Assets/Resources/pushNotificationsSettings.asset`), Discord invite and feedback email (Remote Config).
 
+**The Firebase API key** (`firebaseWebApiKey` in `pushNotificationsSettings.asset`, also in `google-services.json`) is
+the one GitHub secret scanning flags (alert #1, "Google API Key", publicly leaked). It identifies the Firebase project
+and ships inside every APK, so rotating it changes nothing. What protects it is **restriction** in Google Cloud
+Console > APIs & Services > Credentials > the key:
+- Application restrictions: **Android apps**, package `com.clemtek.mobileidlebuilder`, with the SHA-1 of the **Play
+  app signing** certificate (Play Console > Setup > App signing) and of the **upload** certificate (local and
+  internal builds). Add an iOS restriction (bundle id) when iOS push ships.
+- API restrictions: only **Firebase Installations API** and **FCM Registration API** (add others only if a Firebase
+  feature fails without them).
+
+Without restrictions anyone can call any API enabled on the project with it, billed to the project. After
+restricting it, close the alert as "Used in tests / won't fix" with the reason "client key, restricted".
+
 ## History scan
 
 2026-11-26: `git log --all -p -G` over every commit for private-key headers, Google API keys (`AIza…`), Discord
 webhook URLs, AWS keys, GitHub tokens, Slack tokens and OpenAI-style keys, plus every file ever added named
-`*.keystore`, `*.jks`, `*.p8`, `*.p12`, `*.pem`, `*.env`, `google-services*`, `AuthKey*`. **Nothing found**. The only
-hit was the placeholder `https://discord.com/api/webhooks/123/...` in a test.
+`*.keystore`, `*.jks`, `*.p8`, `*.p12`, `*.pem`, `*.env`, `google-services*`, `AuthKey*`, over **every** file type
+(a first pass that skipped `*.asset` missed the Firebase key). Found:
+- the Firebase API key in `Assets/Resources/pushNotificationsSettings.asset` (a client key, see above; restrict it)
+- the placeholder `https://discord.com/api/webhooks/123/...` in a test
+- no private keys, service account JSON, tokens or passwords
 
 To repeat it with a real scanner (recommended once a quarter or after any scare):
 
@@ -77,6 +95,33 @@ docker run --rm -v "${PWD}:/repo" zricethezav/gitleaks:latest git /repo -v
 ```
 
 GitHub secret scanning also watches every push for provider tokens.
+
+## CI audit (2026-11-26)
+
+The repo is **public** with a **self-hosted** runner (`server-windows`), so the questions are who can run code on that
+machine and who can read secrets.
+
+| Check | Result |
+|---|---|
+| Fork PRs | need approval for all outside contributors (Actions setting). Fork PRs get no secrets |
+| Self-hosted runner | only same-repo PRs reach it (`pr-tests`, `release-internal` check `head.repo.full_name`); non-owner PRs also wait on the `self-hosted-approval` environment (required reviewer) |
+| `pull_request_target` / `workflow_run` | not used |
+| Default `GITHUB_TOKEN` | read-only; every workflow sets `permissions:` explicitly |
+| Third-party actions | all pinned to commit SHAs; Dependabot updates the pins monthly |
+| Script injection | no untrusted event text (issue/PR titles, bodies, branch names) in `run:` steps; `workflow_dispatch` inputs are typed or passed through `env:` |
+| Keystore on the runner | written to `secrets\user.keystore` for the build, removed in an `if: always()` step |
+| Build log artifact | scanned: no passwords or tokens. It does show the Windows user name and runner paths (low risk) |
+| Collaborators | owner only |
+| Branch protection | `main` and `develop`: PR + 1 review, no force push, no deletion (admin can bypass, needed as a solo owner) |
+| Open alerts | secret scanning: 1 (Firebase key, above). Dependabot: 0. Code scanning: 0 |
+
+**Public artifacts.** On a public repo any signed-in GitHub user can download workflow artifacts, including the
+internal-build AAB (30 days) and its symbols. The source is public, so this exposes unreleased builds rather than
+secrets. Accepted for now; shorten `retention-days` if pre-release builds should stay private.
+
+**Where the real risk sits.** Every secret is repository-wide, and only the owner can push, so the attack paths are
+the owner's accounts (GitHub, Unity, Google, Apple, Discord) and a compromised dependency. Strong passwords and 2FA
+everywhere matter more than anything in this file, followed by the dev/prod split of the UGS service account.
 
 ## Rotation schedule
 
@@ -166,7 +211,9 @@ Steps (manual, because GitHub never shows a secret's value again, so it can't be
 
 ## To do (#534 follow-ups)
 
-- [ ] Turn on **non-provider patterns** and **validity checks**: Settings > Code security > Secret scanning.
+- [ ] Restrict the Firebase API key (Android apps + API restrictions, above), then close secret-scanning alert #1.
+- [ ] Confirm 2FA on GitHub, Unity ID, the Google account behind Play Console and Google Cloud, the Apple ID, and Discord.
+- [ ] Non-provider patterns and validity checks: not available on this plan (tried 2026-11-26).
 - [ ] Create the `production` environment and move `UGS_ENV_ID_PRODUCTION` (section above).
 - [ ] Split the UGS service account into dev and prod accounts.
 - [ ] Automate procedure A as a scheduled workflow (create a key through the UGS Admin API, `gh secret set` with a
