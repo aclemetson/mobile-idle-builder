@@ -112,13 +112,13 @@ def overwrite(chan: dict, target_id: str) -> tuple[int, int]:
     return 0, 0
 
 
-def can_send(chan: dict, gid: str, member_roles: list[dict]) -> bool:
-    """Discord's permission order for a member holding member_roles (always including @everyone)."""
+def effective(chan: dict, gid: str, member_roles: list[dict], member_id: str | None = None) -> int:
+    """Discord's permission order: base roles, then @everyone overwrite, role overwrites, member overwrite."""
     perms = 0
     for r in member_roles:
         perms |= int(r["permissions"])
     if perms & P["ADMIN"]:
-        return True
+        return ~0
     a, d = overwrite(chan, gid)
     perms = (perms & ~d) | a
     ra = rd = 0
@@ -127,7 +127,14 @@ def can_send(chan: dict, gid: str, member_roles: list[dict]) -> bool:
             x, y = overwrite(chan, r["id"])
             ra, rd = ra | x, rd | y
     perms = (perms & ~rd) | ra
-    return bool(perms & P["SEND"])
+    if member_id:
+        a, d = overwrite(chan, member_id)
+        perms = (perms & ~d) | a
+    return perms
+
+
+def can_send(chan: dict, gid: str, member_roles: list[dict]) -> bool:
+    return bool(effective(chan, gid, member_roles) & P["SEND"])
 
 
 def has(bits: int, *names: str) -> bool:
@@ -297,14 +304,11 @@ def main(argv) -> int:
             check(all(f in guide for f in ["Version:", "Device:", "What happened:", "Steps to reproduce:"]),
                   f"#{name} post guidelines contain the template")
         if True:
-            allow = bot_perms
-            for target in bot_ids:
-                allow |= overwrite(ch, target)[0]
-                if ch.get("parent_id") in by_id and not ch.get("permission_overwrites"):
-                    allow |= overwrite(by_id[ch["parent_id"]], target)[0]
+            allow = effective(ch, gid, [everyone] + bot_roles, me["id"])
             need = ["VIEW_CHANNEL", "READ_HISTORY", "SEND_IN_THREADS", "MANAGE_THREADS"]
             missing = [n for n in need if not allow & P[n]]
-            check(not missing, f"bot override on #{name} {('missing ' + ', '.join(missing)) if missing else 'ok'}")
+            check(not missing, f"bot's effective permissions on #{name} "
+                  + (f"missing {', '.join(missing)}" if missing else "ok"))
         threads = get(f"/channels/{cid}/threads/archived/public?limit=2", token)
         check("_error" not in threads, f"bot can read #{name} posts" + (f" (HTTP {threads.get('_error')})" if "_error" in threads else ""))
 
