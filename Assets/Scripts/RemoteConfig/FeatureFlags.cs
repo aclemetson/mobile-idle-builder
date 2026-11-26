@@ -46,6 +46,7 @@ namespace MobileIdleBuilder
         public const string WhatsNewNotesKey       = "whatsnew.notes";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
+        public const string DiscordUrlKey          = "links.discordUrl";
         public const string UpdateEnabledKey       = "update.enabled";
         public const string UpdateLatestAndroidKey = "update.latest.android";
         public const string UpdateLatestIosKey     = "update.latest.ios";
@@ -88,6 +89,8 @@ namespace MobileIdleBuilder
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
+        // Community invite (#533). Blank hides the Settings button, so the server can go live without a build.
+        public const string DiscordUrlDefault       = "";
         // App update prompt on the splash (AppUpdateCheck). Off by default so a fetch failure never prompts;
         // blank versions never prompt. CI writes update.latest.* after each store upload
         // (scripts/set-remote-config.ps1); update.minimum.* is set by hand to force an update.
@@ -120,6 +123,7 @@ namespace MobileIdleBuilder
             new FlagDef(WhatsNewNotesKey,         FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
+            new FlagDef(DiscordUrlKey,            FlagType.String),
             new FlagDef(UpdateEnabledKey,         FlagType.Bool),
             new FlagDef(UpdateLatestAndroidKey,   FlagType.String),
             new FlagDef(UpdateLatestIosKey,       FlagType.String),
@@ -171,6 +175,7 @@ namespace MobileIdleBuilder
         public static string WhatsNewNotes        => GetString(WhatsNewNotesKey,        WhatsNewDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
+        public static string DiscordUrl           => GetString(DiscordUrlKey,           DiscordUrlDefault);
         public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);
         public static string UpdateMessage        => GetString(UpdateMessageKey,        UpdateMessageDefault);
 

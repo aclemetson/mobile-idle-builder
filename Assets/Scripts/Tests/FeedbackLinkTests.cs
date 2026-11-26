@@ -39,6 +39,30 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(FeatureFlags.FeedbackEmailDefault,    FeatureFlags.FeedbackEmail);
             Assert.AreEqual(FeatureFlags.PrivacyPolicyUrlDefault, FeatureFlags.PrivacyPolicyUrl);
             StringAssert.StartsWith("https://", FeatureFlags.PrivacyPolicyUrl);
+            Assert.AreEqual("", FeatureFlags.DiscordUrl, "no invite ships in the build; the button stays hidden");
+        }
+
+        [TestCase("https://discord.gg/AbCd123")]
+        [TestCase("https://discord.com/invite/AbCd123")]
+        [TestCase("  https://discord.gg/AbCd123  ")]
+        public void IsDiscordInvite_AcceptsHttpsInvites(string url)
+        {
+            Assert.IsTrue(HUDSettingsSubController.IsDiscordInvite(url));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        [TestCase("discord.gg/AbCd123")]                 // no scheme
+        [TestCase("http://discord.gg/AbCd123")]          // not https
+        [TestCase("https://discord.gg/")]                // no code
+        [TestCase("https://discord.com/channels/1/2")]   // not an invite
+        [TestCase("https://discord.com/invite/")]
+        [TestCase("https://evil.example/discord.gg/x")]
+        [TestCase("https://discord.gg.evil.example/x")]
+        public void IsDiscordInvite_RejectsEverythingElse(string url)
+        {
+            Assert.IsFalse(HUDSettingsSubController.IsDiscordInvite(url));
         }
     }
 }
