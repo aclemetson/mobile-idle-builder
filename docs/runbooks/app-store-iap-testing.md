@@ -61,7 +61,10 @@ For each row in the table:
 
 Each product should reach status **Ready to Submit**. That is enough for TestFlight and sandbox testing.
 The first products must be submitted **with an app version**: on the version page, under
-**In-App Purchases and Subscriptions**, add all five before submitting the build for review.
+**In-App Purchases and Subscriptions**, add all five before submitting the build for review. Submitting
+them alone shows "Unable to Submit for Review: add an app version for the selected platform". That is
+expected: leave the draft submission, test in TestFlight, and submit it with the first App Store version
+(which needs a production build, see #416).
 
 New products can take up to an hour to become loadable.
 
