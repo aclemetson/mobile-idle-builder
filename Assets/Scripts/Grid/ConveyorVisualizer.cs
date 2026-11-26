@@ -17,8 +17,9 @@ namespace MobileIdleBuilder
     /// Straight, bend and 2-3 input merge-junction shapes are all built from the same ribbon primitive.
     ///
     /// Item visuals float on the belt, interpolating between a segment's entry and exit edge by each
-    /// ConveyorItem.Progress (several items per tile). The basic particles are animated 3D objects
-    /// (<see cref="BeltItemVisuals"/>); every other item is its icon tile, billboarded to the camera.
+    /// ConveyorItem.Progress (several items per tile). Particles, elements and isotopes are animated 3D objects
+    /// (<see cref="BeltItemVisuals"/>), turned per their <see cref="BeltItemVisuals.Facing"/>; every other item is
+    /// its icon tile, billboarded to the camera.
     /// Visuals are pooled per item id.
     ///
     /// Call RefreshAll() after placing/removing segments (links may have changed across the whole
@@ -47,8 +48,8 @@ namespace MobileIdleBuilder
         // item at the front of a belt leaves, and the 3D particles cost more to build than a quad.
         private const int MaxPooledPerItem = 64;
         private readonly Dictionary<int, Stack<GameObject>> _itemPool = new();
-        // Item ids drawn as 3D particles (BeltItemVisuals): never billboarded.
-        private readonly HashSet<int> _particleItemIds = new();
+        // Item ids drawn as 3D visuals (BeltItemVisuals) and how each is turned; anything else is a billboarded tile.
+        private readonly Dictionary<int, BeltItemVisuals.Facing> _particleFacing = new();
         // Per-frame scratch, reused so Update allocates nothing.
         private readonly HashSet<(Entity, int)> _seenSlots  = new();
         private readonly List<(Entity, int)>    _staleSlots = new();
@@ -57,6 +58,13 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int, int), bool> _inputPorts = new();
         private readonly HashSet<(int, int)>               _beltCells  = new();
         private readonly List<int>                         _inbound    = new(4);
+        private readonly Dictionary<(int, int), int>       _splitMasks = new();   // belt splits: cell -> output mask
+        private readonly List<int>                         _forkExits  = new(3);
+        // Overpasses (BeltBridge): ramp-up cell -> (span direction, length in tiles); ramp-down cell -> span direction.
+        private readonly Dictionary<(int, int), (int dir, int len)> _rampUps   = new();
+        private readonly Dictionary<(int, int), int>                _rampDowns = new();
+        private Material _girderMaterial;
+        private static readonly Color GirderColor = new(0.30f, 0.38f, 0.52f, 1f);
         private readonly bool[] _feeds = new bool[4];
         private readonly bool[] _sinks = new bool[4];
         // One property block for every visual made here; SetPropertyBlock copies it, so reuse is safe.
@@ -66,6 +74,8 @@ namespace MobileIdleBuilder
         // but not merged with) points at a neighbour that also has a belt — they look aligned but
         // items do not flow across. Rebuilt in RefreshAll alongside the belts.
         private readonly List<GameObject> _gapMarkers = new();
+        // Seams the belt being drawn would leave (#208), shown before it is confirmed.
+        private readonly List<GameObject> _previewGapMarkers = new();
         private Material _gapMaterial;
         private bool     _ownsGapMaterial;
         private static readonly Color GapColor = new Color(0.95f, 0.25f, 0.20f);
@@ -90,6 +100,7 @@ namespace MobileIdleBuilder
         internal static readonly int BeltPhaseId = Shader.PropertyToID("_BeltPhase");
         private const float BeltPhaseWrap = 64f;
         private EntityQuery _effectsQuery;
+        private EntityQuery _clockQuery;
         private float       _beltPhase;
 
         /// <summary>The next belt phase: <paramref name="phase"/> advanced by <paramref name="speedCellsPerSecond"/> * dt, wrapped.</summary>
@@ -102,6 +113,21 @@ namespace MobileIdleBuilder
         // ----------------------------------------------------------------
         // Unity lifecycle
         // ----------------------------------------------------------------
+
+        void OnEnable()  => TournamentCosmetics.Changed += ApplyBeltTheme;
+        void OnDisable() => TournamentCosmetics.Changed -= ApplyBeltTheme;
+
+        /// <summary>
+        /// The belt lattice's colours: the equipped belt theme (#500, bought with Strings) or the default warm
+        /// white. Rewritten on the shared material whenever the theme changes; streams keep their water colours.
+        /// </summary>
+        void ApplyBeltTheme()
+        {
+            if (_flowMaterial == null || !_ownsFlowMaterial) return;
+            var theme = TournamentCosmetics.BeltColors(SaveManager.Instance?.Current);
+            _flowMaterial.SetColor("_LineColor", theme?.line ?? BeltLineColor);
+            _flowMaterial.SetColor("_GlowColor", theme?.glow ?? BeltGlowColor);
+        }
 
         void Start()
         {
@@ -118,6 +144,7 @@ namespace MobileIdleBuilder
             );
             _portQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlacedPortData>());
             _effectsQuery = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ResearchEffects>());
+            _clockQuery   = world.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<FactoryClock>());
             _queriesReady = true;
         }
 
@@ -130,6 +157,7 @@ namespace MobileIdleBuilder
                 _itemQuery.Dispose();
                 _portQuery.Dispose();
                 _effectsQuery.Dispose();
+                _clockQuery.Dispose();
             }
 
             foreach (var go in _spawnedBelts.Values) DestroyBelt(go);
@@ -143,9 +171,12 @@ namespace MobileIdleBuilder
             _itemSpriteIds.Clear();
             ClearGapMarkers();
             ClearSinglePreview();
+            ClearPreviewSeams();
 
             if (_ownsFlowMaterial && _flowMaterial != null) Destroy(_flowMaterial);
+            if (_streamMaterial != null) Destroy(_streamMaterial);
             if (_ownsGapMaterial && _gapMaterial != null) Destroy(_gapMaterial);
+            if (_girderMaterial != null) Destroy(_girderMaterial);
         }
 
         // ----------------------------------------------------------------
@@ -217,7 +248,10 @@ namespace MobileIdleBuilder
 
                 Vector3 cellCenter = new Vector3(seg.Cell.x * cs, 0f, seg.Cell.y * cs);
                 int     inEdge     = OppositeDir(seg.EntryDir);
-                int     exitDir    = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                int     beltExit   = _tailVisualExit.TryGetValue((seg.Cell.x, seg.Cell.y), out int ve) ? ve : seg.ExitDir;
+                bool    isSplit    = em.HasComponent<BeltSplit>(e);
+                bool    isRampUp   = _rampUps.TryGetValue((seg.Cell.x, seg.Cell.y), out var rampUp);
+                bool    isRampDown = _rampDowns.TryGetValue((seg.Cell.x, seg.Cell.y), out int downDir);
 
                 for (int k = 0; k < items.Length; k++)
                 {
@@ -241,16 +275,46 @@ namespace MobileIdleBuilder
 
                     // Follow the belt's own centreline (round the arc on a corner), inset 5% at each edge. On a
                     // merge, each item rides the arm it came in on, so side items curve onto the belt.
-                    Vector3 pos = cellCenter + ConveyorFlowMeshBuilder.CenterlinePoint(
-                        cs, item.EntryEdgeOr(inEdge), exitDir, Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress)));
-                    pos.y       = 0.3f;
+                    int   entry   = item.EntryEdgeOr(inEdge);
+                    int   exitDir = isSplit ? item.ExitEdgeOr(beltExit) : beltExit;   // a split's item heads for its branch
+                    float t       = Mathf.Lerp(0.05f, 0.95f, Mathf.Clamp01(item.Progress));
+                    bool  onDeck  = false;
+                    Vector3 local;
+                    float   lift;
+                    if (isRampUp)
+                    {
+                        // An overpass: up the ramp tile, then along the deck to the ramp down.
+                        float s = Mathf.Clamp01(item.Progress) * rampUp.len;
+                        onDeck  = s >= 1f;
+                        local   = onDeck ? ConveyorFlowMeshBuilder.Dir(rampUp.dir) * cs * (s - 0.5f)
+                                         : ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, rampUp.dir, s);
+                        lift    = onDeck ? OverpassRules.DeckHeight : ConveyorFlowMeshBuilder.RampLift(local, rampUp.dir, cs, true);
+                        t       = Mathf.Min(s, 0.98f);
+                        exitDir = rampUp.dir;
+                    }
+                    else
+                    {
+                        local = ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, t);
+                        lift  = isRampDown ? ConveyorFlowMeshBuilder.RampLift(local, downDir, cs, false) : 0f;
+                    }
+                    Vector3 pos = cellCenter + local;
+                    pos.y       = 0.3f + lift;
                     sphere.transform.localPosition = pos;
 
-                    // Billboard tile quads to face the camera so the sprite stays readable as the
-                    // camera orbits. 3D particles are round and animate in their own space: leave them.
-                    if (_cam != null && !_particleItemIds.Contains(item.ItemID))
+                    // Tiles and atoms face the camera so they stay readable as it orbits; a comet tail or wave
+                    // packet points along the belt (round on corners too); round particles are left alone.
+                    var facing = _particleFacing.TryGetValue(item.ItemID, out var f) ? f : BeltItemVisuals.Facing.Camera;
+                    if (facing == BeltItemVisuals.Facing.Camera && _cam != null)
                         sphere.transform.rotation =
                             Quaternion.LookRotation(sphere.transform.position - _cam.transform.position, Vector3.up);
+                    else if (facing == BeltItemVisuals.Facing.AlongBelt)
+                    {
+                        Vector3 dir = onDeck ? ConveyorFlowMeshBuilder.Dir(exitDir)
+                                    : ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Min(1f, t + 0.02f))
+                                    - ConveyorFlowMeshBuilder.CenterlinePoint(cs, entry, exitDir, Mathf.Max(0f, t - 0.02f));
+                        dir.y = 0f;
+                        if (dir.sqrMagnitude > 1e-8f) sphere.transform.localRotation = Quaternion.LookRotation(dir, Vector3.up);
+                    }
                 }
             }
 
@@ -277,6 +341,9 @@ namespace MobileIdleBuilder
             float speed = 1f;
             if (world != null && world.IsCreated && !_effectsQuery.IsEmpty)
                 speed = _effectsQuery.GetSingleton<ResearchEffects>().ConveyorSpeedMult;
+            // Speed burst: belts run on the factory clock, so the lattice scrolls with the items.
+            if (world != null && world.IsCreated && !_clockQuery.IsEmpty)
+                speed *= FactoryClock.Sanitize(_clockQuery.GetSingleton<FactoryClock>().Rate);
             _beltPhase = AdvanceBeltPhase(_beltPhase, Time.deltaTime, speed);
             Shader.SetGlobalFloat(BeltPhaseId, _beltPhase);
         }
@@ -304,10 +371,10 @@ namespace MobileIdleBuilder
             }
 
             var so = ItemDatabase.Instance != null ? ItemDatabase.Instance.Get(itemId) : null;
-            var particle = so != null ? BeltItemVisuals.TryCreate(so.id, gridRenderer.transform) : null;
+            var particle = so != null ? BeltItemVisuals.TryCreate(so, gridRenderer.transform) : null;
             if (particle != null)
             {
-                _particleItemIds.Add(itemId);
+                _particleFacing[itemId] = BeltItemVisuals.FacingOf(so);
                 return particle;
             }
             var icon = so != null ? so.icon : null;
@@ -376,9 +443,23 @@ namespace MobileIdleBuilder
             // is omitted, so the neighbour it points at is not drawn as a merge junction.
             var exitMap = _exitMap;
             exitMap.Clear();
+            _splitMasks.Clear();
+            _rampUps.Clear();
+            _rampDowns.Clear();
             for (int i = 0; i < entities.Length; i++)
             {
                 var seg = em.GetComponentData<ConveyorSegmentData>(entities[i]);
+                if (em.HasComponent<BeltSplit>(entities[i]))
+                    _splitMasks[(seg.Cell.x, seg.Cell.y)] = em.GetComponentData<BeltSplit>(entities[i]).Mask;
+                if (em.HasComponent<BeltBridge>(entities[i]))
+                {
+                    // A ramp up feeds only its ramp down, so it is no neighbour's inbound.
+                    var b   = em.GetComponentData<BeltBridge>(entities[i]);
+                    int dir = ConveyorTopology.DirBetween(seg.Cell, b.Exit);
+                    _rampUps[(seg.Cell.x, seg.Cell.y)] = (dir, Mathf.Max(1, b.Length));
+                    _rampDowns[(b.Exit.x, b.Exit.y)]   = dir;
+                    continue;
+                }
                 if (seg.OutputBlocked) continue;
                 exitMap[(seg.Cell.x, seg.Cell.y)] = seg.ExitDir;
             }
@@ -400,8 +481,29 @@ namespace MobileIdleBuilder
                 if (exitDir != seg.ExitDir) _tailVisualExit[cell] = exitDir;
                 else                        _tailVisualExit.Remove(cell);
 
-                var inbound = ComputeInboundEdges(seg.Cell, exitMap, _inbound);   // read by Build, not kept
-                _spawnedBelts[cell] = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
+                var inbound = ComputeInboundEdges(seg.Cell, exitMap, _splitMasks, _inbound);   // read by Build, not kept
+                // Overpass ramps: a belt under the span never joins one, and a ramp down is fed from the span side.
+                if (_rampUps.TryGetValue(cell, out var ru)) inbound.Remove(ru.dir);
+                if (_rampDowns.TryGetValue(cell, out int rdDir))
+                {
+                    inbound.Remove(OppositeDir(rdDir));
+                    inbound.Insert(0, OppositeDir(rdDir));
+                }
+                if (_splitMasks.TryGetValue(cell, out int splitMask))
+                {
+                    // A belt split: the reverse of a merge, one branch per output side (drawn even before a
+                    // branch belt exists, so the player sees where it will go).
+                    _forkExits.Clear();
+                    for (int d = 0; d < 4; d++) if (BeltSplitRules.Has(splitMask, d)) _forkExits.Add(d);
+                    _spawnedBelts[cell] = SpawnFork(seg.Cell.x, seg.Cell.y, OppositeDir(seg.EntryDir), _forkExits, cs);
+                }
+                else
+                {
+                    var go = SpawnBeltTrack(seg.Cell.x, seg.Cell.y, seg.EntryDir, exitDir, inbound, cs);
+                    if (_rampUps.TryGetValue(cell, out var up)) BuildOverpass(go, up.dir, up.len, cs);
+                    else if (_rampDowns.TryGetValue(cell, out int downDir)) LiftFlow(go, downDir, cs, false);
+                    _spawnedBelts[cell] = go;
+                }
             }
 
             entities.Dispose();
@@ -503,6 +605,22 @@ namespace MobileIdleBuilder
         // "Not connected" seam markers
         // ----------------------------------------------------------------
 
+        /// <summary>Shows the seams a belt being drawn would leave (#208); replaces any shown before.</summary>
+        public void ShowPreviewSeams(List<(int2 cell, int exit)> seams)
+        {
+            ClearPreviewSeams();
+            if (seams == null || gridRenderer == null) return;
+            float cs = gridRenderer.CellSize;
+            foreach (var (cell, exit) in seams)
+                _previewGapMarkers.Add(SpawnGapMarker(cell.x, cell.y, exit, cs));
+        }
+
+        public void ClearPreviewSeams()
+        {
+            foreach (var go in _previewGapMarkers) if (go) Destroy(go);
+            _previewGapMarkers.Clear();
+        }
+
         private void ClearGapMarkers()
         {
             foreach (var go in _gapMarkers) if (go) Destroy(go);
@@ -586,17 +704,101 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>Fills <paramref name="edges"/> with the directions (0..3) from which conveyor flow enters this cell.</summary>
-        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap, List<int> edges)
+        private static List<int> ComputeInboundEdges(int2 cell, Dictionary<(int, int), int> exitMap,
+                                                     Dictionary<(int, int), int> splitMasks, List<int> edges)
         {
             edges.Clear();
             for (int d = 0; d < 4; d++)
             {
                 int2 nc = Adjacent(cell, d);
+                // A split feeds every neighbour on its mask.
+                if (splitMasks.TryGetValue((nc.x, nc.y), out int sm) && BeltSplitRules.Has(sm, OppositeDir(d)))
+                {
+                    edges.Add(d);
+                    continue;
+                }
                 if (!exitMap.TryGetValue((nc.x, nc.y), out int nExit)) continue;
                 int2 nExitCell = Adjacent(nc, nExit);
                 if (nExitCell.x == cell.x && nExitCell.y == cell.y) edges.Add(d);
             }
             return edges;
+        }
+
+        // ----------------------------------------------------------------
+        // Overpasses (BeltBridge)
+        // ----------------------------------------------------------------
+
+        // Lifts a ramp tile's ribbon (spawned by SpawnBeltTrack) toward the deck.
+        private static void LiftFlow(GameObject beltRoot, int spanDir, float cs, bool rampUp)
+        {
+            var mf = beltRoot.transform.Find("Flow")?.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null) ConveyorFlowMeshBuilder.LiftRamp(mf.sharedMesh, spanDir, cs, rampUp);
+        }
+
+        // The whole overpass hangs off its ramp-up tile: the ramp, a raised belt over each tile crossed, and a girder
+        // along each side of the deck. Removing the ramp-up's visual removes all of it.
+        private void BuildOverpass(GameObject rampUpRoot, int spanDir, int len, float cs)
+        {
+            LiftFlow(rampUpRoot, spanDir, cs, true);
+            Vector3 along = ConveyorFlowMeshBuilder.Dir(spanDir);
+            float   deckY = ConveyorFlowMeshBuilder.FlowY + OverpassRules.DeckHeight;
+            for (int k = 1; k < len; k++)
+            {
+                var deck = new GameObject($"Deck_{k}", typeof(MeshFilter), typeof(MeshRenderer));
+                deck.transform.SetParent(rampUpRoot.transform, worldPositionStays: false);
+                deck.transform.localPosition = along * (k * cs);
+                deck.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.Build(cs, spanDir, spanDir, null, deckY);
+                var mr = deck.GetComponent<MeshRenderer>();
+                mr.sharedMaterial    = GetFlowMaterial();
+                mr.shadowCastingMode = ShadowCastingMode.Off;
+                mr.receiveShadows    = false;
+            }
+
+            // Girders: from the middle of the ramp up to the middle of the ramp down, just under the deck's edges.
+            Vector3 side   = Vector3.Cross(Vector3.up, along);
+            float   offset = cs * ConveyorFlowMeshBuilder.WaterWidthFrac * 0.5f + 0.03f;
+            float   length = (len - 1) * cs + cs * 0.5f;
+            Vector3 mid    = along * (cs * len * 0.5f) + Vector3.up * (deckY - 0.05f);
+            Vector3 size   = along * length + side * 0.05f + Vector3.up * 0.07f;
+            size = new Vector3(Mathf.Abs(size.x), size.y, Mathf.Abs(size.z));
+            for (int s = -1; s <= 1; s += 2)
+            {
+                var girder = new GameObject("Girder", typeof(MeshFilter), typeof(MeshRenderer));
+                girder.transform.SetParent(rampUpRoot.transform, worldPositionStays: false);
+                girder.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.BuildBox(mid + side * (offset * s), size);
+                var mr = girder.GetComponent<MeshRenderer>();
+                mr.sharedMaterial    = GetGirderMaterial();
+                mr.shadowCastingMode = ShadowCastingMode.Off;
+                mr.receiveShadows    = false;
+            }
+        }
+
+        private Material GetGirderMaterial()
+        {
+            if (_girderMaterial != null) return _girderMaterial;
+            // URP Unlit so it never renders magenta on Android (CLAUDE.md rule).
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+            _girderMaterial = new Material(shader != null ? shader : Shader.Find("Sprites/Default"));
+            if (_girderMaterial.HasProperty("_BaseColor")) _girderMaterial.SetColor("_BaseColor", GirderColor);
+            if (_girderMaterial.HasProperty("_Color"))     _girderMaterial.SetColor("_Color", GirderColor);
+            _girderMaterial.color = GirderColor;
+            return _girderMaterial;
+        }
+
+        // A belt split's tile: the fork mesh in the belts' own material.
+        private GameObject SpawnFork(int x, int y, int inEdgeDir, List<int> exits, float cs)
+        {
+            var root = new GameObject($"BeltSplit_{x}_{y}");
+            root.transform.SetParent(gridRenderer.transform, worldPositionStays: false);
+            root.transform.localPosition = new Vector3(x * cs, 0f, y * cs);
+            var flow = new GameObject("Flow", typeof(MeshFilter), typeof(MeshRenderer));
+            flow.transform.SetParent(root.transform, worldPositionStays: false);
+            flow.GetComponent<MeshFilter>().sharedMesh = ConveyorFlowMeshBuilder.BuildFork(cs, inEdgeDir, exits);
+            var mr = flow.GetComponent<MeshRenderer>();
+            mr.sharedMaterial    = GetFlowMaterial();
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            mr.receiveShadows    = false;
+            return root;
         }
 
         // ----------------------------------------------------------------
@@ -616,7 +818,7 @@ namespace MobileIdleBuilder
                 ConveyorFlowMeshBuilder.Build(cs, entryDir, exitDir, inboundEdges);
 
             var wmr = flow.GetComponent<MeshRenderer>();
-            wmr.sharedMaterial    = GetFlowMaterial();
+            wmr.sharedMaterial    = IsStreamWorld() ? GetStreamMaterial() : GetFlowMaterial();
             wmr.shadowCastingMode = ShadowCastingMode.Off;
             wmr.receiveShadows    = false;
 
@@ -627,6 +829,41 @@ namespace MobileIdleBuilder
         /// The shared belt material (the <c>ConveyorField</c> lattice); a Belt Splitter's river draws with it
         /// to match its belts. Line colours contrast with every world's dark tiles.
         /// </summary>
+        // Chemistry streams: the same lattice in water colours (cool cyan lines, deep blue glow).
+        private static readonly Color StreamLineColor = new Color(0.62f, 0.92f, 1.00f);
+        private static readonly Color StreamGlowColor = new Color(0.18f, 0.48f, 0.95f);
+        private Material _streamMaterial;
+
+        /// <summary>True when the live world's belts are streams (every belt there is one).</summary>
+        private static bool IsStreamWorld()
+        {
+            var w = World.DefaultGameObjectInjectionWorld;
+            return w != null && w.IsCreated && WorldRules.IsStreamWorld(w.EntityManager);
+        }
+
+        /// <summary>
+        /// Stream worlds' channel material: clear water over a pebble bed with drifting caustics
+        /// (MobileIdleBuilder/StreamWater, concept F2). Falls back to the belt lattice recoloured blue when the
+        /// shader is missing.
+        /// </summary>
+        public Material GetStreamMaterial()
+        {
+            if (_streamMaterial != null) return _streamMaterial;
+            var water = Shader.Find("MobileIdleBuilder/StreamWater");
+            if (water != null)
+            {
+                _streamMaterial = new Material(water);
+                _streamMaterial.SetFloat("_CellSize", gridRenderer != null ? gridRenderer.CellSize : 1.5f);
+                return _streamMaterial;
+            }
+            var baseMat = GetFlowMaterial();
+            if (!_ownsFlowMaterial || baseMat == null) return baseMat;
+            _streamMaterial = new Material(baseMat);
+            _streamMaterial.SetColor("_LineColor", StreamLineColor);
+            _streamMaterial.SetColor("_GlowColor", StreamGlowColor);
+            return _streamMaterial;
+        }
+
         public Material GetFlowMaterial()
         {
             if (_flowMaterial != null) return _flowMaterial;
@@ -642,6 +879,7 @@ namespace MobileIdleBuilder
                 _flowMaterial.SetFloat("_Mapping", 1f);
                 _flowMaterial.SetFloat("_CellSize", gridRenderer != null ? gridRenderer.CellSize : 1.5f);
                 _ownsFlowMaterial = true;
+                ApplyBeltTheme();
             }
             else
             {

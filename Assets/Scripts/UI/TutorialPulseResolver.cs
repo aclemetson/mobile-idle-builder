@@ -37,14 +37,12 @@ namespace MobileIdleBuilder
             ["research-panel"]      = "btn-research",
             ["upgrades-panel"]      = "btn-upgrades",
             ["managers-panel"]      = "btn-managers",
-            ["daily-panel"]         = "btn-daily",
             ["rewards-panel"]       = "btn-rewards",
             ["achievements-panel"]  = "btn-achievements",
             ["worlds-panel"]        = "btn-worlds",
-            ["sites-panel"]         = "btn-sites",
             ["shop-panel"]          = "btn-shop",
             ["megastructure-panel"] = "btn-megastructure",
-            ["pvp-panel"]           = "btn-pvp",
+            ["pve-panel"]           = "btn-tournament",
             ["settings-panel"]      = "btn-settings", // top-bar button, not in the drawer
         };
 
@@ -80,6 +78,15 @@ namespace MobileIdleBuilder
                 if (!e.ClassListContains("slide-panel")) continue;
                 if (IsHidden(e) && PanelOpeners.TryGetValue(e.name, out var opener))
                     return Resolve(root, opener, depth + 1);
+                break;
+            }
+
+            // On a hidden menu tab (Builder / Recipes tabs, #487): guide to that tab's button.
+            for (var e = target.parent; e != null; e = e.parent)
+            {
+                if (!e.ClassListContains(BuilderMenu.PageClass) || !IsHidden(e)) continue;
+                var tabButton = root.Q(e.name.Replace("-page-", "-tab-"));
+                if (tabButton != null) return Resolve(root, tabButton.name, depth + 1);
                 break;
             }
 

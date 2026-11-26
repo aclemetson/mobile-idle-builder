@@ -16,9 +16,10 @@ MonoBehaviour:
   displayName: Peptide Pool
   fieldType: Organic
   drops:
-  - item: {fileID: 11400000, guid: 5a7f8e0ea59460a46a008208dd7c527d, type: 2}
+  - item: {fileID: 11400000, guid: afe7834b40b46cb46908397c9c43c652, type: 2}
     weight: 1
   tapCooldownSeconds: 2.5
+  world: world_biology
   purchaseResearchId: 
   purchaseCostBase: 0
   purchaseCostMultiplier: 10

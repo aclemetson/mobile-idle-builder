@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The powerhouse of the cell. A membrane-bound organelle that burns fuel
     into usable energy.
   codexUnlocked: 0
-  baseSellValue: 9390000
+  baseSellValue: 2980000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

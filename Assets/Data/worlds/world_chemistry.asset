@@ -15,8 +15,10 @@ MonoBehaviour:
   id: world_chemistry
   displayName: Chemistry
   unlockCost: 0
-  prereqUnlockIds:
-  - chemistry_lab
+  prereqUnlockIds: []
+  unlockByTasks: 1
+  streamTransport: 1
+  tutorialFlow: {fileID: 11400000, guid: c271eeb950d491f489fd8e2b27a06dd7, type: 2}
   siteIds:
   - site_chem_lab
   theme:

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: nucleotide_field
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: nucleotide_field
-  displayName: Nucleotide Vein
+  displayName: Nucleotide Pool
   fieldType: Organic
   drops:
-  - item: {fileID: 11400000, guid: 146e721aeca4bb2409be60a74bd7b43f, type: 2}
+  - item: {fileID: 11400000, guid: ed130169409bbd84b83d5f57dd3e4e24, type: 2}
     weight: 1
   tapCooldownSeconds: 3
+  world: world_biology
   purchaseResearchId: 
   purchaseCostBase: 0
   purchaseCostMultiplier: 10

@@ -24,7 +24,9 @@ MonoBehaviour:
   block: foundations
   treeX: -1
   treeY: -1
-  costBaseCurrency: 3080000
+  requiredWorld: 
+  world: world_physics
+  costBaseCurrency: 401000
   costPrestigeCurrency: 0
   durationSeconds: 90
   fieldCooldownMult: 1
@@ -35,6 +37,7 @@ MonoBehaviour:
   unlocksRecipes: []
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 2c81d4a27103bdb4a9e076e504fba132, type: 2}
   resetsOnPrestige: 1
   codexEntry: 

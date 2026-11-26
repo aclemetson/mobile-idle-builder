@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: 'Meitnerium (Mt), element number 109 with mass number 278. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 1230000
+  baseSellValue: 11400000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: 
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     fusion \u2014 stars cannot fuse elements heavier than iron without consuming
     more energy than they produce."
   codexUnlocked: 0
-  baseSellValue: 27200
+  baseSellValue: 333000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

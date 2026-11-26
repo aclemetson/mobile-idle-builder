@@ -43,6 +43,7 @@ namespace MobileIdleBuilder.Dev
             var pState = SystemAPI.GetSingleton<PlayerProgressData>();
             pState.BaseCurrency      = entropy;
             pState.TotalEntropySpent = spent;
+            pState.TotalEntropyDiscounted = 0;
             SystemAPI.SetSingleton(pState);
 
             GameLogger.Debug($"[TutorialSkip] Step → {stepIdx}, Entropy → {entropy}");

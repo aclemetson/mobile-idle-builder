@@ -12,6 +12,22 @@ namespace MobileIdleBuilder
     {
         private readonly HashSet<(int, int)> _occupied      = new();
         private readonly HashSet<(int, int)> _conveyorCells = new();
+        private readonly Dictionary<(int, int), int> _overpassCells = new();   // tiles under an overpass -> span count
+
+        /// <summary>True for a tile an overpass passes over: belts may go there, buildings may not.</summary>
+        public bool IsUnderOverpass(int x, int y) => _overpassCells.ContainsKey((x, y));
+
+        /// <summary>Marks a tile as under an overpass (an overpass span placed over it).</summary>
+        public void RegisterOverpass(int x, int y) =>
+            _overpassCells[(x, y)] = _overpassCells.TryGetValue((x, y), out int n) ? n + 1 : 1;
+
+        /// <summary>The overpass over this tile was removed.</summary>
+        public void UnregisterOverpass(int x, int y)
+        {
+            if (!_overpassCells.TryGetValue((x, y), out int n)) return;
+            if (n <= 1) _overpassCells.Remove((x, y));
+            else        _overpassCells[(x, y)] = n - 1;
+        }
 
         public bool IsOccupied(int x, int y)    => _occupied.Contains((x, y));
         public bool IsConveyorCell(int x, int y) => _conveyorCells.Contains((x, y));
@@ -57,6 +73,10 @@ namespace MobileIdleBuilder
         /// <summary>Returns true if every cell in the rect is free.</summary>
         public bool IsRectFree(int x, int y, int w, int h)
         {
+            // Buildings can't sit under an overpass (belts can).
+            for (int dx = 0; dx < w; dx++)
+            for (int dy = 0; dy < h; dy++)
+                if (IsUnderOverpass(x + dx, y + dy)) return false;
             for (int dx = 0; dx < w; dx++)
                 for (int dy = 0; dy < h; dy++)
                     if (_occupied.Contains((x + dx, y + dy))) return false;

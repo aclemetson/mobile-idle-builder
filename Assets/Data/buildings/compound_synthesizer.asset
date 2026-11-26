@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: compound_synthesizer
   displayName: Compound Synthesizer
-  description: Combines mined elements into inorganic compounds (oxides, salts, acids).
+  description: Combines mined minerals with Chemistry's gases into salts and acids.
   icon: {fileID: 0}
   prefab: {fileID: 0}
   buildingId: 15
@@ -23,25 +23,27 @@ MonoBehaviour:
   isObsoleteable: 0
   obsoleteCondition: 
   obsoletedByResearch: 
-  requiresPower: 1
+  requiresPower: 0
   isPowerSource: 0
-  basePowerCostEV: 50
+  basePowerCostEV: 0
   powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 3
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: eea4dfa47f281b443873f34c993f6e68, type: 2}
-  - {fileID: 11400000, guid: f51cb0c71f77f97419f352abdfb70b19, type: 2}
+  - {fileID: 11400000, guid: b1062b840ab69a048912213d30b2f14d, type: 2}
   - {fileID: 11400000, guid: 881f1447bac3d084e9b4c6b0d5350cb3, type: 2}
-  inputSlotCount: 2
+  - {fileID: 11400000, guid: 68e2ac9bc7adf9c41898ac0eaea123e0, type: 2}
+  inputSlotCount: 1
   inputSlotLabels:
-  - Primary Element
-  - Secondary Element
+  - Stream
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -50,23 +52,21 @@ MonoBehaviour:
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 1
+    localFacing: 2
   - portType: 1
     localCell: {x: 0, y: 0}
-    localFacing: 2
+    localFacing: 0
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_chemistry
   entropyCost: 10000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 2
-    powerCostEV: 75
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -74,7 +74,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 4
-    powerCostEV: 115
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -82,7 +82,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 8
-    powerCostEV: 170
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -116,7 +116,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 3715d00d16193fd4bba40a31aa510d65, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

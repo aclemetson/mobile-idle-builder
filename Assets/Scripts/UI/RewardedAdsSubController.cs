@@ -15,7 +15,7 @@ namespace MobileIdleBuilder
         static readonly AdPlacement[] PanelPlacements =
         {
             AdPlacement.EntropySurge,
-            AdPlacement.EntropyBoost,
+            AdPlacement.IdleRateBoostShort,
             AdPlacement.IdleRateBoost,
             AdPlacement.SpeedBoost,
             AdPlacement.TimeWarp,
@@ -72,6 +72,8 @@ namespace MobileIdleBuilder
                         ? "TEST ADS: no real ads are shown (ads.test_mode). Limited per day."
                         : "Watch a short ad for a bonus. Limited per day.")
                     : "Free rewards are currently unavailable.";
+                string lockMsg = BoostLock.Message(SaveManager.Instance?.Current, GameClock.UtcNow);
+                if (lockMsg != null) _info.text += "\n" + lockMsg + ". One boost at a time.";
             }
 
             foreach (var placement in PanelPlacements)
@@ -96,11 +98,9 @@ namespace MobileIdleBuilder
                 watchBtn.AddToClassList("craft-btn");
                 watchBtn.SetEnabled(canWatch);
 
-                if (def.Kind == AdRewardKind.IncomeMinutes || def.Kind == AdRewardKind.Entropy || def.CooldownMinutes > 0f)
-                {
-                    _liveRows.Add((placement, descLabel, watchBtn));
-                    ApplyLiveText(placement, descLabel, watchBtn);
-                }
+                // Every row is live: cooldowns, income previews and the boost-lock countdown tick.
+                _liveRows.Add((placement, descLabel, watchBtn));
+                ApplyLiveText(placement, descLabel, watchBtn);
 
                 var captured = placement;
                 watchBtn.clicked += () => OnWatchPressed(captured);
@@ -117,12 +117,10 @@ namespace MobileIdleBuilder
                 ApplyLiveText(placement, desc, btn);
         }
 
-        /// <summary>" (12 s)" while the income tracker warms up; empty when there is no tracker or a reload is pending.</summary>
-        static string MeasuringEta()
+        static string SurgeRowText(long entropy, long crystals, float crystalChance)
         {
-            var t = IncomeRateTracker.Current;
-            if (t == null || PrestigeRunReset.ReloadPending) return "";
-            return $" ({System.Math.Ceiling(t.SecondsUntilRewardRate):0} s)";
+            int pct = Mathf.RoundToInt(crystalChance * 100f);
+            return $"+{NumberFormat.Compact(entropy)} entropy ({100 - pct}%) or {crystals} crystals ({pct}%)";
         }
 
         static void ApplyLiveText(AdPlacement placement, Label desc, Button btn)
@@ -131,23 +129,24 @@ namespace MobileIdleBuilder
             var def = AdRewardCalculator.Def(placement);
             int remaining = ads?.Remaining(placement) ?? 0;
             var cooldown  = ads?.CooldownRemaining(placement) ?? System.TimeSpan.Zero;
+            var locked    = ads?.BoostLockRemaining(placement) ?? System.TimeSpan.Zero;
 
             string reward = def.Kind switch
             {
-                AdRewardKind.IncomeMinutes when ads != null && !ads.IncomeMeasured(placement) =>
-                    $"Measuring income{MeasuringEta()}… ({def.IncomeMinutes:0} min of income)",
-                AdRewardKind.IncomeMinutes when ads != null =>
-                    $"+{NumberFormat.Compact(ads.PreviewIncomeReward(placement))} entropy ({def.IncomeMinutes:0} min of income)",
+                AdRewardKind.SurgeRoll when ads != null =>
+                    SurgeRowText(ads.PreviewEntropyReward(), def.CrystalAmount,
+                                 AdRewardCalculator.SurgeCrystalChance(SaveManager.Instance?.Current)),
                 AdRewardKind.Entropy when ads != null =>
                     $"+{NumberFormat.Compact(ads.PreviewEntropyReward())} entropy ({def.NetWorthFraction * 100f:0}% of net worth, min {NumberFormat.Compact(def.MinimumFloor)})",
                 _ => def.Description,
             };
-            desc.text = $"{reward}   ({remaining}/{def.DailyCap} left today)";
+            bool capped = AdRewardCalculator.HasDailyCap(placement);
+            desc.text = capped ? $"{reward}   ({remaining}/{def.DailyCap} left today)" : reward;
 
-            if (remaining <= 0)                  btn.text = "Maxed";
+            if (capped && remaining <= 0)        btn.text = "Maxed";
+            else if (locked > System.TimeSpan.Zero)   btn.text = $"Boost active {BoostLock.FormatLeft(locked)}";
             else if (cooldown > System.TimeSpan.Zero) btn.text = $"Ready in {AdService.FormatCooldown(cooldown)}";
-            else if (ads != null && !ads.IncomeMeasured(placement)) btn.text = "Measuring…";
-            else                                 btn.text = "▶ Watch";
+            else                                 btn.text = ads != null && ads.SkipsAds ? "Claim" : "▶ Watch";
             btn.SetEnabled(ads != null && ads.CanWatch(placement));
         }
 

@@ -19,11 +19,7 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
-    quantity: 6
-  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
-    quantity: 12
-  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
+  - item: {fileID: 11400000, guid: ccb96d6568ebf9a49aa4c45cfdcaaafe, type: 2}
     quantity: 6
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 56d7d1047f99e5a439dfaf7f3de183d6, type: 2}
@@ -32,12 +28,12 @@ MonoBehaviour:
   baseCraftTime: 45
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 250
+  fixedPowerCostEV: 200
   validBuildings:
   - {fileID: 11400000, guid: 7f4070ce2677724458d8725bc480b1e4, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 6091998ca4dbd32428135e92673ca2a6, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: 6 CH2O -> C6H12O6

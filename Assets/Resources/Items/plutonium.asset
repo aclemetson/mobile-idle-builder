@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 24,100 years (Pu-239)
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     particle accelerators. Pu-239 is the most energy-dense fissile fuel known. Assembling
     it requires exquisite precision."
   codexUnlocked: 0
-  baseSellValue: 13300
+  baseSellValue: 2400000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

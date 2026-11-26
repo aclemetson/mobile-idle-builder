@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: alcohols_and_acids
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: alcohols_and_acids
+  displayName: Alcohols and Acids
+  description: 'Alcohols and Acids: Ethanol, Acetic Acid, Glycerol.'
+  icon: {fileID: 0}
+  branch: 0
+  prerequisites:
+  - {fileID: 11400000, guid: 69f886f319651034f9b1ae2eb8053955, type: 2}
+  depthInTree: 10
+  block: chem_organics
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_chemistry
+  costBaseCurrency: 2190000
+  costPrestigeCurrency: 0
+  durationSeconds: 900
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 21f6fa4a106cd1d41b07d4dfadc04bd6, type: 2}
+  - {fileID: 11400000, guid: 054676a0b925612428b4bfda355bc991, type: 2}
+  - {fileID: 11400000, guid: 148b5fb280af816478abd5d6cb4fae79, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 8e04e359d3be2594e9a3132c666e18a7, type: 2}
+  - {fileID: 11400000, guid: 537c720d1187c0f448cab28245cf99d0, type: 2}
+  - {fileID: 11400000, guid: bceb7bd46e611f04a97efdf3ed7d7dcb, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 41439204a2889224fa55ada4505d65e8, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'C3H8O3: the three-carbon spine of every fat.'

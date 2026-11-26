@@ -47,6 +47,32 @@ namespace MobileIdleBuilder
 
         public bool IsOpen => _step != Step.Closed;
 
+        public const string IntroDialogueId = "intro_cyclotron";
+
+        /// <summary>
+        /// Pure rule for the one-shot unlock intro: once the Cyclotron is unlocked, the first time no other
+        /// dialogue is on screen, unless the player has already used it (a save from before the intro existed).
+        /// </summary>
+        public static bool ShouldPlayIntro(SaveData save, bool dialogueBusy) =>
+            save != null && !save.cyclotronIntroSeen && CyclotronProgress.IsUnlocked(save) &&
+            string.IsNullOrEmpty(save.cyclotronLastRunUtc) && !dialogueBusy;
+
+        DialogueController _dialogue;
+
+        void TryPlayIntro(SaveData save)
+        {
+            if (save == null || save.cyclotronIntroSeen) return;
+            if (!string.IsNullOrEmpty(save.cyclotronLastRunUtc)) { save.cyclotronIntroSeen = true; return; } // already played it
+            if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.SaveApplied) return;
+            _dialogue ??= FindAnyObjectByType<DialogueController>();
+            if (_dialogue == null || !ShouldPlayIntro(save, _dialogue.IsPlaying)) return;
+            var dialogue = Resources.Load<DialogueDatabaseSO>("DialogueDatabase")?.Get(IntroDialogueId);
+            if (dialogue == null) return;
+            save.cyclotronIntroSeen = true;
+            SaveManager.Instance?.SaveLocal();
+            _dialogue.PlayDialogue(dialogue);
+        }
+
         public void Init(VisualElement root, HUDController hud)
         {
             _hud          = hud;
@@ -105,14 +131,15 @@ namespace MobileIdleBuilder
             bool unlocked = loaded && CyclotronProgress.IsUnlocked(save);
             HUDController.SetElementVisible(_drawerButton, unlocked);
             if (loaded) SyncBoost(CyclotronProgress.BoostMultiplier(save, GameClock.UtcNow));
+            if (unlocked) TryPlayIntro(save);
 
             if (unlocked && Time.unscaledTime >= _nextStatus)
             {
                 _nextStatus = Time.unscaledTime + 1f;
                 var now = GameClock.UtcNow;
-                _drawerButton.text = DrawerLabel(CyclotronProgress.CooldownLeft(save, now),
+                DrawerTile.SetCaption(_drawerButton, DrawerLabel(CyclotronProgress.CooldownLeft(save, now),
                                                  CyclotronProgress.BoostMultiplier(save, now),
-                                                 CyclotronProgress.BoostLeft(save, now));
+                                                 CyclotronProgress.BoostLeft(save, now)));
                 if (_step == Step.Intro) RefreshIntro(save);
             }
 
@@ -234,8 +261,10 @@ namespace MobileIdleBuilder
         /// Writes the live boost into the <see cref="EntropyIncomeBoost"/> singleton (creating it the first
         /// time) whenever it changes, so the income systems start and stop applying it on the same frame.
         /// </summary>
-        void SyncBoost(float mult)
+        void SyncBoost(float cyclotronMult)
         {
+            // The singleton is the whole live income multiplier: the Cyclotron boost times the ad-free bonus (#503).
+            float mult = AdFree.CombinedIncomeMultiplier(SaveManager.Instance?.Current, cyclotronMult);
             if (!_ecsReady)
             {
                 var world = World.DefaultGameObjectInjectionWorld;

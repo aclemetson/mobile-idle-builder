@@ -66,23 +66,19 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void FuseIron_CraftTime_Is28s()
+        public void IronConvergence_CraftTime_Is60s()
         {
-            Assert.AreEqual(28f, RequireRecipe("fuse_iron").base_craft_time, 0.001f);
+            // Item Timeline (2026-11-23): Iron joins Manganese and Cobalt, the slowest fusion step.
+            Assert.AreEqual(60f, RequireRecipe("iron_convergence").base_craft_time, 0.001f);
         }
 
         // ── Tier 3 — Molecular craft times ───────────────────────────────────
 
         [Test]
-        public void LiquidHydrogen_CraftTime_Is20s()
+        public void Water_CraftTime_Is15s()
         {
-            Assert.AreEqual(20f, RequireRecipe("liquid_hydrogen").base_craft_time, 0.001f);
-        }
-
-        [Test]
-        public void Water_CraftTime_Is60s()
-        {
-            Assert.AreEqual(60f, RequireRecipe("water").base_craft_time, 0.001f);
+            // H2O: 3 atoms. Was 4 H + 8 O at 60 s; time scaled with the atom count (2026-11-18).
+            Assert.AreEqual(15f, RequireRecipe("water").base_craft_time, 0.001f);
         }
 
         // ── Tier 4 — Materials craft times ───────────────────────────────────
@@ -96,9 +92,10 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 5 — Component craft times ───────────────────────────────────
 
         [Test]
-        public void QuantumProcessor_CraftTime_Is1200s()
+        public void QuantumProcessor_CraftTime_Is2400s()
         {
-            Assert.AreEqual(1200f, RequireRecipe("quantum_processor").base_craft_time, 0.001f);
+            // Item Timeline phase 4: Engineering parts are few and slow (2 circuit boards + a superconductor).
+            Assert.AreEqual(2400f, RequireRecipe("quantum_processor").base_craft_time, 0.001f);
         }
 
         // ── Ingredient counts for tutorial-critical recipes ───────────────────
@@ -121,6 +118,33 @@ namespace MobileIdleBuilder.Tests
                 "Hydrogen should have exactly 2 inputs with quantity > 0 (proton, electron)");
             RequireInput(r, "proton",   quantity: 1);
             RequireInput(r, "electron", quantity: 1);
+        }
+
+        [Test]
+        public void Methane_IsCH4_4Hydrogen_1Carbon_40s()
+        {
+            // CH4: one carbon. It once took 6, starving Methane lines of Carbon (fixed 2026-11-18,
+            // craft time halved with the atom count: 10 atoms / 80 s -> 5 atoms / 40 s).
+            // 2026-11-19 natural feedstock: C + 2 H2 -> CH4, from graphite and hydrogen gas.
+            var r = RequireRecipe("methane");
+            RequireInput(r, "hydrogen_gas", quantity: 2);
+            RequireInput(r, "graphite",     quantity: 1);
+            Assert.AreEqual(40f, r.base_craft_time, 0.001f);
+        }
+
+        // Molecules use their real formula. Several were multiples or plain wrong (water 4 H + 8 O, ammonia 7 N,
+        // UF6 from silicon); fixed 2026-11-18, craft time scaled with the atom count. Since 2026-11-19 Chemistry
+        // reacts the gases as found (H2, O2, N2), so some reactions make two molecules
+        // (2 H2 + O2 -> 2 H2O); ChemistryFeedstockTests checks the atoms balance.
+        [TestCase("water",                "hydrogen_gas", 2, "oxygen_gas",   1, 15f)]
+        [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 36f)]
+        public void Molecule_MatchesItsFormula(string id, string a, int qa, string b, int qb, float seconds)
+        {
+            var r = RequireRecipe(id);
+            Assert.AreEqual(2, r.inputs.Count(i => i.quantity > 0), $"{id}: exactly two elements");
+            RequireInput(r, a, quantity: qa);
+            RequireInput(r, b, quantity: qb);
+            Assert.AreEqual(seconds, r.base_craft_time, 0.001f);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────

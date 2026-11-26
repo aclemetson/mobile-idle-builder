@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: island_of_stability
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: island_of_stability
+  displayName: Island of Stability
+  description: Roentgenium to Oganesson, the end of the table.
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
+  depthInTree: 30
+  block: deep_physics
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 870000000000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 18fc538167ecb434db4179caec349741, type: 2}
+  - {fileID: 11400000, guid: e64861209c47c0741804253575311b9c, type: 2}
+  - {fileID: 11400000, guid: bb30176d4a98f5f4d8ac9f1b35cede0b, type: 2}
+  - {fileID: 11400000, guid: e0f4d1c015e2b3e4c836bd03773cb83e, type: 2}
+  - {fileID: 11400000, guid: 70ef9811f7bb3694d9ae5300f3052719, type: 2}
+  - {fileID: 11400000, guid: d34574ed2bfe7bb4ebadf22bdf1a9c99, type: 2}
+  - {fileID: 11400000, guid: 627b1222502f88d4280d837382a8c39d, type: 2}
+  - {fileID: 11400000, guid: f4590576d290f5343b5d7c78c9204f35, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: c82cb0b4e7e524a4dbb9e5496bc07b63, type: 2}
+  - {fileID: 11400000, guid: 045c3ead4adcc95468b696b8b7fddb74, type: 2}
+  - {fileID: 11400000, guid: df82b103d4d1649438361edffa2f28b6, type: 2}
+  - {fileID: 11400000, guid: aa4e982084fe8c94f95c397a73e2b4db, type: 2}
+  - {fileID: 11400000, guid: ddc4af682ef835d48abb0eaf71636159, type: 2}
+  - {fileID: 11400000, guid: a86584b878aa4034ea5d10a69c54caf3, type: 2}
+  - {fileID: 11400000, guid: 2dcb39dc5b2ca994686b4b565cb636e9, type: 2}
+  - {fileID: 11400000, guid: dcb8d59c0937ed845905cec5dc1141cd, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch: []
+  resetsOnPrestige: 1
+  codexEntry: Roentgenium to Oganesson, the end of the table.

@@ -221,8 +221,39 @@ namespace MobileIdleBuilder
         {
             if (string.IsNullOrEmpty(targetId)) return false;
             if (TryParseSuggest(targetId, out _, out _, out _) || TryParsePower(targetId, out _)) return true;
+            // A single fixed tile is where the next thing goes; two tiles are a belt's start and end.
+            if (TryParseCells(targetId, out _, out var second)) return second == null;
             if (TryParseRoute(targetId, out _, out _)) return false;
             return isFieldId != null && isFieldId(targetId);
+        }
+
+        /// <summary>
+        /// Parses "cells:x,y" (one tile: where to place the next building or field) or "cells:x,y&gt;x2,y2"
+        /// (two tiles: the start and end of the next belt or channel). Used where a world has a fixed
+        /// starting layout (Chemistry's tutorial, around the pre-placed Calorimeter).
+        /// </summary>
+        public static bool TryParseCells(string targetId, out Vector2Int first, out Vector2Int? second)
+        {
+            first = default; second = null;
+            const string prefix = "cells:";
+            if (string.IsNullOrEmpty(targetId) || !targetId.StartsWith(prefix, StringComparison.Ordinal)) return false;
+            var parts = targetId.Substring(prefix.Length).Split('>');
+            if (parts.Length < 1 || parts.Length > 2 || !TryCell(parts[0], out first)) return false;
+            if (parts.Length == 2)
+            {
+                if (!TryCell(parts[1], out var b)) return false;
+                second = b;
+            }
+            return true;
+        }
+
+        static bool TryCell(string s, out Vector2Int cell)
+        {
+            cell = default;
+            var xy = s.Split(',');
+            if (xy.Length != 2 || !int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y)) return false;
+            cell = new Vector2Int(x, y);
+            return true;
         }
 
         /// <summary>

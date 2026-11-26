@@ -19,14 +19,16 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 5
   prerequisites:
-  - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
+  - {fileID: 11400000, guid: 419cb6fafa94fd54eae5d89981cd3100, type: 2}
   depthInTree: 6
-  block: biology_world
+  block: bio_biomolecules
   treeX: -1
   treeY: -1
-  costBaseCurrency: 874000000
+  requiredWorld: 
+  world: world_biology
+  costBaseCurrency: 1090000000
   costPrestigeCurrency: 0
-  durationSeconds: 7200
+  durationSeconds: 1800
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
@@ -35,14 +37,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 322f1bf46d44c09488ddc3ac803ed97c, type: 2}
   - {fileID: 11400000, guid: 299eb3c3033840348a05033f42360df2, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: 8a937314ba664414097a020f5613e2b4, type: 2}
-  - {fileID: 11400000, guid: fe0e94040e80312418b902ee519d4cc2, type: 2}
-  - {fileID: 11400000, guid: ffd86a28a84901147a2c8f335941d89f, type: 2}
-  - {fileID: 11400000, guid: a071d933ad3e25e4eb3ad7266b7cad42, type: 2}
   - {fileID: 11400000, guid: 16ccd82f5311877408bff60eb9d63562, type: 2}
   - {fileID: 11400000, guid: 6b279f427c626c1438a4eec48730f603, type: 2}
   - {fileID: 11400000, guid: 502e00693d25a774894042a410b1a914, type: 2}
   - {fileID: 11400000, guid: b3fb4d2eaf6fe5d438c6d7c995ad0a8c, type: 2}
+  - {fileID: 11400000, guid: 8a937314ba664414097a020f5613e2b4, type: 2}
+  - {fileID: 11400000, guid: a06984686dc99294d84c99330ffdfcac, type: 2}
+  - {fileID: 11400000, guid: 441961860dc6c9348a47d0c13c44b5e5, type: 2}
+  - {fileID: 11400000, guid: 86271783cbdb4de4292d73ccffdb5ea9, type: 2}
+  - {fileID: 11400000, guid: 207eefd1e5cb6174bad50c83b3338bdf, type: 2}
   unlocksBuildings:
   - {fileID: 11400000, guid: bd1dde8a2ab4c52449e80942eeef3ae3, type: 2}
   - {fileID: 11400000, guid: b85ff890e41307141970afd1c672e695, type: 2}

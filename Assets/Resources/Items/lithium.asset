@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     technology \u2014 the backbone of rechargeable batteries used in every mobile
     device."
   codexUnlocked: 0
-  baseSellValue: 217
+  baseSellValue: 79
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

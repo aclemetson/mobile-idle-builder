@@ -92,7 +92,11 @@ namespace MobileIdleBuilder
             int applied = 0;
             foreach (var e in entries)
                 if (e != null && byId.TryGetValue(e.id ?? "", out var item) && SetItemField(item, e.field, e.value)) applied++;
-            if (applied > 0) GameLogger.Info($"[GameDataOverrides] Applied {applied} item override(s).");
+            if (applied > 0)
+            {
+                GameLogger.Info($"[GameDataOverrides] Applied {applied} item override(s).");
+                ItemDatabase.BumpVersion();   // item prices changed: rebuild ItemValueTable (#284)
+            }
             return applied;
         }
 

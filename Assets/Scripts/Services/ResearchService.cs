@@ -59,6 +59,8 @@ namespace MobileIdleBuilder
             }
 
             var save = SaveManager.Instance?.Current;
+            long refund = MigrateMergedResearch(save);
+            if (refund > 0) RefundRetired(save, refund);
             if (save?.unlockedResearch != null)
                 foreach (var id in save.unlockedResearch) _unlockedIds.Add(id);
 
@@ -88,6 +90,13 @@ namespace MobileIdleBuilder
 
         public bool IsUnlocked(string id) =>
             !string.IsNullOrEmpty(id) && _unlockedIds.Contains(id);
+
+        /// <summary>
+        /// False while <paramref name="research"/> needs a world that isn't unlocked yet (WorldGate): Physics past
+        /// silicon and the Chemistry tree wait for the Chemistry tasks.
+        /// </summary>
+        public bool WorldOpen(ResearchSO research) =>
+            WorldGate.ResearchOpen(research, SaveManager.Instance?.Current?.unlockedWorlds);
 
         /// <summary>
         /// Product of <see cref="ResearchSO.fieldCooldownMult"/> across every unlocked research node.
@@ -179,6 +188,7 @@ namespace MobileIdleBuilder
         {
             if (research == null) return false;
             if (IsUnlocked(research.id)) return false;
+            if (!WorldOpen(research)) return false;
 
             if (research.prerequisites != null)
             {
@@ -189,8 +199,13 @@ namespace MobileIdleBuilder
                 }
             }
 
+            // Tutorial: while collection is paused only the tutorial's next research can be bought, and a
+            // player already stuck on it gets it for what they hold (TutorialResearchPolicy).
+            if (!TutorialResearchPolicy.CanBuy(research.id, IsUnlocked)) return false;
+
             long currentEntropy = GetCurrentEntropy();
-            return currentEntropy >= EffectiveCost(research);
+            long cost           = EffectiveCost(research);
+            return currentEntropy >= cost || TutorialResearchPolicy.IsRescue(research.id, currentEntropy, cost);
         }
 
         /// <summary>
@@ -213,6 +228,14 @@ namespace MobileIdleBuilder
             return Mathf.Max(0, Mathf.RoundToInt(research.durationSeconds * (1f - reduction)));
         }
 
+        /// <summary>
+        /// Research left this run that will finish the moment it starts: the Free Research levels (#491) less
+        /// the ones already used this run (<see cref="CurrentRunData.freeResearchUsed"/>, reset by prestige).
+        /// </summary>
+        public int FreeResearchLeft =>
+            FreeResearchRule.Remaining(PersistentUpgradeService.Instance?.GetEffect(UpgradeEffectType.FreeResearch) ?? 0f,
+                                       SaveManager.Instance?.Current?.currentRun?.freeResearchUsed ?? 0);
+
         // ── Start / complete ─────────────────────────────────────────────────
 
         /// <summary>
@@ -226,13 +249,25 @@ namespace MobileIdleBuilder
 
             // Check-and-spend in one step; CanPurchase already confirmed the balance.
             long cost = EffectiveCost(research);
-            if (!EntropyWallet.TrySpend(_progressQuery, cost)) return;
+            if (TutorialResearchPolicy.IsRescue(research.id, GetCurrentEntropy(), cost))
+                cost = EntropyWallet.SpendUpTo(_progressQuery, cost, research.costBaseCurrency);
+            else if (!EntropyWallet.TrySpend(_progressQuery, cost, research.costBaseCurrency)) return;
             AchievementService.Instance?.NotifyEntropySpent(cost);
 
             int effective = EffectiveDurationSeconds(research);
             if (effective <= 0)
             {
                 CompleteResearch(research);
+                return;
+            }
+
+            // Free Research (#491): a timed research skips its timer while this run has free ones left.
+            var run = SaveManager.Instance?.Current?.currentRun;
+            if (run != null && FreeResearchLeft > 0)
+            {
+                run.freeResearchUsed++;
+                GameLogger.Info($"[ResearchService] Free research: {research.displayName} ({FreeResearchLeft} left this run)");
+                CompleteResearch(research);   // saves
                 return;
             }
 
@@ -412,6 +447,105 @@ namespace MobileIdleBuilder
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Research merged into another node: removed id -> the node that now does its job. A save that bought
+        /// (or is researching) the removed node gets the node it was merged into, so it keeps what it paid for.
+        /// </summary>
+        internal static readonly System.Collections.Generic.Dictionary<string, string> MergedResearch = new()
+        {
+            // 2026-11-19: Surplus Containment unlocks Input Capacity upgrades too.
+            { "feedstock_buffers", "surplus_containment" },
+            // 2026-11-23 Item Timeline (scripts/apply_item_timeline.py REMOVED_RESEARCH): the s/r-process capture
+            // groups became the Spallation descent and Uranium is mined from the Uranium Vein.
+            { "transition_metals",            "iron_convergence" },
+            { "precious_metals",              "spallation_1" },
+            { "exotic_metals",                "spallation_1" },
+            { "lanthanides_and_heavy_metals", "spallation_3" },
+            { "heavy_transition_metals",      "spallation_5" },
+            { "rapid_neutron_capture",        "spallation_4" },
+            { "slow_neutron_capture",         "spallation_7" },
+            { "fissile_extraction",           "heavy_elements" },
+            // Phase 2: Organic Chemistry became Hydrocarbons (and Alcohols and Acids after it).
+            { "organic_chemistry",            "hydrocarbons" },
+            // Phase 3: Biology's precursors are the life chemicals; metals and materials moved to Metallurgy.
+            { "biochem_precursors",           "energy_currency" },
+            { "reaction_engineering",         "ore_prospecting" },
+            { "advanced_molecules",           "roasting" },
+            { "materials_science",            "steelmaking" },
+            { "advanced_materials",           "metamaterials" },
+            // Phase 4: the components moved to the Engineering world.
+            { "component_engineering",        "circuitry" },
+            { "megastructure_theory",         "dyson_engineering" },
+        };
+
+        /// <summary>
+        /// Research removed with no replacement: id -> its entropy price. A save that finished one just drops it
+        /// (it already had the benefit); one whose timer was running on it gets the price back.
+        /// </summary>
+        internal static readonly System.Collections.Generic.Dictionary<string, long> RetiredResearch = new()
+        {
+            // 2026-11-24: field tap-cooldown research. Nobody taps fields once Automation I's harvesters arrive,
+            // so these were dead weight in the tree; Transportation I now follows Automation I.
+            { "rapid_extraction_i",  150 },
+            { "rapid_extraction_ii", 48000 },
+        };
+
+        /// <summary>
+        /// Rewrites merged research ids in <paramref name="save"/> (unlocked list and the running timer) and drops
+        /// retired ones. Returns the entropy to refund for a retired research whose timer was running. Idempotent.
+        /// </summary>
+        internal static long MigrateMergedResearch(SaveData save)
+        {
+            if (save == null) return 0;
+            long refund = 0;
+            save.unlockedResearch?.RemoveAll(id => id != null && RetiredResearch.ContainsKey(id));
+            if (!string.IsNullOrEmpty(save.activeResearchId)
+                && RetiredResearch.TryGetValue(save.activeResearchId, out long price))
+            {
+                refund = price;
+                save.activeResearchId          = null;
+                save.activeResearchCompleteUtc = null;
+            }
+            if (save.unlockedResearch != null)
+            {
+                for (int i = save.unlockedResearch.Count - 1; i >= 0; i--)
+                {
+                    if (!MergedResearch.TryGetValue(save.unlockedResearch[i], out var into)) continue;
+                    save.unlockedResearch.RemoveAt(i);
+                    if (!save.unlockedResearch.Contains(into)) save.unlockedResearch.Add(into);
+                }
+            }
+            if (!string.IsNullOrEmpty(save.activeResearchId)
+                && MergedResearch.TryGetValue(save.activeResearchId, out var active))
+            {
+                if (save.unlockedResearch != null && save.unlockedResearch.Contains(active))
+                {
+                    // Already owns what the timer was buying: drop the timer rather than run it twice.
+                    save.activeResearchId          = null;
+                    save.activeResearchCompleteUtc = null;
+                }
+                else save.activeResearchId = active;
+            }
+            return refund;
+        }
+
+        // A retired research's running timer: give its price back. Into the live ECS balance when the save has
+        // already been applied, otherwise into the save before it is.
+        void RefundRetired(SaveData save, long amount)
+        {
+            bool live = _effectsReady && ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded
+                        && !_progressQuery.IsEmpty;
+            if (live)
+            {
+                var e = _progressQuery.GetSingletonEntity();
+                var p = _em.GetComponentData<PlayerProgressData>(e);
+                p.BaseCurrency += amount;
+                _em.SetComponentData(e, p);
+            }
+            else if (save?.currentRun != null) save.currentRun.baseCurrency += amount;
+            GameLogger.Info($"[ResearchService] Refunded {amount} entropy for a retired research in progress.");
+        }
 
         private ResearchSO FindResearch(string id) =>
             _allResearch == null ? null : System.Array.Find(_allResearch, r => r != null && r.id == id);

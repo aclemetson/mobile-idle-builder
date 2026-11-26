@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Europium (Eu), element number 63 with mass number 153. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 71800
+  baseSellValue: 68400
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

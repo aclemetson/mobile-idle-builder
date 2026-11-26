@@ -19,10 +19,10 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 5eb818a4a52b9cf43b5ba266095f0d45, type: 2}
+  - item: {fileID: 11400000, guid: 7fc0bedfe283e524c84695400bbed83a, type: 2}
     quantity: 1
-  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
-    quantity: 2
+  - item: {fileID: 11400000, guid: b149446d56d2e3e4ab977d8bc471fadd, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 2643d81dacf1fb845a3a97c22c534af7, type: 2}
   outputQuantity: 1
@@ -30,12 +30,12 @@ MonoBehaviour:
   baseCraftTime: 20
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 100
+  fixedPowerCostEV: 200
   validBuildings:
-  - {fileID: 11400000, guid: ae2dcdde1f53e9044aaf9008d581a3bc, type: 2}
+  - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
+  requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: C + O2 -> CO2

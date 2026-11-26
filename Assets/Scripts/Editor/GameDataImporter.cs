@@ -212,7 +212,8 @@ namespace MobileIdleBuilder.Editor
                     ResolveTierCrossRefs(so, t, researchLookup, itemLookup);
 
             // ── Step 11: TutorialFlowSO ──────────────────────────────────────
-            GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup);
+            var mainTutorial = GenerateTutorialFlow(data.tutorial_steps, dialogueLookup, buildingLookup,
+                completionMessage: "Tutorial complete! The Foundry is yours.");
 
             // ── Step 12: ResearchDatabaseSO ──────────────────────────────────
             GenerateResearchDatabase(data.research, data.research_blocks, researchLookup);
@@ -229,6 +230,21 @@ namespace MobileIdleBuilder.Editor
             var worldLookup = new Dictionary<string, WorldSO>();
             foreach (var world in data.worlds)
                 worldLookup[world.id] = GenerateWorld(world, siteLookup, worldPrereqIds);
+            // ── Step 12.52: per-world tutorials (run the first time the player is in that world) ──
+            foreach (var w in worldLookup.Values) if (w != null) w.tutorialFlow = null;
+            foreach (var wt in data.world_tutorials)
+            {
+                if (wt == null || string.IsNullOrEmpty(wt.id)) continue;
+                if (!worldLookup.TryGetValue(wt.world ?? "", out var wso) || wso == null)
+                {
+                    GameLogger.Warning($"[GameDataImporter] world_tutorials '{wt.id}': world '{wt.world}' not found.");
+                    continue;
+                }
+                wso.tutorialFlow = GenerateTutorialFlow(wt.steps, dialogueLookup, buildingLookup,
+                    $"{TutorialDir}/{wt.id}.asset", wt.world, wt.completion_message);
+                EditorUtility.SetDirty(wso);
+            }
+            if (mainTutorial != null) TutorialFlowSO.EditorResetStatics(mainTutorial);
             GenerateWorldDatabase(data.worlds, worldLookup);
 
             // ── Step 12.59: RecipeDatabaseSO (runtime recipe list, #336/#287) ─
@@ -247,10 +263,16 @@ namespace MobileIdleBuilder.Editor
             GenerateDialogueDatabase(data.dialogues, dialogueLookup);
 
             // ── Step 13: DailyContentSO (no cross-refs) ──────────────────────
-            GenerateDailyContent(data.daily_rewards, data.daily_challenges);
+            GenerateDailyContent(data.daily_rewards);
 
             // ── Step 14: MegastructureSO (resolves stage costs → ItemSO; needs itemLookup) ──
             GenerateMegastructure(data.megastructure, itemLookup);
+
+            // ── Step 15: WorldTaskSO (Chemistry gate delivery stages; needs itemLookup) ──
+            GenerateWorldTasks(data.world_tasks, itemLookup);
+            // The other worlds' tasks (Metallurgy, Engineering): one asset each under Resources/WorldTaskSets.
+            foreach (var more in data.more_world_tasks)
+                GenerateWorldTasks(more, itemLookup, $"{ResourcesDir}/WorldTaskSets", $"WorldTasks_{more?.world}");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -263,7 +285,7 @@ namespace MobileIdleBuilder.Editor
                 $"{data.managers.Count} managers, " +
                 $"{data.dialogues.Count} dialogues, " +
                 $"{data.tutorial_steps.Count} tutorial steps, " +
-                $"{data.daily_rewards.Count} daily rewards, {data.daily_challenges.Count} daily challenges."
+                $"{data.daily_rewards.Count} daily rewards."
             );
         }
 
@@ -290,6 +312,8 @@ namespace MobileIdleBuilder.Editor
             so.buildingPurchaseMultiplierT1       = data.building_purchase_multiplier_t1;
             so.buildingPurchaseMultiplierT2       = data.building_purchase_multiplier_t2;
             so.buildingPurchaseMultiplierT3Plus   = data.building_purchase_multiplier_t3_plus;
+            so.nameFilterPatterns                 = data.name_filter_patterns ?? System.Array.Empty<string>();
+            so.pve                                = data.pve ?? new PveConfig();
 
             if (TryParseEnum<BuildEnvironment>(data.environment, "GameConfig.environment", out var env))
                 so.environment = env;
@@ -362,6 +386,8 @@ namespace MobileIdleBuilder.Editor
             so.block                = data.block ?? "";
             so.treeX                = data.tree_x;
             so.treeY                = data.tree_y;
+            so.requiredWorld        = data.required_world ?? "";
+            so.world                = data.world ?? "";
 
             if (TryParseEnum<ResearchBranch>(data.branch, $"ResearchSO '{data.id}'.branch", out var branch))
                 so.branch = branch;
@@ -415,6 +441,7 @@ namespace MobileIdleBuilder.Editor
             if (TryParseEnum<DecayType>(data.decay_type, $"ItemSO '{data.id}'.decayType", out var decay))
                 so.decayType = decay;
             so.fieldType = FieldTypes.Normalize(data.field_type);
+            so.world     = data.world ?? "";
 
             if (!string.IsNullOrEmpty(data.tier_ref) && tierLookup.TryGetValue(data.tier_ref, out var tier))
                 so.tierData = tier;
@@ -485,8 +512,12 @@ namespace MobileIdleBuilder.Editor
             so.inputSlotCount      = data.input_slot_count;
             so.inputSlotLabels     = data.input_slot_labels ?? Array.Empty<string>();
             so.isEntropySink       = data.is_entropy_sink;
+            so.isPlacedSink        = data.is_placed_sink;
+            so.isSpring            = data.is_spring;
+            so.streamFlow          = data.stream_flow;
+            so.flowDraw            = data.flow_draw;
+            so.world               = data.world ?? "";
             so.isItemFilter        = data.is_item_filter;
-            so.isSplitter          = data.is_splitter;
             so.assignableOutputs   = data.assignable_outputs;
             so.recipeModeLabels    = data.recipe_mode_labels;
             so.recipeModePrefixes  = data.recipe_mode_prefixes;
@@ -500,7 +531,8 @@ namespace MobileIdleBuilder.Editor
             so.codexEntry          = data.codex_entry;
             so.hasSpecialUpgrade   = data.has_special_upgrade;
 
-            so.icon   = LoadAssetOrWarn<Sprite>(data.icon_path,    $"BuildingSO '{data.id}'.icon");
+            so.icon   = LoadAssetOrWarn<Sprite>(data.icon_path,    $"BuildingSO '{data.id}'.icon")
+                        ?? LoadBuildingIcon(data.id);
             so.prefab = LoadAssetOrWarn<GameObject>(data.prefab_path, $"BuildingSO '{data.id}'.prefab");
 
             if (TryParseEnum<BuildingCategory>(data.category, $"BuildingSO '{data.id}'.category", out var cat))
@@ -606,6 +638,7 @@ namespace MobileIdleBuilder.Editor
             so.tapCooldownSeconds = data.tap_cooldown_seconds;
             so.codexEntry    = data.codex_entry;
 
+            so.world                  = data.world ?? "";
             so.purchaseResearchId     = data.purchase_research ?? "";
             so.purchaseCostBase       = data.purchase_cost_base;
             so.purchaseCostMultiplier = data.purchase_cost_multiplier;
@@ -639,6 +672,7 @@ namespace MobileIdleBuilder.Editor
             so.id          = data.id;
             so.displayName = data.display_name;
             so.unlockCost  = data.unlock_cost;
+            so.retired     = data.retired;
 
             so.fieldOverrides.Clear();
             if (data.field_overrides != null)
@@ -648,6 +682,13 @@ namespace MobileIdleBuilder.Editor
                         field             = ResolveRef(ov.field, fieldLookup, $"SiteSO '{data.id}' field_override '{ov.field}'"),
                         densityMultiplier = ov.density_multiplier
                     });
+
+            so.startingBuildings.Clear();
+            if (data.starting_buildings != null)
+                foreach (var sb in data.starting_buildings)
+                    if (!string.IsNullOrEmpty(sb.building))
+                        so.startingBuildings.Add(new SiteStartingBuilding
+                            { buildingId = sb.building, x = sb.x, y = sb.y, rotation = sb.rotation });
 
             EditorUtility.SetDirty(so);
             return so;
@@ -720,6 +761,8 @@ namespace MobileIdleBuilder.Editor
             so.displayName = data.display_name;
             so.unlockCost  = data.unlock_cost;
 
+            so.unlockByTasks   = data.unlock_by_tasks;
+            so.streamTransport = data.stream_transport;
             so.prereqUnlockIds = new List<string>(data.prereq_unlock_ids ?? new List<string>());
             foreach (var pid in so.prereqUnlockIds)
                 if (!string.IsNullOrEmpty(pid) && !validPrereqIds.Contains(pid))
@@ -836,14 +879,17 @@ namespace MobileIdleBuilder.Editor
             return so;
         }
 
-        private static void GenerateTutorialFlow(List<TutorialStepJson> steps,
+        private static TutorialFlowSO GenerateTutorialFlow(List<TutorialStepJson> steps,
             Dictionary<string, DialogueSO> dialogueLookup,
-            Dictionary<string, BuildingSO> buildingLookup)
+            Dictionary<string, BuildingSO> buildingLookup,
+            string path = null, string worldId = "", string completionMessage = "")
         {
-            if (steps == null || steps.Count == 0) return;
+            if (steps == null || steps.Count == 0) return null;
 
-            string path = $"{TutorialDir}/tutorial_flow.asset";
+            path ??= $"{TutorialDir}/tutorial_flow.asset";
             var so = LoadOrCreate<TutorialFlowSO>(path);
+            so.worldId           = worldId ?? "";
+            so.completionMessage = completionMessage ?? "";
 
             var realSteps = steps.FindAll(s => !string.IsNullOrEmpty(s.id));
             so.steps = new TutorialStepDef[realSteps.Count];
@@ -988,10 +1034,10 @@ namespace MobileIdleBuilder.Editor
             }
 
             EditorUtility.SetDirty(so);
+            return so;
         }
 
-        private static void GenerateDailyContent(List<DailyRewardJson> rewards,
-            List<DailyChallengeJson> challenges)
+        private static void GenerateDailyContent(List<DailyRewardJson> rewards)
         {
             EnsureDirectory(ResourcesDir);
             string path = $"{ResourcesDir}/DailyContent.asset";
@@ -1005,23 +1051,50 @@ namespace MobileIdleBuilder.Editor
                         day              = r.day,
                         crystals         = r.crystals,
                         entropy          = r.entropy,
+                        entropyMinutes   = r.entropy_minutes,
                         prestigeCurrency = r.prestige_currency
                     });
             rewardList.Sort((a, b) => a.day.CompareTo(b.day)); // index by 0-based streak
             so.loginRewards = rewardList.ToArray();
 
-            var challengeList = new List<DailyChallengeEntry>(challenges?.Count ?? 0);
-            if (challenges != null)
-                foreach (var c in challenges)
-                    challengeList.Add(new DailyChallengeEntry
-                    {
-                        id          = c.id,
-                        description = c.description,
-                        trigger     = c.trigger,
-                        target      = c.target,
-                        crystals    = c.crystals
-                    });
-            so.challengePool = challengeList.ToArray();
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void GenerateWorldTasks(WorldTasksJson data, Dictionary<string, ItemSO> itemLookup,
+            string dir = null, string fileName = "WorldTasks")
+        {
+            if (data == null || string.IsNullOrEmpty(data.world)) return;
+
+            dir ??= ResourcesDir;
+            EnsureDirectory(dir);
+            var so = LoadOrCreate<WorldTaskSO>($"{dir}/{fileName}.asset");
+            so.worldId     = data.world;
+            so.deliverIn   = string.IsNullOrEmpty(data.deliver_in) ? WorldGate.Physics : data.deliver_in;
+            so.displayName = data.display_name;
+
+            var stages = data.stages ?? new List<WorldTaskStageJson>();
+            so.stages = new WorldTaskStage[stages.Count];
+            for (int i = 0; i < stages.Count; i++)
+            {
+                var sd    = stages[i];
+                var costs = sd.items ?? new List<StageCostJson>();
+                var items = new ItemSO[costs.Count];
+                var qtys  = new int[costs.Count];
+                for (int c = 0; c < costs.Count; c++)
+                {
+                    items[c] = ResolveRef(costs[c].item, itemLookup, $"World task stage '{sd.id}' items[{c}]");
+                    qtys[c]  = costs[c].quantity;
+                }
+                so.stages[i] = new WorldTaskStage
+                {
+                    id          = sd.id,
+                    displayName = sd.display_name,
+                    description = sd.description,
+                    items       = items,
+                    quantities  = qtys,
+                    dialogueId  = sd.dialogue ?? "",
+                };
+            }
 
             EditorUtility.SetDirty(so);
         }
@@ -1196,6 +1269,14 @@ namespace MobileIdleBuilder.Editor
         // sprite generated by ElementIconGenerator at Assets/Art/Icons/Elements/{id}.png.
         // Durable across re-imports without editing the hand-maintained game_data.json.
         internal const string GeneratedIconsDir = "Assets/Art/Icons/Elements";
+
+        // Same convention for buildings: a render from BuildingIconRenderer at Assets/Art/Icons/Buildings/{id}.png (#487).
+        internal const string BuildingIconsDir = "Assets/Art/Icons/Buildings";
+
+        private static Sprite LoadBuildingIcon(string id) =>
+            string.IsNullOrEmpty(id)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<Sprite>($"{BuildingIconsDir}/{Sanitize(id)}.png");
 
         private static Sprite LoadGeneratedIcon(string id) =>
             string.IsNullOrEmpty(id)

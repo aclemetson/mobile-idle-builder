@@ -16,7 +16,10 @@ namespace MobileIdleBuilder
     /// </summary>
     public class ResearchTreeView : VisualElement
     {
-        public const float NodeW = 196f, NodeH = 64f, ColW = 250f, RowH = 84f, BlockGap = 90f, BandTop = 70f;
+        // Rows and columns leave real gutters (48px / 74px) so prerequisite lines that skip columns can run
+        // between nodes instead of under them (see Route). docs/research-tree.html's Tidy uses the same sizes.
+        public const float NodeW = 196f, NodeH = 64f, ColW = 270f, RowH = 112f, BlockGap = 90f, BandTop = 70f;
+        const float TrackGap = 6f, LaneInset = 10f, LaneStep = 6f, CornerR = 8f;
         const float MinScale = 0.25f, MaxScale = 1.6f, DragThreshold = 10f;
 
         public enum NodeState { Locked, Available, Active, Done }
@@ -31,6 +34,8 @@ namespace MobileIdleBuilder
         float _scale = 0.8f;
         bool _placed;
         string _focusOnLayout;
+        Vector2 _contentSize;
+        const float EdgePad = 8f;
 
         /// <summary>Raised when the player taps a node.</summary>
         public event Action<ResearchSO> NodeSelected;
@@ -61,6 +66,7 @@ namespace MobileIdleBuilder
             {
                 if (!_placed && _pos.Count > 0 && _viewport.resolvedStyle.height > 0) { _placed = true; FitHeight(); }
                 if (_focusOnLayout != null && _viewport.resolvedStyle.width > 0) { CenterOn(_focusOnLayout); _focusOnLayout = null; }
+                ApplyTransform();   // re-clamp after a resize (rotation, landscape side-by-side layout)
             });
         }
 
@@ -70,6 +76,20 @@ namespace MobileIdleBuilder
         /// Node positions in tree space. Uses each node's editor position when it has one; the rest follow the
         /// editor's Tidy layout (blocks in order, prerequisite-depth columns inside a block, rows by branch then cost).
         /// </summary>
+        /// <summary>
+        /// <see cref="Layout"/> moved left so the leftmost node sits at x = 0: a world's tab holds part of the tree,
+        /// which then starts at the left edge instead of where it sits in the whole tree.
+        /// </summary>
+        public static Dictionary<string, Vector2> LayoutFromLeft(IReadOnlyList<ResearchSO> research, IReadOnlyList<ResearchBlock> blocks)
+        {
+            var laid = Layout(research, blocks);
+            if (laid.Count == 0) return laid;
+            float minX = laid.Values.Min(v => v.x);
+            if (minX > 0f)
+                foreach (var key in laid.Keys.ToList()) laid[key] = new Vector2(laid[key].x - minX, laid[key].y);
+            return laid;
+        }
+
         public static Dictionary<string, Vector2> Layout(IReadOnlyList<ResearchSO> research, IReadOnlyList<ResearchBlock> blocks)
         {
             var pos = new Dictionary<string, Vector2>();
@@ -129,7 +149,7 @@ namespace MobileIdleBuilder
             foreach (var n in _nodes.Values) n.RemoveFromHierarchy();
             _nodes.Clear();
             _bands.Clear();
-            _pos = Layout(research, blocks);
+            _pos = LayoutFromLeft(research, blocks);
 
             float maxX = 0, maxY = 0;
             foreach (var r in research)
@@ -164,21 +184,89 @@ namespace MobileIdleBuilder
                 _bands.Add(label);
             }
 
-            var edges = new List<(Vector2 from, Vector2 to, bool hot)>();
-            var hotSet = HotSet(research, selectedId);
+            var pairs = new List<(string from, string to)>();
             foreach (var r in research)
             {
-                if (r?.prerequisites == null || !_pos.TryGetValue(r.id, out var to)) continue;
+                if (r?.prerequisites == null || !_pos.ContainsKey(r.id)) continue;
                 foreach (var p in r.prerequisites)
-                    if (p != null && _pos.TryGetValue(p.id, out var from))
-                        edges.Add((new Vector2(from.x + NodeW, from.y + NodeH / 2), new Vector2(to.x, to.y + NodeH / 2),
-                                   hotSet != null && hotSet.Contains(r.id) && hotSet.Contains(p.id)));
+                    if (p != null && _pos.ContainsKey(p.id)) pairs.Add((p.id, r.id));
             }
+            var hotSet = HotSet(research, selectedId);
+            var routes = Route(_pos, pairs);
+            var edges = new List<(List<Vector2> pts, bool hot)>(routes.Count);
+            for (int i = 0; i < pairs.Count; i++)
+                edges.Add((routes[i], hotSet != null && hotSet.Contains(pairs[i].to) && hotSet.Contains(pairs[i].from)));
             _lines.Set(edges, bandRects);
+            _contentSize = new Vector2(maxX + 60, maxY + 60);
             _content.style.width = maxX + 60; _content.style.height = maxY + 60;
             _lines.style.width = maxX + 60;   _lines.style.height = maxY + 60;
             _bands.style.width = maxX + 60;   _bands.style.height = maxY + 60;
             ApplyTransform();
+        }
+
+        /// <summary>
+        /// The path of each prerequisite line (<paramref name="edges"/> are prerequisite -> research ids). A line
+        /// between neighbouring columns is two points, drawn as a curve through the column gap. A line that skips
+        /// columns would pass straight under the nodes between and read as if they were prerequisites too, so it
+        /// is routed as right-angled segments instead: out into the gap right of its source, along the gutter
+        /// between two rows (its own track there), and down the gap left of its target. Pure (tested).
+        /// </summary>
+        public static List<List<Vector2>> Route(IReadOnlyDictionary<string, Vector2> pos, IReadOnlyList<(string from, string to)> edges)
+        {
+            var columns = pos.Values.Select(v => v.x).Distinct().OrderBy(x => x).ToList();
+            var result = new List<List<Vector2>>(edges.Count);
+            // Routed edges, grouped by gutter, for track assignment once all are known.
+            var byGutter = new Dictionary<int, List<(int edge, float x0, float x1)>>();
+            var srcSlots = new Dictionary<float, int>();
+            var dstSlots = new Dictionary<float, int>();
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                var a = pos[edges[i].from]; var b = pos[edges[i].to];
+                var from = new Vector2(a.x + NodeW, a.y + NodeH / 2);
+                var to   = new Vector2(b.x, b.y + NodeH / 2);
+                bool skips = columns.Any(x => x > a.x + 1f && x < b.x - 1f);
+                if (!skips) { result.Add(new List<Vector2> { from, to }); continue; }
+
+                // Lanes in the column gaps: each edge gets its own, stepping in from the nodes' edges.
+                int s = srcSlots.TryGetValue(from.x, out var sn) ? sn : 0; srcSlots[from.x] = s + 1;
+                int d = dstSlots.TryGetValue(to.x,   out var dn) ? dn : 0; dstSlots[to.x]   = d + 1;
+                float x0 = from.x + LaneInset + s * LaneStep;
+                float x1 = to.x   - LaneInset - d * LaneStep;
+
+                // Gutter k lies between row k-1 and row k: below the row when both ends share it, else just
+                // above the lower end, so the line never needs the strip under the block labels.
+                int ra = Mathf.RoundToInt((a.y - BandTop) / RowH), rb = Mathf.RoundToInt((b.y - BandTop) / RowH);
+                int k = ra == rb ? ra + 1 : Mathf.Max(ra, rb);
+                if (!byGutter.TryGetValue(k, out var list)) byGutter[k] = list = new List<(int, float, float)>();
+                list.Add((i, x0, x1));
+                result.Add(new List<Vector2> { from, new(x0, from.y), new(x0, 0), new(x1, 0), new(x1, to.y), to });
+            }
+
+            // Tracks inside each gutter: edges whose horizontal runs overlap get different heights.
+            float gutter = RowH - NodeH;
+            foreach (var kv in byGutter)
+            {
+                var trackEnds = new List<float>();
+                var track = new Dictionary<int, int>();
+                foreach (var (edge, x0, x1) in kv.Value.OrderBy(e => e.x0))
+                {
+                    int t = trackEnds.FindIndex(end => end + TrackGap < x0);
+                    if (t < 0) { t = trackEnds.Count; trackEnds.Add(x1); } else trackEnds[t] = x1;
+                    track[edge] = t;
+                }
+                int n = trackEnds.Count;
+                float step = n <= 1 ? 0f : Mathf.Min(TrackGap, (gutter - 2 * TrackGap) / (n - 1));
+                float mid = BandTop + kv.Key * RowH - gutter / 2;
+                foreach (var (edge, _, _) in kv.Value)
+                {
+                    float y = mid + (track[edge] - (n - 1) / 2f) * step;
+                    var pts = result[edge];
+                    pts[2] = new Vector2(pts[2].x, y);
+                    pts[3] = new Vector2(pts[3].x, y);
+                }
+            }
+            return result;
         }
 
         static HashSet<string> HotSet(IReadOnlyList<ResearchSO> research, string id)
@@ -222,8 +310,25 @@ namespace MobileIdleBuilder
 
         void ApplyTransform()
         {
+            float vw = _viewport.resolvedStyle.width, vh = _viewport.resolvedStyle.height;
+            if (vw > 0 && vh > 0 && _contentSize.x > 0)
+            {
+                _offset.x = ClampAxis(_offset.x, _contentSize.x * _scale, vw, EdgePad);
+                _offset.y = ClampAxis(_offset.y, _contentSize.y * _scale, vh, EdgePad);
+            }
             _content.style.translate = new Translate(_offset.x, _offset.y);
             _content.style.scale = new Scale(new Vector2(_scale, _scale));
+        }
+
+        /// <summary>
+        /// Keeps the tree in view along one axis. Content that fits is pinned to the start edge: centring a node
+        /// in a tree only two rows tall left a third of the viewport empty above it. Larger content can pan only
+        /// until its far edge reaches the viewport's, so it can't be dragged out of sight.
+        /// </summary>
+        internal static float ClampAxis(float offset, float content, float view, float pad)
+        {
+            if (content + 2 * pad <= view) return pad;
+            return Mathf.Clamp(offset, view - content - pad, pad);
         }
 
         // ── Pan, zoom, tap ────────────────────────────────────────────────────
@@ -298,7 +403,7 @@ namespace MobileIdleBuilder
         /// <summary>Prerequisite lines and block bands, drawn in one pass behind the nodes.</summary>
         class TreeLines : VisualElement
         {
-            List<(Vector2 from, Vector2 to, bool hot)> _edges = new();
+            List<(List<Vector2> pts, bool hot)> _edges = new();
             List<Rect> _bands = new();
             // The project renders in linear colour space and Painter2D takes linear values, so these sRGB colours
             // go through .linear; without it they draw far brighter than written.
@@ -314,7 +419,7 @@ namespace MobileIdleBuilder
                 generateVisualContent += Draw;
             }
 
-            public void Set(List<(Vector2, Vector2, bool)> edges, List<Rect> bands)
+            public void Set(List<(List<Vector2>, bool)> edges, List<Rect> bands)
             {
                 _edges = edges; _bands = bands;
                 MarkDirtyRepaint();
@@ -335,15 +440,30 @@ namespace MobileIdleBuilder
                 }
                 p.lineCap = LineCap.Round;
                 foreach (var hotPass in new[] { false, true })      // highlighted lines on top
-                    foreach (var (from, to, hot) in _edges)
+                    foreach (var (pts, hot) in _edges)
                     {
-                        if (hot != hotPass) continue;
+                        if (hot != hotPass || pts.Count < 2) continue;
                         p.strokeColor = hot ? Hot : Line;
                         p.lineWidth = hot ? 3f : 1.5f;
-                        float dx = Mathf.Max(30f, (to.x - from.x) / 2f);
                         p.BeginPath();
-                        p.MoveTo(from);
-                        p.BezierCurveTo(new Vector2(from.x + dx, from.y), new Vector2(to.x - dx, to.y), to);
+                        p.MoveTo(pts[0]);
+                        if (pts.Count == 2)
+                        {
+                            Vector2 from = pts[0], to = pts[1];
+                            float dx = Mathf.Max(30f, (to.x - from.x) / 2f);
+                            p.BezierCurveTo(new Vector2(from.x + dx, from.y), new Vector2(to.x - dx, to.y), to);
+                        }
+                        else
+                        {
+                            // Right angles with rounded corners. A corner too tight for the radius is a plain join.
+                            for (int i = 1; i < pts.Count - 1; i++)
+                            {
+                                Vector2 a = pts[i - 1], c = pts[i], n = pts[i + 1];
+                                float r = Mathf.Min(CornerR, Vector2.Distance(a, c) / 2, Vector2.Distance(c, n) / 2);
+                                if (r < 0.5f) p.LineTo(c); else p.ArcTo(c, n, r);
+                            }
+                            p.LineTo(pts[pts.Count - 1]);
+                        }
                         p.Stroke();
                     }
             }

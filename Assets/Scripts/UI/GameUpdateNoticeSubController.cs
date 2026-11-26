@@ -28,11 +28,19 @@ namespace MobileIdleBuilder
                 _okBtn.clicked += Hide;
         }
 
-        public void Show(string title, string message)
+        /// <param name="leftAligned">Release notes (#502) are bullet lists, which read better left-aligned.</param>
+        public void Show(string title, string message, bool leftAligned = false)
         {
             if (_modal == null) return;
             if (_title   != null) _title.text   = string.IsNullOrEmpty(title)   ? "Game Updated" : title;
-            if (_message != null) _message.text = message ?? "";
+            if (_message != null)
+            {
+                _message.text = message ?? "";
+                if (leftAligned) _message.style.unityTextAlign = TextAnchor.UpperLeft;
+                else             _message.style.unityTextAlign = StyleKeyword.Null;
+            }
+            var scroll = _modal.Q<ScrollView>("game-update-scroll");
+            if (scroll != null) scroll.scrollOffset = Vector2.zero;   // a long note opens at its start
             _modal.RemoveFromClassList("hidden");
         }
 

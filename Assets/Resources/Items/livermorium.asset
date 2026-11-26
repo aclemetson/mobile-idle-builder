@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: 'Livermorium (Lv), element number 116 with mass number 293. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 1290000
+  baseSellValue: 70900000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

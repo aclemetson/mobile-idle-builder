@@ -23,16 +23,43 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void EntropyBoost_IsCappedAtFivePerDay()
+        public void IdleBoost_ComesIn2hAnd4h_TwoADayEach()
         {
-            Assert.AreEqual(5, AdRewardCalculator.DailyCap(AdPlacement.EntropyBoost));
+            var shortDef = AdRewardCalculator.Def(AdPlacement.IdleRateBoostShort);
+            var longDef  = AdRewardCalculator.Def(AdPlacement.IdleRateBoost);
+            Assert.AreEqual(AdRewardKind.IdleRateBoost, shortDef.Kind);
+            Assert.AreEqual(AdRewardKind.IdleRateBoost, longDef.Kind);
+            Assert.AreEqual(2f, shortDef.DurationHours);
+            Assert.AreEqual(4f, longDef.DurationHours);
+            Assert.AreEqual(2, shortDef.DailyCap);
+            Assert.AreEqual(2, longDef.DailyCap);
+        }
+
+        [Test]
+        public void IdleBoosts_CountTheirWatchesSeparately()
+        {
+            var save = NewSave();
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.IdleRateBoostShort);
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.IdleRateBoostShort);
+            Assert.IsTrue(AdRewardCalculator.IsAtCap(save, AdPlacement.IdleRateBoostShort));
+            Assert.IsFalse(AdRewardCalculator.IsAtCap(save, AdPlacement.IdleRateBoost), "the 4h boost keeps its own 2");
+        }
+
+        [Test]
+        public void EntropyBoost_IsRetired_AndTheSurgeHasNoDailyCap()
+        {
+            foreach (var def in AdRewardCalculator.Placements)
+                Assert.AreNotEqual(AdPlacement.EntropyBoost, def.Placement, "folded into the Entropy Surge (#489)");
+            Assert.IsFalse(AdRewardCalculator.HasDailyCap(AdPlacement.EntropySurge));
+            Assert.IsTrue(AdRewardCalculator.HasDailyCap(AdPlacement.TimeWarp));
         }
 
         [Test]
         public void EveryPlacement_HasaDef()
         {
             foreach (AdPlacement p in Enum.GetValues(typeof(AdPlacement)))
-                Assert.IsNotNull(AdRewardCalculator.Def(p), $"missing def for {p}");
+                if (p != AdPlacement.EntropyBoost)   // retired: the id stays for old save counters
+                    Assert.IsNotNull(AdRewardCalculator.Def(p), $"missing def for {p}");
         }
 
         // ── Entropy reward math ───────────────────────────────────────────────
@@ -82,10 +109,10 @@ namespace MobileIdleBuilder.Tests
         public void Counters_AreIndependentPerPlacement()
         {
             var save = NewSave();
-            AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropyBoost);
-            AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropyBoost);
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.SpeedBoost);
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.SpeedBoost);
 
-            Assert.AreEqual(2, AdRewardCalculator.GetWatchCount(save, AdPlacement.EntropyBoost));
+            Assert.AreEqual(2, AdRewardCalculator.GetWatchCount(save, AdPlacement.SpeedBoost));
             Assert.AreEqual(0, AdRewardCalculator.GetWatchCount(save, AdPlacement.TimeWarp));
         }
 
@@ -110,13 +137,13 @@ namespace MobileIdleBuilder.Tests
             var save = NewSave();
             var morning = new DateTime(2026, 6, 23, 9, 0, 0, DateTimeKind.Utc);
             AdRewardCalculator.ApplyDailyReset(save, morning);
-            AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropyBoost);
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.SpeedBoost);
 
             // Later the same UTC day — must NOT reset.
             var evening = new DateTime(2026, 6, 23, 22, 0, 0, DateTimeKind.Utc);
             AdRewardCalculator.ApplyDailyReset(save, evening);
 
-            Assert.AreEqual(1, AdRewardCalculator.GetWatchCount(save, AdPlacement.EntropyBoost));
+            Assert.AreEqual(1, AdRewardCalculator.GetWatchCount(save, AdPlacement.SpeedBoost));
         }
 
         [Test]
@@ -125,14 +152,14 @@ namespace MobileIdleBuilder.Tests
             var save = NewSave();
             var day1 = new DateTime(2026, 6, 23, 9, 0, 0, DateTimeKind.Utc);
             AdRewardCalculator.ApplyDailyReset(save, day1);
-            AdRewardCalculator.IncrementWatch(save, AdPlacement.EntropyBoost);
+            AdRewardCalculator.IncrementWatch(save, AdPlacement.SpeedBoost);
             AdRewardCalculator.IncrementWatch(save, AdPlacement.Crystals);
 
             // Next UTC day — counts clear.
             var day2 = new DateTime(2026, 6, 24, 0, 0, 1, DateTimeKind.Utc);
             AdRewardCalculator.ApplyDailyReset(save, day2);
 
-            Assert.AreEqual(0, AdRewardCalculator.GetWatchCount(save, AdPlacement.EntropyBoost));
+            Assert.AreEqual(0, AdRewardCalculator.GetWatchCount(save, AdPlacement.SpeedBoost));
             Assert.AreEqual(0, AdRewardCalculator.GetWatchCount(save, AdPlacement.Crystals));
         }
     }

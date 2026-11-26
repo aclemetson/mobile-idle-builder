@@ -24,15 +24,19 @@ namespace MobileIdleBuilder
     public static class FeatureFlags
     {
         // ── Keys ──────────────────────────────────────────────────────────────
-        public const string PvpEnabledKey         = "pvp.enabled";
+        public const string PveEnabledKey         = "pve.enabled";
         public const string IapEnabledKey         = "iap.enabled";
         public const string AdsEnabledKey         = "ads.enabled";
         public const string AdsTestModeKey        = "ads.test_mode";
         public const string CloudSaveEnabledKey   = "cloudsave.enabled";
         public const string DailyEventsEnabledKey = "dailyevents.enabled";
+        public const string NotificationsEnabledKey = "notifications.enabled";
+        public const string PushEnabledKey          = "push.enabled";
         public const string MaintenanceEnabledKey = "maintenance.enabled";
         public const string MaintenanceMessageKey = "maintenance.message";
         public const string MaintenanceUntilUtcKey = "maintenance.untilUtc";
+        public const string MaintenanceStartsUtcKey = "maintenance.startsUtc";
+        public const string MaintenancePollSecondsKey = "maintenance.pollSeconds";
         public const string AnalyticsEnabledKey    = "analytics.enabled";
         public const string AnalyticsPhaseKey      = "analytics.phase";
         public const string GameDataUpdatedUtcKey  = "gamedata.updatedUtc";
@@ -40,8 +44,11 @@ namespace MobileIdleBuilder
         public const string GameDataNoticeTitleKey = "gamedata.noticeTitle";
         public const string GameDataNoticeMessageKey = "gamedata.noticeMessage";
         public const string GameDataOverridesKey   = "gamedata.overrides";
+        public const string WhatsNewVersionKey     = "whatsnew.version";   // written by CI with the notes (#502)
+        public const string WhatsNewNotesKey       = "whatsnew.notes";
         public const string FeedbackEmailKey       = "links.feedbackEmail";
         public const string PrivacyPolicyUrlKey    = "links.privacyPolicyUrl";
+        public const string DiscordUrlKey          = "links.discordUrl";
         public const string UpdateEnabledKey       = "update.enabled";
         public const string UpdateLatestAndroidKey = "update.latest.android";
         public const string UpdateLatestIosKey     = "update.latest.ios";
@@ -53,7 +60,7 @@ namespace MobileIdleBuilder
 
         // ── Defaults ──────────────────────────────────────────────────────────
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
-        public const bool PvpEnabledDefault         = false; // server backend not live yet
+        public const bool PveEnabledDefault         = true;  // weekly PvE tournaments (kill-switch; backend: docs/runbooks/pve-backend-setup.md)
         public const bool IapEnabledDefault         = true;
         public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
         // Test ads: no ad network, a "test ad" card instead, reward still granted. Defaults ON so a dev
@@ -62,9 +69,13 @@ namespace MobileIdleBuilder
         public const bool AdsTestModeDefault        = true;
         public const bool CloudSaveEnabledDefault   = true;
         public const bool DailyEventsEnabledDefault = true;
+        public const bool NotificationsEnabledDefault = true;  // local OS notifications (storage full, research done, ...)
+        public const bool PushEnabledDefault          = true;  // remote push registration (UGS Push); also needs analytics.enabled
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
         public const string MaintenanceMessageDefault = "We're performing scheduled maintenance. Please check back soon.";
         public const string MaintenanceUntilUtcDefault = ""; // ISO-8601 UTC; blank => no time line shown
+        public const string MaintenanceStartsUtcDefault = ""; // ISO-8601 UTC; blank => maintenance.enabled applies at once (#224)
+        public const int    MaintenancePollSecondsDefault = 300; // mid-session re-fetch interval, clamped by MaintenancePollSchedule
         public const bool   AnalyticsEnabledDefault  = false;     // opt-in: telemetry stays off until a collection phase is opened
         public const string AnalyticsPhaseDefault    = "default"; // label stamped on every event so phases are segmentable
         // Game-data update notice. updatedUtc drives the once-per-publish popup (blank => never show);
@@ -77,9 +88,13 @@ namespace MobileIdleBuilder
         // Curated scalar overrides applied onto the baked ScriptableObjects at boot (config/items/research).
         // JSON blob; default empty => no overrides, the build runs its baked baseline. See GameDataOverrides.
         public const string GameDataOverridesDefault = "{}";
+        // What's-new notes (#502): CI writes both from docs/whats-new.md on each release. Blank => no notice.
+        public const string WhatsNewDefault = "";
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
         public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
+        // Community invite (#533): the server's permanent invite. Remote Config can swap it; blank hides the button.
+        public const string DiscordUrlDefault       = "https://discord.gg/aVt8Z9ntkC";
         // App update prompt on the splash (AppUpdateCheck). Off by default so a fetch failure never prompts;
         // blank versions never prompt. CI writes update.latest.* after each store upload
         // (scripts/set-remote-config.ps1); update.minimum.* is set by hand to force an update.
@@ -90,15 +105,19 @@ namespace MobileIdleBuilder
         /// <summary>Every registered flag — drives the fetch loop. Keep in sync with the accessors.</summary>
         public static readonly FlagDef[] All =
         {
-            new FlagDef(PvpEnabledKey,         FlagType.Bool),
+            new FlagDef(PveEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
             new FlagDef(AdsEnabledKey,         FlagType.Bool),
             new FlagDef(AdsTestModeKey,        FlagType.Bool),
             new FlagDef(CloudSaveEnabledKey,   FlagType.Bool),
             new FlagDef(DailyEventsEnabledKey, FlagType.Bool),
+            new FlagDef(NotificationsEnabledKey, FlagType.Bool),
+            new FlagDef(PushEnabledKey,          FlagType.Bool),
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceMessageKey, FlagType.String),
             new FlagDef(MaintenanceUntilUtcKey, FlagType.String),
+            new FlagDef(MaintenanceStartsUtcKey, FlagType.String),
+            new FlagDef(MaintenancePollSecondsKey, FlagType.Int),
             new FlagDef(AnalyticsEnabledKey,   FlagType.Bool),
             new FlagDef(AnalyticsPhaseKey,     FlagType.String),
             new FlagDef(GameDataUpdatedUtcKey,    FlagType.String),
@@ -106,8 +125,11 @@ namespace MobileIdleBuilder
             new FlagDef(GameDataNoticeTitleKey,   FlagType.String),
             new FlagDef(GameDataNoticeMessageKey, FlagType.String),
             new FlagDef(GameDataOverridesKey,     FlagType.String),
+            new FlagDef(WhatsNewVersionKey,       FlagType.String),
+            new FlagDef(WhatsNewNotesKey,         FlagType.String),
             new FlagDef(FeedbackEmailKey,         FlagType.String),
             new FlagDef(PrivacyPolicyUrlKey,      FlagType.String),
+            new FlagDef(DiscordUrlKey,            FlagType.String),
             new FlagDef(UpdateEnabledKey,         FlagType.Bool),
             new FlagDef(UpdateLatestAndroidKey,   FlagType.String),
             new FlagDef(UpdateLatestIosKey,       FlagType.String),
@@ -119,7 +141,7 @@ namespace MobileIdleBuilder
         };
 
         // ── Typed accessors ───────────────────────────────────────────────────
-        public static bool PvpEnabled         => GetBool(PvpEnabledKey,         PvpEnabledDefault);
+        public static bool PveEnabled         => GetBool(PveEnabledKey,         PveEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
         public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
 
@@ -143,9 +165,13 @@ namespace MobileIdleBuilder
         public static bool ResolveAdsTestMode(bool devBuild, bool flagValue) => devBuild && flagValue;
         public static bool CloudSaveEnabled   => GetBool(CloudSaveEnabledKey,   CloudSaveEnabledDefault);
         public static bool DailyEventsEnabled => GetBool(DailyEventsEnabledKey, DailyEventsEnabledDefault);
+        public static bool NotificationsEnabled => GetBool(NotificationsEnabledKey, NotificationsEnabledDefault);
+        public static bool PushEnabled          => GetBool(PushEnabledKey,          PushEnabledDefault);
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);
         public static string MaintenanceMessage  => GetString(MaintenanceMessageKey,  MaintenanceMessageDefault);
         public static string MaintenanceUntilUtc => GetString(MaintenanceUntilUtcKey, MaintenanceUntilUtcDefault);
+        public static string MaintenanceStartsUtc => GetString(MaintenanceStartsUtcKey, MaintenanceStartsUtcDefault);
+        public static int    MaintenancePollSeconds => GetInt(MaintenancePollSecondsKey, MaintenancePollSecondsDefault);
         public static bool   AnalyticsEnabled => GetBool(AnalyticsEnabledKey, AnalyticsEnabledDefault);
         public static string AnalyticsPhase   => GetString(AnalyticsPhaseKey,  AnalyticsPhaseDefault);
         public static string GameDataUpdatedUtc   => GetString(GameDataUpdatedUtcKey,   GameDataUpdatedUtcDefault);
@@ -153,8 +179,11 @@ namespace MobileIdleBuilder
         public static string GameDataNoticeTitle  => GetString(GameDataNoticeTitleKey,  GameDataNoticeTitleDefault);
         public static string GameDataNoticeMessage => GetString(GameDataNoticeMessageKey, GameDataNoticeMessageDefault);
         public static string GameDataOverridesJson => GetString(GameDataOverridesKey,    GameDataOverridesDefault);
+        public static string WhatsNewVersion      => GetString(WhatsNewVersionKey,      WhatsNewDefault);
+        public static string WhatsNewNotes        => GetString(WhatsNewNotesKey,        WhatsNewDefault);
         public static string FeedbackEmail        => GetString(FeedbackEmailKey,        FeedbackEmailDefault);
         public static string PrivacyPolicyUrl     => GetString(PrivacyPolicyUrlKey,     PrivacyPolicyUrlDefault);
+        public static string DiscordUrl           => GetString(DiscordUrlKey,           DiscordUrlDefault);
         public static bool   UpdateEnabled        => GetBool(UpdateEnabledKey,          UpdateEnabledDefault);
         public static string UpdateMessage        => GetString(UpdateMessageKey,        UpdateMessageDefault);
 

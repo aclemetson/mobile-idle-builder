@@ -1,4 +1,5 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -341,6 +342,37 @@ namespace MobileIdleBuilder.Dev
             TelemetryService.Instance?.RecordDevConsoleUsed(command);
         }
 
+        // ── PvE helpers ───────────────────────────────────────────────────────
+
+        /// <summary>Starts a PvE call and appends its formatted result to the log when it returns.</summary>
+        private string RunPve<T>(System.Threading.Tasks.Task<T> call, Func<T, string> format)
+        {
+            AwaitPve(call, format);
+            return "PvE request sent...";
+        }
+
+        private async void AwaitPve<T>(System.Threading.Tasks.Task<T> call, Func<T, string> format)
+        {
+            string text;
+            try { text = format(await call); }
+            catch (Exception e) { text = $"PvE error: {e.Message}"; }
+            if (this != null) AppendLog(text);
+        }
+
+        private static string FormatPveStatus(PveStatusResponse r)
+        {
+            if (!string.IsNullOrEmpty(r.error)) return $"PvE: {r.error}";
+            var p = r.profile;
+            var sb = new StringBuilder($"PvE week {r.week}: {r.phase} until {r.phaseEndsUtc} (server {r.serverNowUtc})\n");
+            sb.AppendLine($"  league {p?.league}, last week {p?.lastWeek ?? "-"}, joined this week {r.joinedThisWeek}");
+            if (!string.IsNullOrEmpty(r.startUtc)) sb.AppendLine($"  run {r.startUtc} -> {r.runEndsUtc}, bracket {r.bracketId}{(r.bracketSettled ? " (settled)" : "")}");
+            if (p?.pendingRewards != null)
+                foreach (var w in p.pendingRewards) sb.AppendLine($"  reward {w.week}: rank {w.rank}/{w.size}, {w.crystals} crystals, {w.stars} stars");
+            if (p?.history != null)
+                foreach (var h in p.history) sb.AppendLine($"  {h.week} {h.league}: {h.rank}/{h.size} {h.result} -> {h.newLeague}");
+            return sb.ToString();
+        }
+
         // ── Log ───────────────────────────────────────────────────────────────
 
         private void AppendLog(string text, string cssClass = null)
@@ -371,11 +403,176 @@ namespace MobileIdleBuilder.Dev
 
         // ── Command registration ──────────────────────────────────────────────
 
+        private static System.Collections.IEnumerator ThrowNextFrame()
+        {
+            yield return null;
+            throw new InvalidOperationException("Dev console test exception (diag exception)");
+        }
+
+        private static System.Collections.IEnumerator CrashNextFrame()
+        {
+            yield return null;
+            GameLogger.Warning("[Diag] Forcing a native crash (diag crash)");
+            UnityEngine.Diagnostics.Utils.ForceCrash(UnityEngine.Diagnostics.ForcedCrashCategory.Abort);
+        }
+
         private void RegisterCommands()
         {
             // ── help ─────────────────────────────────────────────────────────
             _registry.Register("help", "List all commands",
                 _ => _registry.GetHelpText());
+
+            // ── local notifications (docs/runbooks/notifications-device-testing.md) ──
+            _registry.Register("notif status", "Notification flag / toggle / OS permission / active state",
+                _ => NotificationService.Instance?.DevStatus() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif plan", "Preview what backgrounding the app would schedule now",
+                _ => NotificationService.Instance?.DevPreviewPlan() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif test <seconds>", "Schedule a test notification in N seconds (then background the app)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int seconds) || seconds < 5)
+                        return "Error: <seconds> must be an integer >= 5.";
+                    return NotificationService.Instance?.DevScheduleTest(seconds) ?? "Error: NotificationService not running.";
+                });
+
+            _registry.Register("notif permission", "Show the OS notification permission prompt (if the OS still allows it)",
+                _ =>
+                {
+                    var svc = NotificationService.Instance;
+                    if (svc == null) return "Error: NotificationService not running.";
+                    svc.RequestPermission("dev_console", granted => GameLogger.Info($"[Notifications] dev permission -> {granted}"));
+                    return "Permission requested; run 'notif status' after answering.";
+                });
+
+            _registry.Register("push status", "Remote push: registered / why not / device token (for dashboard Test on Device)",
+                _ => RemotePushService.Instance?.DevStatus() ?? "Error: RemotePushService not running.");
+
+            // ── crash reporting check (docs/runbooks/cloud-diagnostics-setup.md, #168) ──
+            // The registry catches handler exceptions, so throw on the next frame to make it uncaught.
+            _registry.Register("diag exception", "Throw an uncaught exception next frame (Cloud Diagnostics check)",
+                _ =>
+                {
+                    StartCoroutine(ThrowNextFrame());
+                    return "Throwing next frame; look under Diagnostics in the Unity Dashboard in a few minutes.";
+                });
+
+            _registry.Register("diag crash", "Force a native crash: the app closes (symbol upload check)",
+                _ =>
+                {
+                    StartCoroutine(CrashNextFrame());
+                    return "Crashing next frame. Reopen the app so the report is sent.";
+                });
+
+            _registry.Register("notif prompt","Reset the opt-in answers (asked, next ask date, never ask) and show the card now",
+                _ => NotificationService.Instance?.DevShowPrompt() ?? "Error: NotificationService not running.");
+
+            _registry.Register("notif exact", "Show the on-time reminders card (Android Alarms & reminders) now",
+                _ => NotificationService.Instance?.DevShowExactPrompt() ?? "Error: NotificationService not running.");
+
+            // ── player name (PvE phase 1) ────────────────────────────────────
+            _registry.Register("name status", "Cached player name, skip flag, and whether UGS is reachable",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    bool online = PlayerNameService.Backend?.IsReady ?? false;
+                    return $"name='{save?.playerName}' skipped={save?.namePromptSkipped} online={online} " +
+                           $"patterns={PlayerNameService.Patterns.Count}";
+                });
+
+            _registry.Register("name check <text>", "Validate a name against the rules and filter (saves nothing)",
+                args =>
+                {
+                    string name = PlayerNameRules.Clean(args[0]);
+                    var check = PlayerNameRules.Validate(name, PlayerNameService.Patterns);
+                    return $"'{name}' (normalised '{PlayerNameRules.Normalize(name)}'): {check}";
+                });
+
+            _registry.Register("name prompt", "Clear the 'Later' answer and open the name card now",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save != null) save.namePromptSkipped = false;
+                    var card = FindAnyObjectByType<PlayerNamePromptController>();
+                    if (card == null) return "Error: HUD not ready.";
+                    card.OpenFromSettings();
+                    return "Name card shown.";
+                });
+
+            // ── PvE backend (phase 3; docs/runbooks/pve-backend-setup.md) ────
+            // Results arrive asynchronously and are appended to the log. Using the console marks the save as a
+            // dev save, so these joins land in the separate dev brackets.
+            _registry.Register("pve status", "PvE server status: week, phase, league, joined, pending rewards",
+                _ => RunPve(PveApi.Status(), FormatPveStatus));
+
+            _registry.Register("pve join", "Join this week's tournament on the server (no prestige; phase 4 adds that)",
+                _ => RunPve(PveApi.Join(SaveManager.Instance?.Current?.devConsoleUsed ?? true), FormatPveStatus));
+
+            _registry.Register("pve snap <netWorth> <rate>", "Send a PvE snapshot (net worth, idle net worth/s)",
+                args =>
+                {
+                    if (!double.TryParse(args[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double nw)
+                        || !double.TryParse(args[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double rate))
+                        return "Error: numbers expected, e.g. pve snap 125000 12.5";
+                    return RunPve(PveApi.Snapshot(nw, rate, 1800),
+                        r => string.IsNullOrEmpty(r.error) ? $"Snapshot accepted at t={r.t}s" : $"Snapshot: {r.error} (t={r.t}s)");
+                });
+
+            _registry.Register("pve board", "Show your PvE bracket at your elapsed time (~ = projected)",
+                _ => RunPve(PveApi.Board(), r =>
+                {
+                    if (!string.IsNullOrEmpty(r.error)) return $"Board: {r.error}";
+                    var sb = new StringBuilder($"Week {r.week} {r.league}, at t={r.viewerT}s{(r.settled ? " (final)" : "")}\n");
+                    foreach (var row in r.rows)
+                        sb.AppendLine($"  {row.rank,3}. {(row.you ? ">" : " ")}{row.name,-16} {(row.projected ? "~" : " ")}{row.value:N0}  ({row.elapsed / 3600f:0.0}h played)");
+                    return sb.ToString();
+                }));
+
+            _registry.Register("pve claim <week>", "Claim a pending PvE reward (server side only; phase 5 applies it)",
+                args => RunPve(PveApi.Claim(args[0]), r =>
+                    string.IsNullOrEmpty(r.error) ? $"Claimed {r.reward.week}: rank {r.reward.rank}/{r.reward.size}, {r.reward.crystals} crystals, {r.reward.stars} stars" : $"Claim: {r.error}"));
+
+            _registry.Register("pve time <iso|off>", "Send a fake server time (needs pve_settings.allowDebugTime on the server)",
+                args =>
+                {
+                    if (args[0] == "off") { PveApi.DebugNowUtc = null; return "PvE debug time off."; }
+                    if (!DateTime.TryParse(args[0], System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var t))
+                        return "Error: ISO time expected, e.g. pve time 2026-11-27T10:00:00Z";
+                    PveApi.DebugNowUtc = t;
+                    return $"PvE debug time {PveRules.Iso(t)} ({PveRules.Phase(t)}, week {PveRules.WeekId(t)}).";
+                });
+
+            // ── tournament item stars (PvE phase 2) ──────────────────────────
+            _registry.Register("stars grant <n>", "Grant N tournament stars on random discovered items (+20% value each)",
+                args =>
+                {
+                    if (!int.TryParse(args[0], out int n) || n <= 0 || n > 1000)
+                        return "Error: <n> must be an integer 1..1000.";
+                    var landed = ItemStars.GrantLive(n);
+                    if (landed.Count == 0) return "No stars granted: no save, or no discovered items yet.";
+                    var counts = new Dictionary<string, int>();
+                    foreach (var id in landed) counts[id] = counts.TryGetValue(id, out int c) ? c + 1 : 1;
+                    var sb = new StringBuilder($"Granted {landed.Count} star(s):\n");
+                    foreach (var kv in counts) sb.AppendLine($"  {kv.Key} +{kv.Value}");
+                    return sb.ToString();
+                });
+
+            _registry.Register("stars list", "List every item with tournament stars and its value multiplier",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: no save.";
+                    if (ItemStars.Total(save) == 0) return "No stars.";
+                    var sb = new StringBuilder($"{ItemStars.Total(save)} star(s):\n");
+                    for (int i = 0; i < save.itemStarIds.Count && i < save.itemStarCounts.Count; i++)
+                        sb.AppendLine($"  {save.itemStarIds[i],-24} ★{save.itemStarCounts[i]}  x{ItemStars.MultiplierFor(save.itemStarCounts[i]):0.0#}");
+                    return sb.ToString();
+                });
+
+            _registry.Register("stars clear", "Remove every tournament star",
+                _ => { ItemStars.ClearLive(); return "Stars cleared."; });
 
             // ── item listing ─────────────────────────────────────────────────
             _registry.Register("list items", "List all items with their string IDs",
@@ -654,22 +851,60 @@ namespace MobileIdleBuilder.Dev
                     return "Prestige requested. PrestigeSystem will process on next frame.";
                 });
 
-            // ── PVP ───────────────────────────────────────────────────────────
-            _registry.Register("unlock pvp", "Override PVP prestige lock",
+            // ── Ascension (Item Timeline phase 4) ─────────────────────────────
+            _registry.Register("ascend", "Ascend now (skips the every-research check): prestige + lock worlds + pay megastructure material",
                 _ =>
                 {
-                    if (SaveManager.Instance?.Current == null)
-                        return "Error: SaveManager not ready.";
-                    SaveManager.Instance.Current.prestigeCount = PVPService.PvpPrestigeUnlockCount;
-                    PVPService.Instance?.ResetForNewWeek();
-                    return $"PVP unlocked (prestigeCount set to {PVPService.PvpPrestigeUnlockCount}).";
+                    if (_progressQuery.IsEmpty) return "Error: PlayerProgressData not found.";
+                    AscensionRules.Pending = true;
+                    var entity = _progressQuery.GetSingletonEntity();
+                    var data   = _em.GetComponentData<PlayerProgressData>(entity);
+                    data.PrestigeRequested = true;
+                    _em.SetComponentData(entity, data);
+                    var save = SaveManager.Instance?.Current;
+                    return $"Ascension requested: +{AscensionRules.MaterialFor(save?.ascensionCount ?? 0)} material.";
                 });
 
-            _registry.Register("reset pvp", "Reset PVP run state",
+            _registry.Register("add material <n>", "Add megastructure material (buys Expansion levels in the Megastructure panel)",
+                args =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: no save.";
+                    if (!long.TryParse(args[0], out long n) || n <= 0) return "Error: <n> must be a positive integer.";
+                    save.megastructureMaterial += n;
+                    MegastructureService.Instance?.ApplyBonusToECS();
+                    return $"Megastructure material: {save.megastructureMaterial:N0}.";
+                });
+
+            // ── Tournament (PvE phase 4) ─────────────────────────────────────
+            _registry.Register("tournament status", "Local tournament state: entry, run timer, prestige lock, pending join prestige",
+                _ => TournamentService.Instance?.DevStatus() ?? "Error: TournamentService not running.");
+
+            _registry.Register("tournament unlock", "Mark the Chemistry tutorial done so tournaments unlock",
                 _ =>
                 {
-                    PVPService.Instance?.ResetForNewWeek();
-                    return "PVP run reset.";
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: SaveManager not ready.";
+                    var slot = TutorialFlows.Slot(save, TournamentRules.UnlockWorld, create: true);
+                    slot.done = true;
+                    SaveManager.Instance.SaveLocal();
+                    return "Chemistry tutorial marked done: tournaments unlocked.";
+                });
+
+            _registry.Register("tournament intro", "Show this week's tournament message again (when entry is open)",
+                _ => TournamentIntroController.DevReset(full: false));
+
+            _registry.Register("tournament intro full", "Reset the first-time tournament explainer so it plays again",
+                _ => TournamentIntroController.DevReset(full: true));
+
+            _registry.Register("tournament forget", "Clear this device's tournament entry (the server keeps its copy)",
+                _ =>
+                {
+                    var save = SaveManager.Instance?.Current;
+                    if (save == null) return "Error: SaveManager not ready.";
+                    save.tournament = new TournamentSaveData();
+                    SaveManager.Instance.SaveLocal();
+                    return "Local tournament entry cleared (prestige unlocked).";
                 });
 
             _registry.Register("win pvp", "Notify achievement service of a PVP win",
@@ -730,15 +965,6 @@ namespace MobileIdleBuilder.Dev
                     return svc.SwitchTo(n)
                         ? $"Switched to site [{n}] '{svc.GetSite(n).id}'."
                         : $"Error: switch to [{n}] failed.";
-                });
-
-            _registry.Register("domains intro", "Replay the one-shot Quantum Domains intro dialogue",
-                _ =>
-                {
-                    var sites = FindAnyObjectByType<SitesSubController>();
-                    if (sites == null) return "Error: SitesSubController not in scene (wire it on the HUD GameObject).";
-                    sites.ReplayDomainsIntroForTesting();
-                    return "Replaying Quantum Domains intro.";
                 });
 
             _registry.Register("site unlock <id>", "Unlock a site by id (deducts entropy)",
@@ -808,6 +1034,57 @@ namespace MobileIdleBuilder.Dev
                     return svc.UnlockWorld(w.id)
                         ? $"Unlocked world '{w.id}' for {w.unlockCost}e."
                         : $"Error: unlock of '{w.id}' failed.";
+                });
+
+            // ── world delivery tasks (Chemistry gate) ────────────────────────
+            _registry.Register("task status", "Show the world delivery task stage and progress",
+                _ =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready or WorldTasks asset missing.";
+                    if (svc.IsComplete) return $"All {svc.StageCount} stages done; '{svc.Data.worldId}' unlocks from them.";
+                    var stage = svc.CurrentStage;
+                    var save  = SaveManager.Instance?.Current;
+                    var sb = new StringBuilder($"{WorldGate.DisplayName(svc.Data.worldId)} tasks, stage {svc.CompletedStages + 1}/{svc.StageCount}: {stage.displayName}\n");
+                    for (int i = 0; i < stage.items.Length; i++)
+                    {
+                        var it = stage.items[i];
+                        if (it == null) continue;
+                        sb.AppendLine($"  {it.id,-12} {WorldTasks.Delivered(save, svc.Data, it.itemId),8} / {WorldTasks.Required(stage, it.itemId)}");
+                    }
+                    return sb.ToString().TrimEnd();
+                });
+
+            _registry.Register("task add <item> <qty>", "Credit items to the current task stage as if the Demon got them",
+                args =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    if (args.Length < 2 || !long.TryParse(args[1], out long qty) || qty <= 0)
+                        return "Error: usage 'task add <item> <qty>'.";
+                    var item = ItemDatabase.GetStatic(args[0]);
+                    if (item == null) return $"Error: unknown item '{args[0]}'.";
+                    int counted = svc.DevCredit(item.itemId, qty);
+                    return $"Counted {counted} {item.id}. Now stage {svc.CompletedStages + (svc.IsComplete ? 0 : 1)}/{svc.StageCount}.";
+                });
+
+            _registry.Register("task stage <n>", "Set the number of finished task stages (progress on the next is cleared)",
+                args =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    if (!int.TryParse(args[0], out int n) || n < 0) return "Error: <n> must be a non-negative integer.";
+                    svc.DevSetStage(n);
+                    return $"Finished stages set to {svc.CompletedStages}/{svc.StageCount}.";
+                });
+
+            _registry.Register("task complete", "Finish every task stage (unlocks the world on the next frame)",
+                _ =>
+                {
+                    var svc = WorldTaskService.Instance;
+                    if (svc?.Data == null) return "Error: WorldTaskService not ready.";
+                    svc.DevSetStage(svc.StageCount);
+                    return $"All {svc.StageCount} stages finished.";
                 });
 
             // ── tutorial ─────────────────────────────────────────────────────
@@ -910,6 +1187,7 @@ namespace MobileIdleBuilder.Dev
                         var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                         pp.BaseCurrency      = entropy;
                         pp.TotalEntropySpent = totalSpent;
+                        pp.TotalEntropyDiscounted = 0;
                         pp.BaseNetWorth      = System.Math.Max(0f, netWorth - totalEarned);
                         pp.NetWorth          = System.Math.Max(netWorth, totalEarned);
                         _progressQuery.SetSingleton(pp);
@@ -944,6 +1222,7 @@ namespace MobileIdleBuilder.Dev
                         save.tutorial.isActive                 = true;
                         save.currentRun.baseCurrency           = entropy;
                         save.currentRun.totalEntropySpent      = totalSpent;
+                        save.currentRun.totalEntropyDiscounted = 0;
                         save.currentRun.baseNetWorth           = System.Math.Max(0f, netWorth - totalEarned);
                     }
 
@@ -974,6 +1253,7 @@ namespace MobileIdleBuilder.Dev
                             var pp = _progressQuery.GetSingleton<PlayerProgressData>();
                             pp.BaseCurrency      = entropy;
                             pp.TotalEntropySpent = totalInvested;
+                            pp.TotalEntropyDiscounted = 0;
                             pp.BaseNetWorth      = 0f;
                             pp.NetWorth          = entropy + totalInvested;
                             _progressQuery.SetSingleton(pp);
@@ -1159,10 +1439,10 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("block list", "List research blocks (game phases) and what 'block load' gives you",
                 _ => BlockList());
 
-            _registry.Register("block load <id>", "Start a research block as a first arrival (id, name or number); uses a captured save point if one exists",
+            _registry.Register("block load <id>", "Start a research block as a first arrival (id, name or number); uses a captured save point if one exists. 'visit return' comes back",
                 args => BlockLoad(args[0], preferCapture: true));
 
-            _registry.Register("block fresh <id>", "Start a research block from its data definition, ignoring any captured save point",
+            _registry.Register("block fresh <id>", "Start a research block from its data definition, ignoring any captured save point. 'visit return' comes back",
                 args => BlockLoad(args[0], preferCapture: false));
 
             _registry.Register("block capture <id>", "Save the current game as the save point for a research block",
@@ -1176,6 +1456,40 @@ namespace MobileIdleBuilder.Dev
 
             _registry.Register("snapshot delete <name>", "Delete a saved snapshot",
                 args => SnapshotDelete(args[0]));
+
+            // ── visit: try something out, then come back to exactly where you were ──
+            // The first 'visit' saves the current game as the return point (snapshots/visit_return.json);
+            // further visits keep that original point until 'visit return' restores it. Specific forms are
+            // registered before 'visit <name>' because the first matching pattern wins.
+            _registry.Register("visit return", "Go back to the game as it was before the first 'visit'",
+                _ => VisitReturn());
+
+            _registry.Register("visit status", "Show whether a 'visit' return point is waiting",
+                _ => File.Exists(Path.Combine(SnapshotDir, VisitReturnName + ".json"))
+                    ? $"Visiting. 'visit return' restores the game saved at " +
+                      $"{File.GetLastWriteTime(Path.Combine(SnapshotDir, VisitReturnName + ".json")):g}."
+                    : "Not visiting. 'visit <snapshot>' or 'visit world <id>' saves a return point first.");
+
+            _registry.Register("tutorial restart <world>", "Save a return point, then start a world's tutorial over on a fresh map (physics = a fresh run); 'visit return' comes back",
+                args => VisitWorld(args[0]));
+
+            _registry.Register("visit world <id>", "Save a return point, then enter a world fresh: unlocked, its buildings cleared, its tutorial from the start",
+                args => VisitWorld(args[0]));
+
+            _registry.Register("visit <name>", "Save a return point, then load any snapshot (see 'snapshot list'); 'visit return' comes back",
+                args =>
+                {
+                    if (args[0] == VisitReturnName) return "Use 'visit return' to go back.";
+                    var data = SnapshotRead(args[0], out string err);
+                    if (data == null) return err;
+                    string saved = SaveVisitReturnPoint();
+                    if (saved.StartsWith("Error")) return saved;
+                    SaveManager.Instance.DevReplaceCurrent(data);
+                    GridSaveService.Instance?.ClearGrid();
+                    _inputField?.Blur();
+                    SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+                    return $"{saved} Visiting snapshot '{args[0]}'. 'visit return' brings you back.";
+                });
 
             // ── simulated spending and absence (AI playtest benchmarks) ──────
             _registry.Register("iap grant <tier>", "Simulate buying crystal pack 1-4 ($0.99 / $4.99 / $9.99 / $19.99)",
@@ -1209,6 +1523,89 @@ namespace MobileIdleBuilder.Dev
             double dollars = double.Parse(pack.DisplayPrice.TrimStart('$'), System.Globalization.CultureInfo.InvariantCulture);
             Playtest.PlaytestBenchmark.Active?.AddPurchase(dollars, pack.CrystalAmount, pack.Name);
             return $"Granted {pack.Name}: +{pack.CrystalAmount} crystals ({pack.DisplayPrice}).";
+        }
+
+        // ── Visit helpers ─────────────────────────────────────────────────────
+
+        private const string VisitReturnName = "visit_return";
+
+        /// <summary>
+        /// Saves the current game as the return point, unless one is already waiting: chained visits all
+        /// come back to the game as it was before the first one.
+        /// </summary>
+        private static string SaveVisitReturnPoint()
+        {
+            if (SceneLoader.IsTransitioning || !(ECSLoadBridge.Instance?.SaveApplied ?? false))
+                return "Error: the game is still loading. Try again once it has finished.";
+            if (File.Exists(Path.Combine(SnapshotDir, VisitReturnName + ".json")))
+                return "Return point kept from your first visit.";
+            string r = SnapshotSave(VisitReturnName);
+            return r.StartsWith("Error") ? r : "Return point saved.";
+        }
+
+        private string VisitReturn()
+        {
+            if (SceneLoader.IsTransitioning) return "The game is still loading. Try again once it has finished.";
+            var data = SnapshotRead(VisitReturnName, out _);
+            if (data == null) return "Nothing to return to: no 'visit' is in progress.";
+            if (SaveManager.Instance == null) return "Error: SaveManager not ready.";
+
+            SaveManager.Instance.DevReplaceCurrent(data);
+            File.Delete(Path.Combine(SnapshotDir, VisitReturnName + ".json"));
+            GridSaveService.Instance?.ClearGrid();
+            _inputField?.Blur();
+            SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+            return "Returning to the game as it was before your visit...";
+        }
+
+        /// <summary>
+        /// 'visit world &lt;id&gt;': saves a return point, then sets the game up to try a world as a first
+        /// arrival: the world (and its sites) unlocked, travelled to, its buildings and channels removed
+        /// (fields stay), and its own tutorial reset to the start. Reloads the scene so everything
+        /// (tutorial overlay included) starts clean. Accepts a world id, its short name or its index.
+        /// </summary>
+        private string VisitWorld(string key)
+        {
+            var svc = WorldService.Instance;
+            var sm  = SaveManager.Instance;
+            if (svc == null || sm?.Current == null) return "Error: WorldService or SaveManager not ready.";
+
+            int idx = svc.IndexOf(key);
+            if (idx < 0) idx = svc.IndexOf("world_" + key);
+            if (idx < 0 && int.TryParse(key, out int n) && svc.GetWorld(n) != null) idx = n;
+            var world = svc.GetWorld(idx);
+            if (world == null) return $"Error: unknown world '{key}'. Try 'world list'.";
+
+            string saved = SaveVisitReturnPoint();
+            if (saved.StartsWith("Error")) return saved;
+
+            // Build the visit on a copy of the save and reload once, like 'snapshot load'. No live world
+            // switch first: switching and then reloading straight away is what froze on the loading screen.
+            var sites    = Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites;
+            var siteIds  = new List<string>();
+            if (sites != null) foreach (var site in sites) siteIds.Add(site != null ? site.id : null);
+            var research = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.allResearch;
+            var fieldWorlds = new Dictionary<string, string>();
+            if (sites != null)
+                foreach (var site in sites)
+                    if (site?.fieldOverrides != null)
+                        foreach (var ov in site.fieldOverrides)
+                            if (ov.field != null) fieldWorlds[ov.field.id] = ov.field.world;
+
+            var data = WorldVisit.Clone(sm.Current);
+            long startEntropy = GameBootstrap.Instance?.gameConfig != null ? GameBootstrap.Instance.gameConfig.startingEntropy : 0;
+            WorldVisit.PrepareFreshArrival(data, world, idx, siteIds,
+                rid => research == null ? null : System.Array.Find(research, r => r != null && r.id == rid)?.requiredWorld,
+                fid => fieldWorlds.TryGetValue(fid, out var w) ? w : null,
+                startEntropy);
+
+            sm.DevReplaceCurrent(data);
+            SaveManager.ClearLiveRunState();
+            _inputField?.Blur();
+            SceneLoader.GoTo(SceneManager.GetActiveScene().name);
+            string what = idx == 0 ? "a fresh run with the main tutorial"
+                        : world.tutorialFlow != null ? "its tutorial from the start" : "no tutorial of its own";
+            return $"{saved} Entering '{world.id}' fresh ({what}). 'visit return' brings you back.";
         }
 
         // ── Snapshot helpers ──────────────────────────────────────────────────
@@ -1247,6 +1644,7 @@ namespace MobileIdleBuilder.Dev
             var db = Resources.Load<ResearchDatabaseSO>("ResearchDatabase");
             if (db?.blocks == null || db.blocks.Length == 0)
                 return "Error: no research blocks. Run MobileIdleBuilder > Import Game Data.";
+            var worldDb = Resources.Load<WorldDatabaseSO>("WorldDatabase");
             var sb = new StringBuilder("Research blocks (load with 'block load <n|id>'):\n");
             int n = 1;
             foreach (var b in System.Linq.Enumerable.OrderBy(db.blocks, b => b.order))
@@ -1257,8 +1655,10 @@ namespace MobileIdleBuilder.Dev
                 int ups = b.startPermanentUpgrades?.Length ?? 0;
                 sb.AppendLine($"  [{n++}] {b.id,-20} {b.displayName,-20} {b.targetHours,5:0.#}h  {research,2} research  " +
                               $"start: {b.startPrestigeCount} prestiges, {ups} upgrades, {b.startEntropy:N0}e" +
+                              $"  in {BlockStartPresets.BlockWorld(db, b, worldDb)?.displayName ?? "Physics"}" +
                               (captured ? "  [captured save point]" : ""));
             }
+            sb.AppendLine("A block in another world opens that world and starts you on its entry site; 'visit world <id>' enters a world at its tutorial.");
             return sb.ToString().TrimEnd();
         }
 
@@ -1284,6 +1684,11 @@ namespace MobileIdleBuilder.Dev
             data ??= BlockStartPresets.Build(sm.Current, db, Resources.Load<WorldDatabaseSO>("WorldDatabase"), block);
             if (data == null) return "Error: could not build the block's save.";
 
+            // Like 'visit': keep the game as it was so 'visit return' brings it back (the first return point
+            // is kept across chained visits and block loads).
+            string returnPoint = SaveVisitReturnPoint();
+            if (returnPoint.StartsWith("Error")) return returnPoint;
+
             // The Recipes panel lists only recipes the player has learned; research learns them.
             var knowledge = RecipeKnowledgeService.Instance;
             var recipes   = RecipeDatabase.Instance?.Recipes;
@@ -1298,7 +1703,7 @@ namespace MobileIdleBuilder.Dev
             SceneLoader.GoTo(SceneManager.GetActiveScene().name);
             return $"Starting '{block.displayName}' from its {source}: {data.unlockedResearch.Count} research done, " +
                    $"{data.prestigeCount} prestiges, {data.permanentUpgrades.Count} permanent upgrades, " +
-                   $"{data.currentRun.baseCurrency:N0}e. Reloading...";
+                   $"{data.currentRun.baseCurrency:N0}e. {returnPoint} Type 'visit return' to come back. Reloading...";
         }
 
         private static SaveData SnapshotRead(string name, out string error)

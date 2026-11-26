@@ -23,6 +23,30 @@ namespace MobileIdleBuilder
         /// Returns true on success, false if the cell is already occupied.
         /// Pass outputDirection for field-collector buildings; omit (null) for all others.
         /// </summary>
+        /// <summary>
+        /// True when a stream segment (Chemistry channel) lies beside the footprint of
+        /// <paramref name="building"/> placed at (x, y). Used for the "No water" placement warning.
+        /// </summary>
+        public bool TouchesStream(int gridX, int gridY, BuildingSO building, int rotation, bool flipped)
+        {
+            if (building == null) return false;
+            var baseFp = new UnityEngine.Vector2Int(Mathf.Max(1, building.footprint.x), Mathf.Max(1, building.footprint.y));
+            var fp = PortUtils.RotatedFootprint(baseFp, rotation);
+            using var q = _em.CreateEntityQuery(ComponentType.ReadOnly<StreamSegment>(), ComponentType.ReadOnly<ConveyorSegmentData>());
+            var segs = q.ToComponentDataArray<ConveyorSegmentData>(Unity.Collections.Allocator.Temp);
+            bool touches = false;
+            foreach (var s in segs)
+            {
+                int dx = s.Cell.x < gridX ? gridX - s.Cell.x : s.Cell.x - (gridX + fp.x - 1);
+                int dy = s.Cell.y < gridY ? gridY - s.Cell.y : s.Cell.y - (gridY + fp.y - 1);
+                if (dx < 0) dx = 0;
+                if (dy < 0) dy = 0;
+                if (dx + dy == 1) { touches = true; break; }
+            }
+            segs.Dispose();
+            return touches;
+        }
+
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
                                   int speedLevel = 1, int storageLevel = 1, int inputLevel = 1,
@@ -139,6 +163,8 @@ namespace MobileIdleBuilder
 
             if (building?.isEntropySink == true)
                 _em.AddComponentData(entity, new EntropySinkTag());
+            if (building != null && building.IsFixedSink)
+                _em.AddComponentData(entity, new DemonTag());
 
             // Bespoke procedural structure selector (data-driven, no hardcoded ids). Collectors and
             // entropy sinks are detected by their gameplay components; everything else that declares a
@@ -182,6 +208,16 @@ namespace MobileIdleBuilder
                 _em.AddComponentData(entity, new PowerStatus { IsConnected = 0, ThrottleRatio = 0f });
             }
 
+            // Streams (stream worlds): a Spring heads a stream; a building with a flow draw takes its
+            // share from the stream beside it and StreamFlowSystem writes how much it got.
+            if (building != null && building.isSpring)
+                _em.AddComponentData(entity, new StreamSource { Flow = building.streamFlow });
+            if (building != null && building.flowDraw > 0f)
+            {
+                _em.AddComponentData(entity, new StreamConsumer { Draw = building.flowDraw });
+                _em.AddComponentData(entity, new StreamStatus { OnStream = 0, Ratio = 0f });
+            }
+
             if (hasPorts)
             {
                 var portBuf = _em.GetBuffer<PlacedPortData>(entity);
@@ -201,13 +237,49 @@ namespace MobileIdleBuilder
             if (building != null && (building.isItemFilter || building.assignableOutputs))
                 AddFilterComponents(entity, portFilters, building.isItemFilter);
 
-            if (building != null && building.isSplitter)
+            GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
+            return true;
+        }
+
+        /// <summary>
+        /// Moves the placed building <paramref name="e"/> to (gridX, gridY) with a new rotation and flip,
+        /// keeping its entity (and so its items, progress, recipe, upgrades and manager). Swaps its grid
+        /// occupancy from the old footprint to the new one; returns false, changing nothing, if the new
+        /// footprint is taken by anything else. The caller redraws the building and belts.
+        /// </summary>
+        public bool MoveBuilding(Entity e, BuildingSO building, int gridX, int gridY,
+                                 int rotation, bool flipped, int? outputDirection)
+        {
+            if (!_em.Exists(e) || !_em.HasComponent<GridPosition>(e)) return false;
+
+            var old = _em.GetComponentData<GridPosition>(e).Cell;
+            int ow = 1, oh = 1;
+            if (_em.HasComponent<BuildingFootprint>(e))
             {
-                _em.AddComponent<SplitterTag>(entity);
-                _em.AddComponentData(entity, new SplitterState { NextFacing = -1 });
+                var ofp = _em.GetComponentData<BuildingFootprint>(e);
+                ow = ofp.Width;
+                oh = ofp.Height;
             }
 
-            GameLogger.Develop($"[BuildingPlacer] Placed '{building?.displayName ?? "Building"}' at ({gridX},{gridY}) footprint {fw}x{fh} rotation={rotation} flipped={flipped}");
+            var baseFp = building == null
+                ? new UnityEngine.Vector2Int(1, 1)
+                : new UnityEngine.Vector2Int(Mathf.Max(1, building.footprint.x), Mathf.Max(1, building.footprint.y));
+            var fp = PortUtils.RotatedFootprint(baseFp, rotation);
+
+            var occupancy = GridOccupancy.Instance;
+            if (occupancy != null)
+            {
+                occupancy.ReleaseRect(old.x, old.y, ow, oh);
+                if (!occupancy.TryOccupyRect(gridX, gridY, fp.x, fp.y))
+                {
+                    occupancy.RegisterRect(old.x, old.y, ow, oh);
+                    GameLogger.Develop($"[BuildingPlacer] Move to ({gridX},{gridY}) {fp.x}x{fp.y} blocked; building stays at ({old.x},{old.y}).");
+                    return false;
+                }
+            }
+
+            BuildingMove.Apply(_em, e, building, gridX, gridY, rotation, flipped, outputDirection);
+            GameLogger.Develop($"[BuildingPlacer] Moved '{building?.displayName ?? "Building"}' ({old.x},{old.y}) -> ({gridX},{gridY}) rotation={rotation} flipped={flipped}");
             return true;
         }
 

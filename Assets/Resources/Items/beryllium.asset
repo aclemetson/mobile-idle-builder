@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     to X-rays and used in nuclear reactor reflectors. Toxic in dust form \u2014 handle
     with care."
   codexUnlocked: 0
-  baseSellValue: 488
+  baseSellValue: 167
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

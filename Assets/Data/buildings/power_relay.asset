@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Broadcasts the grid's shared power over a wide radius without generating
     any eV of its own. Place relays to carry power from your generators to distant
     buildings.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 610dab15a0bd48e41a842a765f57963a, type: 3}
   prefab: {fileID: 0}
   buildingId: 13
   tier: 1
@@ -32,13 +32,16 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 5
   linkRadiusTiles: 6
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 0
   supportedRecipes: []
   inputSlotCount: 0
   inputSlotLabels: []
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -48,6 +51,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_physics
   entropyCost: 300
   baseMaxOutputItems: 0
   baseMaxInputItemsPerSlot: 0

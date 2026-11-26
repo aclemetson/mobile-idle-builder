@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Francium (Fr), element number 87 with mass number 223. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 27300
+  baseSellValue: 4790
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

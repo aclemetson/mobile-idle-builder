@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: 'The cell''s factory floor: a complex of nucleic acid and protein that
     reads genetic code and builds new proteins.'
   codexUnlocked: 0
-  baseSellValue: 7450000
+  baseSellValue: 2210000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

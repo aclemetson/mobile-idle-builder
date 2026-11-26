@@ -2,6 +2,8 @@
 
 How to test the crystal-pack in-app purchases (IAP) end-to-end through Google Play Console.
 
+The iOS / App Store Connect version is `docs/runbooks/app-store-iap-testing.md`.
+
 ## What the game ships
 
 Unity IAP (`com.unity.purchasing`) is integrated. `IAPService`
@@ -14,6 +16,31 @@ IDs below must match the Play Console product IDs **exactly**:
 | `crystals_tier2` | 3,200    | $4.99        |
 | `crystals_tier3` | 7,500    | $9.99        |
 | `crystals_tier4` | 20,000   | $19.99       |
+
+Plus one **non-consumable** (#503):
+
+| Product ID | What it gives | Target price |
+| ---------- | ------------- | ------------ |
+| `ad_free`  | Every ad reward without the ad (Entropy Surge included) + permanent +20% entropy income (`AdFree.cs`) | $9.99 |
+
+A purchase sets `SaveData.adFree` (survives prestige, syncs with the cloud save). On every store init
+`IAPService.RestoreAdFreeFromReceipt` re-grants it when the store still holds the receipt (reinstall / new
+device; Google redelivers owned non-consumables). iOS shows a **Restore Purchases** button under the card
+(`IAPService.RestorePurchases`, App Store requirement).
+
+**Once per account.** `ad_free` can be bought once per Google / Apple account. Three layers enforce it:
+1. **The store.** Google Play refuses to sell an owned one-time product again until the app consumes it ("You
+   already own this item"). Unity IAP never consumes a `ProductType.NonConsumable`, so it stays owned for good.
+   Apple refuses a second purchase of a Non-Consumable, and offers to restore it for free instead.
+2. **The game.**
+   - The card shows **Owned** with its button disabled.
+   - `IAPService.BuyProduct` refuses to start a purchase when the save owns it or the store already holds the
+     receipt (`AdFree.CanBuy`), and restores it instead.
+   - Granting is idempotent (`AdFree.Grant`).
+3. **Play Console.** Leave **multi-quantity** off on the product's purchase option.
+
+The entitlement belongs to the **store account**. Any game save that signs in on a device with that
+Google / Apple account gets it back through the receipt.
 
 On a successful purchase, `IAPService.ProcessPurchase` calls
 `PremiumShopService.AwardCrystals(amount)`, which adds to `SaveData.paidCurrency` (the ◆ balance)
@@ -31,13 +58,16 @@ App package id: `com.clemtek.mobileidlebuilder` (Player Settings, Android + iPho
 
 ## Procedure
 
-### 1. Create the four managed products
+### 1. Create the five managed products
 
 Play Console > **Monetize > Products > In-app products** > Create product.
 
 - Create one product per row in the table above. **Product ID must match exactly**
   (`crystals_tier1` ... `crystals_tier4`) — it cannot be changed after creation.
 - Set a name/description and a price (~$0.99 / $4.99 / $9.99 / $19.99 or local equivalents).
+- `ad_free`: create it the same way (Play has one-time products only, so "non-consumable" is the client's
+  `ProductType.NonConsumable`, which never consumes the purchase). Price ~$9.99 or the local equivalent. On
+  App Store Connect, create it as a **Non-Consumable** in-app purchase.
 - Set each product's status to **Active**.
 - Note: products can take a few hours to propagate before they are purchasable.
 

@@ -112,10 +112,31 @@ namespace MobileIdleBuilder.Tests
         public void FeatureFlags_Accessors_ReturnDefaults_WhenServiceAbsent()
         {
             // No FeatureFlagService in an EditMode test → accessors must yield compile-time defaults.
-            Assert.AreEqual(FeatureFlags.PvpEnabledDefault,         FeatureFlags.PvpEnabled);
+            Assert.AreEqual(FeatureFlags.PveEnabledDefault,         FeatureFlags.PveEnabled);
             Assert.AreEqual(FeatureFlags.IapEnabledDefault,         FeatureFlags.IapEnabled);
             Assert.AreEqual(FeatureFlags.CloudSaveEnabledDefault,   FeatureFlags.CloudSaveEnabled);
             Assert.AreEqual(FeatureFlags.DailyEventsEnabledDefault, FeatureFlags.DailyEventsEnabled);
         }
+
+        // -- Fetch reuse (#209): GameScene reuses the splash gate's fetch --
+
+        [Test]
+        public void IsFresh_NeverFetched_IsStale()
+            => Assert.IsFalse(FeatureFlagResolver.IsFresh(-1f, 5f, 120f));
+
+        [Test]
+        public void IsFresh_RecentFetch_IsReused()
+            => Assert.IsTrue(FeatureFlagResolver.IsFresh(10f, 15f, 120f));
+
+        [Test]
+        public void IsFresh_OldFetch_IsStale()
+        {
+            Assert.IsFalse(FeatureFlagResolver.IsFresh(10f, 130f, 120f));
+            Assert.IsFalse(FeatureFlagResolver.IsFresh(10f, 500f, 120f));
+        }
+
+        [Test]
+        public void IsFresh_ClockBehindTheFetch_IsStale()
+            => Assert.IsFalse(FeatureFlagResolver.IsFresh(50f, 10f, 120f));
     }
 }

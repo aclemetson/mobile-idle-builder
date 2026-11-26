@@ -19,23 +19,23 @@ MonoBehaviour:
   tier: 4
   category: 6
   inputs:
-  - item: {fileID: 11400000, guid: 6d1a01fd29cd2544086df1cd0c88ccda, type: 2}
-    quantity: 3
-  - item: {fileID: 11400000, guid: ef6e4abec0fbe844292c2d7f1b3f91bc, type: 2}
-    quantity: 4
+  - item: {fileID: 11400000, guid: 481dc7a64c564ed4a83a24b1660ad5fa, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: e55206a266b6ab64d8c01038f32ad411, type: 2}
+    quantity: 1
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: 24398ca4d86eb704b8b607716a77000c, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 500
+  baseCraftTime: 480
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 25000
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 57aa8ecd6478e5047b3ccbf84fa1775c, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: Kroll process

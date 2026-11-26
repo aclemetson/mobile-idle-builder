@@ -42,11 +42,31 @@ namespace MobileIdleBuilder
             public bool  IsCollector;
             public bool  IsSink;
             public bool  IsFilter;           // #321: passes items through by its rules; never a final consumer
-            public bool  IsSplitter;         // Belt Splitter: shares items evenly between its output belts
-            public bool  IsRouter => IsFilter || IsSplitter;
+            public bool  IsRouter => IsFilter;
             public IdleRecipeInfo Recipe;   // valid only for synthesizers
-            public readonly List<int> Outgoing = new(); // indices (or -1 for inventory)
-            public readonly List<int> Incoming = new(); // producer node indices feeding this node
+            public readonly List<int>   Outgoing   = new(); // indices (or -1 for inventory)
+            public readonly List<float> OutWeights = new(); // share of the output each Outgoing entry takes (belt splits)
+            public readonly List<int>   Incoming   = new(); // producer node indices feeding this node (one per edge)
+
+            public float TotalOutWeight
+            {
+                get { float t = 0f; foreach (var w in OutWeights) t += w; return t; }
+            }
+
+            /// <summary>Items/s of this node's output that reach node <paramref name="to"/> over all its edges there.</summary>
+            public float FlowTo(int to)
+            {
+                float total = TotalOutWeight, share = 0f;
+                for (int k = 0; k < Outgoing.Count; k++) if (Outgoing[k] == to) share += OutWeights[k];
+                return total > 0f ? OutputRate * share / total : 0f;
+            }
+
+            public void AddEdge(int to, float weight, Node[] all, int self)
+            {
+                Outgoing.Add(to);
+                OutWeights.Add(weight);
+                if (to >= 0) all[to].Incoming.Add(self);
+            }
             public int   OutputItemId = -1;
             public float OutputRate;         // items/sec (speed + manager scaled; pre idle-collection-rate)
             public float CraftsPerSec;       // synthesizers: steady-state crafts/sec (input-limited)
@@ -68,12 +88,14 @@ namespace MobileIdleBuilder
             Func<int, int, IdleRecipeInfo> getRecipeInfo = null,
             float surplusSaleFraction = 0f,
             Func<int, bool> isFilter = null,
-            Func<int, bool> isSplitter = null,
-            Func<BuildingSaveData, float> getCollectorRate = null)
+            Func<BuildingSaveData, float> getCollectorRate = null,
+            Func<BuildingSaveData, IEnumerable<(Vector2Int cell, int facing)>> getOutputPorts = null)
         {
             var snapshot = new IdleCollectionSnapshot { snapshotTimestampUtc = snapshotTimestamp };
             if (grid == null) return snapshot;
 
+            // Belt Splitter buildings became belt splits (2026-11-24); an old grid is converted first.
+            SplitterMigration.Convert(grid);
             var buildings = grid.buildings ?? new List<BuildingSaveData>();
             var conveyors = grid.conveyors ?? new List<ConveyorSaveData>();
 
@@ -91,7 +113,6 @@ namespace MobileIdleBuilder
                     IsCollector = isCollector(bsd.buildingId),
                     IsSink      = isEntropySink(bsd.buildingId),
                     IsFilter    = isFilter?.Invoke(bsd.buildingId) ?? false,
-                    IsSplitter  = isSplitter?.Invoke(bsd.buildingId) ?? false,
                     Recipe      = info
                 };
                 indexOf[bsd] = i;
@@ -111,45 +132,151 @@ namespace MobileIdleBuilder
             }
 
             var cellToBuilding = BuildCellMap(buildings, getFootprint);
-            var filterExits    = new List<(int filter, int side, int to)>();
+            var filterExits    = new List<(int filter, int side, int to, float weight)>();
 
-            // ---- Edges (producer at head → consumer/inventory at tail) --------
+            // Belt splits: where each split sits, and every chain by its first cell (a split's branches are saved
+            // as chains starting on the tile beside it).
+            var splitMap    = new Dictionary<Vector2Int, BeltSplitData>();
+            foreach (var sd in BeltSplitRules.Parse(grid.splits)) splitMap[new Vector2Int(sd.X, sd.Y)] = sd;
+            var chainByHead = new Dictionary<Vector2Int, ConveyorSaveData>();
+            foreach (var chain in conveyors)
+                if (chain?.cells != null && chain.cells.Length >= 2)
+                {
+                    var head = new Vector2Int(chain.cells[0], chain.cells[1]);
+                    if (!chainByHead.ContainsKey(head)) chainByHead[head] = chain;
+                }
+
+            // Where one chain's items end up: the building at its tail, shared out at every split on the way.
+            void Route(ConveyorSaveData chain, float weight, List<(int to, float w)> into, int depth, int from = 0)
+            {
+                int len = chain.cells.Length / 2;
+                float w = weight;
+                for (int c = from; c < len && w > 0f; c++)
+                {
+                    var cell = new Vector2Int(chain.cells[c * 2], chain.cells[c * 2 + 1]);
+                    if (!splitMap.TryGetValue(cell, out var sp)) continue;
+                    int next = c < len - 1
+                        ? DirBetween(cell, new Vector2Int(chain.cells[c * 2 + 2], chain.cells[c * 2 + 3])) : -1;
+                    // A side leads on along the chain (next), into a branch chain, or straight into a building that
+                    // takes items (a split right in front of an input, as ConveyorSystem delivers it).
+                    BuildingSaveData SideConsumer(int d) =>
+                        d != next && !chainByHead.ContainsKey(Step(cell, d))
+                        && cellToBuilding.TryGetValue(Step(cell, d), out var b) && CanConsume(b) ? b : null;
+                    float total = 0f;
+                    for (int d = 0; d < 4; d++)
+                        if (BeltSplitRules.Has(sp.Mask, d)
+                            && (d == next || chainByHead.ContainsKey(Step(cell, d)) || SideConsumer(d) != null))
+                            total += BeltSplitRules.ClampWeight(sp.Weight(d));
+                    if (total <= 0f) continue;
+                    float trunk = 0f;
+                    for (int d = 0; d < 4; d++)
+                    {
+                        if (!BeltSplitRules.Has(sp.Mask, d)) continue;
+                        float share = w * BeltSplitRules.ClampWeight(sp.Weight(d)) / total;
+                        if (d == next) trunk = share;
+                        else if (depth < 16 && chainByHead.TryGetValue(Step(cell, d), out var branch))
+                            Route(branch, share, into, depth + 1);
+                        else if (SideConsumer(d) is { } consumerSide)
+                            into.Add((indexOf[consumerSide], share));
+                    }
+                    w = trunk;
+                }
+                if (w <= 0f) return;
+                int tx = chain.cells[chain.cells.Length - 2], ty = chain.cells[chain.cells.Length - 1];
+                var consumer = FindAdjacent(tx, ty, cellToBuilding, CanConsume);
+                into.Add((consumer != null ? indexOf[consumer] : -1, w));
+            }
+
+            bool FedBySplit(Vector2Int cell)
+            {
+                for (int d = 0; d < 4; d++)
+                    if (splitMap.TryGetValue(Step(cell, d), out var sp) && BeltSplitRules.Has(sp.Mask, (d + 2) % 4))
+                        return true;
+                return false;
+            }
+
+            // The building feeding a chain's head: the one whose output port faces it, as ConveyorSystem pass 4
+            // pulls. Two producers often touch one head (a harvester pair side by side); taking whichever came
+            // first credited the belt to the wrong one, starved the synth it feeds, and the Demon got nothing
+            // offline or from a Time Warp (#535). Without port data, any adjacent producer (the old rule).
+            BuildingSaveData HeadProducer(Vector2Int head)
+            {
+                if (getOutputPorts != null)
+                    for (int d = 0; d < 4; d++)
+                    {
+                        if (!cellToBuilding.TryGetValue(Step(head, d), out var b) || !CanProduce(b)) continue;
+                        foreach (var (pc, facing) in getOutputPorts(b))
+                            if (Step(pc, facing) == head) return b;
+                    }
+                return FindAdjacent(head.x, head.y, cellToBuilding, CanProduce);
+            }
+
+            // ---- Edges (producer at head → consumer/inventory at tail, shared at splits) --------
+            var routed = new List<(int to, float w)>();
             foreach (var chain in conveyors)
             {
                 if (chain?.cells == null || chain.cells.Length < 2) continue;
 
                 int hx = chain.cells[0], hy = chain.cells[1];
-                int tx = chain.cells[chain.cells.Length - 2];
-                int ty = chain.cells[chain.cells.Length - 1];
+                if (FedBySplit(new Vector2Int(hx, hy))) continue;   // a split's branch: reached through the split
 
-                var consumer = FindAdjacent(tx, ty, cellToBuilding, CanConsume);
-                int to = consumer != null ? indexOf[consumer] : -1;
+                routed.Clear();
+                Route(chain, 1f, routed, 0);
 
-                var producer = FindAdjacent(hx, hy, cellToBuilding, CanProduce);
+                var producer = HeadProducer(new Vector2Int(hx, hy));
                 if (producer == null)
                 {
-                    // A belt leaving a Filter or Splitter: remember which side it starts from and where it ends.
+                    // A belt leaving a Filter: remember which side it starts from and where it ends.
                     var filter = FindAdjacent(hx, hy, cellToBuilding, b => nodes[indexOf[b]].IsRouter);
                     if (filter != null && filter.position?.Length >= 2)
                     {
                         int f = indexOf[filter];
                         int side = SideFacing(filter.position[0], filter.position[1], hx, hy);
-                        if (side >= 0 && to != f) filterExits.Add((f, side, to));
+                        if (side >= 0)
+                            foreach (var (to, w) in routed) if (to != f) filterExits.Add((f, side, to, w));
                     }
                     continue;
                 }
 
                 int from = indexOf[producer];
-                if (to == from) continue; // ignore a belt that loops back to its own source
-
-                nodes[from].Outgoing.Add(to);
-                if (to >= 0) nodes[to].Incoming.Add(from);
+                foreach (var (to, w) in routed)
+                    if (to != from) nodes[from].AddEdge(to, w, nodes, from);   // a belt looping back to its source is ignored
             }
 
-            // ---- Filters and Splitters are see-through (#321) -------------------
+            // ---- Producers feeding a belt mid-way (#206: a merge at a harvester's exit) ----
+            // An output port facing a belt that runs through its tile feeds it there (ConveyorSystem pass 4), so the
+            // producer gets an edge to wherever the belt goes from that cell. A belt only ending there takes nothing.
+            if (getOutputPorts != null)
+            {
+                var fedCells = new HashSet<(int, Vector2Int)>();   // a merge cell is on every chain through it
+                foreach (var chain in conveyors)
+                {
+                    if (chain?.cells == null) continue;
+                    int len = chain.cells.Length / 2;
+                    for (int c = 1; c < len - 1; c++)
+                    {
+                        var cell = new Vector2Int(chain.cells[c * 2], chain.cells[c * 2 + 1]);
+                        for (int d = 0; d < 4; d++)
+                        {
+                            if (!cellToBuilding.TryGetValue(Step(cell, d), out var b) || !CanProduce(b)) continue;
+                            bool faces = false;
+                            foreach (var (pc, facing) in getOutputPorts(b))
+                                if (Step(pc, facing) == cell) { faces = true; break; }
+                            if (!faces) continue;
+                            int from = indexOf[b];
+                            if (!fedCells.Add((from, cell))) continue;
+                            routed.Clear();
+                            Route(chain, 1f, routed, 0, c);
+                            foreach (var (to, w) in routed)
+                                if (to != from) nodes[from].AddEdge(to, w, nodes, from);
+                        }
+                    }
+                }
+            }
+
+            // ---- Filters are see-through (#321) ---------------------------------
             // A belt into a Filter is re-pointed at wherever the Filter sends that producer's item (following
-            // chained Filters). An item no side takes waits on its belt, so that edge earns nothing. A belt into
-            // a Splitter becomes one edge per output belt, so the producer's flow on it is shared evenly.
+            // chained Filters), keeping the belt's share. An item no side takes waits on its belt: that edge earns nothing.
             for (int i = 0; i < n; i++)
             {
                 var node = nodes[i];
@@ -159,17 +286,15 @@ namespace MobileIdleBuilder
                 {
                     int to = node.Outgoing[k];
                     if (to < 0 || !nodes[to].IsRouter) continue;
+                    float edgeWeight = node.OutWeights[k];
                     nodes[to].Incoming.Remove(i);
                     node.Outgoing.RemoveAt(k);
+                    node.OutWeights.RemoveAt(k);
 
-                    var targets = new List<int>();
-                    ThroughRouters(to, item, nodes, filterExits, targets, 0);
-                    foreach (int target in targets)
-                    {
-                        if (target == i) continue;
-                        node.Outgoing.Add(target);
-                        if (target >= 0) nodes[target].Incoming.Add(i);
-                    }
+                    var targets = new List<(int to, float w)>();
+                    ThroughRouters(to, item, nodes, filterExits, targets, 1f, 0);
+                    foreach (var (target, w) in targets)
+                        if (target != i) node.AddEdge(target, edgeWeight * w, nodes, i);
                 }
             }
 
@@ -236,12 +361,14 @@ namespace MobileIdleBuilder
             {
                 var node = nodes[i];
                 if (node.OutputItemId < 0 || node.OutputRate <= 0f || node.OutgoingCount == 0) continue;
+                float totalWeight = node.TotalOutWeight;
+                if (totalWeight <= 0f) continue;
 
-                float perEdge = node.OutputRate / node.OutgoingCount;
-                if (perEdge <= 0f) continue;
-
-                foreach (int to in node.Outgoing)
+                for (int k = 0; k < node.Outgoing.Count; k++)
                 {
+                    int   to      = node.Outgoing[k];
+                    float perEdge = node.OutputRate * node.OutWeights[k] / totalWeight;
+                    if (perEdge <= 0f) continue;
                     bool sink         = to >= 0 && nodes[to].IsSink;
                     bool producingSyn = to >= 0 && nodes[to].Recipe.Valid && !nodes[to].IsSink
                                                 && nodes[to].OutputRate > 0f;
@@ -257,7 +384,8 @@ namespace MobileIdleBuilder
                                 itemId            = node.OutputItemId,
                                 itemsPerSecond    = excess,
                                 endsAtEntropySink = true,
-                                baseSellValue     = getItemSellValue(node.OutputItemId) * surplusSaleFraction
+                                baseSellValue     = getItemSellValue(node.OutputItemId) * surplusSaleFraction,
+                                notDelivered      = true   // sold at the full input, never reaches the Demon
                             });
                         continue;
                     }
@@ -269,7 +397,8 @@ namespace MobileIdleBuilder
                         itemId            = node.OutputItemId,
                         itemsPerSecond    = perEdge,
                         endsAtEntropySink = sink || stuck,
-                        baseSellValue     = stuck ? price * surplusSaleFraction : price
+                        baseSellValue     = stuck ? price * surplusSaleFraction : price,
+                        notDelivered      = stuck            // a surplus sale, not a Demon delivery
                     });
                 }
             }
@@ -288,7 +417,8 @@ namespace MobileIdleBuilder
                     itemId            = node.OutputItemId,
                     itemsPerSecond    = node.OutputRate / outQty,   // crafts per second
                     endsAtEntropySink = true,
-                    baseSellValue     = node.Recipe.ByproductEntropy
+                    baseSellValue     = node.Recipe.ByproductEntropy,
+                    notDelivered      = true   // escape entropy per craft; the item itself goes wherever its belt goes
                 });
             }
 
@@ -309,38 +439,41 @@ namespace MobileIdleBuilder
         /// waits. A Filter picks one side by its rules (with no rules, an old save, its first belt); a Splitter uses all of its belts.
         /// </summary>
         private static void ThroughRouters(int router, int item, Node[] nodes,
-                                           List<(int filter, int side, int to)> exits, List<int> targets, int depth)
+                                           List<(int filter, int side, int to, float weight)> exits,
+                                           List<(int to, float w)> targets, float share, int depth)
         {
-            if (depth >= 8) return; // a loop of Filters/Splitters
-
-            if (nodes[router].IsSplitter)
-            {
-                foreach (var e in exits)
-                {
-                    if (e.filter != router) continue;
-                    if (e.to >= 0 && nodes[e.to].IsRouter) ThroughRouters(e.to, item, nodes, exits, targets, depth + 1);
-                    else targets.Add(e.to);
-                }
-                return;
-            }
+            if (depth >= 8) return; // a loop of Filters
 
             var rules = PortFilterRules.Parse(nodes[router].Bsd.portFilters);
             int side  = rules.Count == 0 ? FirstExitSide(router, exits) : PortFilterRules.Route(rules, item);
             if (side == PortFilterRules.NoRoute) return;
+            // The belt on that side may split on its way: each of its ends takes its share.
             foreach (var e in exits)
             {
                 if (e.filter != router || e.side != side) continue;
-                if (e.to >= 0 && nodes[e.to].IsRouter) ThroughRouters(e.to, item, nodes, exits, targets, depth + 1);
-                else targets.Add(e.to);
-                return;
+                if (e.to >= 0 && nodes[e.to].IsRouter) ThroughRouters(e.to, item, nodes, exits, targets, share * e.weight, depth + 1);
+                else targets.Add((e.to, share * e.weight));
             }
         }
 
-        private static int FirstExitSide(int filter, List<(int filter, int side, int to)> exits)
+        private static int FirstExitSide(int filter, List<(int filter, int side, int to, float weight)> exits)
         {
             foreach (var e in exits) if (e.filter == filter) return e.side;
             return PortFilterRules.NoRoute;
         }
+
+        /// <summary>The cell one step from <paramref name="c"/> in OutputDirection <paramref name="d"/>.</summary>
+        private static Vector2Int Step(Vector2Int c, int d) => d switch
+        {
+            0 => new Vector2Int(c.x, c.y + 1),
+            1 => new Vector2Int(c.x + 1, c.y),
+            2 => new Vector2Int(c.x, c.y - 1),
+            _ => new Vector2Int(c.x - 1, c.y),
+        };
+
+        /// <summary>OutputDirection of the step between two adjacent cells.</summary>
+        private static int DirBetween(Vector2Int a, Vector2Int b) =>
+            b.y > a.y ? 0 : b.x > a.x ? 1 : b.y < a.y ? 2 : 3;
 
         /// <summary>OutputDirection from a 1x1 building at (fx, fy) to the neighbouring cell (hx, hy), or -1.</summary>
         private static int SideFacing(int fx, int fy, int hx, int hy)
@@ -368,11 +501,12 @@ namespace MobileIdleBuilder
             if (qty <= 0) return 0f;
 
             float arriving = 0f;
-            foreach (int u in synth.Incoming)
+            int self = Array.IndexOf(nodes, synth);
+            foreach (int u in new HashSet<int>(synth.Incoming))
             {
                 var un = nodes[u];
                 if (un.OutputItemId == itemId && un.OutputRate > 0f && un.OutgoingCount > 0)
-                    arriving += un.OutputRate / un.OutgoingCount;
+                    arriving += un.FlowTo(self);
             }
             if (arriving <= 0f) return 0f;
             float excess = arriving - synth.CraftsPerSec * qty;
@@ -396,11 +530,12 @@ namespace MobileIdleBuilder
 
                 // Rate of this input item arriving from all upstream producers (each split across its outputs).
                 float arriving = 0f;
-                foreach (int u in node.Incoming)
+                int self = Array.IndexOf(nodes, node);
+                foreach (int u in new HashSet<int>(node.Incoming))
                 {
                     var un = nodes[u];
                     if (un.OutputItemId == inItem && un.OutputRate > 0f && un.OutgoingCount > 0)
-                        arriving += un.OutputRate / un.OutgoingCount;
+                        arriving += un.FlowTo(self);
                 }
 
                 float craftsFromInput = arriving / inQty;

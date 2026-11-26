@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Vanadium (V), element number 23 with mass number 51. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 22800
+  baseSellValue: 5560
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

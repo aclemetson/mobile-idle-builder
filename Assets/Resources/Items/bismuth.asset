@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Bismuth (Bi), element number 83 with mass number 209. A fission fragment
     on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 30700
+  baseSellValue: 5600
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

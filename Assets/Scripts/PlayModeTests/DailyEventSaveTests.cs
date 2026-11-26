@@ -45,14 +45,8 @@ namespace MobileIdleBuilder.PlayModeTests
             var data = new SaveData
             {
                 loginStreakIndex      = 5,
-                lastLoginRewardUtc    = "2026-06-11T00:00:00.0000000Z",
-                dailyChallengeResetUtc = "2026-06-12T00:00:00.0000000Z"
+                lastLoginRewardUtc    = "2026-06-11T00:00:00.0000000Z"
             };
-            data.dailyChallengeIds.Add("dc_craft_50");
-            data.dailyChallengeIds.Add("dc_place_3");
-            data.dailyChallengeIds.Add("dc_login");
-            data.dailyChallengeProgress.Add(new AchievementProgressEntry { id = "dc_craft_50", count = 30 });
-            data.dailyChallengesClaimed.Add("dc_login");
 
             svc.Save(data);
             var loaded = svc.Load();
@@ -60,13 +54,6 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.IsNotNull(loaded);
             Assert.AreEqual(5, loaded.loginStreakIndex);
             Assert.AreEqual("2026-06-11T00:00:00.0000000Z", loaded.lastLoginRewardUtc);
-            Assert.AreEqual("2026-06-12T00:00:00.0000000Z", loaded.dailyChallengeResetUtc);
-            CollectionAssert.AreEqual(
-                new[] { "dc_craft_50", "dc_place_3", "dc_login" }, loaded.dailyChallengeIds);
-            Assert.AreEqual(1, loaded.dailyChallengeProgress.Count);
-            Assert.AreEqual("dc_craft_50", loaded.dailyChallengeProgress[0].id);
-            Assert.AreEqual(30,            loaded.dailyChallengeProgress[0].count);
-            CollectionAssert.AreEqual(new[] { "dc_login" }, loaded.dailyChallengesClaimed);
         }
 
         [Test]
@@ -82,13 +69,6 @@ namespace MobileIdleBuilder.PlayModeTests
             Assert.AreEqual("legacy", loaded.playerId);
             Assert.AreEqual(0, loaded.loginStreakIndex, "streak index must default to 0 (calendar never used)");
             Assert.IsTrue(string.IsNullOrEmpty(loaded.lastLoginRewardUtc));
-            Assert.IsTrue(string.IsNullOrEmpty(loaded.dailyChallengeResetUtc));
-            Assert.IsNotNull(loaded.dailyChallengeIds);
-            Assert.IsEmpty(loaded.dailyChallengeIds);
-            Assert.IsNotNull(loaded.dailyChallengeProgress);
-            Assert.IsEmpty(loaded.dailyChallengeProgress);
-            Assert.IsNotNull(loaded.dailyChallengesClaimed);
-            Assert.IsEmpty(loaded.dailyChallengesClaimed);
         }
     }
 }

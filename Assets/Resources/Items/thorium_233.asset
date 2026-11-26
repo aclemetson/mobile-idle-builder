@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 22 minutes
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Thorium-232 that has caught one neutron. It beta-decays within minutes
     into Protactinium-233, the first step of the thorium fuel cycle that breeds Uranium-233.
   codexUnlocked: 0
-  baseSellValue: 22800
+  baseSellValue: 3780
   isotopeSellMultiplier: 1.163
   escapesAsEntropy: 0

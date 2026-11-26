@@ -21,46 +21,77 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 07d24042f66809543a69db826346ad04, type: 2}
   - {fileID: 11400000, guid: 1ed29cf61df3cdb47ac8661171317c2a, type: 2}
   - {fileID: 11400000, guid: 4b670ee6d1d9e2446980f2e273ce51fc, type: 2}
-  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
-  - {fileID: 11400000, guid: 0849915e5a6bd3f408aed3b6bb62180a, type: 2}
-  - {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
-  - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
-  - {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
-  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
-  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
-  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
-  - {fileID: 11400000, guid: 10b8edf85cf68c145af0408c91e9f53b, type: 2}
-  - {fileID: 11400000, guid: d4db8d9d72baf3c479820d203cf9976d, type: 2}
-  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
   - {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
-  - {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
-  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
-  - {fileID: 11400000, guid: 05caecaf0f49b624d989e151df55503a, type: 2}
-  - {fileID: 11400000, guid: e012e28e2ad593748ac391bff610c6ec, type: 2}
-  - {fileID: 11400000, guid: 9a7392223fd3ef0448c1a88e27c6ce0e, type: 2}
+  - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
+  - {fileID: 11400000, guid: 8df3263ba828dd242a8e4db2896dc77f, type: 2}
+  - {fileID: 11400000, guid: 3dc8be268dcffa345a79b103092e1b09, type: 2}
+  - {fileID: 11400000, guid: 3715d00d16193fd4bba40a31aa510d65, type: 2}
+  - {fileID: 11400000, guid: 69f886f319651034f9b1ae2eb8053955, type: 2}
+  - {fileID: 11400000, guid: 89fc5926f2437fd4f9105e0a5fb6e653, type: 2}
+  - {fileID: 11400000, guid: 41439204a2889224fa55ada4505d65e8, type: 2}
+  - {fileID: 11400000, guid: 3207e21981d7768419c5d1b1a7793f31, type: 2}
+  - {fileID: 11400000, guid: d238da5e193f37444ba3e7afdba207e2, type: 2}
+  - {fileID: 11400000, guid: bae6289ff3f6496428e5ae371786f222, type: 2}
+  - {fileID: 11400000, guid: 6091998ca4dbd32428135e92673ca2a6, type: 2}
+  - {fileID: 11400000, guid: d52c36fb019a9ae43aedfbee7ae364d1, type: 2}
+  - {fileID: 11400000, guid: f73cdabf86fbef24f844683056d467a2, type: 2}
+  - {fileID: 11400000, guid: 0626b96c592cea04582f0afdd48df07f, type: 2}
+  - {fileID: 11400000, guid: 189d6e03b4e9d894ea5d855a0884a6de, type: 2}
+  - {fileID: 11400000, guid: ed637f9e67f419d45a9e785cfe8d41b6, type: 2}
+  - {fileID: 11400000, guid: 419cb6fafa94fd54eae5d89981cd3100, type: 2}
   - {fileID: 11400000, guid: 5c085c53a899ab445b4b56066019c5c3, type: 2}
-  - {fileID: 11400000, guid: 395c3af752d2b7a4cac0c7811dff3a78, type: 2}
-  - {fileID: 11400000, guid: ce736bdb1f556ef4b8d53a56f6b3041c, type: 2}
-  - {fileID: 11400000, guid: 7d7f322a80ec8be44a4061dc6a23ab3a, type: 2}
-  - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
   - {fileID: 11400000, guid: 645e42d24518f4046a36a5df35a3b2fd, type: 2}
+  - {fileID: 11400000, guid: 73ca7ad6ed41300469e205d78d246637, type: 2}
+  - {fileID: 11400000, guid: e28b5908e0980ee4582cacc698ade90d, type: 2}
   - {fileID: 11400000, guid: 99e97a83dd18e7f4594e5ff435365dc6, type: 2}
+  - {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
   - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
   - {fileID: 11400000, guid: be0475d498b556b438115e57d3a8a740, type: 2}
-  - {fileID: 11400000, guid: 219e645a0be6cd14f8d941ce4841deee, type: 2}
+  - {fileID: 11400000, guid: c8c4e378306357d438114906aeacff30, type: 2}
+  - {fileID: 11400000, guid: abb53d4bc88af97469f50438b6f6f0be, type: 2}
+  - {fileID: 11400000, guid: aa963b1835a7d48448b4e7401d7ce976, type: 2}
+  - {fileID: 11400000, guid: 202753c68bb8ed344a9718acbf017182, type: 2}
+  - {fileID: 11400000, guid: b9331ed30290719499cca9cf3a6c9773, type: 2}
+  - {fileID: 11400000, guid: 0cfd34920e495da4782d7cfc42b81da8, type: 2}
+  - {fileID: 11400000, guid: d1176c02af836e24eb1d9b3db713a16f, type: 2}
+  - {fileID: 11400000, guid: 621a1d20a5d7f7d478631ff482fb6585, type: 2}
+  - {fileID: 11400000, guid: 40f6f604e8938794ba0efe351cdb00b6, type: 2}
+  - {fileID: 11400000, guid: 0bfa92ae2a56bb5438fb301daee9cc32, type: 2}
+  - {fileID: 11400000, guid: 442e9a2d4f4441a43b925dda800457cc, type: 2}
+  - {fileID: 11400000, guid: 8ff1c81446308d84c91c60340c2f6e81, type: 2}
+  - {fileID: 11400000, guid: 2cec6ea9df900004dab0cb69331282cf, type: 2}
+  - {fileID: 11400000, guid: 68db96b3a01840542b477e7bf10713ba, type: 2}
+  - {fileID: 11400000, guid: 2ac06ddcc41be364c91592ce3f9ef477, type: 2}
+  - {fileID: 11400000, guid: 77635a3946f63554da5cd3071dca709b, type: 2}
+  - {fileID: 11400000, guid: 38337d98e2e2d9f4ca28b9331c7e1638, type: 2}
   - {fileID: 11400000, guid: 303aa09e9783ce3498c0964e8cd01eb2, type: 2}
-  - {fileID: 11400000, guid: 65b108cc785423446a2be6086c47de4d, type: 2}
-  - {fileID: 11400000, guid: 6428ce9aa2d06434f9d5ebb353c78d3d, type: 2}
+  - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
+  - {fileID: 11400000, guid: 019961abd25900c49947ecd5677cd62d, type: 2}
+  - {fileID: 11400000, guid: 6199c33eeb368504aad500f9a8c4851b, type: 2}
   - {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
-  - {fileID: 11400000, guid: cb9cd1d6b215d5c499eb5e9173562b24, type: 2}
-  - {fileID: 11400000, guid: 8c2c1d640f1e726408fc38ad9b22c973, type: 2}
-  - {fileID: 11400000, guid: fe99096546751544a9d65a468655dd5d, type: 2}
   - {fileID: 11400000, guid: e36ccaa76eca72c44a8fc5f975b07bad, type: 2}
   - {fileID: 11400000, guid: d2878676895346440b5cd05f90ba887f, type: 2}
   - {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
   - {fileID: 11400000, guid: d4c7bb90e307c664584dbaebb7d2e4b0, type: 2}
+  - {fileID: 11400000, guid: 46e1ca7bf7bba7a479096fb48bb6ead8, type: 2}
+  - {fileID: 11400000, guid: 828849a49214dc7408020c77c903ef80, type: 2}
+  - {fileID: 11400000, guid: d972fab1d135c7f4694979b3619e3406, type: 2}
+  - {fileID: 11400000, guid: 6eeac5569bd9dd04f86b51a6807ba544, type: 2}
+  - {fileID: 11400000, guid: cb2a1a0069313204aa80255a12b3e9ac, type: 2}
+  - {fileID: 11400000, guid: 57aa8ecd6478e5047b3ccbf84fa1775c, type: 2}
+  - {fileID: 11400000, guid: 2241ab6a31db69c4c8406bb90be00668, type: 2}
+  - {fileID: 11400000, guid: 0350dd279371d6c42b78f4a0a4e9f284, type: 2}
+  - {fileID: 11400000, guid: 82a63f39ed765ee46b77823300765c11, type: 2}
+  - {fileID: 11400000, guid: 407758744366c814d991e87b6a1dd0c1, type: 2}
+  - {fileID: 11400000, guid: 9f39951201fa4d244bc4bb3e898c2a45, type: 2}
+  - {fileID: 11400000, guid: 7ba831a6a8f7b0149b267ccf87e0ff11, type: 2}
+  - {fileID: 11400000, guid: c0a30fb846171314ca9e4f7da6cc4265, type: 2}
+  - {fileID: 11400000, guid: 80bc36f1f3afb7249a3774024bc40584, type: 2}
+  - {fileID: 11400000, guid: 45cac0aa7a4f2384cb0c8c625e23e162, type: 2}
   - {fileID: 11400000, guid: ce913068fb689d64ba2bc135512066d0, type: 2}
   - {fileID: 11400000, guid: c1ac57b44a99040488d5ed040b5e8782, type: 2}
+  - {fileID: 11400000, guid: 2c81d4a27103bdb4a9e076e504fba132, type: 2}
+  - {fileID: 11400000, guid: 8e5db0410ea749147a2292eb0a0100d8, type: 2}
   blocks:
   - id: ignition
     displayName: Ignition
@@ -76,130 +107,563 @@ MonoBehaviour:
   - id: foundations
     displayName: Foundations
     order: 2
-    targetHours: 3
+    targetHours: 1.4
     anchor: 0
     description: 'Broaden the base after the tutorial: faster belts and harvesters,
-      isotopes, the first molecules and the Uranium on-ramp.'
+      nucleons and the light elements.'
     startPrestigeCount: 0
     startPrestigeCurrencyEarned: 0
-    startEntropy: 52000
+    startEntropy: 26800
+    startPermanentUpgrades: []
+    startSites: []
+  - id: first_fusion
+    displayName: First Fusion
+    order: 3
+    targetHours: 2.1
+    anchor: 0
+    description: Lithium to Oxygen after the tutorial.
+    startPrestigeCount: 0
+    startPrestigeCurrencyEarned: 0
+    startEntropy: 26800
     startPermanentUpgrades: []
     startSites: []
   - id: stellar_forge
     displayName: Stellar Forge
-    order: 3
-    targetHours: 12
+    order: 4
+    targetHours: 5
     anchor: 0
-    description: Climb the fusion ladder to Iron, then past it with explosive burning.
+    description: 'Fluorine to Silicon: the end of Physics before Chemistry opens.'
     startPrestigeCount: 1
     startPrestigeCurrencyEarned: 150
-    startEntropy: 2350000
+    startEntropy: 1580000
     startPermanentUpgrades:
     - assembly_line:1
     - memory_resonance:1
-    - entropy_headstart:2
+    - entropy_headstart:1
     - quantum_yield:1
     - idle_time_cap:1
     - efficient_layouts:1
+    - surplus_resale:1
+    - field_cooldown:1
     startSites: []
-  - id: actinide_frontier
-    displayName: Actinide Frontier
-    order: 4
-    targetHours: 20
+  - id: chemistry_entry
+    displayName: First Chemistry
+    order: 5
+    targetHours: 1.2
     anchor: 0
-    description: 'Work back from Uranium: decay, fission and neutron capture to the
-      precious metals.'
-    startPrestigeCount: 4
-    startPrestigeCurrencyEarned: 700
-    startEntropy: 4040000
+    description: 'The gate is open: hydrogen, oxygen, carbon and nitrogen into water,
+      CO2, methane and ammonia.'
+    startPrestigeCount: 5
+    startPrestigeCurrencyEarned: 900
+    startEntropy: 1580000
     startPermanentUpgrades:
-    - assembly_line:2
+    - assembly_line:3
     - memory_resonance:2
     - entropy_headstart:2
     - quantum_yield:2
     - idle_time_cap:2
     - research_overdrive:1
     - idle_collection_rate:2
-    - efficient_layouts:1
+    - efficient_layouts:2
     - surplus_resale:2
-    - expanded_vault:1
-    - field_cooldown:1
-    - salvage_protocols:1
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
     startSites: []
-  - id: chemistry_world
-    displayName: Chemistry World
-    order: 5
-    targetHours: 20
+  - id: deep_burning
+    displayName: Deep Burning
+    order: 6
+    targetHours: 7
     anchor: 0
-    description: Molecules, the Chemistry world and engineered materials.
-    startPrestigeCount: 8
-    startPrestigeCurrencyEarned: 2000
-    startEntropy: 39900000
+    description: Phosphorus to Manganese, the end of the fusion climb.
+    startPrestigeCount: 5
+    startPrestigeCurrencyEarned: 900
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:2
+    - entropy_headstart:2
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    startSites: []
+  - id: chem_small_molecules
+    displayName: Small Molecules
+    order: 7
+    targetHours: 6.8
+    anchor: 0
+    description: Syngas, formaldehyde, methanol and the prebiotic nitrogen of HCN
+      and urea.
+    startPrestigeCount: 5
+    startPrestigeCurrencyEarned: 900
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:2
+    - entropy_headstart:2
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    startSites: []
+  - id: actinide_descent
+    displayName: Actinide Descent
+    order: 8
+    targetHours: 9
+    anchor: 0
+    description: Mine Uranium and walk it down the decay chain to Lead and Thallium.
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
     startPermanentUpgrades:
     - assembly_line:3
     - memory_resonance:3
-    - entropy_headstart:4
-    - quantum_yield:3
-    - idle_time_cap:3
-    - research_overdrive:2
-    - idle_collection_rate:3
-    - efficient_layouts:3
-    - surplus_resale:3
-    - expanded_vault:3
-    - field_cooldown:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
     - salvage_protocols:2
     - turnkey_builder:1
-    startSites:
-    - site_actinide_vein
-  - id: synthetic_frontier
-    displayName: Synthetic Frontier
-    order: 6
-    targetHours: 30
+    startSites: []
+  - id: chem_organics
+    displayName: Organics
+    order: 9
+    targetHours: 8
     anchor: 0
-    description: Elements past Uranium, components and the megastructure.
-    startPrestigeCount: 15
-    startPrestigeCurrencyEarned: 5000
-    startEntropy: 315000000
+    description: Ethylene, acetylene and the alcohols and acids built on them.
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
     startPermanentUpgrades:
-    - assembly_line:4
-    - memory_resonance:5
-    - entropy_headstart:4
-    - quantum_yield:4
-    - idle_time_cap:4
-    - research_overdrive:3
-    - idle_collection_rate:4
-    - efficient_layouts:4
-    - surplus_resale:4
-    - expanded_vault:4
-    - field_cooldown:4
-    - salvage_protocols:4
-    - turnkey_builder:2
-    - entropy_echo:1
-    startSites:
-    - site_actinide_vein
-  - id: biology_world
-    displayName: Biology World
-    order: 7
-    targetHours: 40
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: chem_sulfur_phosphorus
+    displayName: Sulfur & Phosphorus
+    order: 10
+    targetHours: 10
     anchor: 0
-    description: Biochemistry to cells, organisms and ecosystems.
+    description: 'The last two elements of life: sulfur vents and phosphate rock,
+      and their acids.'
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: metal_descent
+    displayName: Metal Descent
+    order: 11
+    targetHours: 20
+    anchor: 0
+    description: Spallation, one element at a time, from Mercury down to Cobalt.
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: chem_building_blocks
+    displayName: Building Blocks of Life
+    order: 12
+    targetHours: 14
+    anchor: 0
+    description: Amino acids, sugars, nucleobases, a fatty acid and the salts cells
+      need.
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: iron_age
+    displayName: Iron
+    order: 13
+    targetHours: 2
+    anchor: 0
+    description: 'Both ends meet: Iron from Manganese and Cobalt.'
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: chem_molecules_of_life
+    displayName: Molecules of Life
+    order: 14
+    targetHours: 12
+    anchor: 0
+    description: 'Peptides, nucleotides, membranes and ATP: everything Biology starts
+      from.'
+    startPrestigeCount: 6
+    startPrestigeCurrencyEarned: 1100
+    startEntropy: 4520000
+    startPermanentUpgrades:
+    - assembly_line:3
+    - memory_resonance:3
+    - entropy_headstart:3
+    - quantum_yield:2
+    - idle_time_cap:2
+    - research_overdrive:1
+    - idle_collection_rate:2
+    - efficient_layouts:2
+    - surplus_resale:2
+    - expanded_vault:2
+    - field_cooldown:2
+    - salvage_protocols:2
+    - turnkey_builder:1
+    startSites: []
+  - id: bio_biomolecules
+    displayName: Biomolecules
+    order: 15
+    targetHours: 10
+    anchor: 0
+    description: Proteins, carbohydrates, membranes and nucleic acids from the molecules
+      of life.
     startPrestigeCount: 25
     startPrestigeCurrencyEarned: 11000
-    startEntropy: 647000000
+    startEntropy: 523000000
     startPermanentUpgrades:
     - assembly_line:5
     - memory_resonance:5
     - entropy_headstart:5
     - quantum_yield:5
-    - idle_time_cap:6
+    - idle_time_cap:5
     - research_overdrive:4
     - idle_collection_rate:5
     - efficient_layouts:4
     - surplus_resale:4
-    - expanded_vault:4
-    - field_cooldown:4
+    - expanded_vault:5
+    - field_cooldown:5
     - salvage_protocols:4
     - turnkey_builder:3
     - entropy_echo:2
-    startSites:
-    - site_actinide_vein
+    startSites: []
+  - id: bio_cells
+    displayName: Cells
+    order: 16
+    targetHours: 14
+    anchor: 0
+    description: Ribosomes, mitochondria and membranes, then the first cell.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: deep_physics
+    displayName: Deep Physics
+    order: 17
+    targetHours: 70
+    anchor: 0
+    description: Fission, the transuranics and the superheavy elements.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: bio_multicellular
+    displayName: Multicellular Life
+    order: 18
+    targetHours: 16
+    anchor: 0
+    description: Cells into tissues, tissues into organs.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: bio_ecosystems
+    displayName: Ecosystems
+    order: 19
+    targetHours: 16
+    anchor: 0
+    description: 'Organisms, populations and a whole ecosystem: the Biology capstone.'
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: metallurgy_ores
+    displayName: Ores
+    order: 20
+    targetHours: 8
+    anchor: 0
+    description: Mine iron, aluminium, copper and titanium ores, coal and quartz;
+      roast the first oxide.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: metallurgy_alloys
+    displayName: Smelting & Alloys
+    order: 21
+    targetHours: 16
+    anchor: 0
+    description: Steel, aluminium, copper wire, titanium alloy and carbon fibre.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: metallurgy_advanced
+    displayName: Advanced Materials
+    order: 22
+    targetHours: 16
+    anchor: 0
+    description: 'Wafers, aerogel, superconductors and metamaterial: the Metallurgy
+      capstone.'
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: engineering_components
+    displayName: Components
+    order: 23
+    targetHours: 10
+    anchor: 0
+    description: Circuit boards, quantum processors and plasma containment, from
+      Metallurgy's materials.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: engineering_systems
+    displayName: Systems
+    order: 24
+    targetHours: 10
+    anchor: 0
+    description: Orbital frames, antimatter cells and graviton lenses.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []
+  - id: engineering_megastructure
+    displayName: Megastructure
+    order: 25
+    targetHours: 6
+    anchor: 0
+    description: Dyson Nodes for the Dyson Sphere; every research done opens Ascension.
+    startPrestigeCount: 25
+    startPrestigeCurrencyEarned: 11000
+    startEntropy: 523000000
+    startPermanentUpgrades:
+    - assembly_line:5
+    - memory_resonance:5
+    - entropy_headstart:5
+    - quantum_yield:5
+    - idle_time_cap:5
+    - research_overdrive:4
+    - idle_collection_rate:5
+    - efficient_layouts:4
+    - surplus_resale:4
+    - expanded_vault:5
+    - field_cooldown:5
+    - salvage_protocols:4
+    - turnkey_builder:3
+    - entropy_echo:2
+    startSites: []

@@ -1,14 +1,10 @@
 name: PR Tests
 
-# DISABLED (portfolio mode): nothing here runs automatically right now.
-# The original triggers are kept below, commented out; restore them to re-enable.
-# See docs/runbooks/ci-setup.md.
-# on:
-#   pull_request:
-#     branches: [develop, main, 'release/**', 'integration/**']
 # A manual run (Actions > PR Tests > Run workflow, or `gh workflow run "PR Tests" --ref <branch>`)
 # tests the chosen branch. Only users with write access can dispatch, so it skips the approval gate.
 on:
+  pull_request:
+    branches: [develop, main, 'release/**', 'integration/**']
   workflow_dispatch:
 
 concurrency:

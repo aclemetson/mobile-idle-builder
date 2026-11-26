@@ -27,13 +27,14 @@ MonoBehaviour:
   decayType: 0
   halfLifeNote: 
   isFissile: 0
-  isHarvested: 0
-  fieldType: None
+  isHarvested: 1
+  world: world_metallurgy
+  fieldType: Ore
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Silicon dioxide \u2014 the primary component of sand, glass, and quartz.
     Ultrapure silica is the substrate from which semiconductor wafers are grown."
   codexUnlocked: 0
-  baseSellValue: 233000
+  baseSellValue: 3000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

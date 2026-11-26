@@ -13,10 +13,14 @@
         "Unity.Services.Core",
         "Unity.Services.Authentication",
         "Unity.Services.CloudSave",
+        "Unity.Services.CloudCode",
         "Unity.Services.Analytics",
         "Unity.Purchasing",
         "Unity.Services.RemoteConfig",
-        "Unity.LevelPlay"
+        "Unity.LevelPlay",
+        "Unity.Notifications.Android",
+        "Unity.Notifications.iOS",
+        "Unity.Services.PushNotifications"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -22,6 +22,10 @@ namespace MobileIdleBuilder
     ///
     /// Legacy field-collector buildings (no ports, MustBeOnField):
     ///   R  /  Rotate button  →  cycle output direction (original behaviour)
+    ///
+    /// Edit mode (<see cref="BeginEdit"/>, from a press-and-hold on a placed building): the same flow
+    /// moves, turns or flips that building in place, keeping its entity and everything in it. The bar's
+    /// Remove button deletes it after a confirmation.
     /// </summary>
     public class BuildingPlacementController : MonoBehaviour
     {
@@ -100,8 +104,17 @@ namespace MobileIdleBuilder
         /// <summary>The field being bought and placed, or null while placing a building.</summary>
         public FieldSO PendingField => IsPlacing ? _pendingField : null;
 
-        /// <summary>True while placing a multi-tile field purchase (a quark pair), which can turn 90°.</summary>
-        private bool IsPlacingFieldGroup => _pendingField != null && _pendingField.purchaseGroupSize > 1;
+        /// <summary>True while placing a multi-tile field (a quark pair, bought or moved), which can turn 90°.</summary>
+        private bool IsPlacingFieldGroup => _pendingField != null && FieldGroupSize > 1;
+
+        // ---- Field move (#542): the cells of the placed field (or quark pair) being moved, anchor first ----
+        private List<Vector2Int> _moveFieldCells;
+
+        /// <summary>True while a placed field (or quark pair) is being moved rather than bought.</summary>
+        public bool IsMovingField => IsPlacing && _moveFieldCells != null;
+
+        /// <summary>Tiles in the pending field footprint: the moved group's size, else the purchase group size.</summary>
+        private int FieldGroupSize => _moveFieldCells?.Count ?? Mathf.Max(1, _pendingField?.purchaseGroupSize ?? 1);
 
         /// <summary>True when the flip button / F key should be shown.</summary>
         public bool CanFlip => HasPortLayout;
@@ -169,10 +182,10 @@ namespace MobileIdleBuilder
         // ---- Candidate / confirm state ----
         private bool       _hasCandidate;
         private Vector2Int _candidateCell;
-        private bool       _pointerDown;
-        private Vector2    _pointerPrev;
-        private float      _dragAccum;
-        private bool       _pressOverUI;
+        private readonly TapGesture _tap = new();
+
+        private bool IsPressOverPlacementUI(Vector2 p) =>
+            (IsPointerOverPlacementUI?.Invoke(p) ?? false) || UIInputBlocker.IsPointerOverUI(p);
 
         /// <summary>True once the player has tapped a cell and is being asked to confirm placement.</summary>
         public bool HasCandidate => _hasCandidate;
@@ -210,6 +223,21 @@ namespace MobileIdleBuilder
         private List<PowerConnectionGraph.PowerNode> _placementPowerNodes;
         private static readonly Color ConnectionLineColor = new Color(1f, 0.9f, 0.3f, 0.95f); // warm amber, reads as "wired"
 
+        // ---- Edit mode: moving a building that is already placed ----
+        // The building keeps its entity; while it is edited its visual is hidden and the placement ghost
+        // stands in for it. Its own footprint does not block the ghost.
+        private Entity     _editEntity = Entity.Null;
+        private Vector2Int _editOrigin;
+        private Vector2Int _editOriginFootprint;
+        private int        _editOriginRotation;
+        private bool       _editOriginFlipped;
+        private int        _editOriginOutputDir = -1;
+        private int        _editRecipeId        = -1;
+        private DeconstructController _deconstructController;
+
+        /// <summary>True while a placed building is being moved (edit mode is a kind of placement).</summary>
+        public bool IsEditing => IsPlacing && _editEntity != Entity.Null;
+
         /// <summary>Raised when placement mode begins (true) or ends (false).</summary>
         public event Action<bool> OnPlacingChanged;
 
@@ -236,7 +264,11 @@ namespace MobileIdleBuilder
         // Public API
         // ================================================================
 
-        public void BeginPlacement(BuildingEntry entry) => BeginPlacementCore(entry, null);
+        public void BeginPlacement(BuildingEntry entry)
+        {
+            if (IsEditing) CancelPlacement();
+            BeginPlacementCore(entry, null);
+        }
 
         /// <summary>
         /// Starts placing a field bought with Field Synthesis. Same ghost, confirm popup and rotate
@@ -245,13 +277,212 @@ namespace MobileIdleBuilder
         public void BeginFieldPlacement(FieldSO field)
         {
             if (field == null) return;
+            if (IsEditing) CancelPlacement();
             BeginPlacementCore(default, field);
         }
 
-        private void BeginPlacementCore(BuildingEntry entry, FieldSO field)
+        /// <summary>
+        /// Puts a placed building back into placement mode so it can be moved, turned or flipped without
+        /// being destroyed (press and hold on it, see <see cref="LongPress"/>). The ghost starts on the
+        /// building's own cell with its current orientation; ✓ moves it there, Cancel leaves it where it
+        /// was, and the bar's Remove button deletes it after a confirmation. Moving is free.
+        /// </summary>
+        public bool BeginEdit(Entity entity)
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return false;
+            var em = world.EntityManager;
+            if (!em.Exists(entity) || !em.HasComponent<BuildingData>(entity) || !em.HasComponent<GridPosition>(entity))
+                return false;
+
+            var building = FindBuilding(em.GetComponentData<BuildingData>(entity).BuildingType);
+            if (building == null) return false;
+
+            if (IsPlacing) CancelPlacement();
+
+            var cell = em.GetComponentData<GridPosition>(entity).Cell;
+            int fw = 1, fh = 1;
+            if (em.HasComponent<BuildingFootprint>(entity))
+            {
+                var fp = em.GetComponentData<BuildingFootprint>(entity);
+                fw = fp.Width;
+                fh = fp.Height;
+            }
+
+            int  rotation = 0;
+            bool flipped  = false;
+            if (em.HasComponent<BuildingTransformData>(entity))
+            {
+                var t = em.GetComponentData<BuildingTransformData>(entity);
+                rotation = t.Rotation;
+                flipped  = t.Flipped;
+            }
+
+            // Set before BeginPlacementCore so the HUD sees IsEditing when OnPlacingChanged fires.
+            _editEntity          = entity;
+            _editOrigin          = new Vector2Int(cell.x, cell.y);
+            _editOriginFootprint = new Vector2Int(fw, fh);
+            _editOriginRotation  = rotation;
+            _editOriginFlipped   = flipped;
+            _editOriginOutputDir = em.HasComponent<OutputDirectionData>(entity)
+                ? em.GetComponentData<OutputDirectionData>(entity).Direction : -1;
+            _editRecipeId        = em.HasComponent<RecipeProcessData>(entity)
+                ? em.GetComponentData<RecipeProcessData>(entity).RecipeID : -1;
+
+            BeginPlacementCore(new BuildingEntry { building = building }, null);
+
+            _rotation = rotation;
+            _flipped  = flipped;
+            if (_editOriginOutputDir >= 0)
+            {
+                _outputDirection = (OutputDirection)_editOriginOutputDir;
+                _ghostArrow?.SetEdge(_outputDirection);
+            }
+
+            buildingVisualizer?.SetBuildingHidden(_editOrigin.x, _editOrigin.y, true);
+            SetCandidate(_editOrigin);
+            return true;
+        }
+
+        /// <summary>
+        /// Puts a placed field back into placement mode so it can be moved (press and hold on a bare field
+        /// tile, #542). A quark pair moves as one unit and can turn. Moving is free, like a building's. A
+        /// field with a Harvester on it stays put (the Harvester would be left on bare ground), and fields
+        /// don't move during the tutorial, whose steps point at them. Returns false, with a banner saying
+        /// why, when the field can't move.
+        /// </summary>
+        public bool BeginFieldMove(Vector2Int cell)
+        {
+            var field = FieldGenerator.GetFieldAt(cell.x, cell.y);
+            if (field == null) return false;
+
+            if (SaveManager.Instance?.Current?.tutorial?.isActive ?? false)
+            {
+                InventoryPopupController.NotifyWarning(FieldMoveTutorialMessage);
+                return false;
+            }
+
+            var group = FieldGenerator.FieldGroupAt(cell, IsGridOccupied);
+            if (group.Count == 0) return false;
+            if (group.Exists(IsGridOccupied))
+            {
+                InventoryPopupController.NotifyWarning(FieldMoveOccupiedMessage);
+                return false;
+            }
+
+            if (IsPlacing) CancelPlacement();
+
+            BeginPlacementCore(default, field, group);
+
+            // A pair standing one above the other starts upright.
+            _rotation = group.Count > 1 && group[1].x == group[0].x ? 1 : 0;
+            SetCandidate(group[0]);
+            return true;
+        }
+
+        internal const string FieldMoveTutorialMessage = "Fields can't move during the tutorial.";
+        internal const string FieldMoveOccupiedMessage = "Move the Harvester off this field first.";
+
+        private static bool IsGridOccupied(Vector2Int c) =>
+            GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y);
+
+        private bool IsMovedFieldCell(Vector2Int c) => _moveFieldCells != null && _moveFieldCells.Contains(c);
+
+        /// <summary>✓ while moving a field: re-homes the field (or pair) on the candidate cells (free).</summary>
+        private void ConfirmFieldMove(int x, int y)
+        {
+            var from = _moveFieldCells;
+            var to   = FootprintCells(x, y);
+
+            bool changed = false;
+            for (int i = 0; i < to.Count; i++)
+                if (to[i] != from[i]) { changed = true; break; }
+
+            _fieldGenerator ??= FindAnyObjectByType<FieldGenerator>();
+            bool moved = changed && _fieldGenerator != null && _fieldGenerator.MoveFields(from, to);
+
+            CancelPlacement();
+            if (!moved) return;
+
+            GameLogger.Info($"[BuildingPlacementController] Moved {from.Count} field tile(s) from {from[0]} to {to[0]}.");
+            SaveManager.Instance?.SaveLocal();
+        }
+
+        /// <summary>
+        /// The edit bar's Remove button: asks to confirm (with the refund), then deletes the edited building
+        /// and leaves edit mode. Cancelling the prompt keeps editing.
+        /// </summary>
+        public void RequestRemoveEditedBuilding()
+        {
+            if (!IsEditing) return;
+            _deconstructController ??= FindAnyObjectByType<DeconstructController>();
+            if (_deconstructController == null) return;
+
+            var entity = _editEntity;
+            _deconstructController.ConfirmRemove(entity, () =>
+            {
+                if (_editEntity != entity) return;
+                _editEntity = Entity.Null; // its visual is already gone; nothing to restore
+                CancelPlacement();
+            });
+        }
+
+        /// <summary>Leaves edit mode's hold on the building, showing it again where it was if asked.</summary>
+        private void EndEdit(bool restoreVisual)
+        {
+            if (_editEntity == Entity.Null) return;
+            if (restoreVisual) buildingVisualizer?.SetBuildingHidden(_editOrigin.x, _editOrigin.y, false);
+            _editEntity   = Entity.Null;
+            _editRecipeId = -1;
+        }
+
+        /// <summary>✓ in edit mode: moves the building to the candidate cell and orientation (free).</summary>
+        private void ConfirmMove(int x, int y)
+        {
+            var  entity   = _editEntity;
+            var  building = _pending.building;
+            bool hasPorts = building?.ports != null && building.ports.Length > 0;
+            int? legacyDir = (!hasPorts && building != null && building.placementRule == PlacementRule.MustBeOnField)
+                             ? (int?)_outputDirection : null;
+
+            bool changed = x != _editOrigin.x || y != _editOrigin.y
+                        || _rotation != _editOriginRotation || _flipped != _editOriginFlipped
+                        || (legacyDir.HasValue && legacyDir.Value != _editOriginOutputDir);
+
+            if (!changed || buildingPlacer == null ||
+                !buildingPlacer.MoveBuilding(entity, building, x, y, _rotation, _flipped, legacyDir))
+            {
+                CancelPlacement(); // nothing to do (or blocked): the building stays as it was
+                return;
+            }
+
+            ManagerService.Instance?.MoveBuilding(ManagerService.EncodePos(_editOrigin.x, _editOrigin.y),
+                                                  ManagerService.EncodePos(x, y));
+
+            // The old visual goes and Refresh builds the building at its new cell.
+            buildingVisualizer?.RemoveBuilding(_editOrigin.x, _editOrigin.y);
+            _editEntity = Entity.Null;
+            CancelPlacement();
+            buildingVisualizer?.Refresh();
+            // Belt tails that fed it (or now can) point at their real input again (#223).
+            (_conveyorVisualizer ??= FindAnyObjectByType<ConveyorVisualizer>())?.RefreshAll();
+            SaveManager.Instance?.SaveLocal();
+        }
+
+        private BuildingSO FindBuilding(int buildingId)
+        {
+            foreach (var entry in availableBuildings)
+                if (entry.building != null && entry.building.buildingId == buildingId) return entry.building;
+            return null;
+        }
+
+        /// <param name="moveFieldCells">Set when moving a placed field (#542); set before OnPlacingChanged fires
+        /// so the HUD sees <see cref="IsMovingField"/>.</param>
+        private void BeginPlacementCore(BuildingEntry entry, FieldSO field, List<Vector2Int> moveFieldCells = null)
         {
             _pending           = entry;
             _pendingField      = field;
+            _moveFieldCells    = moveFieldCells;
             _placementPowerNodes = null;
             _lastGhostCell     = new(-1, -1);
             _awaitingSelection = false;
@@ -260,8 +491,7 @@ namespace MobileIdleBuilder
             _flipped           = false;
             IsPlacing          = true;
             _hasCandidate      = false;
-            _pointerDown       = false;
-            _dragAccum         = 0f;
+            _tap.Cancel(); // the press that started placement (or edit mode) is never a cell tap
             // Leave the camera unlocked so the player can press-and-drag to pan while positioning.
             cameraController?.SetPanLocked(false);
 
@@ -284,6 +514,7 @@ namespace MobileIdleBuilder
 
         public void CancelPlacement()
         {
+            EndEdit(restoreVisual: true); // an edited building that wasn't moved shows again where it was
             gridRenderer.HideGhost();
             HideRadiusPreview();
             _placementPowerNodes = null;
@@ -293,6 +524,7 @@ namespace MobileIdleBuilder
             _awaitingSelection = false;
             IsPlacing          = false;
             _pendingField      = null;
+            _moveFieldCells    = null;
             if (_hasCandidate) { _hasCandidate = false; OnCandidateChanged?.Invoke(false); }
             cameraController?.SetPanLocked(false);
             OnPlacingChanged?.Invoke(false);
@@ -320,6 +552,9 @@ namespace MobileIdleBuilder
 
             if (!IsPlacing) return;
 
+            // Edit mode's "Remove?" prompt is open: it owns input until it closes.
+            if (ConfirmPrompt.IsOpen) { _tap.Cancel(); return; }
+
             // Cancel: back out of a pending candidate first, otherwise exit placement entirely.
             if (InputUtils.WasCancelPressed())
             {
@@ -335,32 +570,11 @@ namespace MobileIdleBuilder
                 if (Keyboard.current.fKey.wasPressedThisFrame) Flip();
             }
 
-            // ---- Tap vs. drag detection ----
-            // A drag (movement beyond the tap threshold) is a camera pan and must NOT place a building;
-            // only a stationary tap that did not begin on the confirm popup selects a cell.
-            bool    tapped      = false;
-            Vector2 tapPosition = default;
-
-            if (InputUtils.WasPointerPressed())
-            {
-                _pointerDown = true;
-                _pointerPrev = InputUtils.GetPointerPosition();
-                _dragAccum   = 0f;
-                _pressOverUI = (IsPointerOverPlacementUI?.Invoke(_pointerPrev) ?? false)
-                               || UIInputBlocker.IsPointerOverUI(_pointerPrev);
-            }
-            if (_pointerDown && InputUtils.IsPointerHeld())
-            {
-                Vector2 cur = InputUtils.GetPointerPosition();
-                _dragAccum += Vector2.Distance(cur, _pointerPrev);
-                _pointerPrev = cur;
-            }
-            if (_pointerDown && InputUtils.WasPointerReleased())
-            {
-                _pointerDown = false;
-                tapPosition  = InputUtils.GetPointerPosition();
-                tapped       = _dragAccum <= CameraController.TapThreshold && !_pressOverUI;
-            }
+            // ---- Tap vs. pan/zoom (TapGesture) ----
+            // A pan, a pinch or rotate, a touch that stops a gliding map, or a press on the confirm popup
+            // must NOT pick a cell. A press that began before placement started (the hold that opened edit
+            // mode) never began here, so its release is not a tap either.
+            bool tapped = InputUtils.PumpTap(_tap, IsPressOverPlacementUI, out Vector2 tapPosition);
 
             // Desktop hover preview while no candidate is locked in (mobile has no hover).
             if (!_hasCandidate && Touchscreen.current == null && Mouse.current != null)
@@ -422,6 +636,18 @@ namespace MobileIdleBuilder
             _hasCandidate = false;
             OnCandidateChanged?.Invoke(false);
             gridRenderer.HideGhost();
+
+            if (IsEditing)
+            {
+                ConfirmMove(x, y);
+                return;
+            }
+
+            if (IsMovingField)
+            {
+                ConfirmFieldMove(x, y);
+                return;
+            }
 
             if (_pendingField != null)
             {
@@ -554,6 +780,9 @@ namespace MobileIdleBuilder
 
             if (placed && unpowered)
                 InventoryPopupController.NotifyWarning("Unpowered: place it in generator range");
+            if (placed && _pending.building != null && _pending.building.flowDraw > 0f
+                && !buildingPlacer.TouchesStream(x, y, _pending.building, _rotation, _flipped))
+                InventoryPopupController.NotifyWarning("No water: place it beside a channel from a Spring");
 
             if (placed)
             {
@@ -676,8 +905,13 @@ namespace MobileIdleBuilder
             _placementPowerNodes = (world == null || !world.IsCreated)
                 ? new List<PowerConnectionGraph.PowerNode>()
                 : PowerConnectionGraph.GatherFromEcs(world.EntityManager, gridRenderer.CellSize);
+            if (IsEditing) _placementPowerNodes.RemoveAll(IsEditedNode);
             return _placementPowerNodes;
         }
+
+        /// <summary>The edited building's own power node, still at its old cell: it must not preview itself.</summary>
+        private bool IsEditedNode(PowerConnectionGraph.PowerNode n) =>
+            n.AnchorX == _editOrigin.x && n.AnchorY == _editOrigin.y;
 
         /// <summary>Lazily creates the dashed power-connection renderer (runtime GameObject, no scene wiring).</summary>
         private PowerConnectionRenderer EnsureConnectionRenderer()
@@ -708,6 +942,7 @@ namespace MobileIdleBuilder
 
             foreach (var n in nodes)
             {
+                if (IsEditing && IsEditedNode(n)) continue;
                 if (PowerCoverageMath.NodesLinked(
                         gMinX, gMinY, gMaxX, gMaxY,
                         n.AnchorX, n.AnchorY, n.AnchorX + n.Width - 1, n.AnchorY + n.Height - 1,
@@ -724,7 +959,7 @@ namespace MobileIdleBuilder
 
         private Vector2Int GetBaseFootprint()
         {
-            if (_pendingField != null) return new Vector2Int(Mathf.Max(1, _pendingField.purchaseGroupSize), 1);
+            if (_pendingField != null) return new Vector2Int(FieldGroupSize, 1);
             if (_pending.building == null) return Vector2Int.one;
             var fp = _pending.building.footprint;
             return new Vector2Int(Mathf.Max(1, fp.x), Mathf.Max(1, fp.y));
@@ -743,12 +978,13 @@ namespace MobileIdleBuilder
         {
             if (_pendingField != null)
             {
-                // A bought field needs bare ground: no building, belt or existing field.
+                // A bought or moved field needs bare ground: no building, belt or other field (a moved
+                // field's own old cells are free, so it can shift by a tile or turn in place).
                 foreach (var c in FootprintCells(x, y))
                 {
                     if (!gridRenderer.IsInBounds(c.x, c.y)) return PlacementBlock.OffGrid;
                     if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(c.x, c.y)) return PlacementBlock.Occupied;
-                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null) return PlacementBlock.OnField;
+                    if (FieldGenerator.GetFieldAt(c.x, c.y) != null && !IsMovedFieldCell(c)) return PlacementBlock.OnField;
                 }
                 return PlacementBlock.None;
             }
@@ -756,8 +992,7 @@ namespace MobileIdleBuilder
             if (_pending.building == null)
             {
                 if (!gridRenderer.IsInBounds(x, y)) return PlacementBlock.OffGrid;
-                return GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(x, y)
-                    ? PlacementBlock.Occupied : PlacementBlock.None;
+                return IsOccupiedByOther(x, y) ? PlacementBlock.Occupied : PlacementBlock.None;
             }
 
             var fp = GetEffectiveFootprint();
@@ -768,7 +1003,7 @@ namespace MobileIdleBuilder
                 {
                     int cx = x + dx, cy = y + dy;
                     if (!gridRenderer.IsInBounds(cx, cy)) return PlacementBlock.OffGrid;
-                    if (GridOccupancy.Instance != null && GridOccupancy.Instance.IsOccupied(cx, cy)) return PlacementBlock.Occupied;
+                    if (IsOccupiedByOther(cx, cy)) return PlacementBlock.Occupied;
 
                     var fieldAtCell = FieldGenerator.GetFieldAt(cx, cy);
 
@@ -781,6 +1016,10 @@ namespace MobileIdleBuilder
                                                                   ft => ft == fieldAtCell.fieldType);
                             if (!compatible) return PlacementBlock.WrongField;
                         }
+                        // A moved harvester keeps its recipe, so the new field must still yield it.
+                        if (IsEditing && _editRecipeId >= 0 &&
+                            !FieldRecipes.For(_pending.building, fieldAtCell).Exists(r => r != null && r.recipeId == _editRecipeId))
+                            return PlacementBlock.FieldLacksRecipe;
                     }
                     else if (fieldAtCell != null)
                     {
@@ -792,7 +1031,21 @@ namespace MobileIdleBuilder
             return PlacementBlock.None;
         }
 
-        internal enum PlacementBlock { None, OffGrid, Occupied, NeedsField, WrongField, OnField }
+        /// <summary>
+        /// Taken by something other than the building being edited: in edit mode the building's own old
+        /// footprint is free, so it can shift by a tile or turn in place.
+        /// </summary>
+        private bool IsOccupiedByOther(int x, int y)
+        {
+            if (GridOccupancy.Instance == null || !GridOccupancy.Instance.IsOccupied(x, y)) return false;
+            return !(IsEditing && InEditOrigin(x, y));
+        }
+
+        private bool InEditOrigin(int x, int y) =>
+            x >= _editOrigin.x && x < _editOrigin.x + _editOriginFootprint.x &&
+            y >= _editOrigin.y && y < _editOrigin.y + _editOriginFootprint.y;
+
+        internal enum PlacementBlock { None, OffGrid, Occupied, NeedsField, WrongField, OnField, FieldLacksRecipe }
 
         /// <summary>
         /// One-line reason shown in the notification banner when a tap picks a cell the ✓ can't confirm,
@@ -809,6 +1062,7 @@ namespace MobileIdleBuilder
                 case PlacementBlock.WrongField: return $"{Capitalize(name)} can't harvest this field.";
                 case PlacementBlock.OnField:    return isField ? "A new field needs empty ground."
                                                                : "Fields are for Harvesters. Pick an empty tile.";
+                case PlacementBlock.FieldLacksRecipe: return $"{Capitalize(name)} can't make its item here.";
                 default:                        return null;
             }
         }

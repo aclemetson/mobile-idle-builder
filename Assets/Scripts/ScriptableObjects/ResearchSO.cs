@@ -18,6 +18,8 @@ namespace MobileIdleBuilder
         public string block;                // research block (game phase) id, ResearchDatabaseSO.blocks
         public int treeX = -1;              // research tree position from the editor (docs/research-tree.html); -1 = auto
         public int treeY = -1;
+        public string requiredWorld;        // world id that must be unlocked before this can start ("" = none); WorldGate
+        public string world;                // world whose Research tab lists it ("" = Physics); not a gate (see requiredWorld)
 
         [Header("Cost")]
         public long costBaseCurrency;       // long: late research costs pass 2^31 under the derived economy

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: lipid_field
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.FieldSO
   id: lipid_field
-  displayName: Lipid Seep
+  displayName: Lipid Film
   fieldType: Organic
   drops:
-  - item: {fileID: 11400000, guid: 88b16eecc00db8244a51c8b437db4fe0, type: 2}
+  - item: {fileID: 11400000, guid: e222d88ead9b6134797c0635b5bed8f7, type: 2}
     weight: 1
   tapCooldownSeconds: 2.5
+  world: world_biology
   purchaseResearchId: 
   purchaseCostBase: 0
   purchaseCostMultiplier: 10

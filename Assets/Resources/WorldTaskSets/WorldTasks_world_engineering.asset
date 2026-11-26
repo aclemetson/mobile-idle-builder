@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 219196f5b8d4c39479287d396d9acd2f, type: 3}
+  m_Name: WorldTasks_world_engineering
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.WorldTaskSO
+  worldId: world_engineering
+  deliverIn: world_metallurgy
+  displayName: Path to Engineering
+  stages:
+  - id: eng_task_1
+    displayName: Structural Steel
+    description: Every machine starts as steel. Send it to Maxwell's Demon.
+    items:
+    - {fileID: 11400000, guid: fb74179fba2d23d419bd0a385c9cbee7, type: 2}
+    quantities: 2c010000
+    dialogueId: 
+  - id: eng_task_2
+    displayName: Light Alloys
+    description: 'Titanium and carbon fibre: strong and light.'
+    items:
+    - {fileID: 11400000, guid: 24398ca4d86eb704b8b607716a77000c, type: 2}
+    - {fileID: 11400000, guid: 5477442e1e274024f8a1e306c1618fc7, type: 2}
+    quantities: 7800000078000000
+    dialogueId: 
+  - id: eng_task_3
+    displayName: Exotic Materials
+    description: 'Superconductors and metamaterial: the stuff of machines that bend
+      physics.'
+    items:
+    - {fileID: 11400000, guid: 4961c6c0e8079244ebf14e548d2f054f, type: 2}
+    - {fileID: 11400000, guid: baa79aaa0a014ce4189cb696387a0deb, type: 2}
+    quantities: 1e00000005000000
+    dialogueId: 

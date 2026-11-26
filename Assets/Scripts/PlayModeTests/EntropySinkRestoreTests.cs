@@ -39,6 +39,15 @@ namespace MobileIdleBuilder.PlayModeTests
         }
 
         [Test]
+        public void IsRestorable_True_ForPlacedSink()
+        {
+            // Chemistry's Calorimeter is placed by the player, so it must come back from the save.
+            var calorimeter = Building(30, isEntropySink: true);
+            calorimeter.isPlacedSink = true;
+            Assert.IsTrue(GridSaveService.IsRestorable(calorimeter));
+        }
+
+        [Test]
         public void IsRestorable_False_ForMissingBuilding()
         {
             Assert.IsFalse(GridSaveService.IsRestorable(null));

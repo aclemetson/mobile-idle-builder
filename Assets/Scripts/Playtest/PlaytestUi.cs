@@ -184,6 +184,35 @@ namespace MobileIdleBuilder.Playtest
             return glyph != null ? $"[{glyph.Icon} icon]" : null;
         }
 
+        /// <summary>
+        /// Name of the topmost HUD element at a screen point (top-left origin): the picked element or its
+        /// nearest named ancestor, with the panel it sits in, e.g. "worlds-button (in left-drawer)". Null when
+        /// no UI is there. For harness messages (#261: say what covers a tap target).
+        /// </summary>
+        public static string CoveringElement(Vector2 screenTopLeft)
+        {
+            foreach (var root in VisibleRoots())
+            {
+                var size = root.panel.visualTree.layout.size;
+                if (size.x <= 0 || size.y <= 0) continue;
+                var panelPoint = new Vector2(screenTopLeft.x * size.x / Screen.width, screenTopLeft.y * size.y / Screen.height);
+                var picked = root.panel.Pick(panelPoint);
+                if (picked == null) continue;
+
+                string name = null, panel = null;
+                for (var e = picked; e != null; e = e.parent)
+                {
+                    if (name == null && !string.IsNullOrEmpty(e.name)) name = e.name;
+                    if (panel == null && e != picked && !string.IsNullOrEmpty(e.name) &&
+                        (e.ClassListContains("slide-panel") || Array.IndexOf(OverlayNames, e.name) >= 0))
+                        panel = e.name;
+                }
+                name ??= picked.GetType().Name;
+                return panel != null && panel != name ? $"{name} (in {panel})" : name;
+            }
+            return null;
+        }
+
         /// <summary>Converts a rect in panel space to screen pixels with a top-left origin.</summary>
         public static Rect PanelToScreen(VisualElement root, Rect panelRect)
         {

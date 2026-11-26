@@ -38,6 +38,15 @@ namespace MobileIdleBuilder
         /// <summary>True once a remote fetch has succeeded this session (vs. running on cache/defaults).</summary>
         public bool HasFetched { get; private set; }
 
+        /// <summary>Successful fetches this session. MaintenanceWatcher re-checks maintenance when it changes.</summary>
+        public int FetchCount { get; private set; }
+
+        /// <summary>Realtime of the last successful fetch, or -1 before the first.</summary>
+        public float LastFetchRealtime { get; private set; } = -1f;
+
+        /// <summary>Default age under which <see cref="FetchIfStaleAsync"/> reuses the last fetch.</summary>
+        public const float ReuseFetchSeconds = 120f;
+
         // Self-bootstrap: this service has no serialized fields, so it does not need scene placement
         // (and cannot be lost in a scene refactor — see the persistent-managers history). It is created
         // before any scene loads, well ahead of SaveManager's fetch and the HUD's first flag read.
@@ -71,6 +80,20 @@ namespace MobileIdleBuilder
         /// Idempotent and safe to call once per launch. On any failure the in-memory values are
         /// left untouched (cache/defaults remain in effect). Call only after UGS init + sign-in.
         /// </summary>
+        /// <summary>
+        /// Fetches unless a fetch already succeeded in the last <paramref name="maxAgeSeconds"/>. GameScene
+        /// uses this so the splash gate's fetch is reused instead of fetching Remote Config twice per launch (#209).
+        /// </summary>
+        public Task FetchIfStaleAsync(float maxAgeSeconds = ReuseFetchSeconds)
+        {
+            if (FeatureFlagResolver.IsFresh(LastFetchRealtime, Time.realtimeSinceStartup, maxAgeSeconds))
+            {
+                GameLogger.Info($"[FeatureFlags] Reusing this launch's fetch ({Time.realtimeSinceStartup - LastFetchRealtime:F0}s old).");
+                return Task.CompletedTask;
+            }
+            return FetchAsync();
+        }
+
         public async Task FetchAsync()
         {
             if (Application.internetReachability == NetworkReachability.NotReachable)
@@ -102,6 +125,8 @@ namespace MobileIdleBuilder
 
                 FeatureFlagResolver.MergeInto(_values, fetched);
                 HasFetched = true;
+                FetchCount++;
+                LastFetchRealtime = Time.realtimeSinceStartup;
                 SaveCache();
                 GameLogger.Info($"[FeatureFlags] Fetched {fetched.Count} flag(s) from Remote Config.");
             }

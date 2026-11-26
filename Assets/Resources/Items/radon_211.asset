@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 14.6 hours
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Radon stripped of eleven neutrons. Too proton-rich to last, it captures
     an electron and becomes Astatine-211, an isotope used in cancer therapy.
   codexUnlocked: 0
-  baseSellValue: 27300
+  baseSellValue: 4810
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

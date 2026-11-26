@@ -52,22 +52,95 @@ namespace MobileIdleBuilder
             _filePath = Path.Combine(LocalSaveService.SaveDirectory, FileName);
         }
 
+        // True once Start has read the device file. A cloud save taken before then is adopted in Start.
+        bool _started;
+        bool _adoptPending;
+
         void Start()
         {
             Load();
             SyncWithRecipeDatabase();
+            _started = true;
+            if (_adoptPending) { _adoptPending = false; AdoptProfileKnowledge(); }
+            else SyncWithProfile();
         }
 
         /// <summary>
-        /// Re-reads knowledge from disk, falling back to the default asset when the file is gone.
-        /// This service survives scene loads, so a save wipe must reset it explicitly — otherwise it
-        /// keeps the old run's unlocks in memory and writes them straight back out on the next
-        /// MarkKnown(), resurrecting the file the wipe just deleted.
+        /// Re-reads knowledge from disk, falling back to the default asset when the file is gone, then
+        /// lines it up with the current save. This service survives scene loads, so a save wipe must
+        /// reset it explicitly — otherwise it keeps the old run's unlocks in memory and writes them
+        /// straight back out on the next MarkKnown(), resurrecting the file the wipe just deleted.
         /// </summary>
         public void ResetInMemory()
         {
             Load();
             SyncWithRecipeDatabase();
+            SyncWithProfile();
+        }
+
+        /// <summary>
+        /// The save was replaced by another profile's (a cloud save was taken): its recipe knowledge
+        /// replaces this device's, so the device shows what that profile knows and nothing it doesn't.
+        /// </summary>
+        public void AdoptProfileKnowledge()
+        {
+            if (!_started) { _adoptPending = true; return; }
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return;
+            if (SyncWithSave(_data, save, saveWins: true))
+                Save();
+            GameLogger.Info($"[RecipeKnowledgeService] Adopted the save's recipe knowledge ({save.unlockedRecipes.Count} known).");
+        }
+
+        /// <summary>
+        /// Lines the device file (<paramref name="data"/>) up with the save's copy of the knowledge, the
+        /// one that roams with the cloud save. Returns true when <paramref name="data"/> changed and the
+        /// file needs saving.
+        ///  - The save has never carried knowledge (<c>recipeKnowledgeVersion</c> 0, an older save): it is
+        ///    back-filled from the file.
+        ///  - <paramref name="saveWins"/> (a cloud save was just taken): the file is rewritten to match.
+        ///  - Otherwise (same profile, normal launch): the union, so a crash between writing the file and
+        ///    writing save.json loses nothing.
+        /// </summary>
+        internal static bool SyncWithSave(RecipeKnowledgeSave data, SaveData save, bool saveWins = false)
+        {
+            if (data?.entries == null || save == null) return false;
+            save.unlockedRecipes ??= new List<string>();
+
+            if (save.recipeKnowledgeVersion == 0)
+            {
+                save.unlockedRecipes.Clear();
+                foreach (var e in data.entries)
+                    if (e.previous_research) save.unlockedRecipes.Add(e.id);
+                save.recipeKnowledgeVersion = 1;
+                return false;
+            }
+
+            var known    = new HashSet<string>(save.unlockedRecipes);
+            bool changed = false;
+            foreach (var e in data.entries)
+            {
+                bool inSave = known.Remove(e.id);
+                if (inSave && !e.previous_research) { e.previous_research = true; changed = true; }
+                else if (!inSave && e.previous_research)
+                {
+                    if (saveWins) { e.previous_research = false; changed = true; }
+                    else save.unlockedRecipes.Add(e.id);
+                }
+            }
+            foreach (var id in known)   // known in the save, missing from the file
+            {
+                data.entries.Add(new RecipeKnowledgeEntry { id = id, previous_research = true });
+                changed = true;
+            }
+            return changed;
+        }
+
+        void SyncWithProfile()
+        {
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return;
+            if (SyncWithSave(_data, save)) Save();
         }
 
         // ── Query ────────────────────────────────────────────────────────────
@@ -135,6 +208,12 @@ namespace MobileIdleBuilder
                 entry.previous_research = true;
                 Save();
             }
+
+            // Mirror into the save so the knowledge reaches the cloud with it.
+            var save = SaveManager.Instance?.Current;
+            if (save == null) return;
+            if (save.recipeKnowledgeVersion == 0) SyncWithSave(_data, save);   // back-fill everything
+            else if (!save.unlockedRecipes.Contains(recipeId)) save.unlockedRecipes.Add(recipeId);
         }
 
         // ── Internal ─────────────────────────────────────────────────────────

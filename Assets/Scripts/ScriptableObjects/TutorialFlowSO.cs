@@ -18,9 +18,37 @@ namespace MobileIdleBuilder
     [CreateAssetMenu(fileName = "tutorial_flow", menuName = "MobileIdleBuilder/Tutorial Flow")]
     public class TutorialFlowSO : ScriptableObject
     {
+        /// <summary>
+        /// The flow that runs now. Physics' main tutorial (empty <see cref="worldId"/>) is the default and
+        /// claims Current when it loads; a world's own tutorial (WorldSO.tutorialFlow) only runs while that
+        /// world is live, switched in by <see cref="TutorialFlows"/>.
+        /// </summary>
         public static TutorialFlowSO Current { get; private set; }
-        void OnEnable()  => Current = this;
-        void OnDisable() { if (Current == this) Current = null; }
+
+        /// <summary>The main (Physics) tutorial, once loaded.</summary>
+        public static TutorialFlowSO Default { get; private set; }
+
+        void OnEnable()
+        {
+            if (!string.IsNullOrEmpty(worldId)) return;
+            Default = this;
+            if (Current == null || string.IsNullOrEmpty(Current.worldId)) Current = this;
+        }
+
+        void OnDisable()
+        {
+            if (Current == this) Current = null;
+            if (Default == this) Default = null;
+        }
+
+        /// <summary>Makes <paramref name="flow"/> the running flow (null = the default Physics tutorial).</summary>
+        public static void Activate(TutorialFlowSO flow) => Current = flow != null ? flow : Default;
+
+        /// <summary>World this flow belongs to; empty = the main (Physics) tutorial.</summary>
+        public string worldId = "";
+
+        /// <summary>Toast shown when the flow finishes; empty = none.</summary>
+        public string completionMessage = "";
 
         public TutorialStepDef[] steps;
 
@@ -28,6 +56,17 @@ namespace MobileIdleBuilder
         /// <summary>For unit tests only — bypasses OnEnable asset loading.</summary>
         internal static void SetCurrentForTesting(TutorialFlowSO flow) => Current = flow;
         internal static void ClearCurrentForTesting() => Current = null;
+        internal static void SetDefaultForTesting(TutorialFlowSO flow) => Default = flow;
+
+        /// <summary>
+        /// Importer only: a brand-new world flow asset is enabled before its worldId is written, so it can
+        /// claim Default/Current for the rest of the Editor session. Point both back at the main flow.
+        /// </summary>
+        public static void EditorResetStatics(TutorialFlowSO main)
+        {
+            Default = main;
+            Current = main;
+        }
 #endif
     }
 

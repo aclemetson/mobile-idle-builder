@@ -19,12 +19,14 @@ MonoBehaviour:
   icon: {fileID: 0}
   branch: 3
   prerequisites:
-  - {fileID: 11400000, guid: 915b66c3037ee924ab3c68fe5ca98fea, type: 2}
+  - {fileID: 11400000, guid: e35f80e6c63af0c43b4ce435245bc517, type: 2}
   depthInTree: 0
   block: foundations
   treeX: -1
   treeY: -1
-  costBaseCurrency: 11000
+  requiredWorld: 
+  world: world_physics
+  costBaseCurrency: 81600
   costPrestigeCurrency: 0
   durationSeconds: 45
   fieldCooldownMult: 1

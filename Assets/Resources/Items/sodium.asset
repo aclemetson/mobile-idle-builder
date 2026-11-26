@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: 
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Sodium (Na), element number 11 with mass number 23. Forged by fusion,
     climbing the ladder toward iron, the most stable nucleus.
   codexUnlocked: 0
-  baseSellValue: 3740
+  baseSellValue: 883
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

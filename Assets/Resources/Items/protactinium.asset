@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Protactinium (Pa), element number 91 with mass number 231. A fission
     fragment on the long descent from the heavy actinides back toward iron.
   codexUnlocked: 0
-  baseSellValue: 23900
+  baseSellValue: 4050
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

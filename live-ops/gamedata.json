@@ -1,0 +1,13 @@
+{
+  "_comment": "Source for the gamedata.* Remote Config keys (#210). Edit in a PR (the Publish Game Data check validates it), merge, then run the Publish Game Data workflow. See live-ops/README.md.",
+  "version": 0,
+  "notice": {
+    "title": "Game Updated",
+    "message": "We've adjusted some game values to improve balance. Tap to continue."
+  },
+  "overrides": {
+    "config": [],
+    "items": [],
+    "research": []
+  }
+}

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Eukaryotic Cell
   methodLabel: 
   recipeId: 201
-  tier: 3
+  tier: 4
   category: 5
   inputs:
   - item: {fileID: 11400000, guid: 3d36bbc3894dfa44e879e5d2118f1130, type: 2}
@@ -27,15 +27,15 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: c97d9822819909e48bad2be38375d5fd, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 60
+  baseCraftTime: 150
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 600
+  fixedPowerCostEV: 0
   validBuildings:
   - {fileID: 11400000, guid: d2781fa6f2fd279479d47afa590562b3, type: 2}
   canCraftManually: 0
   knownFromStart: 0
   requiredResearch: {fileID: 11400000, guid: 8c201ae96fdd4c04f9bbb88f15152c83, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: cell + mitochondria

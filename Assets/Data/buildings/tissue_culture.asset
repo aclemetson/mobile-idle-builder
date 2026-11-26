@@ -23,13 +23,17 @@ MonoBehaviour:
   isObsoleteable: 0
   obsoleteCondition: 
   obsoletedByResearch: 
-  requiresPower: 1
+  requiresPower: 0
   isPowerSource: 0
   basePowerCostEV: 600
   powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
   - {fileID: 11400000, guid: 85d297ca7c84a0e4ca2715be3bf71aa8, type: 2}
@@ -41,7 +45,6 @@ MonoBehaviour:
   - Organelle
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -60,6 +63,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_biology
   entropyCost: 25000000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30

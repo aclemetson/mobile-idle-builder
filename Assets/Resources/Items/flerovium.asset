@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: 'Flerovium (Fl), element number 114 with mass number 289. A superheavy
     nucleus forced together in the accelerator: vanishingly unstable, immensely valued.'
   codexUnlocked: 0
-  baseSellValue: 1280000
+  baseSellValue: 39000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

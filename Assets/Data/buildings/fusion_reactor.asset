@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Fusion Reactor
   description: "Fuses two light nuclei into a heavier element \u2014 the fast lane
     up the fusion ladder. Unlocked by Stellar Fusion research."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4fd0f10c57f621d419dbf072ed7e4381, type: 3}
   prefab: {fileID: 0}
   buildingId: 11
   tier: 2
@@ -31,6 +31,10 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
   - {fileID: 11400000, guid: bcb789ae341b0f74b8678b5b0cdd921c, type: 2}
@@ -58,14 +62,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
   - {fileID: 11400000, guid: b42412ce8930c194f837745e082ac3e6, type: 2}
   - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
-  - {fileID: 11400000, guid: bf10740a158e9dd4b92f0862d6e86d57, type: 2}
+  - {fileID: 11400000, guid: 2e78ee1afda215e4dac306504f792916, type: 2}
   inputSlotCount: 2
   inputSlotLabels:
   - Nucleus A
   - Nucleus B
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -87,6 +90,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_physics
   entropyCost: 1500
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30

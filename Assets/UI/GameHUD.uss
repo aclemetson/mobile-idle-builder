@@ -58,6 +58,16 @@
     color: #b39dff;
 }
 
+/* Chemistry task strip: Chemistry world teal, tappable (opens the Worlds panel) */
+.task-status {
+    background-color: rgba(63, 214, 170, 0.12);
+}
+
+.task-status-label {
+    color: #7fe6c8;
+    font-size: var(--font-size-sm);
+}
+
 .inventory-bar {
     flex-direction: row;
     flex-wrap: wrap;
@@ -429,6 +439,51 @@
     color: var(--color-text-secondary);
 }
 
+/* Drawer menu as a 3-column grid of icon tiles with a small caption (#486). The nav ScrollView's
+   content wraps; the MENU title and the locked hint take a full row. */
+.drawer-grid .unity-scroll-view__content-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.drawer-grid .drawer-section-title,
+.drawer-grid .drawer-locked-hint {
+    width: 100%;
+}
+
+.drawer-tile {
+    width: 31%;
+    margin: 0 1% var(--spacing-sm) 1%;
+    min-height: 72px;
+    padding: var(--spacing-sm) 2px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border-radius);
+    border-color: rgba(0, 229, 255, 0.12);
+}
+
+.drawer-tile > .drawer-tile__icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
+}
+
+.drawer-tile__caption {
+    font-size: 11px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
+
+/* The reminder dot sits on the tile's top-right corner instead of the old row's right edge. */
+.drawer-tile > .reminder-dot {
+    top: 6px;
+    margin-top: 0;
+    right: 6px;
+}
+
 /* Hint shown beneath a locked drawer button */
 .drawer-locked-hint {
     color: var(--color-text-secondary);
@@ -496,6 +551,18 @@
 .research-card-info {
     flex-direction: column;
     align-items: flex-start;
+    flex-shrink: 1;
+}
+
+/* Cards never squash inside the list, and the Start / Skip buttons keep a full touch target. */
+.research-card {
+    flex-shrink: 0;
+}
+
+.research-card-footer > .craft-btn {
+    flex-shrink: 0;
+    min-height: 44px;
+    margin-left: var(--spacing-sm);
 }
 
 .research-card-cost {
@@ -575,6 +642,9 @@
     position: relative;
     border-bottom-width: 1px;
     border-bottom-color: var(--color-border);
+    /* Never squeezed by a long list below it: without this, a tall list shrank every child of the panel,
+       header included, and the title disappeared (#499, research list mode; seen again in the PvE shop). */
+    flex-shrink: 0;
 }
 
 .panel-title {
@@ -1218,6 +1288,13 @@
     font-size: var(--font-size-sm);
 }
 
+/* Edit mode's Remove: a rotate-style bar button in the danger colour. */
+.remove-building-btn {
+    background-color: rgba(255, 23, 68, 0.14);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
 /* Compact icon-only buttons (Bend / Place / Clear) so the whole bar fits a phone width. */
 .conveyor-icon-btn {
     width: 40px;
@@ -1258,6 +1335,12 @@
     background-color: rgba(255, 23, 68, 0.14);
     border-color: var(--color-danger);
     color: var(--color-danger);
+}
+
+/* Up (overpass) while it's on: the next tap lays an overpass. */
+.conveyor-mode-btn--on {
+    background-color: var(--color-primary);
+    color: rgb(10, 14, 26);
 }
 
 /* ---- Idle Return Modal ---- */
@@ -1304,6 +1387,12 @@
     -unity-text-align: middle-center;
 }
 
+/* Release notes can run long (#502): the message scrolls inside the card. */
+.game-update-scroll {
+    max-height: 380px;
+    flex-shrink: 1;
+}
+
 .game-update-message {
     color: var(--color-text-secondary);
     font-size: var(--font-size-md);
@@ -1334,10 +1423,446 @@
     padding: 0 var(--spacing-md);
 }
 
+/* Optional checkbox under the message (e.g. "Don't ask again" on the notification opt-in). */
+.confirm-prompt__checkbox {
+    align-self: center;
+    margin: 0 var(--spacing-md) var(--spacing-md);
+    min-height: 32px;
+}
+
+.confirm-prompt__checkbox .unity-toggle__text {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    margin-left: var(--spacing-sm);
+}
+
 .confirm-prompt__btn {
     flex-grow: 1;
     min-height: 44px;
     margin: 0 var(--spacing-xs);
+    -unity-text-align: middle-center;
+}
+
+/* Belt split card (press-and-hold on a belt, BeltSplitCard). */
+.belt-split-card {
+    max-width: 460px;
+}
+
+.belt-split-rows {
+    padding: 0 var(--spacing-md);
+}
+
+.belt-split-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    padding: 2px var(--spacing-xs);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.belt-split-row--on {
+    border-color: var(--color-primary);
+}
+
+.belt-split-row__side {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+}
+
+.belt-split-row__step {
+    min-width: 0;
+    width: 44px;
+    margin: 0 2px;
+}
+
+.belt-split-row__weight {
+    width: 28px;
+    -unity-text-align: middle-center;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+}
+
+.belt-split-summary {
+    padding: var(--spacing-xs) var(--spacing-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* Builder cards (#487): a horizontal row per tab. The ScrollView scrolls sideways; each tab page is a row. */
+.builder-cards .unity-scroll-view__content-container,
+.recipe-cards .unity-scroll-view__content-container {
+    flex-direction: row;
+    padding-bottom: 0;
+}
+
+.builder-page {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.building-tile {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 148px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+}
+
+.building-tile__picture {
+    width: 84px;
+    height: 84px;
+    margin-bottom: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+    justify-content: center;
+    align-items: center;
+}
+
+.building-tile__glyph {
+    width: 48px;
+    height: 48px;
+    color: var(--color-primary);
+}
+
+.building-tile__name {
+    -unity-text-align: middle-center;
+    font-size: var(--font-size-sm);
+    min-height: 36px;
+    margin-bottom: 2px;
+}
+
+.building-tile__cost {
+    -unity-text-align: middle-center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.building-tile__place {
+    width: 100%;
+    margin: 0;
+}
+
+.building-tile__info {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 15px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.building-tile__info > .glyph-icon { width: 16px; height: 16px; }
+
+/* Recipe cards (#488): one per item, in a horizontal row per item-type tab. */
+.recipe-card {
+    flex-direction: column;
+    align-items: stretch;
+    width: 176px;
+    min-height: 300px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 0;
+    padding: var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.recipe-card__icon {
+    width: 56px;
+    height: 56px;
+    align-self: center;
+    margin-bottom: var(--spacing-xs);
+    -unity-background-scale-mode: scale-to-fit;
+    justify-content: center;
+    align-items: center;
+}
+
+.recipe-card__name {
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 2px;
+}
+
+.recipe-card__inputs {
+    justify-content: center;
+}
+
+.recipe-card__hint {
+    font-size: 11px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-top: 2px;
+}
+
+.recipe-card__meta {
+    color: var(--color-text-secondary);
+}
+
+.recipe-card__method {
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+}
+
+.recipe-card__spacer {
+    flex-grow: 1;
+    min-height: var(--spacing-xs);
+}
+
+.recipe-card__ways {
+    align-self: center;
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.recipe-card__craft {
+    width: 100%;
+    justify-content: center;
+}
+
+.recipe-card--unavailable .recipe-card__icon {
+    opacity: 0.6;
+}
+
+.recipe-card--locked > .recipe-card__icon,
+.recipe-card--locked > .recipe-card__name,
+.recipe-card--locked > .recipe-card__inputs,
+.recipe-card--locked > .recipe-card__meta {
+    opacity: 0.5;
+}
+
+/* The method drop-up: opens upward over the card from just above the toggle. */
+.recipe-dropup {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 108px;
+    padding: 4px;
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-primary);
+    border-radius: var(--border-radius);
+}
+
+.recipe-dropup__option {
+    margin: 2px 0;
+    padding: 4px 6px;
+    white-space: normal;
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-left;
+    background-color: rgba(0, 229, 255, 0.06);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+}
+
+.recipe-dropup__option--selected {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Tournament panel header badge: the player's league (TournamentPanelController, one modifier per league id). */
+/* Tournament panel pages (#500): each fills the panel below the tabs. */
+.pve-page {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    flex-direction: column;
+}
+
+/* Cosmetic rows (#500): swatch, name, buy / equip. */
+.pve-cosmetic-row {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    background-color: var(--color-surface-raised);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.pve-cosmetic-row--on {
+    border-color: var(--color-primary);
+}
+
+.pve-cosmetic-row__swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0);
+    margin-right: var(--spacing-sm);
+}
+
+.pve-cosmetic-row__name {
+    flex-grow: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+}
+
+.pve-cosmetic-row__btn {
+    min-width: 110px;
+}
+
+.pve-shop-balance {
+    padding: var(--spacing-sm) var(--spacing-md) 0;
+    white-space: normal;
+}
+
+/* Strings balance in the tournament panel header (#500). */
+.pve-strings {
+    margin-left: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-left;
+}
+
+.pve-league-badge {
+    margin-left: var(--spacing-sm);
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    font-size: var(--font-size-sm);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: #0a0e1a;
+    background-color: #cd7f32;
+    border-color: #cd7f32;
+}
+
+.pve-league-badge--silver   { background-color: #c0c7d0; border-color: #c0c7d0; }
+.pve-league-badge--gold     { background-color: #ffd700; border-color: #ffd700; }
+.pve-league-badge--platinum { background-color: #7fe0d6; border-color: #7fe0d6; }
+.pve-league-badge--diamond  { background-color: #8ab4ff; border-color: #8ab4ff; }
+.pve-league-badge--champion { background-color: #c47dff; border-color: #c47dff; color: #ffffff; }
+
+/* Last result banner: green when promoted, red when moved down, neutral when staying. */
+.pve-banner {
+    margin: var(--spacing-xs) 0 var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    border-width: 1px;
+    border-color: var(--color-border);
+    background-color: var(--color-surface-raised);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.pve-banner--promoted { border-color: var(--color-success); color: var(--color-success); }
+.pve-banner--demoted  { border-color: var(--color-danger);  color: var(--color-danger); }
+
+.pve-your-rank {
+    flex-grow: 1;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-right;
+    margin-right: var(--spacing-sm);
+}
+
+/* Tournament leaderboard rows (TournamentPanelController). Projected values (players behind you) are italic with "~". */
+.tournament-row--retired .tournament-row__value {
+    color: var(--color-text-secondary);
+}
+
+.tournament-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 32px;
+    padding: 2px var(--spacing-sm);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+}
+
+.tournament-row--you {
+    background-color: var(--color-surface-raised);
+}
+
+.tournament-row--promote .tournament-row__rank {
+    color: var(--color-success);
+}
+
+.tournament-row--demote .tournament-row__rank {
+    color: var(--color-danger);
+}
+
+.tournament-row__rank {
+    width: 40px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+}
+
+.tournament-row__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tournament-row__value {
+    color: var(--color-currency-entropy);
+    font-size: var(--font-size-md);
+    -unity-text-align: middle-right;
+}
+
+.tournament-row__played {
+    width: 56px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    -unity-text-align: middle-right;
+}
+
+.tournament-row--projected .tournament-row__value {
+    -unity-font-style: italic;
+    color: var(--color-text-secondary);
+}
+
+/* Player name card (PlayerNamePromptController): text input + validation line.
+   Anchored near the top instead of centred: the on-screen keyboard opens from the bottom and covered the
+   centred card on phones (#504). UI Toolkit can't read the keyboard height reliably on Android, so the
+   card simply stays clear of the lower half, like the dev console does. */
+.name-prompt {
+    justify-content: flex-start;
+    padding-top: 12%;
+}
+
+.name-prompt__input {
+    margin: 0 var(--spacing-md);
+    min-height: 44px;
+}
+
+.name-prompt__input .unity-base-text-field__input {
+    background-color: var(--color-surface-raised);
+    border-color: var(--color-border);
+    border-width: 1px;
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    padding: 0 var(--spacing-sm);
+    -unity-text-align: middle-center;
+}
+
+.name-prompt__error {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    min-height: 20px;
+    margin: var(--spacing-xs) var(--spacing-md) var(--spacing-md);
+    white-space: normal;
     -unity-text-align: middle-center;
 }
 
@@ -1489,11 +2014,25 @@
     margin-bottom: 2px;
 }
 
+/* Tree/List toggle. The header is a row with a shrinking title, and a default Button shrinks too, so it
+   squeezed down to a sliver: pinned to a full 44px touch target that never shrinks. */
 .research-view-btn {
-    margin-right: var(--spacing-sm);
-    padding: 2px 10px;
+    flex-shrink: 0;
+    margin: 0 var(--spacing-sm) 0 auto;
+    min-width: 72px;
+    min-height: 44px;
+    padding: 0 16px;
     font-size: var(--font-size-sm);
-    border-radius: 6px;
+    border-radius: 18px;
+    border-width: 1px;
+    border-color: var(--color-primary);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--color-primary);
+    -unity-text-align: middle-center;
+}
+
+.research-view-btn:active {
+    background-color: rgba(0, 229, 255, 0.24);
 }
 
 .stats-value {
@@ -1757,4 +2296,81 @@
     white-space: normal;
     -unity-text-align: middle-left;
     margin-top: var(--spacing-xs);
+}
+
+/* ---- Landscape (.hud--landscape on #root, set by HUDController when the HUD is wider than tall) ----
+   A bottom sheet 65% tall left the panels a 350px strip across a 1170px-wide screen. In landscape they are
+   side sheets under the top bar instead, with the map visible on the left; the hint pill and the tutorial
+   dialogue dock in that strip (PanelDock). */
+.hud--landscape .slide-panel {
+    left: 40%;
+    top: var(--top-bar-height);
+    height: auto;
+    border-top-right-radius: 0;
+    border-left-width: 1px;
+    border-left-color: var(--color-border);
+    border-bottom-left-radius: 12px;
+}
+
+/* Research gets more width: the tree on the left, the selected node's card beside it. */
+.hud--landscape #research-panel {
+    left: 24%;
+}
+
+.hud--landscape .research-tree {
+    flex-direction: row;
+}
+
+.hud--landscape .rt-viewport {
+    min-height: 0;
+    min-width: 0;
+    flex-basis: 0;
+}
+
+.hud--landscape .rt-detail {
+    max-height: none;
+    width: 40%;
+    min-width: 260px;
+    max-width: 380px;
+    margin-top: 0;
+    margin-left: var(--spacing-sm);
+}
+
+/* Tutorial highlight on a Builder card and its Place button. Compound selectors: the plain
+   .panel-btn--highlight lost to .craft-btn / .building-card (same specificity, declared later),
+   so a pulsed Place button never lit up. Colour only, so nothing shifts (#239). */
+.craft-btn.panel-btn--highlight {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: rgb(8, 16, 24);
+}
+
+.building-card.building-card--tutorial {
+    background-color: rgba(0, 229, 255, 0.22);
+    border-color: var(--color-primary);
+}
+
+/* Research panel: one tab per unlocked world (HUDController.RefreshResearchTabs). */
+.research-tabs {
+    flex-direction: row;
+    flex-shrink: 0;
+    padding: 0 var(--spacing-md) var(--spacing-sm) var(--spacing-md);
+}
+
+.research-tab {
+    flex-grow: 1;
+    margin: 0 var(--spacing-xs) 0 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: var(--color-surface-raised);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+}
+
+.research-tab.research-tab--selected {
+    background-color: rgba(0, 229, 255, 0.22);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }

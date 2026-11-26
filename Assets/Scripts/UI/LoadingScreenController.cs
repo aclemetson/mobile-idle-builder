@@ -28,6 +28,10 @@ namespace MobileIdleBuilder
 
                 var versionLabel = root?.Q<Label>("loading-version");
                 if (versionLabel != null) versionLabel.text = VersionLabel.Format();
+
+                // "Two saves found" at startup is answered here, before the save is applied to ECS
+                // (ECSLoadBridge waits for it), so the chosen save is the only one ever loaded.
+                SaveConflictPrompt.InitLoadingScreen(root);
             }
 
             if (string.IsNullOrEmpty(SceneLoader.TargetScene))
@@ -95,19 +99,21 @@ namespace MobileIdleBuilder
             if (hasBridge)
             {
                 float logTimer = 0f;
-                while (!ECSLoadBridge.Instance.IsLoaded)
+                // The bridge is a scene object: if it goes away mid-wait there is nothing left to wait for.
+                while (ECSLoadBridge.Instance != null && !ECSLoadBridge.Instance.IsLoaded)
                 {
                     displayed = Mathf.MoveTowards(displayed, 0.99f, Time.deltaTime * 0.05f);
                     UpdateProgress(displayed * 100f);
-                    logTimer += Time.deltaTime;
+                    logTimer += Time.unscaledDeltaTime;
                     if (logTimer >= 2f)
                     {
                         logTimer = 0f;
-                        GameLogger.Info($"[LoadingScreen] Phase2 still waiting — IsLoaded=false  displayed={displayed:F2}");
+                        GameLogger.Info($"[LoadingScreen] Phase2 still waiting — IsLoaded=false  displayed={displayed:F2}  " +
+                                        $"awaitingSaveChoice={SaveManager.Instance?.AwaitingSaveChoice ?? false}");
                     }
                     yield return null;
                 }
-                GameLogger.Info("[LoadingScreen] Phase2 complete — ECSLoadBridge.IsLoaded=true");
+                GameLogger.Info($"[LoadingScreen] Phase2 complete — bridge {(ECSLoadBridge.Instance != null ? "loaded" : "gone")}");
             }
 
             // Phase 3 — done; snap to 100%, brief hold, reveal destination UI, remove overlay.
@@ -125,6 +131,8 @@ namespace MobileIdleBuilder
             Destroy(gameObject);
             GameLogger.Info("[LoadingScreen] Overlay destroyed — transition complete");
         }
+
+        private void OnDestroy() => SaveConflictPrompt.ReleaseLoadingScreen();
 
         private void UpdateProgress(float pct)
         {

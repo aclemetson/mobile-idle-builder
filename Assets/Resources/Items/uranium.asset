@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 4.47 billion years
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -36,6 +37,6 @@ MonoBehaviour:
     Requires advanced assembly techniques. Decays: alpha decay turns it into Thorium
     (Decay Chamber)."
   codexUnlocked: 0
-  baseSellValue: 20000
+  baseSellValue: 3170
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

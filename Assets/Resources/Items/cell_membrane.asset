@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: A closed lipid boundary studded with proteins. It defines the cell
     and controls what crosses in and out.
   codexUnlocked: 0
-  baseSellValue: 13000000
+  baseSellValue: 2850000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

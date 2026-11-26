@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 9.3 hours
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: Lead with seven neutrons removed. It captures an electron and becomes
     Thallium-201, used in heart scans.
   codexUnlocked: 0
-  baseSellValue: 30700
+  baseSellValue: 5630
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

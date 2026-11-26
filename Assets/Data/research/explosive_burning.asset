@@ -14,38 +14,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: explosive_burning
   displayName: Explosive Burning
-  description: 'Fuse a proton onto Sulfur, Argon, Calcium, Titanium and Chromium:
-    Chlorine, Potassium, Scandium, Vanadium and Manganese. With Iron, this completes
-    every element a star can make.'
+  description: Potassium, Calcium, Scandium and Titanium.
   icon: {fileID: 0}
   branch: 4
   prerequisites:
   - {fileID: 11400000, guid: aa95324a2c40e2643bd3f4ce1fcd024a, type: 2}
-  depthInTree: 6
-  block: stellar_forge
+  depthInTree: 9
+  block: deep_burning
   treeX: -1
   treeY: -1
-  costBaseCurrency: 8280000
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 1700000
   costPrestigeCurrency: 0
-  durationSeconds: 1800
+  durationSeconds: 600
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
-  - {fileID: 11400000, guid: e2885cf7c807ea541a5f209360e39266, type: 2}
   - {fileID: 11400000, guid: 89b33da28615202459096ab75d854a0d, type: 2}
+  - {fileID: 11400000, guid: 4c6c94900546a7340bd82fd524fc4c57, type: 2}
   - {fileID: 11400000, guid: 5ed6af1e7dd24c145b1ddd327ae7f06a, type: 2}
-  - {fileID: 11400000, guid: e62f17f097d33ae4498907181c45f781, type: 2}
-  - {fileID: 11400000, guid: c4932c0b7989ec14499515b2d1fb1812, type: 2}
+  - {fileID: 11400000, guid: 4236c7094747bed418dfcc0397e20a57, type: 2}
   unlocksRecipes:
-  - {fileID: 11400000, guid: b55c7b0772bb38e4c956c67e6ce491ee, type: 2}
+  - {fileID: 11400000, guid: 716dd01167a799d4da71115fe9297ff7, type: 2}
+  - {fileID: 11400000, guid: 10924634e73b74940943c8e88c9873e8, type: 2}
   - {fileID: 11400000, guid: 02b241c4051ecba469cef6cb42ad1b54, type: 2}
   - {fileID: 11400000, guid: eee5723157e262d439db5809087b2a62, type: 2}
-  - {fileID: 11400000, guid: a399eadd2b8d5dc4e957b31f30d2f6b7, type: 2}
-  - {fileID: 11400000, guid: 3b19ba32c5e471a499e99f7af12fe61a, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
   unlocksResearch:
-  - {fileID: 11400000, guid: e1c88061a45407d4a891e696495ac329, type: 2}
+  - {fileID: 11400000, guid: c8c4e378306357d438114906aeacff30, type: 2}
   resetsOnPrestige: 1
   codexEntry: When a massive star explodes, a shock wave sweeps through its silicon
     and oxygen layers in seconds, briefly hot enough to forge the odd-numbered elements

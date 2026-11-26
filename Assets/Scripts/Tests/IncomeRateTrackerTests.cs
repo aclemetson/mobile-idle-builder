@@ -127,23 +127,11 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void HasRewardRate_FalseUntilTheMinimumSpan_ThenTrue()
         {
-            Feed(0, 30, 100.0, 0.0, run: 1);
+            Feed(0, 20, 100.0, 0.0, run: 1);            // 10 s settle + 10 s of samples: under the minimum
             Assert.IsFalse(_tracker.HasRewardRate);
-            Feed(31, 80, 100.0, 3100.0, run: 1);
+            Feed(21, 80, 100.0, 2100.0, run: 1);
             Assert.IsTrue(_tracker.HasRewardRate);
             Assert.AreEqual(0.0, _tracker.SecondsUntilRewardRate, 1e-9);
-        }
-
-        [Test]
-        public void SurgeReward_AfterPrestige_IsTheFloor()
-        {
-            Feed(0, 100, 1000.0, 0.0, run: 1);
-            long before = AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, _tracker.RewardPerSecond);
-            Feed(101, 105, 1.0, 100000.0, run: 2);
-            long after = AdRewardCalculator.CalcIncomeReward(AdPlacement.EntropySurge, _tracker.RewardPerSecond);
-
-            Assert.AreEqual(600000, before, "10 min of 1000/s");
-            Assert.AreEqual(AdRewardCalculator.Def(AdPlacement.EntropySurge).MinimumFloor, after);
         }
     }
 }

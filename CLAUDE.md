@@ -11,7 +11,8 @@ Project rules for AI coding agents (Claude Code loads this file automatically). 
 ## Git Workflow
 - All work merges into `develop` only via a release branch (e.g., `release/0.3`) through a PR — never commit directly to `develop` or `main`
 - After running tests and committing on a feature branch, open a PR targeting the correct release branch (confirm the target before creating)
-- CI/CD is paused: workflows are `workflow_dispatch` only (see `docs/runbooks/ci-setup.md`), so run the test suite locally before every PR
+- CI runs PR Tests on every PR into develop, main, `release/**` and `integration/**` (see `docs/runbooks/ci-setup.md`); still run the test suite locally before every PR
+- For a PR into `develop`, review `docs/store/store-listing.md` (and the privacy declarations) against the release and fill in the template's "Store listing" section; for other targets delete that section
 
 ## Testing
 - Always run the full Unity test suite (`scripts/test-local.ps1`) before committing

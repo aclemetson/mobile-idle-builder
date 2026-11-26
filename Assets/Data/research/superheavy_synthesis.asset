@@ -14,19 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
   id: superheavy_synthesis
   displayName: Superheavy Synthesis
-  description: "Unlock accelerator synthesis of the superheavy elements \u2014 mendelevium
-    through oganesson."
+  description: Mendelevium to Darmstadtium.
   icon: {fileID: 0}
   branch: 1
   prerequisites:
   - {fileID: 11400000, guid: 2b649f01e3ad8b040b31fea0a5bc3909, type: 2}
-  depthInTree: 7
-  block: synthetic_frontier
+  depthInTree: 29
+  block: deep_physics
   treeX: -1
   treeY: -1
-  costBaseCurrency: 447000000
-  costPrestigeCurrency: 50
-  durationSeconds: 7200
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 54600000000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
   fieldCooldownMult: 1
   effects: []
   unlocksItems:
@@ -40,14 +41,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2f4af581c8ef6404fa9cc8658757484b, type: 2}
   - {fileID: 11400000, guid: 46b5a6fddaf8e1e4d83eb728224eb34e, type: 2}
   - {fileID: 11400000, guid: 621b03004af010d4ebe3cf7df59c2e9b, type: 2}
-  - {fileID: 11400000, guid: 18fc538167ecb434db4179caec349741, type: 2}
-  - {fileID: 11400000, guid: e64861209c47c0741804253575311b9c, type: 2}
-  - {fileID: 11400000, guid: bb30176d4a98f5f4d8ac9f1b35cede0b, type: 2}
-  - {fileID: 11400000, guid: e0f4d1c015e2b3e4c836bd03773cb83e, type: 2}
-  - {fileID: 11400000, guid: 70ef9811f7bb3694d9ae5300f3052719, type: 2}
-  - {fileID: 11400000, guid: d34574ed2bfe7bb4ebadf22bdf1a9c99, type: 2}
-  - {fileID: 11400000, guid: 627b1222502f88d4280d837382a8c39d, type: 2}
-  - {fileID: 11400000, guid: f4590576d290f5343b5d7c78c9204f35, type: 2}
   unlocksRecipes:
   - {fileID: 11400000, guid: 38772baec86e4e943ae9be3fb977c6df, type: 2}
   - {fileID: 11400000, guid: b8f3e0230b9f27b4c84e08f08fab1ea5, type: 2}
@@ -59,17 +52,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 735edd94c4d48a84cafd0836ba32687a, type: 2}
   - {fileID: 11400000, guid: d1bffc1c8301eca429125262f30e3fc9, type: 2}
   - {fileID: 11400000, guid: 5775faf87515f514eb65977fee6fd88f, type: 2}
-  - {fileID: 11400000, guid: c82cb0b4e7e524a4dbb9e5496bc07b63, type: 2}
-  - {fileID: 11400000, guid: 045c3ead4adcc95468b696b8b7fddb74, type: 2}
-  - {fileID: 11400000, guid: df82b103d4d1649438361edffa2f28b6, type: 2}
-  - {fileID: 11400000, guid: aa4e982084fe8c94f95c397a73e2b4db, type: 2}
-  - {fileID: 11400000, guid: ddc4af682ef835d48abb0eaf71636159, type: 2}
-  - {fileID: 11400000, guid: a86584b878aa4034ea5d10a69c54caf3, type: 2}
-  - {fileID: 11400000, guid: 2dcb39dc5b2ca994686b4b565cb636e9, type: 2}
-  - {fileID: 11400000, guid: dcb8d59c0937ed845905cec5dc1141cd, type: 2}
   unlocksBuildings: []
   unlocksGridExpansion: 0
-  unlocksResearch: []
+  unlocksResearch:
+  - {fileID: 11400000, guid: 6199c33eeb368504aad500f9a8c4851b, type: 2}
   resetsOnPrestige: 1
   codexEntry: "Beyond fermium, nuclei survive only by slamming lighter atoms together
     at relativistic speed. Each new element exists for fractions of a second \u2014

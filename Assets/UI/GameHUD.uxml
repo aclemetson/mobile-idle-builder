@@ -42,6 +42,11 @@
             <ui:Label name="craft-status-label" text="" class="research-status-label craft-status-label" />
         </ui:VisualElement>
 
+        <!-- ═══ CHEMISTRY TASK STRIP (Demon delivery stages; hidden in the tutorial and once Chemistry is open). Tap opens Worlds ═══ -->
+        <ui:VisualElement name="task-status" class="research-status task-status hidden">
+            <ui:Label name="task-status-label" text="" class="research-status-label task-status-label" />
+        </ui:VisualElement>
+
         <!-- ═══ GRID AREA ═══ -->
         <ui:VisualElement name="grid-area" class="grid-area" picking-mode="Ignore" />
 
@@ -68,27 +73,67 @@
             <ui:VisualElement class="drawer-divider" />
 
             <!-- Nav section -->
-            <ui:ScrollView class="drawer-nav-scroll"
+            <ui:ScrollView class="drawer-nav-scroll drawer-grid"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden">
                 <ui:Label text="MENU" class="drawer-section-title" />
-                <ui:Button name="btn-buildings"    text="Builder"      class="drawer-nav-btn" />
-                <ui:Button name="btn-recipes"      text="Recipes"      class="drawer-nav-btn" />
-                <ui:Button name="btn-codex"        text="Codex"        class="drawer-nav-btn" />
-                <ui:Button name="btn-stats"        text="Statistics"   class="drawer-nav-btn" />
-                <ui:Button name="btn-research"     text="Research"     class="drawer-nav-btn" />
-                <ui:Button name="btn-cyclotron"    text="Cyclotron"    class="drawer-nav-btn hidden" />
-                <ui:Button name="btn-upgrades"     text="✦ Upgrades"   class="drawer-nav-btn drawer-nav-btn--prestige" />
-                <ui:Button name="btn-managers"     text="✦ Managers"   class="drawer-nav-btn drawer-nav-btn--prestige" />
-                <ui:Button name="btn-megastructure" text="◉ Megastructure" class="drawer-nav-btn drawer-nav-btn--prestige hidden" />
-                <ui:Button name="btn-daily"        text="Daily"        class="drawer-nav-btn" />
-                <ui:Button name="btn-rewards"      text="▶ Free Rewards" class="drawer-nav-btn" />
-                <ui:Button name="btn-achievements" text="Achievements" class="drawer-nav-btn" />
+                <ui:Button name="btn-buildings" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Build" class="drawer-tile__icon" />
+                    <ui:Label text="Builder" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-recipes" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Recipes" class="drawer-tile__icon" />
+                    <ui:Label text="Recipes" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-codex" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Codex" class="drawer-tile__icon" />
+                    <ui:Label text="Codex" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-stats" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Stats" class="drawer-tile__icon" />
+                    <ui:Label text="Stats" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-research" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Research" class="drawer-tile__icon" />
+                    <ui:Label text="Research" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-cyclotron" text="" class="drawer-nav-btn drawer-tile hidden">
+                    <MobileIdleBuilder.GlyphIcon icon="Cyclotron" class="drawer-tile__icon" />
+                    <ui:Label text="Cyclotron" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-upgrades" text="" class="drawer-nav-btn drawer-tile drawer-nav-btn--prestige">
+                    <MobileIdleBuilder.GlyphIcon icon="Upgrades" class="drawer-tile__icon" />
+                    <ui:Label text="Upgrades" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-managers" text="" class="drawer-nav-btn drawer-tile drawer-nav-btn--prestige">
+                    <MobileIdleBuilder.GlyphIcon icon="Managers" class="drawer-tile__icon" />
+                    <ui:Label text="Managers" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-megastructure" text="" class="drawer-nav-btn drawer-tile drawer-nav-btn--prestige hidden">
+                    <MobileIdleBuilder.GlyphIcon icon="Megastructure" class="drawer-tile__icon" />
+                    <ui:Label text="Mega" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-rewards" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Rewards" class="drawer-tile__icon" />
+                    <ui:Label text="Rewards" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-achievements" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Achievements" class="drawer-tile__icon" />
+                    <ui:Label text="Achieve" class="drawer-tile__caption" />
+                </ui:Button>
                 <ui:Label  name="achievements-locked-hint" text="Prestige to Unlock" class="drawer-locked-hint hidden" />
-                <ui:Button name="btn-worlds"       text="◍ Worlds"     class="drawer-nav-btn" />
-                <ui:Button name="btn-sites"        text="Domains"      class="drawer-nav-btn" />
-                <ui:Button name="btn-pvp"          text="Competition"  class="drawer-nav-btn" />
-                <ui:Button name="btn-shop"         text="♦ Shop"       class="drawer-nav-btn" />
+                <ui:Button name="btn-worlds" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Worlds" class="drawer-tile__icon" />
+                    <ui:Label text="Worlds" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-tournament" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Tournament" class="drawer-tile__icon" />
+                    <ui:Label text="Tourney" class="drawer-tile__caption" />
+                </ui:Button>
+                <ui:Button name="btn-shop" text="" class="drawer-nav-btn drawer-tile">
+                    <MobileIdleBuilder.GlyphIcon icon="Shop" class="drawer-tile__icon" />
+                    <ui:Label text="Shop" class="drawer-tile__caption" />
+                </ui:Button>
             </ui:ScrollView>
         </ui:VisualElement>
 
@@ -165,7 +210,14 @@
                         <ui:Label text="Net worth" class="upgrade-row-name" />
                         <ui:Label name="stats-networth-value" text="" class="stats-value" />
                     </ui:VisualElement>
-                    <ui:Label text="Entropy you hold and have spent this run, plus your items. Prestige pays out from this." class="upgrade-row-desc" />
+                    <ui:Label text="Entropy you hold, the full price of everything you bought this run, and your items, including those inside buildings. Prestige pays out from this." class="upgrade-row-desc" />
+                </ui:VisualElement>
+                <ui:VisualElement class="upgrade-row">
+                    <ui:VisualElement class="upgrade-row-header">
+                        <ui:Label text="Stored in buildings" class="upgrade-row-name" />
+                        <ui:Label name="stats-stored-value" text="" class="stats-value" />
+                    </ui:VisualElement>
+                    <ui:Label name="stats-stored-sub" text="" class="upgrade-row-desc" />
                 </ui:VisualElement>
                 <ui:VisualElement class="upgrade-row">
                     <ui:VisualElement class="upgrade-row-header">
@@ -204,23 +256,6 @@
             <ui:ScrollView name="managers-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
-        </ui:VisualElement>
-
-        <!-- ═══ DAILY EVENTS PANEL ═══ -->
-        <ui:VisualElement name="daily-panel" class="slide-panel hidden">
-            <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Daily Rewards" class="panel-title" />
-                <ui:Button name="btn-close-daily" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-            </ui:VisualElement>
-            <ui:ScrollView name="daily-list" class="recipe-list"
-                           vertical-scroller-visibility="Auto"
-                           horizontal-scroller-visibility="Hidden">
-                <ui:Label text="Login Reward" class="recipe-name" />
-                <ui:Label name="daily-login-info" text="—" class="recipe-inputs" />
-                <ui:Button name="btn-claim-login" text="Claim" class="craft-btn" />
-                <ui:Label text="Daily Challenges" class="recipe-name" />
-                <ui:VisualElement name="daily-challenges-list" />
-            </ui:ScrollView>
         </ui:VisualElement>
 
         <!-- ═══ FREE REWARDS (REWARDED ADS) PANEL ═══ -->
@@ -282,20 +317,6 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
-        <!-- ═══ SITES / QUANTUM DOMAINS PANEL ═══ -->
-        <ui:VisualElement name="sites-panel" class="slide-panel hidden">
-            <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Quantum Domains" class="panel-title" />
-                <ui:Button name="btn-close-sites" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-            </ui:VisualElement>
-            <ui:VisualElement name="sites-balance" class="prestige-shop-balance">
-                <ui:Label name="sites-entropy" text="Entropy: 0" class="prestige-shop-currency-label" />
-            </ui:VisualElement>
-            <ui:ScrollView name="sites-list" class="recipe-list"
-                           vertical-scroller-visibility="Auto"
-                           horizontal-scroller-visibility="Hidden" />
-        </ui:VisualElement>
-
         <!-- ═══ WORLDS / TRACKS PANEL ═══ -->
         <ui:VisualElement name="worlds-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
@@ -310,30 +331,52 @@
                            horizontal-scroller-visibility="Hidden" />
         </ui:VisualElement>
 
-        <!-- ═══ PVP PANEL ═══ -->
-        <ui:VisualElement name="pvp-panel" class="slide-panel hidden">
+        <!-- ═══ TOURNAMENT PANEL (PvE: TournamentPanelController) ═══ -->
+        <ui:VisualElement name="pve-panel" class="slide-panel hidden">
             <ui:VisualElement name="panel-header" class="panel-header">
-                <ui:Label text="Weekly Competition" class="panel-title" />
-                <ui:Button name="btn-close-pvp" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
+                <ui:Label name="pve-title" text="Tournament" class="panel-title" />
+                <ui:Label name="pve-league-badge" text="" class="pve-league-badge hidden" />
+                <ui:Label name="pve-strings" text="" class="pve-strings hidden" />
+                <ui:Button name="btn-close-pve" text="" class="close-btn glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
             </ui:VisualElement>
 
-            <!-- Status section -->
-            <ui:VisualElement name="pvp-status-section" class="recipe-list">
-                <ui:Label name="pvp-state-label"    text="—"                    class="recipe-name" />
-                <ui:Label name="pvp-timer-label"    text=""                     class="recipe-inputs" />
-                <ui:Label name="pvp-lock-label"     text=""                     class="recipe-inputs" />
-                <ui:Button name="btn-enter-pvp"     text="Enter Competition"    class="craft-btn" />
-                <ui:Label name="pvp-completed-label" text=""                    class="recipe-inputs" />
+            <!-- Tabs (#500): the tournament itself, and the Strings shop. Named for MenuTabs / TutorialPulseResolver. -->
+            <ui:VisualElement name="pve-tabs" class="research-tabs menu-tabs">
+                <ui:Button name="pve-tab-tournament" text="Tournament" class="research-tab research-tab--selected" />
+                <ui:Button name="pve-tab-shop" text="Shop" class="research-tab" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="pve-page-tournament" class="tab-page pve-page">
+            <!-- Status. The banner shows the last result (promoted / stayed / moved down). -->
+            <ui:VisualElement name="pve-status-section" class="recipe-list">
+                <ui:Label name="pve-banner"        text=""                 class="pve-banner hidden" />
+                <ui:Label name="pve-state-label"   text="—"                class="recipe-name" />
+                <ui:Label name="pve-timer-label"   text=""                 class="recipe-inputs" />
+                <ui:Label name="pve-info-label"    text=""                 class="recipe-inputs" />
+                <ui:Button name="btn-pve-start"    text="Start tournament" class="craft-btn" />
+                <ui:Button name="btn-pve-retire"   text="Retire early"     class="craft-btn surge-offer__decline hidden" />
+                <ui:Label name="pve-result-label"  text=""                 class="recipe-inputs" />
+                <ui:Button name="btn-pve-claim"    text="Claim reward"     class="craft-btn hidden" />
             </ui:VisualElement>
 
             <!-- Leaderboard section -->
-            <ui:VisualElement name="pvp-leaderboard-section" class="panel-header">
+            <ui:VisualElement name="pve-leaderboard-section" class="panel-header">
                 <ui:Label text="Leaderboard" class="panel-title" />
-                <ui:Button name="btn-refresh-leaderboard" text="Refresh" class="craft-btn panel-header-action" />
+                <ui:Label name="pve-your-rank" text="" class="pve-your-rank" />
+                <ui:Button name="btn-pve-refresh" text="Refresh" class="craft-btn panel-header-action" />
             </ui:VisualElement>
-            <ui:ScrollView name="pvp-leaderboard-list" class="recipe-list"
+            <ui:ScrollView name="pve-leaderboard-list" class="recipe-list"
                            vertical-scroller-visibility="Auto"
                            horizontal-scroller-visibility="Hidden" />
+            </ui:VisualElement>
+
+            <!-- Strings shop (#500): the tournament track, then cosmetics. Filled by TournamentPanelController. -->
+            <ui:VisualElement name="pve-page-shop" class="tab-page pve-page hidden">
+                <ui:Label name="pve-shop-balance" text="" class="recipe-name pve-shop-balance" />
+                <ui:ScrollView name="pve-shop-list" class="recipe-list"
+                               vertical-scroller-visibility="Auto"
+                               horizontal-scroller-visibility="Hidden" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ═══ PREMIUM SHOP PANEL ═══ -->
@@ -387,6 +430,10 @@
                         <ui:Button name="btn-quality-high"   text="High"   class="quality-btn quality-btn--active" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label text="Building Progress Bars" class="settings-label" />
+                    <ui:Toggle name="toggle-progress-bars" value="true" class="settings-toggle" />
+                </ui:VisualElement>
                 <ui:Label text="NOTIFICATIONS" class="drawer-section-title" />
                 <ui:VisualElement class="settings-row">
                     <ui:Label text="Push Notifications" class="settings-label" />
@@ -403,9 +450,11 @@
                 </ui:VisualElement>
                 <ui:Label text="ACCOUNT" class="drawer-section-title" />
                 <ui:Label name="settings-account" text="" class="settings-account" />
+                <ui:Button name="btn-player-name" text="Choose a player name" class="drawer-nav-btn" />
                 <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
+                <ui:Button name="btn-discord"        text="Join our Discord" class="drawer-nav-btn hidden" />
                 <ui:Button name="btn-privacy-policy" text="Privacy Policy" class="drawer-nav-btn" />
                 <ui:Label text="ABOUT" class="drawer-section-title" />
                 <ui:Label name="settings-version" text="" class="settings-version" />
@@ -419,6 +468,8 @@
                           class="placement-label" />
                 <ui:Button name="btn-rotate-output" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Rotate" /><ui:Label text="Rotate" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-flip-building" class="rotate-output-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Flip" /><ui:Label text="Flip" picking-mode="Ignore" class="glyph-label" /></ui:Button>
+                <!-- Edit mode only (press and hold a placed building): delete it, after a confirmation. -->
+                <ui:Button name="btn-remove-building" class="rotate-output-btn remove-building-btn glyph-host glyph-host--row hidden"><MobileIdleBuilder.GlyphIcon icon="Trash" /><ui:Label text="Remove" picking-mode="Ignore" class="glyph-label" /></ui:Button>
                 <ui:Button name="btn-cancel-placement" text="Cancel" class="cancel-placement-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -433,18 +484,21 @@
         <!-- ═══ CONVEYOR PLACEMENT OVERLAY ═══ -->
         <ui:VisualElement name="conveyor-overlay" class="placement-overlay hidden" picking-mode="Ignore">
             <ui:VisualElement name="conveyor-bar" class="placement-bar">
-                <ui:Label name="conveyor-label" text="Tap a start, then an end (or the same cell for one belt)"
+                <ui:Label name="conveyor-label" text="Tap a start"
                           class="placement-label" />
                 <ui:Button name="btn-conveyor-rotate" text="" tooltip="Bend route" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Rotate" /></ui:Button>
                 <ui:Button name="btn-conveyor-confirm" text="" tooltip="Place" class="conveyor-icon-btn conveyor-confirm-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Check" /></ui:Button>
-                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Clear" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Close" /></ui:Button>
-                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Start from a new cell" class="conveyor-mode-btn hidden" />
+                <!-- Undo: removes the last traced point (name kept from the old Clear button). -->
+                <ui:Button name="btn-conveyor-cancel-candidate" text="" tooltip="Undo point" class="conveyor-icon-btn hidden glyph-host"><MobileIdleBuilder.GlyphIcon icon="Undo" /></ui:Button>
+                <!-- Up: the next tap lays an overpass (Overpasses research). -->
+                <ui:Button name="btn-conveyor-up" text="Up" tooltip="Raise the next stretch over belts" class="conveyor-mode-btn hidden" />
+                <ui:Button name="btn-conveyor-new-start" text="New" tooltip="Clear and start a new belt" class="conveyor-mode-btn hidden" />
                 <ui:Button name="btn-conveyor-mode" text="Create" tooltip="Toggle create / destroy" class="conveyor-mode-btn" />
                 <ui:Button name="btn-cancel-conveyor" text="Done" class="cancel-placement-btn" />
             </ui:VisualElement>
             <ui:VisualElement name="conveyor-legend" class="conveyor-legend" picking-mode="Ignore">
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--endpoint" picking-mode="Ignore" />
-                <ui:Label text="Start / end" class="conveyor-legend__text" picking-mode="Ignore" />
+                <ui:Label text="Points" class="conveyor-legend__text" picking-mode="Ignore" />
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--path" picking-mode="Ignore" />
                 <ui:Label text="Path preview" class="conveyor-legend__text" picking-mode="Ignore" />
                 <ui:VisualElement class="conveyor-legend__swatch conveyor-legend__swatch--guide" picking-mode="Ignore" />
@@ -609,7 +663,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- ═══ GAME UPDATE NOTICE (shown once per published gamedata.updatedUtc) ═══ -->
+        <!-- ═══ GAME UPDATE NOTICE (once per published gamedata.updatedUtc; also the what's-new notes, #502) ═══ -->
         <ui:VisualElement name="game-update-modal" class="idle-return-modal hidden"
                           style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
             <ui:VisualElement name="game-update-backdrop" class="idle-return-backdrop" />
@@ -617,7 +671,10 @@
                 <ui:VisualElement class="panel-header">
                     <ui:Label name="game-update-title" text="Game Updated" class="panel-title" />
                 </ui:VisualElement>
-                <ui:Label name="game-update-message" text="" class="game-update-message" />
+                <ui:ScrollView name="game-update-scroll" class="game-update-scroll"
+                               vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
+                    <ui:Label name="game-update-message" text="" class="game-update-message" />
+                </ui:ScrollView>
                 <ui:Button name="btn-game-update-ok" text="OK" class="craft-btn" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -746,9 +803,30 @@
                     <ui:Label name="confirm-prompt__title" text="Remove?" class="panel-title" />
                 </ui:VisualElement>
                 <ui:Label name="confirm-prompt__message" text="" class="game-update-message" />
+                <ui:Toggle name="confirm-prompt__checkbox" text="" value="false" class="confirm-prompt__checkbox hidden" />
                 <ui:VisualElement class="confirm-prompt__buttons">
                     <ui:Button name="confirm-prompt__cancel" text="Cancel" class="craft-btn confirm-prompt__btn" />
                     <ui:Button name="confirm-prompt__confirm" text="Remove" class="cancel-placement-btn confirm-prompt__btn" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ═══ PLAYER NAME (PlayerNamePromptController.cs) ═══
+             Public name for tournament leaderboards (PvE phase 1). Shown once after the tutorial, and from
+             Settings > Account. Saved to UGS player names; checked against game_config.name_filter_patterns. -->
+        <ui:VisualElement name="name-prompt" class="idle-return-modal name-prompt blocks-world-input hidden"
+                          style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 101;">
+            <ui:VisualElement class="idle-return-backdrop" />
+            <ui:VisualElement class="idle-return-card">
+                <ui:VisualElement class="panel-header">
+                    <ui:Label name="name-prompt__title" text="Choose your name" class="panel-title" />
+                </ui:VisualElement>
+                <ui:Label name="name-prompt__message" text="" class="game-update-message" />
+                <ui:TextField name="name-prompt__input" max-length="16" class="name-prompt__input" />
+                <ui:Label name="name-prompt__error" text="" class="name-prompt__error" />
+                <ui:VisualElement class="confirm-prompt__buttons">
+                    <ui:Button name="name-prompt__skip" text="Later" class="craft-btn confirm-prompt__btn surge-offer__decline" />
+                    <ui:Button name="name-prompt__save" text="Save" class="craft-btn confirm-prompt__btn" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

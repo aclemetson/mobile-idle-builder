@@ -19,6 +19,10 @@ namespace MobileIdleBuilder.Editor
         // in the manifest, which Google Play rejects ("APK is marked as debuggable").
         public static void BuildAndroidDevelopment() => BuildAndroidInternal(appBundle: true, devTooling: true);
 
+        // Same dev tooling as BuildAndroidDevelopment, as an APK for sideloading with
+        // `adb install -r` (device testing without a Play upload, e.g. notifications).
+        public static void BuildAndroidDevelopmentApk() => BuildAndroidInternal(appBundle: false, devTooling: true);
+
         public static void BuildWindows()
         {
             string version    = PlayerSettings.bundleVersion;
@@ -47,7 +51,13 @@ namespace MobileIdleBuilder.Editor
             }
         }
 
-        public static void BuildIOS()
+        public static void BuildIOS() => BuildIOSInternal(devTooling: false);
+
+        // TestFlight build: compiles in the dev console and dev-only tooling (DEVELOPMENT_BUILD), the iOS
+        // twin of BuildAndroidDevelopment. Without it the console was compiled out of every iOS build.
+        public static void BuildIOSDevelopment() => BuildIOSInternal(devTooling: true);
+
+        private static void BuildIOSInternal(bool devTooling)
         {
             string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "build", "iOS");
             Directory.CreateDirectory(outputDir);
@@ -61,7 +71,10 @@ namespace MobileIdleBuilder.Editor
                 locationPathName = outputDir,
                 target           = BuildTarget.iOS,
                 options          = BuildOptions.None,
+                // Same as Android: the symbol only, not BuildOptions.Development (no debuggable player).
+                extraScriptingDefines = devTooling ? new[] { "DEVELOPMENT_BUILD" } : null,
             };
+            GameLogger.Info($"iOS build extra defines: {(devTooling ? "DEVELOPMENT_BUILD" : "(none)")}");
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
             if (report.summary.result != BuildResult.Succeeded)
@@ -72,6 +85,9 @@ namespace MobileIdleBuilder.Editor
             else
             {
                 GameLogger.Info($"iOS Xcode project generated: {outputDir}");
+                // game-ci/unity-builder v6 (game-ci CLI) fails the job unless the log contains this exact text
+                // or its own "# Build results #" block, which a custom buildMethod never prints.
+                UnityEngine.Debug.Log("Build succeeded!");
                 EditorApplication.Exit(0);
             }
         }
@@ -87,6 +103,7 @@ namespace MobileIdleBuilder.Editor
             ConfigureAndroidKeystore();
 
             EditorUserBuildSettings.buildAppBundle = appBundle;
+            ConfigureAndroidDebugSymbols();
 
             // Define DEVELOPMENT_BUILD for compilation only (dev console + tooling) via
             // extraScriptingDefines, while keeping options = BuildOptions.None so the bundle is a
@@ -141,6 +158,19 @@ namespace MobileIdleBuilder.Editor
             {
                 GameLogger.Warning("APPLE_TEAM_ID not set; leaving iOS signing configuration unchanged.");
             }
+        }
+
+        // Writes <product>-<version>-v<code>.symbols.zip next to the build so IL2CPP crash frames can be
+        // symbolicated (Cloud Diagnostics, and Play Console's native crash view). Full = with line numbers.
+        // Zip only, not IncludeInBundle: full IL2CPP symbols inside the AAB would push it past Play's size
+        // check. CI keeps the zip as an artifact; see docs/runbooks/cloud-diagnostics-setup.md.
+        private static void ConfigureAndroidDebugSymbols()
+        {
+#if UNITY_ANDROID
+            UnityEditor.Android.UserBuildSettings.DebugSymbols.level = Unity.Android.Types.DebugSymbolLevel.Full;
+            UnityEditor.Android.UserBuildSettings.DebugSymbols.format = Unity.Android.Types.DebugSymbolFormat.Zip;
+            GameLogger.Info("Android debug symbols: Full, symbols.zip");
+#endif
         }
 
         private static void ConfigureAndroidKeystore()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace MobileIdleBuilder
@@ -72,7 +73,7 @@ namespace MobileIdleBuilder
                 // Preserve entropy sinks (Maxwell's Demon) — they're baked from the SubScene, and
                 // LoadGrid deliberately refuses to re-place them, so destroying one here would
                 // leave the grid with no Demon at all.
-                if (_em.HasComponent<EntropySinkTag>(e))
+                if (_em.HasComponent<DemonTag>(e))
                 {
                     GridOccupancy.Instance?.RegisterRect(gp.Cell.x, gp.Cell.y, fw, fh);
                     continue;
@@ -89,6 +90,15 @@ namespace MobileIdleBuilder
             {
                 var seg = _em.GetComponentData<ConveyorSegmentData>(e);
                 GridOccupancy.Instance?.UnregisterConveyor(seg.Cell.x, seg.Cell.y);
+                if (_em.HasComponent<BeltBridge>(e) && GridOccupancy.Instance != null)
+                {
+                    // The tiles under its overpass are open to buildings again.
+                    var b    = _em.GetComponentData<BeltBridge>(e);
+                    var up   = new Vector2Int(seg.Cell.x, seg.Cell.y);
+                    var down = new Vector2Int(b.Exit.x, b.Exit.y);
+                    if (OverpassRules.IsStraight(up, down))
+                        foreach (var c in OverpassRules.CrossedCells(up, down)) GridOccupancy.Instance.UnregisterOverpass(c.x, c.y);
+                }
                 conveyorVisualizer?.RemoveBelt(seg.Cell.x, seg.Cell.y);
                 _em.DestroyEntity(e);
             }
@@ -135,7 +145,7 @@ namespace MobileIdleBuilder
         /// mark the chains that end at the Demon for offline earnings.
         /// </summary>
         internal static bool IsRestorable(BuildingSO building) =>
-            building != null && !building.isEntropySink;
+            building != null && !building.IsFixedSink;
 
         /// <summary>
         /// A saved building that no longer fits anywhere near its old anchor (its footprint grew) is
@@ -219,6 +229,7 @@ namespace MobileIdleBuilder
             grid.buildings.Clear();
             grid.conveyors.Clear();
             grid.blockedOutputs = null;
+            grid.splits         = null;
 
             // --- Buildings ---
             // The entropy sink IS persisted (its entry mirrors the live baked entity, and the idle
@@ -269,12 +280,37 @@ namespace MobileIdleBuilder
                 segMap[e] = _em.GetComponentData<ConveyorSegmentData>(e);
             convEntities.Dispose();
 
+            // Belt splits: their branches start on a tile the split feeds (not a chain head), so each branch is
+            // also saved as a chain from its first tile; the splits themselves are re-applied after loading.
+            var cellToSeg   = new Dictionary<int2, Entity>(segMap.Count);
+            foreach (var kv in segMap) cellToSeg[kv.Value.Cell] = kv.Key;
+            var chainStarts = new List<Entity>();
+            var splitList   = new List<BeltSplitData>();
             foreach (var kv in segMap)
             {
-                if (!kv.Value.IsChainHead) continue;
+                if (kv.Value.IsChainHead) chainStarts.Add(kv.Key);
+                if (!_em.HasComponent<BeltSplit>(kv.Key)) continue;
+                var split = _em.GetComponentData<BeltSplit>(kv.Key);
+                splitList.Add(new BeltSplitData
+                {
+                    X = kv.Value.Cell.x, Y = kv.Value.Cell.y, Mask = split.Mask,
+                    W0 = split.W0, W1 = split.W1, W2 = split.W2, W3 = split.W3,
+                });
+                for (int d = 0; d < 4; d++)
+                {
+                    if (!BeltSplitRules.Has(split.Mask, d)) continue;
+                    var c = kv.Value.Cell + (d == 0 ? new int2(0, 1) : d == 1 ? new int2(1, 0) : d == 2 ? new int2(0, -1) : new int2(-1, 0));
+                    if (cellToSeg.TryGetValue(c, out var branch) && branch != kv.Value.NextSegment
+                        && !segMap[branch].IsChainHead && !chainStarts.Contains(branch))
+                        chainStarts.Add(branch);
+                }
+            }
+            grid.splits = BeltSplitRules.Flatten(splitList);
 
+            foreach (var start in chainStarts)
+            {
                 var cells = new List<int>();
-                var cur   = kv.Key;
+                var cur   = start;
                 int guard = 0;
                 while (cur != Entity.Null && segMap.TryGetValue(cur, out var seg) && guard++ < 10000)
                 {
@@ -285,8 +321,8 @@ namespace MobileIdleBuilder
 
                 var csd = new ConveyorSaveData { cells = cells.ToArray() };
                 // A lone segment has no neighbours to derive facing from on reload, so persist its
-                // chosen direction (kv.Value is the chain head = the only segment here).
-                if (cells.Count == 2) csd.singleDir = kv.Value.ExitDir;
+                // chosen direction (the chain's first segment = the only segment here).
+                if (cells.Count == 2) csd.singleDir = segMap[start].ExitDir;
                 grid.conveyors.Add(csd);
             }
 
@@ -325,19 +361,71 @@ namespace MobileIdleBuilder
 
         /// <summary>Called by ECSLoadBridge after ECS entities are confirmed present.</summary>
         /// <param name="forceApply">If true, bypasses the IsNewGame guard (used by tutorial skip on a fresh session).</param>
+        /// <summary>
+        /// Places the active site's starting buildings (SiteSO.startingBuildings, e.g. Chemistry's Calorimeter
+        /// in the centre) once per run: <see cref="GridSaveData.startersPlaced"/> records it, so a starter the
+        /// player moved or demolished is not put back. Prestige resets the grids, so each run gets them again.
+        /// </summary>
+        private void PlaceStartingBuildings(SaveData save, GridSaveData grid)
+        {
+            if (save == null || grid == null || grid.startersPlaced || !_ecsReady) return;
+            var sites = Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites;
+            int idx   = save.currentRun?.activeSiteIndex ?? 0;
+            var site  = sites != null && idx >= 0 && idx < sites.Length ? sites[idx] : null;
+            grid.startersPlaced = true;
+            if (site?.startingBuildings == null || site.startingBuildings.Count == 0) return;
+
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer == null || placementController?.availableBuildings == null) return;
+            foreach (var sb in site.startingBuildings)
+            {
+                var entry = System.Array.Find(placementController.availableBuildings,
+                                              e => e.building != null && e.building.id == sb.buildingId);
+                if (entry.building == null)
+                {
+                    GameLogger.Warning($"[GridSave] Starting building '{sb.buildingId}' on '{site.id}' not found.");
+                    continue;
+                }
+                if (!placer.PlaceBuilding(sb.x, sb.y, entry.building, null, null, sb.rotation))
+                    GameLogger.Warning($"[GridSave] Could not place starting building '{sb.buildingId}' at ({sb.x},{sb.y}).");
+            }
+            FindAnyObjectByType<BuildingVisualizer>()?.Refresh();
+            GameLogger.Info($"[GridSave] Placed {site.startingBuildings.Count} starting building(s) on '{site.id}'.");
+        }
+
         public void LoadGrid(bool forceApply = false)
         {
             var save = SaveManager.Instance?.Current;
+
+            // World rules first (stream belts, Demon on/off), so the belts restored below are built
+            // for the world they belong to. Runs on scene load and every site/world switch.
+            if (save != null && _ecsReady)
+            {
+                WorldRules.Apply(_em, WorldRules.StreamTransport(save), FindAnyObjectByType<BuildingVisualizer>(),
+                    WorldRules.ActiveWorld(save)?.id);
+                // Each world runs its own tutorial; the Physics one never runs in Chemistry.
+                TutorialFlows.Activate(_em, save, WorldRules.ActiveWorld(save));
+            }
+
             var grid = EnsureActiveGrid(save);
             if (grid == null) return;
             if (!forceApply && SaveManager.Instance.IsNewGame) return;
+
+            // Belt Splitter buildings became belt splits (2026-11-24): turn any still saved into split tiles.
+            int convertedSplitters = SplitterMigration.Convert(grid);
+            if (convertedSplitters > 0)
+                GameLogger.Info($"[GridSaveService] Converted {convertedSplitters} Belt Splitter building(s) into belt splits.");
 
             bool hasBuildings = grid.buildings?.Count > 0;
             bool hasConveyors = grid.conveyors?.Count > 0;
             bool hasFields    = grid.fields?.Count > 0;
             // Fields must restore even with no buildings/conveyors — a build site can hold a
             // generated field layout that the player has not built on yet.
-            if (!hasBuildings && !hasConveyors && !hasFields) return;
+            if (!hasBuildings && !hasConveyors && !hasFields)
+            {
+                PlaceStartingBuildings(save, grid);
+                return;
+            }
 
             var buildingLookup = new Dictionary<int, BuildingPlacementController.BuildingEntry>();
             if (placementController?.availableBuildings != null)
@@ -460,6 +548,10 @@ namespace MobileIdleBuilder
                         blockedCells.Add(new Vector2Int(grid.blockedOutputs[i], grid.blockedOutputs[i + 1]));
                     conveyorPlacer.ApplyBlockedOutputs(blockedCells);
                 }
+
+                // Belt splits last: every branch belt exists now, so the split links into all of them.
+                if (grid.splits != null && grid.splits.Length >= BeltSplitRules.Stride)
+                    conveyorPlacer.ApplySplits(BeltSplitRules.Parse(grid.splits));
             }
 
             // --- Restore fields ---
@@ -477,6 +569,7 @@ namespace MobileIdleBuilder
             else
                 GameLogger.Debug($"[Prime] skipped — ecsReady={_ecsReady} hasConveyors={hasConveyors} forceApply={forceApply}");
 
+            PlaceStartingBuildings(save, grid);
             RebuildIdleSnapshot(save);
         }
 
@@ -536,7 +629,7 @@ namespace MobileIdleBuilder
             float megaSpeedMult = 1f + (MegastructureService.Instance?.GetSpeedBonus() ?? 0f);
             float boostMult     = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
             float globalRate    = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f)
-                                  * boostMult * megaSpeedMult;
+                                  * boostMult * megaSpeedMult * WorldRules.WorldMultipliers(WorldRules.ActiveWorld(save)?.id).speed;
 
             int primed = BeltPrimer.PrimeAllChains(_em, _conveyorQuery, _buildingQuery, resolve, globalRate);
             if (primed > 0)
@@ -588,7 +681,7 @@ namespace MobileIdleBuilder
                 buildingLookup.TryGetValue(id, out var e) ? e.building.baseOutputRate : 0f;
 
             float getItemSellValue(int itemId) =>
-                ItemDatabase.GetStatic(itemId)?.baseSellValue ?? 0f;
+                ItemStars.StarredBase(ItemDatabase.GetStatic(itemId));   // stars raise offline chains too
 
             // Recipe data for offline synthesizer simulation. Only recipe-crafting buildings qualify —
             // collectors (field taps) and entropy sinks are handled by the collector/sink paths instead.
@@ -625,14 +718,18 @@ namespace MobileIdleBuilder
                 };
             }
 
-            float boostMult = PremiumShopService.Instance?.GetSpeedBoostMultiplier() ?? 1f;
+            // No speed-burst factor here: the snapshot is the unboosted rate and OfflineCollectionService
+            // weights the time away by how much of it the burst actually covered.
             // Megastructure global bonuses fold into the idle calc: speed onto the rate multiplier,
             // output onto each source's output multiplier (alongside the per-building manager bonus).
             float megaSpeedMult  = 1f + (MegastructureService.Instance?.GetSpeedBonus()  ?? 0f);
             float megaOutputMult = 1f + (MegastructureService.Instance?.GetOutputBonus() ?? 0f);
             // Quantum Yield (prestige output) composes the same way it does live in ProductionSystem.
             if (save.prestigeOutputMultiplier > 0f) megaOutputMult *= save.prestigeOutputMultiplier;
-            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * boostMult * megaSpeedMult;
+            // The live world's shop track (Fission Yield, Neutron Economy...), as ProductionSystem reads it.
+            var (worldSpeed, worldOutput) = WorldRules.WorldMultipliers(WorldRules.ActiveWorld(save)?.id);
+            megaOutputMult *= worldOutput;
+            float speedMult = (save.prestigeSpeedMultiplier > 0f ? save.prestigeSpeedMultiplier : 1f) * megaSpeedMult * worldSpeed;
 
             int activeSite = save.currentRun?.activeSiteIndex ?? 0;
             float getManagerOutputMultiplier(BuildingSaveData bsd)
@@ -640,6 +737,31 @@ namespace MobileIdleBuilder
                 if (bsd?.position == null || bsd.position.Length < 2) return megaOutputMult;
                 int posKey = ManagerService.EncodePos(bsd.position[0], bsd.position[1]);
                 return (ManagerService.Instance?.GetIdleOutputMultiplierAt(activeSite, posKey) ?? 1f) * megaOutputMult;
+            }
+
+            // Stream worlds (Chemistry) produce along ordered streams, not producer-to-consumer belts.
+            if (WorldRules.StreamTransport(save))
+            {
+                save.idleSnapshot = StreamIdleAnalyzer.BuildSnapshot(
+                    grid,
+                    isCollector,
+                    isEntropySink,
+                    getFootprint,
+                    getOutputItemId,
+                    bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
+                        ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f,
+                    getItemSellValue,
+                    getRecipeInfo,
+                    id => buildingLookup.TryGetValue(id, out var sp) && sp.building.isSpring
+                        ? sp.building.streamFlow * WorldRules.SpringFlowMultiplier(WorldRules.ActiveWorld(save)?.id) : 0f,
+                    id => buildingLookup.TryGetValue(id, out var fd) ? fd.building.flowDraw : 0f,
+                    speedMult,
+                    DateTime.UtcNow.ToString("O"),
+                    SurplusSale.CurrentFraction(),
+                    getManagerOutputMultiplier);
+                MirrorActiveSiteSnapshot(save);
+                GameLogger.Debug($"[Idle] RebuildIdleSnapshot (streams) — chains={save.idleSnapshot?.chains?.Count ?? 0}");
+                return;
             }
 
             save.idleSnapshot = IdleGraphAnalyzer.BuildSnapshot(
@@ -656,9 +778,9 @@ namespace MobileIdleBuilder
                 getRecipeInfo,
                 SurplusSale.CurrentFraction(),
                 id => buildingLookup.TryGetValue(id, out var fe) && fe.building.isItemFilter,
-                id => buildingLookup.TryGetValue(id, out var fs) && fs.building.isSplitter,
                 bsd => buildingLookup.TryGetValue(bsd.buildingId, out var fc)
-                    ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f);
+                    ? BuildingSO.CollectorRateForLevel(fc.building, bsd.level) : 0f,
+                bsd => OutputPorts(bsd, buildingLookup.TryGetValue(bsd.buildingId, out var fo) ? fo.building : null));
 
             // Mirror into the per-site snapshot list so inactive sites keep producing offline.
             // The active site's entry is always kept current here; inactive entries persist from
@@ -667,6 +789,30 @@ namespace MobileIdleBuilder
 
             int builtChains = save.idleSnapshot?.chains?.Count ?? 0;
             GameLogger.Debug($"[Idle] RebuildIdleSnapshot — buildings={grid.buildings?.Count ?? 0} conveyors={grid.conveyors?.Count ?? 0} chains={builtChains}");
+        }
+
+        /// <summary>A saved building's output ports on the grid: (cell, facing), as BuildingPlacer places them.</summary>
+        internal static IEnumerable<(UnityEngine.Vector2Int cell, int facing)> OutputPorts(BuildingSaveData bsd, BuildingSO building)
+        {
+            if (bsd?.position == null || bsd.position.Length < 2) yield break;
+            // A field harvester has no port layout: BuildingPlacer gives it one output port on its own cell,
+            // facing its chosen output direction (#535: offline must know which belt a harvester feeds). Only for
+            // buildings without ports: a save older than the field reads 0 for every building.
+            if (building != null && (building.ports == null || building.ports.Length == 0))
+            {
+                if (building.placementRule == PlacementRule.MustBeOnField && bsd.outputDirection >= 0 && bsd.outputDirection < 4)
+                    yield return (new UnityEngine.Vector2Int(bsd.position[0], bsd.position[1]), bsd.outputDirection);
+                yield break;
+            }
+            if (building?.ports == null) yield break;
+            var baseFootprint = new UnityEngine.Vector2Int(UnityEngine.Mathf.Max(1, building.footprint.x),
+                                                           UnityEngine.Mathf.Max(1, building.footprint.y));
+            foreach (var port in building.ports)
+            {
+                if (port.portType != PortType.Output) continue;
+                var (rel, dir) = PortUtils.TransformPort(port, baseFootprint, bsd.flipped, bsd.rotation);
+                yield return (new UnityEngine.Vector2Int(bsd.position[0] + rel.x, bsd.position[1] + rel.y), (int)dir);
+            }
         }
 
         /// <summary>

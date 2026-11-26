@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_metallurgy
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     An extraordinary thermal insulator. Used in Mars rover heat shields and as structural
     fill in megastructures."
   codexUnlocked: 0
-  baseSellValue: 2570000
+  baseSellValue: 241000000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

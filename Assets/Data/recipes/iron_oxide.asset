@@ -16,26 +16,24 @@ MonoBehaviour:
   displayName: Iron Oxide
   methodLabel: 
   recipeId: 35
-  tier: 3
-  category: 5
+  tier: 4
+  category: 6
   inputs:
-  - item: {fileID: 11400000, guid: 9ab6b2ff36ba7bb44b7492230edc55d2, type: 2}
-    quantity: 4
-  - item: {fileID: 11400000, guid: 029e7a65cdb493b44bdde7f91055319a, type: 2}
-    quantity: 6
+  - item: {fileID: 11400000, guid: a5e38be4f3eb61e4aa12785df059e18a, type: 2}
+    quantity: 2
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: ef6e4abec0fbe844292c2d7f1b3f91bc, type: 2}
   outputQuantity: 1
   byproducts: []
-  baseCraftTime: 200
+  baseCraftTime: 90
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 1500
+  fixedPowerCostEV: 0
   validBuildings:
-  - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
+  - {fileID: 11400000, guid: d204cf5b07a4a09479660d498daf5e79, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: 8429f43fc7245734e98b5d575119b56e, type: 2}
+  requiredResearch: {fileID: 11400000, guid: d972fab1d135c7f4694979b3619e3406, type: 2}
   unlocksResearch: {fileID: 0}
-  isSimplified: 0
-  simplificationNote: 
+  isSimplified: 1
+  simplificationNote: roasted ore

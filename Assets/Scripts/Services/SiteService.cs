@@ -78,7 +78,7 @@ namespace MobileIdleBuilder
             if (index == 0) return true;                                  // origin implicit
             if (save == null || sites == null || index < 0 || index >= sites.Count) return false;
             var site = sites[index];
-            return site != null && save.unlockedSites != null && save.unlockedSites.Contains(site.id);
+            return site != null && !site.retired && save.unlockedSites != null && save.unlockedSites.Contains(site.id);
         }
 
         public bool CanUnlock(int index)
@@ -99,7 +99,7 @@ namespace MobileIdleBuilder
         {
             int index = IndexOf(siteId);
             var site  = GetSite(index);
-            if (site == null) return false;
+            if (site == null || site.retired) return false;
             if (IsUnlocked(index)) return false;
 
             var save = SaveManager.Instance?.Current;

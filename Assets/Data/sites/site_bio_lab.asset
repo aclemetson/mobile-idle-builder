@@ -15,6 +15,7 @@ MonoBehaviour:
   id: site_bio_lab
   displayName: Biology Lab
   unlockCost: 0
+  retired: 0
   fieldOverrides:
   - field: {fileID: 11400000, guid: fdbea0cd763851c40b04eb4df78f4999, type: 2}
     densityMultiplier: 0
@@ -28,3 +29,6 @@ MonoBehaviour:
     densityMultiplier: 2
   - field: {fileID: 11400000, guid: 088707f7d1806ef468a7d7be79f3eb92, type: 2}
     densityMultiplier: 2
+  - field: {fileID: 11400000, guid: d1d346ab0450fef4a8d43a0bf196e17a, type: 2}
+    densityMultiplier: 2
+  startingBuildings: []

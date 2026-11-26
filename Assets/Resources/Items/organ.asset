@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Several tissues combined into a functional unit \u2014 a heart, a
     leaf, a liver. The machinery of a body."
   codexUnlocked: 0
-  baseSellValue: 658000000
+  baseSellValue: 72500000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

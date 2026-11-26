@@ -14,8 +14,9 @@ namespace MobileIdleBuilder
     public class HUDBuildingInspectorSubController : MonoBehaviour
     {
         // Research ids that gate the per-building capacity upgrades (must match game_data.json research ids).
+        // Surplus Containment unlocks both capacity tracks (Feedstock Buffers was merged into it, 2026-11-19).
         private const string OutputCapacityResearchId = "surplus_containment";
-        private const string InputCapacityResearchId  = "feedstock_buffers";
+        private const string InputCapacityResearchId  = "surplus_containment";
 
         private VisualElement _buildingInspectorPanel;
         private VisualElement _inspectorStatic;    // pinned above the scrolls: progress bar + one line of buffer chips
@@ -230,17 +231,27 @@ namespace MobileIdleBuilder
             if (wasOpen) Hidden?.Invoke();
         }
 
+        // Reuses the inspector's elements across the 0.5s refreshes instead of rebuilding them (#282).
+        private readonly ElementReuse _ui = new();
+
+        /// <summary>Elements the last refresh had to create (0 when the layout did not change). For tests.</summary>
+        internal int LastRefreshCreated => _ui.Created;
+
         private void RefreshInspectorContent()
         {
             if (_inspectorStatic == null || _inspectorRecipes == null || _inspectorUpgrades == null || !_ecsReady) return;
             if (_inspectorEntity == Entity.Null) return;
             if (!_em.Exists(_inspectorEntity)) { HideBuildingInspector(); return; }
 
-            _inspectorStatic.Clear();
-            _inspectorInfo?.Clear();
-            _inspectorRecipes.Clear();
-            _inspectorUpgrades.Clear();
-            _craftProgressFill = null; // dropped by the Clear() above; re-created if this building crafts
+            // The build below asks _ui for each element; End drops whatever it no longer asked for.
+            _ui.Begin(_inspectorStatic, _inspectorInfo, _inspectorRecipes, _inspectorUpgrades);
+            _craftProgressFill = null; // re-taken below if this building crafts
+            try { BuildInspectorContent(); }
+            finally { _ui.End(); }
+        }
+
+        private void BuildInspectorContent()
+        {
             // Clear any radius visual from a previously-selected generator; re-shown below if this one is a source.
             ClearSelectedPowerVisual();
 
@@ -325,52 +336,55 @@ namespace MobileIdleBuilder
                 var stage    = _em.GetBuffer<CraftStagingSlot>(_inspectorEntity, isReadOnly: true);
                 if (recipeIn.Length > 0)
                 {
-                    var craftLine = new VisualElement();
+                    var craftLine = _ui.Take<VisualElement>(_inspectorStatic, "craft-line");
                     craftLine.AddToClassList("inspector-buffers");
-                    var group = new VisualElement();
+                    var group = _ui.Take<VisualElement>(craftLine, "group");
                     group.AddToClassList("inspector-buffer-group");
-                    var title = new Label("CRAFT");
-                    title.AddToClassList("inspector-buffer-label");
-                    group.Add(title);
+                    _ui.Label(group, "title", "CRAFT", "inspector-buffer-label");
                     for (int i = 0; i < recipeIn.Length; i++)
                     {
                         int have = CraftStaging.Count(stage, recipeIn[i].ItemID);
-                        group.Add(MakeItemChip(recipeIn[i].ItemID, have, StagedCountText(have, recipeIn[i].Quantity)));
+                        MakeItemChip(group, recipeIn[i].ItemID, have, StagedCountText(have, recipeIn[i].Quantity));
                     }
-                    craftLine.Add(group);
-                    _inspectorStatic.Add(craftLine);
                 }
             }
 
-            var bufferLine = new VisualElement();
-            bufferLine.AddToClassList("inspector-buffers");
-
+            List<int> expectedIn = null;
+            bool showIn = false;
             if (_em.HasBuffer<BuildingInputSlot>(_inspectorEntity))
             {
-                var buf      = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
-                var expected = RecipeInputIds(_inspectorEntity);
-                if (ShowInputBufferSection(buf.Length, expected.Count, _em.HasComponent<EntropySinkTag>(_inspectorEntity)))
+                expectedIn = RecipeInputIds(_inspectorEntity);
+                showIn = ShowInputBufferSection(_em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true).Length,
+                                                expectedIn.Count, _em.HasComponent<EntropySinkTag>(_inspectorEntity));
+            }
+            bool showOut = _em.HasBuffer<BuildingOutputSlot>(_inspectorEntity);
+
+            if (showIn || showOut)
+            {
+                var bufferLine = _ui.Take<VisualElement>(_inspectorStatic, "buffer-line");
+                bufferLine.AddToClassList("inspector-buffers");
+
+                if (showIn)
                 {
+                    var buf      = _em.GetBuffer<BuildingInputSlot>(_inspectorEntity, isReadOnly: true);
                     var contents = new List<(int itemId, int quantity)>(buf.Length);
                     for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
                     var captured = _inspectorEntity;
-                    bufferLine.Add(MakeBufferGroup("IN", StableBufferRows(expected, contents), contents.Count > 0,
-                        () => { if (EmptyInputToInventory(captured)) _hud?.ShowNotification("📥", EmptiedMessage(input: true)); }));
+                    MakeBufferGroup(bufferLine, "in", "IN", StableBufferRows(expectedIn, contents), contents.Count > 0,
+                        () => { if (EmptyInputToInventory(captured)) _hud?.ShowNotification("📥", EmptiedMessage(input: true)); });
+                }
+
+                if (showOut)
+                {
+                    var buf      = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
+                    var contents = new List<(int itemId, int quantity)>(buf.Length);
+                    for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
+                    var captured = _inspectorEntity;
+                    MakeBufferGroup(bufferLine, "out", "OUT", StableBufferRows(RecipeOutputIds(_inspectorEntity), contents),
+                        contents.Count > 0,
+                        () => { if (EmptyOutputToInventory(captured)) _hud?.ShowNotification("📦", EmptiedMessage(input: false)); });
                 }
             }
-
-            if (_em.HasBuffer<BuildingOutputSlot>(_inspectorEntity))
-            {
-                var buf      = _em.GetBuffer<BuildingOutputSlot>(_inspectorEntity, isReadOnly: true);
-                var contents = new List<(int itemId, int quantity)>(buf.Length);
-                for (int i = 0; i < buf.Length; i++) contents.Add((buf[i].ItemID, buf[i].Quantity));
-                var captured = _inspectorEntity;
-                bufferLine.Add(MakeBufferGroup("OUT", StableBufferRows(RecipeOutputIds(_inspectorEntity), contents),
-                    contents.Count > 0,
-                    () => { if (EmptyOutputToInventory(captured)) _hud?.ShowNotification("📦", EmptiedMessage(input: false)); }));
-            }
-
-            if (bufferLine.childCount > 0) _inspectorStatic.Add(bufferLine);
 
             if (_em.HasBuffer<RecipeOutputSlot>(_inspectorEntity))
             {
@@ -398,7 +412,7 @@ namespace MobileIdleBuilder
             if (_em.HasComponent<RecipeProcessData>(_inspectorEntity))
             {
                 float bonus = _em.GetComponentData<RecipeProcessData>(_inspectorEntity).ByproductEntropy;
-                if (bonus > 0f) AddInspectorRow(_inspectorInfo, "  " + HUDController.EscapeBonusText(bonus));
+                if (bonus > 0f) AddInspectorRow(_inspectorInfo, "  " + HudText.EscapeBonusText(bonus));
             }
 
             // buildingSO fetched above (before the power-source early-out).
@@ -423,13 +437,6 @@ namespace MobileIdleBuilder
                 {
                     AddFilterSection(_inspectorEntity);
                 }
-                else if (buildingSO.isSplitter)
-                {
-                    AddInspectorRow(_inspectorRecipes, "—— Splitting ——");
-                    AddInspectorRow(_inspectorRecipes,
-                        "Every item goes out the next side in turn, so the belts share it evenly. " +
-                        "A side with no belt, or a full one, is skipped.");
-                }
                 else if (buildingSO.supportedRecipes != null)
                 {
                     // Only offer recipes whose gating research has been purchased. Research-gating
@@ -448,6 +455,7 @@ namespace MobileIdleBuilder
                     {
                         SetBuildingRecipe(_inspectorEntity, available[0]);
                         // Re-render with the recipe applied; the RecipeID check keeps this from recursing.
+                        // (A nested refresh: it begins and ends its own pass; the outer End then has nothing left.)
                         if (_em.GetComponentData<RecipeProcessData>(_inspectorEntity).RecipeID >= 0)
                         {
                             RefreshInspectorContent();
@@ -469,7 +477,7 @@ namespace MobileIdleBuilder
                         foreach (var r in available)
                         {
                             var captured = r;
-                            var btn = MakeRecipeButton(r, SharesOutput(available, r));
+                            var btn = MakeRecipeButton(_inspectorRecipes, r, SharesOutput(available, r));
                             // Routed from the list: a Button's own Clickable consumes the
                             // pointer-down before any manipulator added later. See ListTapRouter.
                             ListTapRouter.Register(_inspectorRecipes, btn, () =>
@@ -477,7 +485,6 @@ namespace MobileIdleBuilder
                                 SetBuildingRecipe(_inspectorEntity, captured);
                                 RefreshInspectorContent();
                             });
-                            _inspectorRecipes?.Add(btn);
                         }
                     }
                 }
@@ -521,16 +528,17 @@ namespace MobileIdleBuilder
                 if (!isHere && !svc.IsHired(mgr.id)) continue;
                 anyRow = true;
 
-                var row = new VisualElement();
+                var row = _ui.Take<VisualElement>(_inspectorUpgrades, "manager-row");
                 row.AddToClassList("upgrade-row");
 
                 int   stars    = svc.GetStars(mgr.id);
                 float effValue = svc.EffectiveBonusValue(mgr.id);
-                var name = new Label($"{mgr.displayName} {stars}★  ({ManagerBonusText(mgr.bonusType, effValue)})");
-                name.AddToClassList("upgrade-row-name");
-                row.Add(name);
+                _ui.Label(row, "name", $"{mgr.displayName} {stars}★  ({ManagerBonusText(mgr.bonusType, effValue)})",
+                          "upgrade-row-name");
 
-                var btn = new Button { text = isHere ? "Unassign" : "Assign" };
+                var btn = _ui.Take<Button>(row, "assign");
+                string assignText = isHere ? "Unassign" : "Assign";
+                if (btn.text != assignText) btn.text = assignText;
                 btn.AddToClassList("craft-btn");
                 var capturedId = mgr.id;
                 ListTapRouter.Register(_inspectorUpgrades, btn, () =>
@@ -539,8 +547,6 @@ namespace MobileIdleBuilder
                     else        svc.Assign(capturedId, siteIndex, posKey);
                     RefreshInspectorContent();
                 });
-                row.Add(btn);
-                _inspectorUpgrades?.Add(row);
             }
 
             if (!anyRow)
@@ -606,7 +612,29 @@ namespace MobileIdleBuilder
                 // A power problem stops the building, so it stays in view instead of hiding behind (i).
                 if (statusText != "Powered") AddInspectorRow(_inspectorStatic, $"⚡ {statusText}");
             }
+
+            // Streams (Chemistry): a Spring's flow, or the share a bank building gets from its stream.
+            if (so.isSpring)
+            {
+                AddInspectorRow(_inspectorInfo, "—— Stream ——");
+                AddInspectorRow(_inspectorInfo, $"Flow: {so.streamFlow * WorldRules.SpringFlowMultiplier(WorldRules.CurrentWorldId):0.#} L/s, shared by the buildings downstream, nearest first");
+            }
+            else if (_em.HasComponent<StreamStatus>(_inspectorEntity))
+            {
+                var st   = _em.GetComponentData<StreamStatus>(_inspectorEntity);
+                string s = StreamStatusText(st);
+                AddInspectorRow(_inspectorInfo, "—— Stream ——");
+                AddInspectorRow(_inspectorInfo, $"Draw: {so.flowDraw:0.#} L/s");
+                AddInspectorRow(_inspectorInfo, $"Status: {s}");
+                if (st.OnStream == 0 || st.Ratio < 0.999f) AddInspectorRow(_inspectorStatic, $"💧 {s}");
+            }
         }
+
+        internal static string StreamStatusText(StreamStatus st) =>
+            st.OnStream == 0  ? "Not beside a stream"
+            : st.Ratio <= 0f  ? "Dry: the stream ran out of water upstream"
+            : st.Ratio < 0.999f ? $"Short of water, {st.Ratio * 100f:0}% speed"
+            : "Flowing";
 
         // ── Upgrade UI ────────────────────────────────────────────────────────
 
@@ -689,44 +717,34 @@ namespace MobileIdleBuilder
         {
             bool canUpgrade = !isMaxed && nextDesc != null;
 
-            var row = new VisualElement();
+            var row = _ui.Take<VisualElement>(_inspectorUpgrades, "upgrade-row");
             row.AddToClassList("upgrade-row");
             if (isMaxed) row.AddToClassList("upgrade-row--maxed");
 
-            var header = new VisualElement();
+            var header = _ui.Take<VisualElement>(row, "header");
             header.AddToClassList("upgrade-row-header");
-            var nameLabel  = new Label(title);
-            nameLabel.AddToClassList("upgrade-row-name");
-            var levelLabel = new Label(isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}");
-            levelLabel.AddToClassList("upgrade-row-level");
-            header.Add(nameLabel);
-            header.Add(levelLabel);
-            row.Add(header);
+            _ui.Label(header, "name", title, "upgrade-row-name");
+            _ui.Label(header, "level", isMaxed ? $"Lv {currentLevel} / {maxLevel}  MAX" : $"Lv {currentLevel} / {maxLevel}",
+                      "upgrade-row-level");
 
-            var desc = new Label(canUpgrade ? nextDesc : "Maximum level reached");
-            desc.AddToClassList("upgrade-row-desc");
-            row.Add(desc);
+            _ui.Label(row, "desc", canUpgrade ? nextDesc : "Maximum level reached", "upgrade-row-desc");
 
             bool canAfford = canUpgrade && GetBaseCurrency() >= nextCost;
 
-            var footer = new VisualElement();
+            var footer = _ui.Take<VisualElement>(row, "footer");
             footer.AddToClassList("upgrade-row-footer");
 
-            var costLabel = new Label(canUpgrade ? $"{nextCost:N0} e" : "—");
-            costLabel.AddToClassList("upgrade-row-cost");
+            var costLabel = _ui.Label(footer, "cost", canUpgrade ? $"{nextCost:N0} e" : "—", "upgrade-row-cost");
             if (canUpgrade && !canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
-            footer.Add(costLabel);
 
-            var btn = new Button { text = canUpgrade ? "Upgrade" : "Maxed" };
+            var btn = _ui.Take<Button>(footer, "buy");
+            string btnText = canUpgrade ? "Upgrade" : "Maxed";
+            if (btn.text != btnText) btn.text = btnText;
             btn.AddToClassList("craft-btn");
             btn.SetEnabled(canAfford);
             // Routed from the scroll: on touch the ScrollView swallows a Button's own Clickable, and the
             // 0.5s rebuild would drop a press held across it. See ListTapRouter.
             ListTapRouter.Register(_inspectorUpgrades, btn, onBuy);
-            footer.Add(btn);
-
-            row.Add(footer);
-            _inspectorUpgrades?.Add(row);
         }
 
         /// <summary>
@@ -920,13 +938,12 @@ namespace MobileIdleBuilder
             {
                 if (r == null) continue;
                 var captured = r;
-                var btn = MakeRecipeButton(r, SharesOutput(relevantRecipes, r));
+                var btn = MakeRecipeButton(_inspectorRecipes, r, SharesOutput(relevantRecipes, r));
                 ListTapRouter.Register(_inspectorRecipes, btn, () =>
                 {
                     SetBuildingRecipe(entity, captured);
                     RefreshInspectorContent();
                 });
-                _inspectorRecipes?.Add(btn);
             }
         }
 
@@ -945,31 +962,38 @@ namespace MobileIdleBuilder
         /// A picker button named after the recipe's product. When several buttons make the same product
         /// (<paramref name="withMethodLine"/>), a smaller second line says the building, inputs and method.
         /// </summary>
-        private static Button MakeRecipeButton(RecipeSO r, bool withMethodLine)
+        private Button MakeRecipeButton(VisualElement parent, RecipeSO r, bool withMethodLine)
         {
             string name = r.outputItem?.displayName ?? r.displayName ?? r.name;
-            var btn = new Button();
+            var btn = _ui.Take<Button>(parent, withMethodLine ? "recipe-2line" : "recipe");
             btn.AddToClassList("craft-btn");
-            var icon = HUDController.MakeItemIcon(r.outputItem?.icon, "item-icon");
+            _ui.Own(btn);   // drops an icon left from a recipe that had one
+            ItemIcon(btn, r.outputItem?.icon);
 
             if (!withMethodLine)
             {
-                btn.text = name;
-                if (icon != null) btn.Insert(0, icon);
+                if (btn.text != name) btn.text = name;
                 return btn;
             }
 
             // Two lines: the button's own text can't hold a second label, so lay out icon + a text column.
             btn.AddToClassList("craft-btn--with-method");
-            if (icon != null) btn.Add(icon);
-            var column = new VisualElement { pickingMode = PickingMode.Ignore };
+            var column = _ui.Take<VisualElement>(btn, "column");
+            column.pickingMode = PickingMode.Ignore;
             column.AddToClassList("recipe-text-column");
-            column.Add(new Label(name) { pickingMode = PickingMode.Ignore });
-            var method = new Label(RecipeText.MethodLine(r)) { pickingMode = PickingMode.Ignore };
-            method.AddToClassList("recipe-method-line");
-            column.Add(method);
-            btn.Add(column);
+            _ui.Label(column, "name", name).pickingMode = PickingMode.Ignore;
+            _ui.Label(column, "method", RecipeText.MethodLine(r), "recipe-method-line").pickingMode = PickingMode.Ignore;
             return btn;
+        }
+
+        /// <summary>An item's icon as the next child of <paramref name="parent"/>; nothing when it has none.</summary>
+        private VisualElement ItemIcon(VisualElement parent, Sprite icon)
+        {
+            if (icon == null) return null;
+            var el = _ui.Take<VisualElement>(parent, "icon");
+            el.AddToClassList("item-icon");
+            el.style.backgroundImage = new StyleBackground(icon);
+            return el;
         }
 
         // ── Recipe modes (#322: Neutron Capture Slow / Fast) ───────────────────
@@ -999,13 +1023,14 @@ namespace MobileIdleBuilder
 
             if (modes.Count > 1)
             {
-                var row = new VisualElement();
+                var row = _ui.Take<VisualElement>(_inspectorRecipes, "mode-row");
                 row.AddToClassList("filter-row");
                 foreach (int m in modes)
                 {
                     int captured = m;
                     string label = so.recipeModeLabels != null && m < so.recipeModeLabels.Length ? so.recipeModeLabels[m] : $"Mode {m + 1}";
-                    var btn = new Button { text = label };
+                    var btn = _ui.Take<Button>(row, "mode");
+                    if (btn.text != label) btn.text = label;
                     btn.AddToClassList("filter-side-btn");
                     btn.AddToClassList("recipe-mode-btn");
                     btn.EnableInClassList("filter-side-btn--on", m == mode);
@@ -1014,9 +1039,7 @@ namespace MobileIdleBuilder
                         _recipeMode[entity] = captured;
                         RefreshInspectorContent();
                     });
-                    row.Add(btn);
                 }
-                _inspectorRecipes?.Add(row);
             }
             return available.FindAll(r => so.RecipeModeOf(r.id) == mode);
         }
@@ -1090,13 +1113,10 @@ namespace MobileIdleBuilder
             foreach (var (facing, id) in rules)
                 if (id == itemId) current = facing;
 
-            var row = new VisualElement();
+            var row = _ui.Take<VisualElement>(_inspectorRecipes, "filter-row");
             row.AddToClassList("filter-row");
-            var icon = itemId >= 0 ? HUDController.MakeItemIcon(ItemDatabase.Instance?.Get(itemId)?.icon, "item-icon") : null;
-            if (icon != null) row.Add(icon);
-            var name = new Label(label);
-            name.AddToClassList("filter-row__name");
-            row.Add(name);
+            if (itemId >= 0) ItemIcon(row, ItemDatabase.Instance?.Get(itemId)?.icon);
+            _ui.Label(row, "name", label, "filter-row__name");
 
             var choices = new List<int>(sides) { PortFilterRules.NoRoute };
             foreach (int side in choices)
@@ -1105,7 +1125,9 @@ namespace MobileIdleBuilder
                 // No rule of its own: an item goes wherever "Everything else" goes ("Else"); for the
                 // "Everything else" row itself, no side means unassigned items wait.
                 string noSide = itemId == PortFilterRules.Everything ? "Wait" : "Else";
-                var btn = new Button { text = side == PortFilterRules.NoRoute ? noSide : SideArrows[side & 3] };
+                var btn = _ui.Take<Button>(row, "side");
+                string sideText = side == PortFilterRules.NoRoute ? noSide : SideArrows[side & 3];
+                if (btn.text != sideText) btn.text = sideText;
                 btn.AddToClassList("filter-side-btn");
                 btn.EnableInClassList("filter-side-btn--on", side == current);
                 ListTapRouter.Register(_inspectorRecipes, btn, () =>
@@ -1117,9 +1139,7 @@ namespace MobileIdleBuilder
                     SaveManager.Instance?.SaveLocal();
                     RefreshInspectorContent();
                 });
-                row.Add(btn);
             }
-            _inspectorRecipes?.Add(row);
         }
 
         // ── Nucleon Harvester merge (#313) ────────────────────────────────────
@@ -1137,33 +1157,26 @@ namespace MobileIdleBuilder
             if (nucleon == null) return;
             if (!TryFindMergePartner(entity, so, new Vector2Int(cellX, cellY), out var partner)) return;
 
-            long fee = NucleonHarvesterMerge.Fee(nucleon, so, CostReduction());
+            long fee     = NucleonHarvesterMerge.Fee(nucleon, so, CostReduction());
+            long listFee = NucleonHarvesterMerge.Fee(nucleon, so, 0f);
             bool canAfford = GetBaseCurrency() >= fee;
 
-            var row = new VisualElement();
+            var row = _ui.Take<VisualElement>(_inspectorUpgrades, "merge-row");
             row.AddToClassList("upgrade-row");
-            var name = new Label("Nucleon Harvester");
-            name.AddToClassList("upgrade-row-name");
-            row.Add(name);
-            var desc = new Label("Merge with the neighbouring Harvester into one Nucleon Harvester. " +
-                                 "It makes protons or neutrons straight from the fields, no Combiner needed.");
-            desc.AddToClassList("upgrade-row-desc");
-            row.Add(desc);
+            _ui.Label(row, "name", "Nucleon Harvester", "upgrade-row-name");
+            _ui.Label(row, "desc", "Merge with the neighbouring Harvester into one Nucleon Harvester. " +
+                                   "It makes protons or neutrons straight from the fields, no Combiner needed.", "upgrade-row-desc");
 
-            var footer = new VisualElement();
+            var footer = _ui.Take<VisualElement>(row, "footer");
             footer.AddToClassList("upgrade-row-footer");
-            var costLabel = new Label($"{fee:N0} e");
-            costLabel.AddToClassList("upgrade-row-cost");
+            var costLabel = _ui.Label(footer, "cost", $"{fee:N0} e", "upgrade-row-cost");
             if (!canAfford) costLabel.AddToClassList("upgrade-row-cost--unaffordable");
-            footer.Add(costLabel);
-            var btn = new Button { text = "Merge" };
+            var btn = _ui.Take<Button>(footer, "merge");
+            if (btn.text != "Merge") btn.text = "Merge";
             btn.AddToClassList("craft-btn");
             btn.SetEnabled(canAfford);
             ListTapRouter.Register(_inspectorUpgrades, btn,
-                () => MergeIntoNucleonHarvester(entity, partner, so, nucleon, fee));
-            footer.Add(btn);
-            row.Add(footer);
-            _inspectorUpgrades?.Add(row);
+                () => MergeIntoNucleonHarvester(entity, partner, so, nucleon, fee, listFee));
         }
 
         /// <summary>An orthogonally adjacent Harvester on a quark field collecting the opposite quark.</summary>
@@ -1190,7 +1203,7 @@ namespace MobileIdleBuilder
             return false;
         }
 
-        private void MergeIntoNucleonHarvester(Entity a, Entity b, BuildingSO harvester, BuildingSO nucleon, long fee)
+        private void MergeIntoNucleonHarvester(Entity a, Entity b, BuildingSO harvester, BuildingSO nucleon, long fee, long listFee)
         {
             if (!_ecsReady || !_em.Exists(a) || !_em.Exists(b)) return; // changed while the panel was open
             var ca = _em.GetComponentData<GridPosition>(a).Cell;
@@ -1198,7 +1211,7 @@ namespace MobileIdleBuilder
             if (!NucleonHarvesterMerge.TryPlacement(new Vector2Int(ca.x, ca.y), new Vector2Int(cb.x, cb.y),
                                                     out var anchor, out int rotation)) return;
             var placer = FindAnyObjectByType<BuildingPlacer>();
-            if (placer == null || !TryDeductCurrency(fee)) return;
+            if (placer == null || !TryDeductCurrency(fee, listFee)) return;
 
             var bdA = _em.GetComponentData<BuildingData>(a);
             var bdB = _em.GetComponentData<BuildingData>(b);
@@ -1275,6 +1288,15 @@ namespace MobileIdleBuilder
                     globalSpeed = gb.SpeedMult;
                 }
             }
+            using (var wq = _em.CreateEntityQuery(ComponentType.ReadOnly<ActiveWorldRules>()))
+            {
+                if (!wq.IsEmpty)
+                {
+                    var wr = wq.GetSingleton<ActiveWorldRules>();
+                    if (wr.OutputMult > 0f) outMult     *= wr.OutputMult;
+                    if (wr.SpeedMult  > 0f) globalSpeed *= wr.SpeedMult;
+                }
+            }
             using (var pq = _em.CreateEntityQuery(ComponentType.ReadOnly<PrestigeData>()))
             {
                 if (pq.IsEmpty) return;
@@ -1295,7 +1317,8 @@ namespace MobileIdleBuilder
             double perCraft = ItemValue.PerCraft(outs, SurplusSale.DemonPrice, outMult, process.ByproductEntropy);
             float speed = building.ProductionSpeed * powerRatio * globalSpeed;
             double perSecond = ItemValue.PerSecond(perCraft, process.CraftTime, speed);
-            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f);
+            return ValueLines(price, perCraft, outMult, perSecond, hasPower && powerRatio <= 0f,
+                              ItemStars.Count(outs[0].itemId));
         }
 
         /// <summary>
@@ -1311,7 +1334,8 @@ namespace MobileIdleBuilder
         /// The inspector's value rows for a crafter: price each, value per craft, value per second. Always three
         /// rows so the 0.5s rebuild keeps its layout.
         /// </summary>
-        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower)
+        internal static string[] ValueLines(float price, double perCraft, float outMult, double perSecond, bool noPower,
+                                            int stars = 0)
         {
             string craft = outMult > 1.001f
                 ? $"×{outMult:0.##} output → {NumberFormat.Entropy(perCraft)} per craft"
@@ -1319,7 +1343,7 @@ namespace MobileIdleBuilder
             string rate = noPower
                 ? "≈ ◈ 0 /s (no power)"
                 : $"≈ {NumberFormat.Entropy(perSecond)} /s at current speed";
-            return new[] { HUDController.WorthEachText(price), craft, rate };
+            return new[] { HudText.WorthEachText(price, stars), craft, rate };
         }
 
         /// <summary>The collector's value row, e.g. "≈ ◈ 2.5 /s".</summary>
@@ -1336,7 +1360,7 @@ namespace MobileIdleBuilder
 
         private long GetBaseCurrency() => _ecsReady ? EntropyWallet.Balance(_playerQuery) : 0L;
 
-        private bool TryDeductCurrency(long cost) => EntropyWallet.TrySpend(_playerQuery, cost);
+        private bool TryDeductCurrency(long cost, long listPrice = 0) => EntropyWallet.TrySpend(_playerQuery, cost, listPrice);
 
         private BuildingSO GetBuildingSO(Entity entity)
         {
@@ -1401,11 +1425,10 @@ namespace MobileIdleBuilder
             _hud?.NotifyBuildingRecipeSet();
         }
 
-        private static void AddInspectorRow(VisualElement target, string text)
+        private void AddInspectorRow(VisualElement target, string text)
         {
-            var lbl = new Label(text);
-            lbl.AddToClassList("recipe-inputs");
-            target?.Add(lbl);
+            if (target == null) return;
+            _ui.Label(target, "row", text, "recipe-inputs");
         }
 
         // ── Stable buffer rows ────────────────────────────────────────────────
@@ -1504,7 +1527,7 @@ namespace MobileIdleBuilder
 
         private VisualElement AddProgressBar(VisualElement parent, float fraction)
         {
-            var bar = new VisualElement();
+            var bar = _ui.Take<VisualElement>(parent, "progress");
             bar.style.height              = 10;
             bar.style.marginTop           = 2;
             bar.style.marginBottom        = 4;
@@ -1513,13 +1536,10 @@ namespace MobileIdleBuilder
             bar.style.borderBottomLeftRadius = 3; bar.style.borderBottomRightRadius = 3;
             bar.style.overflow            = Overflow.Hidden;
 
-            var fill = new VisualElement();
+            var fill = _ui.Take<VisualElement>(bar, "fill");
             fill.style.height          = Length.Percent(100);
             fill.style.backgroundColor = new Color(0.30f, 0.80f, 1.00f); // crest blue
             fill.style.width           = Length.Percent(fraction * 100f);
-            bar.Add(fill);
-
-            parent.Add(bar);
             return fill;
         }
 
@@ -1547,20 +1567,18 @@ namespace MobileIdleBuilder
         /// the buffer into the player inventory. The button is disabled (not removed) when there is
         /// nothing to empty, so the line keeps its shape between rebuilds.
         /// </summary>
-        private VisualElement MakeBufferGroup(string label, List<(int itemId, int quantity)> rows,
-                                              bool hasContents, System.Action onEmpty)
+        private void MakeBufferGroup(VisualElement parent, string key, string label, List<(int itemId, int quantity)> rows,
+                                     bool hasContents, System.Action onEmpty)
         {
-            var group = new VisualElement();
+            var group = _ui.Take<VisualElement>(parent, key);
             group.AddToClassList("inspector-buffer-group");
 
-            var title = new Label(label);
-            title.AddToClassList("inspector-buffer-label");
-            group.Add(title);
+            _ui.Label(group, "title", label, "inspector-buffer-label");
 
             foreach (var (itemId, quantity) in rows)
-                group.Add(MakeItemChip(itemId, quantity));
+                MakeItemChip(group, itemId, quantity);
 
-            var btn = new Button();
+            var btn = _ui.Take<Button>(group, "empty");
             btn.AddToClassList("inspector-empty-btn");
             GlyphIcon.SetOn(btn, GlyphIcon.Kind.Empty);
             // Disabled rather than omitted so the layout doesn't change as the buffer fills/drains;
@@ -1569,38 +1587,33 @@ namespace MobileIdleBuilder
             // _inspectorStatic is not a ScrollView, but the router is still required: the
             // button's own Clickable consumes the pointer-down regardless of any ScrollView.
             ListTapRouter.Register(_inspectorStatic, btn, onEmpty);
-            group.Add(btn);
-            return group;
         }
 
         /// <summary>A creation-buffer chip's count: gathered of needed, e.g. "112/146".</summary>
         internal static string StagedCountText(int have, int need) => $"{have}/{need}";
 
         /// <summary>An item's periodic-table tile (or its name when it has no icon) and its count.</summary>
-        private static VisualElement MakeItemChip(int itemId, int quantity, string countText = null)
+        private VisualElement MakeItemChip(VisualElement parent, int itemId, int quantity, string countText = null)
         {
-            var chip = new VisualElement { pickingMode = PickingMode.Ignore };
+            var chip = _ui.Take<VisualElement>(parent, "chip");
+            chip.pickingMode = PickingMode.Ignore;
             chip.AddToClassList("inspector-chip");
             if (quantity <= 0) chip.AddToClassList("inspector-chip--empty");
 
             var icon = ItemDatabase.Instance?.Get(itemId)?.icon;
             if (icon != null)
             {
-                var img = new VisualElement { pickingMode = PickingMode.Ignore };
+                var img = _ui.Take<VisualElement>(chip, "icon");
+                img.pickingMode = PickingMode.Ignore;
                 img.AddToClassList("inspector-chip__icon");
                 img.style.backgroundImage = new StyleBackground(icon);
-                chip.Add(img);
             }
             else
             {
-                var name = new Label(ItemName(itemId)) { pickingMode = PickingMode.Ignore };
-                name.AddToClassList("inspector-chip__name");
-                chip.Add(name);
+                _ui.Label(chip, "name", ItemName(itemId), "inspector-chip__name").pickingMode = PickingMode.Ignore;
             }
 
-            var count = new Label(countText ?? $"×{quantity}") { pickingMode = PickingMode.Ignore };
-            count.AddToClassList("inspector-chip__count");
-            chip.Add(count);
+            _ui.Label(chip, "count", countText ?? $"×{quantity}", "inspector-chip__count").pickingMode = PickingMode.Ignore;
             return chip;
         }
 

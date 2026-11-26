@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_chemistry
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: The simplest two-carbon hydrocarbon. A short link in the chain that
     organic chemistry builds outward without end.
   codexUnlocked: 0
-  baseSellValue: 78000
+  baseSellValue: 7990
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

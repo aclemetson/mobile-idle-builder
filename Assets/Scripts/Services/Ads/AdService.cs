@@ -14,6 +14,7 @@ namespace MobileIdleBuilder
         NoSave,            // SaveManager not ready
         NothingToCollect,  // reward would have been empty (e.g. TimeWarp with no production)
         OnCooldown,        // this placement's cooldown has not run out yet (Entropy Surge)
+        BoostActive,       // a timed boost is running; no other boost may start (BoostLock)
     }
 
     /// <summary>Result handed back to the UI after a show attempt.</summary>
@@ -117,7 +118,13 @@ namespace MobileIdleBuilder
         // ── Public query API (for the UI) ─────────────────────────────────────
 
         /// <summary>True when ads are enabled and a rewarded ad can currently be shown.</summary>
-        public bool IsReady => EnsureProviderIfEnabled() && _provider != null && _provider.IsRewardedReady;
+        public bool IsReady => SkipsAds || (EnsureProviderIfEnabled() && _provider != null && _provider.IsRewardedReady);
+
+        /// <summary>
+        /// The player owns the ad-free purchase (#503): every reward is granted without playing an ad, so neither
+        /// the ads flag nor a loaded ad is needed.
+        /// </summary>
+        public bool SkipsAds => AdFree.Owned(SaveManager.Instance?.Current);
 
         /// <summary>
         /// Start() only sees the flag value cached from the previous launch; the fresh Remote Config fetch
@@ -142,24 +149,10 @@ namespace MobileIdleBuilder
         /// <summary>True if the player may watch this placement right now (enabled, ready, under cap, cooled down).</summary>
         public bool CanWatch(AdPlacement p)
         {
-            if (!EnsureProviderIfEnabled()) return false;
-            if (_provider == null || !_provider.IsRewardedReady) return false;
+            if (!IsReady) return false;
             if (CooldownRemaining(p) > TimeSpan.Zero) return false;
-            if (!IncomeMeasured(p)) return false;
+            if (BoostLockRemaining(p) > TimeSpan.Zero) return false;
             return Remaining(p) > 0;
-        }
-
-        /// <summary>
-        /// False while an income-minutes placement (Entropy Surge) cannot price itself yet: the run's income
-        /// has under <see cref="IncomeRateTracker.MinRewardSpanSeconds"/> of samples (just launched, just
-        /// prestiged) or a prestige reload is pending. The offer waits rather than showing its floor.
-        /// Always true for other placements.
-        /// </summary>
-        public bool IncomeMeasured(AdPlacement p)
-        {
-            if (AdRewardCalculator.Def(p).Kind != AdRewardKind.IncomeMinutes) return true;
-            if (PrestigeRunReset.ReloadPending) return false;
-            return IncomeRateTracker.Current != null && IncomeRateTracker.Current.HasRewardRate;
         }
 
         /// <summary>Time left on the placement's cooldown (zero when ready or the placement has none).</summary>
@@ -167,6 +160,14 @@ namespace MobileIdleBuilder
         {
             var save = SaveManager.Instance?.Current;
             return save == null ? TimeSpan.Zero : AdRewardCalculator.CooldownRemaining(save, p, GameClock.UtcNow);
+        }
+
+        /// <summary>Time until the one-boost-at-a-time lock lifts for this placement; zero when it may be watched.</summary>
+        public TimeSpan BoostLockRemaining(AdPlacement p)
+        {
+            var save = SaveManager.Instance?.Current;
+            var now  = GameClock.UtcNow;
+            return BoostLock.BlocksAd(save, p, now) ? BoostLock.Remaining(save, now) : TimeSpan.Zero;
         }
 
         /// <summary>
@@ -182,20 +183,12 @@ namespace MobileIdleBuilder
         }
 
         /// <summary>
-        /// What Entropy Boost would pay right now: 10% of the live net worth (the save's snapshot only
-        /// refreshes on save, so it lags and the panel preview would not match the grant).
+        /// What the Entropy Surge's entropy roll would pay right now: 10% of the live net worth (the save's
+        /// snapshot only refreshes on save, so it lags and the preview would not match the grant).
         /// </summary>
         public long PreviewEntropyReward() =>
             AdRewardCalculator.CalcEntropyReward(
                 ECSLoadBridge.Instance?.LiveNetWorth ?? SaveManager.Instance?.Current?.lastKnownNetWorth ?? 0f);
-
-        /// <summary>
-        /// What an income-minutes placement (Entropy Surge) would pay right now. Uses only this run's
-        /// income (<see cref="IncomeRateTracker.RewardPerSecond"/>), so right after a prestige it pays the floor.
-        /// </summary>
-        public long PreviewIncomeReward(AdPlacement p) =>
-            AdRewardCalculator.CalcIncomeReward(
-                p, PrestigeRunReset.ReloadPending ? 0d : IncomeRateTracker.Current?.RewardPerSecond ?? 0d);
 
         // ── Show / grant ──────────────────────────────────────────────────────
 
@@ -235,7 +228,8 @@ namespace MobileIdleBuilder
             var save = SaveManager.Instance?.Current;
             if (save == null) { Finish(onDone, Fail(p, AdShowOutcome.NoSave, "Save not ready.")); return; }
 
-            if (!EnsureProviderIfEnabled()) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
+            bool skipAd = SkipsAds;
+            if (!skipAd && !EnsureProviderIfEnabled()) { Finish(onDone, Fail(p, AdShowOutcome.Disabled, "Ads are disabled.")); return; }
 
             AdRewardCalculator.ApplyDailyReset(save, GameClock.UtcNow);
             if (AdRewardCalculator.IsAtCap(save, p))
@@ -249,32 +243,33 @@ namespace MobileIdleBuilder
                 Finish(onDone, Fail(p, AdShowOutcome.OnCooldown, $"Ready again in {FormatCooldown(cooldown)}."));
                 return;
             }
-            if (!IncomeMeasured(p))
+            if (BoostLock.BlocksAd(save, p, GameClock.UtcNow))
             {
-                Finish(onDone, Fail(p, AdShowOutcome.NotReady, "Measuring your income, try again in a few seconds."));
+                Finish(onDone, Fail(p, AdShowOutcome.BoostActive, BoostLock.Message(save, GameClock.UtcNow) + "."));
                 return;
             }
-            if (_provider == null || !_provider.IsRewardedReady)
+            if (!skipAd && (_provider == null || !_provider.IsRewardedReady))
             {
                 Finish(onDone, Fail(p, AdShowOutcome.NotReady, "No ad available right now."));
                 return;
             }
 
-            // Income-minutes rewards are priced now, before the ad: the ad pauses the app, which restarts
-            // the income measurement, so pricing afterwards would pay the floor. The player gets what was shown.
-            long quotedIncome = AdRewardCalculator.Def(p).Kind == AdRewardKind.IncomeMinutes ? PreviewIncomeReward(p) : 0;
+            // The surge's entropy is priced now, before the ad, so the player gets the amount the card showed.
+            long quoted = AdRewardCalculator.Def(p).Kind == AdRewardKind.SurgeRoll ? PreviewEntropyReward() : 0;
 
-            _provider.ShowRewarded(earned =>
+            void OnAdFinished(bool earned)
             {
                 if (!earned)
                 {
-                    _provider.LoadRewarded();
+                    _provider?.LoadRewarded();
+                    TelemetryService.Instance?.RecordAdReward(p.ToString(), granted: false, adFree: skipAd);
                     Finish(onDone, Fail(p, AdShowOutcome.Declined, "Ad skipped — no reward."));
                     return;
                 }
 
-                bool granted = GrantReward(save, p, doubleOfflineResult, quotedIncome, out string message);
-                _provider.LoadRewarded();
+                bool granted = GrantReward(save, p, doubleOfflineResult, quoted, out string message);
+                if (!skipAd) _provider?.LoadRewarded();
+                TelemetryService.Instance?.RecordAdReward(p.ToString(), granted, adFree: skipAd);
 
                 if (!granted)
                 {
@@ -286,7 +281,11 @@ namespace MobileIdleBuilder
                 AdRewardCalculator.RecordWatch(save, p, GameClock.UtcNow);
                 SaveManager.Instance.SaveLocal();
                 Finish(onDone, new AdShowResult { Outcome = AdShowOutcome.Granted, Placement = p, Message = message });
-            });
+            }
+
+            // Ad-free (#503): the reward without the ad. Cooldowns and caps still apply.
+            if (skipAd) OnAdFinished(true);
+            else        _provider.ShowRewarded(OnAdFinished);
         }
 
         /// <summary>
@@ -294,7 +293,7 @@ namespace MobileIdleBuilder
         /// Returns false (with no mutation that counts) when there is nothing to grant — e.g. a Time Warp
         /// while nothing is producing. Out <paramref name="message"/> is a toast-ready summary.
         /// </summary>
-        bool GrantReward(SaveData save, AdPlacement p, IdleCollectionResult doubleOfflineResult, long quotedIncome, out string message)
+        bool GrantReward(SaveData save, AdPlacement p, IdleCollectionResult doubleOfflineResult, long quotedEntropy, out string message)
         {
             var def = AdRewardCalculator.Def(p);
             switch (def.Kind)
@@ -307,12 +306,17 @@ namespace MobileIdleBuilder
                     message = $"+{amount:N0} entropy";
                     return true;
                 }
-                case AdRewardKind.IncomeMinutes:
+                case AdRewardKind.SurgeRoll:
                 {
-                    long amount = quotedIncome;
-                    save.currentRun.baseCurrency += amount;
-                    ApplyEntropyToECS(amount);
-                    message = $"+{amount:N0} entropy";
+                    if (AdRewardCalculator.SurgeRollsCrystals(UnityEngine.Random.value, save))
+                    {
+                        save.paidCurrency += def.CrystalAmount;
+                        message = $"+{def.CrystalAmount} crystals";
+                        return true;
+                    }
+                    save.currentRun.baseCurrency += quotedEntropy;
+                    ApplyEntropyToECS(quotedEntropy);
+                    message = $"+{quotedEntropy:N0} entropy";
                     return true;
                 }
                 case AdRewardKind.Crystals:
@@ -359,18 +363,25 @@ namespace MobileIdleBuilder
 
             if (result == null || !result.HasAnyOutput) { message = "Nothing producing to bank."; return false; }
 
-            ApplyCollectionResult(save, result);
-            message = $"Banked {hours:F0}h of production";
+            long counted = ApplyCollectionResult(save, result, "time warp (ad)");
+            message = $"Banked {hours:F0}h of production" + TaskSuffix(counted, OfflineCollectionService.TasksActiveHere(save));
             return true;
         }
 
         bool GrantDoubleOffline(SaveData save, IdleCollectionResult result, out string message)
         {
             if (result == null || !result.HasAnyOutput) { message = "Nothing to double."; return false; }
-            ApplyCollectionResult(save, result);
-            message = "Offline earnings doubled!";
+            long counted = ApplyCollectionResult(save, result, "double offline");
+            message = "Offline earnings doubled!" + TaskSuffix(counted, OfflineCollectionService.TasksActiveHere(save));
             return true;
         }
+
+        /// <summary>
+        /// " (+40 task items)" when a reward counted toward the world tasks. While a task list is active here it
+        /// also shows " (+0 task items)", so a reward that counted nothing says so (#535); otherwise empty.
+        /// </summary>
+        internal static string TaskSuffix(long counted, bool tasksActive = false) =>
+            counted > 0 || tasksActive ? $" (+{Math.Max(0, counted):N0} task items)" : "";
 
         // ── ECS write-through helpers (mirror PremiumShopService) ──────────────
 
@@ -381,18 +392,17 @@ namespace MobileIdleBuilder
             bridge.AddEntropy(amount);
         }
 
-        void ApplyCollectionResult(SaveData save, IdleCollectionResult result)
+        /// <summary>Applies an idle-style result and returns how many items counted toward the world tasks.</summary>
+        long ApplyCollectionResult(SaveData save, IdleCollectionResult result, string source)
         {
             var bridge = ECSLoadBridge.Instance;
             if (bridge != null && bridge.IsLoaded)
             {
                 ApplyEntropyToECS(result.EntropyEarned);
                 bridge.AddInventoryItems(result.ItemsEarned);
+                return OfflineCollectionService.CreditDemonDeliveries(save, result, source);
             }
-            else
-            {
-                OfflineCollectionService.ApplyResultToSave(save, result);
-            }
+            return OfflineCollectionService.ApplyResultToSave(save, result);
         }
 
         // ── Internals ─────────────────────────────────────────────────────────

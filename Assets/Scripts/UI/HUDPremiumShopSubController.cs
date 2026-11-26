@@ -33,6 +33,7 @@ namespace MobileIdleBuilder
         public void Initialize(VisualElement root)
         {
             Cleanup();
+            _lockTicker = null; // the UI was rebuilt; schedule on the new panel
             QueryElements(root);
             BindButtons();
             SubscribeToPurchases();
@@ -63,6 +64,19 @@ namespace MobileIdleBuilder
             RefreshBalanceLabel();
             Refresh();
             HUDController.SetElementVisible(_panel, true);
+            // Keep the boost-lock countdown live, and unlock the cards the moment the boost ends.
+            if (_lockTicker == null && _panel != null) _lockTicker = _panel.schedule.Execute(OnLockTick).Every(1000);
+            else _lockTicker?.Resume();
+        }
+
+        private IVisualElementScheduledItem _lockTicker;
+
+        private void OnLockTick()
+        {
+            if (_panel == null || _panel.resolvedStyle.display == DisplayStyle.None) { _lockTicker?.Pause(); return; }
+            string now = _activeTab == ShopTab.Crystals ? null : BoostLock.Message(SaveManager.Instance?.Current, GameClock.UtcNow);
+            if ((now == null) != (_lockMessage == null)) Refresh();          // lock started or ended: rebuild cards
+            else if (now != null && _contextLabel != null) _contextLabel.text = now + ". One boost at a time.";
         }
 
         public void Close()
@@ -123,11 +137,17 @@ namespace MobileIdleBuilder
             _crystalBalance.text = $"♦ {crystals:N0}";
         }
 
+        private string _lockMessage;
+
         private void Refresh()
         {
             if (_tierList == null) return;
             _tierList.Clear();
             RefreshBalanceLabel();
+            // One boost at a time: while a timed boost runs, every boost card is locked (crystal packs are not).
+            _lockMessage = _activeTab == ShopTab.Crystals
+                ? null
+                : BoostLock.Message(SaveManager.Instance?.Current, GameClock.UtcNow);
 
             switch (_activeTab)
             {
@@ -137,6 +157,8 @@ namespace MobileIdleBuilder
                 case ShopTab.PrestigeCurrency: BuildPrestigeCurrencyCards(); break;
                 case ShopTab.Crystals:         BuildCrystalPackCards();      break;
             }
+            if (_lockMessage != null && _contextLabel != null)
+                _contextLabel.text = _lockMessage + ". One boost at a time.";
         }
 
         // ── Time Warp cards (instant offline collection) ──────────────────────
@@ -161,8 +183,15 @@ namespace MobileIdleBuilder
                     null,
                     () =>
                     {
-                        var result = PremiumShopService.Instance?.TryBuyTimeWarp(captured) ?? PurchaseResult.InvalidTier;
-                        if (result == PurchaseResult.Success) Refresh();
+                        var shop   = PremiumShopService.Instance;
+                        var result = shop?.TryBuyTimeWarp(captured) ?? PurchaseResult.InvalidTier;
+                        if (result != PurchaseResult.Success) return;
+                        Refresh();
+                        // Same toast as the ad's Time Warp, task count included (#535).
+                        GetComponent<HUDController>()?.ShowNotification("▶",
+                            $"Banked {shop.LastTimeWarpHours:F0}h of production" + AdService.TaskSuffix(
+                                shop.LastTimeWarpTaskItems,
+                                OfflineCollectionService.TasksActiveHere(SaveManager.Instance?.Current)));
                     });
 
                 _tierList.Add(card);
@@ -184,7 +213,7 @@ namespace MobileIdleBuilder
             }
             else
             {
-                _contextLabel.text = "2x offline production speed";
+                _contextLabel.text = "Your whole factory runs at 2x speed, online and offline";
             }
 
             long crystals = SaveManager.Instance?.Current?.paidCurrency ?? 0;
@@ -289,6 +318,8 @@ namespace MobileIdleBuilder
 
             _contextLabel.text = "Purchase crystals with real money";
 
+            BuildAdFreeCard();
+
             for (int i = 0; i < PremiumShopCalculator.CrystalPackTiers.Length; i++)
             {
                 int captured = i;
@@ -308,6 +339,35 @@ namespace MobileIdleBuilder
 
                 _tierList.Add(card);
             }
+        }
+
+        // Ad-free (#503): one-time purchase. Owned shows as such; iOS also gets the Restore Purchases button the
+        // App Store requires for non-consumables (Google redelivers owned purchases at store init).
+        private void BuildAdFreeCard()
+        {
+            bool owned = AdFree.Owned(SaveManager.Instance?.Current);
+            string price =
+#if UNITY_PURCHASING
+                IAPService.Instance?.GetLocalizedPrice(AdFree.ProductId) ??
+#endif
+                AdFree.FallbackPrice;
+
+            var card = MakeIAPTierCard(AdFree.ShopName, AdFree.ShopDescription, owned ? "Owned" : price,
+                                       () => OnIAPBuyPressed(AdFree.ProductId));
+            card.AddToClassList("shop-tier-card--featured");
+            if (owned)
+                foreach (var b in card.Query<Button>().ToList()) { b.text = "Owned"; b.SetEnabled(false); }
+            _tierList.Add(card);
+
+#if UNITY_PURCHASING && UNITY_IOS
+            if (!owned)
+            {
+                var restore = new Button(() => IAPService.Instance?.RestorePurchases(_ => Refresh())) { text = "Restore Purchases" };
+                restore.AddToClassList("craft-btn");
+                restore.AddToClassList("shop-restore-btn");
+                _tierList.Add(restore);
+            }
+#endif
         }
 
         private void OnIAPBuyPressed(string productId)
@@ -393,9 +453,9 @@ namespace MobileIdleBuilder
                 costLabel.AddToClassList("shop-tier-card__cost--unaffordable");
             footer.Add(costLabel);
 
-            var buyBtn = new Button(onBuy) { text = "Buy" };
+            var buyBtn = new Button(onBuy) { text = _lockMessage != null ? "Locked" : "Buy" };
             buyBtn.AddToClassList("shop-buy-btn");
-            if (!canAfford)
+            if (!canAfford || _lockMessage != null)
             {
                 buyBtn.SetEnabled(false);
                 buyBtn.AddToClassList("shop-buy-btn--disabled");

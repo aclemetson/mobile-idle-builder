@@ -61,9 +61,10 @@ namespace MobileIdleBuilder
         RadioactiveContainment, // lead shell
         BasicGenerator,     // energy spire
         PowerRelay,         // broadcast pylon
-        BeltSplitter,       // river forking around a rock
+        BeltSplitter,       // retired 2026-11-24 (belt splits replaced the building); kept for serialized values
         FusionReactor,      // star in a magnetic bottle
-        NucleonHarvester    // two field wells feeding one nucleon
+        NucleonHarvester,   // two field wells feeding one nucleon
+        Spring              // rock pool welling up into a stream (Chemistry). Appended: serialized ints stay put.
     }
 
     /// <summary>
@@ -161,6 +162,10 @@ namespace MobileIdleBuilder
         IdleCollectionRate,       // additive fraction per level (+0.05 = 5 %)
         DemolishRefund,           // additive fraction of spent entropy refunded on removal (+0.10 = 10 %)
         SurplusResale,            // additive fraction of the Demon price paid for auto-sold unused items (+0.10 = 10 %)
+        WorldCraftSpeed,          // additive craft speed in one world only (UpgradeDef.world), e.g. Neutron Economy
+        WorldOutput,              // additive output in one world only (UpgradeDef.world), e.g. Fission Yield
+        WorldStreamFlow,          // additive Spring flow in one stream world (UpgradeDef.world), e.g. Spring Pressure
+        FreeResearch,             // +1 research per level each run that completes the moment it starts (#491)
     }
 
     public enum AchievementTrigger

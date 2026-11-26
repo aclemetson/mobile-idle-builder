@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: steelmaking
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: steelmaking
+  displayName: Steelmaking
+  description: 'Steelmaking: Steel.'
+  icon: {fileID: 0}
+  branch: 2
+  prerequisites:
+  - {fileID: 11400000, guid: d972fab1d135c7f4694979b3619e3406, type: 2}
+  depthInTree: 6
+  block: metallurgy_alloys
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_metallurgy
+  world: world_metallurgy
+  costBaseCurrency: 14600000000
+  costPrestigeCurrency: 0
+  durationSeconds: 2400
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: fb74179fba2d23d419bd0a385c9cbee7, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: 10c02035ae7c1ec4398fa9d4d0d19537, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: cb2a1a0069313204aa80255a12b3e9ac, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Steelmaking

@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: spallation_4
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: spallation_4
+  displayName: 'Spallation: Terbium to Promethium'
+  description: 'Spallation: Terbium to Promethium.'
+  icon: {fileID: 0}
+  branch: 1
+  prerequisites:
+  - {fileID: 11400000, guid: 621a1d20a5d7f7d478631ff482fb6585, type: 2}
+  depthInTree: 18
+  block: metal_descent
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_chemistry
+  world: world_physics
+  costBaseCurrency: 6270000
+  costPrestigeCurrency: 0
+  durationSeconds: 1200
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: b8f816885aeef9b468f0ac814ca9c10c, type: 2}
+  - {fileID: 11400000, guid: 6abd3e5ca342ac14ba81a0c4424cc898, type: 2}
+  - {fileID: 11400000, guid: 4c97e0b1e325cb64ca93fbd9cad64459, type: 2}
+  - {fileID: 11400000, guid: 891a5a472ac25b745952379dd1c2c584, type: 2}
+  - {fileID: 11400000, guid: 36999beebf5026d428597008f4af5fcc, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: dc8e522df98b97b41ba9c3d80df1920a, type: 2}
+  - {fileID: 11400000, guid: 025599426e698784fa4d26a263458a75, type: 2}
+  - {fileID: 11400000, guid: f0144e5fef2f1d04693862cac58c8e2c, type: 2}
+  - {fileID: 11400000, guid: 55dc1edbf4c49a242b2227b3a25cca70, type: 2}
+  - {fileID: 11400000, guid: f7494e12a7f627a4f903a719931a66a3, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 0bfa92ae2a56bb5438fb301daee9cc32, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: 'Spallation: Terbium to Promethium'

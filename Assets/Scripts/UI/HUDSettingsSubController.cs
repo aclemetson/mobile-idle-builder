@@ -26,13 +26,16 @@ namespace MobileIdleBuilder
 
         private Slider _sliderPanSensitivity;
         private Toggle _toggleInvertTilt;
+        private Toggle _toggleProgressBars;
 
         private Button _btnSendFeedback;
         private Button _btnPrivacyPolicy;
+        private Button _btnDiscord;
         private Label  _versionLabel;
 
         private Label  _accountLabel;
         private Button _btnGoogleSignIn;
+        private Button _btnPlayerName;
         private bool   _signingIn;
         private string _accountStatus;   // result of the last Settings sign-in, shown under the account
 
@@ -60,9 +63,13 @@ namespace MobileIdleBuilder
             if (_toggleNotifications != null) _toggleNotifications.UnregisterValueChangedCallback(OnNotificationsChanged);
             if (_sliderPanSensitivity != null) _sliderPanSensitivity.UnregisterValueChangedCallback(OnPanSensitivityChanged);
             if (_toggleInvertTilt    != null) _toggleInvertTilt.UnregisterValueChangedCallback(OnInvertTiltChanged);
+            if (_toggleProgressBars  != null) _toggleProgressBars.UnregisterValueChangedCallback(OnProgressBarsChanged);
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         -= OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        -= OnPrivacyPolicy;
+            if (_btnDiscord          != null) _btnDiscord.clicked              -= OnDiscord;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         -= OnGoogleSignIn;
+            if (_btnPlayerName       != null) _btnPlayerName.clicked           -= OnPlayerName;
+            PlayerNameService.OnNameChanged -= OnNameChanged;
         }
 
         private void OnDisable() => Cleanup();
@@ -73,6 +80,8 @@ namespace MobileIdleBuilder
         {
             SyncFromSettings();
             RefreshAccount();
+            // Remote Config may have published the invite since the last open.
+            _btnDiscord?.EnableInClassList("hidden", !IsDiscordInvite(FeatureFlags.DiscordUrl));
             HUDController.SetElementVisible(_panel, true);
         }
 
@@ -94,11 +103,14 @@ namespace MobileIdleBuilder
             _toggleNotifications  = root.Q<Toggle>("toggle-notifications");
             _sliderPanSensitivity = root.Q<Slider>("slider-pan-sensitivity");
             _toggleInvertTilt     = root.Q<Toggle>("toggle-invert-tilt");
+            _toggleProgressBars   = root.Q<Toggle>("toggle-progress-bars");
             _btnSendFeedback      = root.Q<Button>("btn-send-feedback");
             _btnPrivacyPolicy     = root.Q<Button>("btn-privacy-policy");
+            _btnDiscord           = root.Q<Button>("btn-discord");
             _versionLabel         = root.Q<Label>("settings-version");
             _accountLabel         = root.Q<Label>("settings-account");
             _btnGoogleSignIn      = root.Q<Button>("btn-google-sign-in");
+            _btnPlayerName        = root.Q<Button>("btn-player-name");
 
             if (_versionLabel != null) _versionLabel.text = VersionLabel.Format();
         }
@@ -115,9 +127,13 @@ namespace MobileIdleBuilder
             if (_toggleNotifications != null) _toggleNotifications.RegisterValueChangedCallback(OnNotificationsChanged);
             if (_sliderPanSensitivity != null) _sliderPanSensitivity.RegisterValueChangedCallback(OnPanSensitivityChanged);
             if (_toggleInvertTilt    != null) _toggleInvertTilt.RegisterValueChangedCallback(OnInvertTiltChanged);
+            if (_toggleProgressBars  != null) _toggleProgressBars.RegisterValueChangedCallback(OnProgressBarsChanged);
             if (_btnSendFeedback     != null) _btnSendFeedback.clicked         += OnSendFeedback;
             if (_btnPrivacyPolicy    != null) _btnPrivacyPolicy.clicked        += OnPrivacyPolicy;
+            if (_btnDiscord          != null) _btnDiscord.clicked              += OnDiscord;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         += OnGoogleSignIn;
+            if (_btnPlayerName       != null) _btnPlayerName.clicked           += OnPlayerName;
+            PlayerNameService.OnNameChanged += OnNameChanged;
         }
 
         private void SyncFromSettings()
@@ -130,12 +146,16 @@ namespace MobileIdleBuilder
             if (_sliderMusic  != null) _sliderMusic.SetValueWithoutNotify(s.musicVolume);
 
             if (_toggleNotifications != null)
-                _toggleNotifications.SetValueWithoutNotify(s.notificationsEnabled);
+                _toggleNotifications.SetValueWithoutNotify(NotificationService.Instance != null
+                    ? NotificationService.Instance.IsActive
+                    : s.notificationsEnabled);
 
             if (_sliderPanSensitivity != null)
                 _sliderPanSensitivity.SetValueWithoutNotify(s.panSensitivity);
             if (_toggleInvertTilt != null)
                 _toggleInvertTilt.SetValueWithoutNotify(s.invertTilt);
+            if (_toggleProgressBars != null)
+                _toggleProgressBars.SetValueWithoutNotify(s.showProgressBars);
 
             ApplyQualityButtonStyles(s.graphicsQuality);
         }
@@ -173,14 +193,26 @@ namespace MobileIdleBuilder
             else        btn.RemoveFromClassList("quality-btn--active");
         }
 
+        // Turning notifications on may need the OS permission: NotificationService asks for it, or opens the
+        // OS settings page when the player denied it before. The toggle shows what will actually happen.
         private void OnNotificationsChanged(ChangeEvent<bool> evt)
-            => SettingsService.Instance?.SetNotifications(evt.newValue);
+        {
+            var service = NotificationService.Instance;
+            if (service == null) { SettingsService.Instance?.SetNotifications(evt.newValue); return; }
+            service.SetEnabledFromSettings(evt.newValue, active =>
+            {
+                if (_toggleNotifications != null) _toggleNotifications.SetValueWithoutNotify(active);
+            });
+        }
 
         private void OnPanSensitivityChanged(ChangeEvent<float> evt)
             => SettingsService.Instance?.SetPanSensitivity(evt.newValue);
 
         private void OnInvertTiltChanged(ChangeEvent<bool> evt)
             => SettingsService.Instance?.SetInvertTilt(evt.newValue);
+
+        private void OnProgressBarsChanged(ChangeEvent<bool> evt)
+            => SettingsService.Instance?.SetShowProgressBars(evt.newValue);
 
         // ── Account (cross-device saves) ──────────────────────────────────────
 
@@ -198,7 +230,18 @@ namespace MobileIdleBuilder
                 _btnGoogleSignIn.SetEnabled(!_signingIn);
                 _btnGoogleSignIn.text = _signingIn ? "Signing in..." : "Sign in with Google";
             }
+            if (_btnPlayerName != null) _btnPlayerName.text = PlayerNameButtonText(PlayerNameService.Current);
         }
+
+        /// <summary>The Settings name row: the current public name (with its UGS tag), or an invitation to pick one.</summary>
+        internal static string PlayerNameButtonText(string fullName) =>
+            string.IsNullOrEmpty(fullName)
+                ? "Choose a player name"
+                : $"Player name: {PlayerNameRules.WithoutTag(fullName)} {PlayerNameRules.Tag(fullName)}".TrimEnd();
+
+        private void OnPlayerName() => GetComponent<PlayerNamePromptController>()?.OpenFromSettings();
+
+        private void OnNameChanged(string _) { if (this != null) RefreshAccount(); }
 
         /// <summary>
         /// The account row: who the save belongs to and a short player id, so two devices can be checked
@@ -247,9 +290,34 @@ namespace MobileIdleBuilder
             string playerId = SaveManager.Instance?.Current?.playerId;
             string device   = $"{SystemInfo.deviceModel} / {SystemInfo.operatingSystem}";
             Application.OpenURL(BuildFeedbackMailto(FeatureFlags.FeedbackEmail, Application.version, playerId, device));
+            TelemetryService.Instance?.RecordFeedbackOpened("settings_email");
         }
 
         private void OnPrivacyPolicy() => Application.OpenURL(FeatureFlags.PrivacyPolicyUrl);
+
+        private void OnDiscord()
+        {
+            string url = FeatureFlags.DiscordUrl;
+            if (!IsDiscordInvite(url)) return;
+            Application.OpenURL(url.Trim());
+            TelemetryService.Instance?.RecordFeedbackOpened("settings_discord");
+        }
+
+        /// <summary>
+        /// True for an https Discord invite (discord.gg/... or discord.com/invite/...). Anything else, including
+        /// a blank or mistyped Remote Config value, keeps the Settings button hidden.
+        /// </summary>
+        public static bool IsDiscordInvite(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps) return false;
+            string host = uri.Host.ToLowerInvariant();
+            string path = uri.AbsolutePath.Trim('/');
+            if (host == "discord.gg") return path.Length > 0;
+            if (host == "discord.com" || host == "www.discord.com")
+                return path.StartsWith("invite/", StringComparison.OrdinalIgnoreCase) && path.Length > "invite/".Length;
+            return false;
+        }
 
         /// <summary>
         /// Builds the Send Feedback <c>mailto:</c> link. The body is prefilled with the build version,

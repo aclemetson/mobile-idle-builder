@@ -5,20 +5,21 @@ namespace MobileIdleBuilder
 {
     /// <summary>
     /// Whether a port still needs a belt, using the same rules as ConveyorSystem. Pure, so tests pin it.
-    /// A belt merely passing the port moves nothing, so its arrow stays.
+    /// An output feeds a belt that starts on, or runs through, the tile in front of it (#206: merging at a
+    /// harvester's exit); a belt that only ends there takes nothing, so its arrow stays.
     /// </summary>
     public static class PortArrowRules
     {
         /// <summary>
         /// True when the port's arrow should show. <paramref name="tileFree"/> is false when the tile in
         /// front of the port is off the grid or holds a building, leaving no room for a belt or an arrow.
-        /// An output feeds a belt that STARTS on that tile; an input is fed by a belt that ENDS on it.
+        /// An output feeds a belt that STARTS on or RUNS THROUGH that tile; an input is fed by a belt that ENDS on it.
         /// </summary>
         public static bool ShouldShow(bool isOutput, bool tileFree, bool hasBelt, bool beltIsChainHead, bool beltIsTail)
         {
             if (!tileFree) return false;
             if (!hasBelt) return true;
-            return isOutput ? !beltIsChainHead : !beltIsTail;
+            return isOutput ? !beltIsChainHead && beltIsTail : !beltIsTail;
         }
     }
 

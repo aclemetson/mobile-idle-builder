@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_engineering
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     gravitational tension of thousands of square kilometres of solar-collecting surface.
     Built to last a million years.
   codexUnlocked: 0
-  baseSellValue: 322000000
+  baseSellValue: 9.45e+10
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

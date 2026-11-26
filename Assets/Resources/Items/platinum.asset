@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     toxic exhaust. In fuel cells it enables hydrogen-oxygen reactions at room temperature.
     Rarer than gold.
   codexUnlocked: 0
-  baseSellValue: 392000
+  baseSellValue: 15400
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

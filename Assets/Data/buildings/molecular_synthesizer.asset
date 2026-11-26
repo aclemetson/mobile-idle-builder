@@ -24,29 +24,31 @@ MonoBehaviour:
   isObsoleteable: 0
   obsoleteCondition: 
   obsoletedByResearch: 
-  requiresPower: 1
+  requiresPower: 0
   isPowerSource: 0
-  basePowerCostEV: 50
+  basePowerCostEV: 0
   powerCostIsDynamic: 0
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 3
+  isPlacedSink: 0
   baseOutputRate: 1
   supportedRecipes:
-  - {fileID: 11400000, guid: b175fea17216d474083f69d496d871cc, type: 2}
   - {fileID: 11400000, guid: 1aacaa56d9d734b46b22b375732e16ac, type: 2}
   - {fileID: 11400000, guid: d6fafcc65f1de0f4f94a4590fcb0b800, type: 2}
   - {fileID: 11400000, guid: 842eac4b22365274dbc1ceddfca4c621, type: 2}
-  - {fileID: 11400000, guid: b62f5d117e826f84b83598cd2a5ef3f9, type: 2}
-  - {fileID: 11400000, guid: 5ca28e7c456b5d644b892fb78df04308, type: 2}
-  - {fileID: 11400000, guid: 07da0090faff46847a007510755cefc2, type: 2}
-  inputSlotCount: 2
+  - {fileID: 11400000, guid: eea4dfa47f281b443873f34c993f6e68, type: 2}
+  - {fileID: 11400000, guid: b9182a9e2888de249809cc006fc6133d, type: 2}
+  - {fileID: 11400000, guid: d34aca21beec2ce428db67a6d54466ed, type: 2}
+  - {fileID: 11400000, guid: 3f4feccd033875b499ebc7328c2e3d9a, type: 2}
+  inputSlotCount: 1
   inputSlotLabels:
-  - Primary Element
-  - Secondary Element
+  - Stream
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -55,23 +57,21 @@ MonoBehaviour:
   ports:
   - portType: 0
     localCell: {x: 0, y: 0}
-    localFacing: 3
-  - portType: 0
-    localCell: {x: 0, y: 0}
-    localFacing: 1
+    localFacing: 2
   - portType: 1
     localCell: {x: 0, y: 0}
-    localFacing: 2
+    localFacing: 0
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_chemistry
   entropyCost: 5000
   baseMaxOutputItems: 20
   baseMaxInputItemsPerSlot: 30
   upgradeLevels:
   - level: 2
     outputRate: 2
-    powerCostEV: 75
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -79,7 +79,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 3
     outputRate: 4
-    powerCostEV: 115
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -87,7 +87,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   - level: 4
     outputRate: 8
-    powerCostEV: 170
+    powerCostEV: 0
     outputEV: 0
     influenceRadiusTiles: 0
     linkRadiusTiles: 0
@@ -121,7 +121,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: ec40a54a81e55d841b51adb88670f87d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: a2955157f835c994aad7b5a363eaa3e9, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

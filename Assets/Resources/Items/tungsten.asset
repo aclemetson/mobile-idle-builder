@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_physics
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     nozzles, light filaments, and plasma-facing components in fusion reactors all
     rely on tungsten's thermal extremity."
   codexUnlocked: 0
-  baseSellValue: 247000
+  baseSellValue: 28700
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -13,14 +13,17 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | elements / isotopes / particles / fusion / fission / fissile fields / periodic table | `elements-and-isotopes.md` |
 | worlds / tracks / chemistry / biology / organic compounds / a second or third map | `chemistry-biology.md` |
 | save fields, persistence, cloud, offline earnings, timed effects | `save-system.md` |
+| OS notifications (local reminders), notification permission, Android channels, iOS badge | `notifications.md` |
 | HUD, panels, UXML/USS, sub-controllers | `ui-toolkit.md` |
 | ECS systems, components, authoring, Mono↔ECS, multipliers/bonuses | `ecs-patterns.md` |
 | balance numbers, currencies, costs, formulas | `economy-balance.md` (values and research costs are generated: "Derived economy") |
 | remote toggles, feature gating, kill-switches, env-specific behavior | `feature-flags.md` |
 | telemetry, analytics events, player data collection, balancing dashboards | `analytics.md` |
 | crash/exception reporting, Cloud Diagnostics, debug data to Unity Cloud, symbol upload | `../runbooks/cloud-diagnostics-setup.md` |
+| CI secrets, API keys, service accounts, key rotation, a new `secrets.*` in a workflow | `../runbooks/secrets.md` |
 | building/structure visuals, procedural meshes, shaders, art direction | `visual-design.md` |
 | rewarded ads, ad SDK, LevelPlay go-live | `../runbooks/levelplay-ads-setup.md` |
+| PvE tournaments, leagues, player names, item stars, Cloud Code module | `tasks/feature-pve-tournaments.md` + `../runbooks/pve-backend-setup.md` |
 | any code change (before committing) | `testing.md` |
 | AI playtests (agent plays in the Editor via MCP), playtest briefs, fixtures, `playtest_*` tools | `../../Playtests/README.md` |
 
@@ -33,6 +36,7 @@ Each task file opens with its own Required-reading line and a Status line; updat
 | Task | Status | Size |
 |---|---|---|
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
+| `tasks/feature-pve-tournaments.md` — weekly 24h league tournaments (UGS Cloud Code), nicknames, item stars | phases 1-5 merged (#492-#496), phase 6 on feat/pve-6-onboarding | XL (6 phases) |
 
 ### Done (`tasks/archive/`)
 

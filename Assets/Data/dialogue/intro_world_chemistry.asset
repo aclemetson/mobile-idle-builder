@@ -14,18 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.DialogueSO
   lines:
   - speakerName: The Architect
-    text: "You have crossed a threshold. Physics forged the elements one nucleus
-      at a time \u2014 Chemistry mines them in bulk and forces them into new bonds.
-      A whole world opens."
+    text: 'You have crossed a threshold. Physics forged the elements one nucleus
+      at a time. Out here they come as nature leaves them: hydrogen and oxygen as
+      gases, carbon as graphite, nitrogen in the air.'
     portrait: {fileID: 0}
     pauseGame: 1
     highlightTarget: 
     action: 
   - speakerName: The Architect
-    text: "The Chemistry map has its own sites and its own element seams. Harvest
-      raw elements, synthesize compounds, and climb toward the organic precursors
-      of life. Travel between worlds from the Worlds panel whenever you wish \u2014
-      each keeps producing while you are away."
+    text: Chemistry is open. Travel there from the Worlds panel whenever you wish;
+      every world keeps producing while you are away. I will show you how things
+      work when you arrive.
     portrait: {fileID: 0}
     pauseGame: 0
     highlightTarget: 

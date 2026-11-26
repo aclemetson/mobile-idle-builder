@@ -28,12 +28,13 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_biology
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
   codexEntry: "Countless populations woven into one self-sustaining web \u2014 predators,
     prey, plants, and decomposers cycling matter and energy. A living world."
   codexUnlocked: 0
-  baseSellValue: 6.66e+10
+  baseSellValue: 1.17e+9
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -124,6 +124,17 @@ namespace MobileIdleBuilder
 
             // New game or migration from a pre-field-save build: randomize positions.
             yield return RegisterBakedBuildings();
+
+            // A save that loads straight into another site with no fields yet (dev 'visit world', or a
+            // site whose fields were cleared) gets that site's own layout, not the origin's quark fields.
+            int activeSite = SaveManager.Instance?.Current?.currentRun?.activeSiteIndex ?? 0;
+            var sites = Resources.Load<SiteDatabaseSO>("SiteDatabase")?.allSites;
+            if (activeSite > 0 && sites != null && activeSite < sites.Length && sites[activeSite] != null)
+            {
+                GenerateForSite(sites[activeSite], activeSite);
+                yield break;
+            }
+
             BuildDemonExclusionZone();
 
             var candidates = BuildCandidateList();
@@ -280,6 +291,87 @@ namespace MobileIdleBuilder
         {
             if (fieldSO == null || gridRenderer == null || _fieldMap.ContainsKey(new Vector2Int(x, y))) return;
             OccupyAndSpawn(x, y, fieldSO);
+        }
+
+        /// <summary>
+        /// The cells that move together when the player moves the field at <paramref name="cell"/> (#542),
+        /// anchor (lowest x, then lowest y) first. A field bought in groups (a quark pair) takes one
+        /// neighbour of the same field with it, preferring a neighbour <paramref name="isOccupied"/> says is
+        /// bare; any other field moves alone. Empty when there is no field at the cell.
+        /// </summary>
+        public static List<Vector2Int> FieldGroupAt(Vector2Int cell, Func<Vector2Int, bool> isOccupied = null)
+        {
+            var group = new List<Vector2Int>(2);
+            if (!_fieldMap.TryGetValue(cell, out var field) || field == null) return group;
+            group.Add(cell);
+            if (field.purchaseGroupSize <= 1) return group;
+
+            Vector2Int? partner = null;
+            foreach (var dir in Cardinals)
+            {
+                var n = cell + dir;
+                if (!_fieldMap.TryGetValue(n, out var other) || other != field) continue;
+                if (partner == null) partner = n;
+                if (isOccupied == null || !isOccupied(n)) { partner = n; break; }
+            }
+            if (partner.HasValue) group.Add(partner.Value);
+            group.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y.CompareTo(b.y));
+            return group;
+        }
+
+        /// <summary>
+        /// Re-keys the fields at <paramref name="from"/> to <paramref name="to"/> (same order) in the cell
+        /// registry. Each target must be empty or one of the moving cells. Returns false and changes nothing
+        /// otherwise. The instances themselves (cooldown and all) are kept.
+        /// </summary>
+        internal static bool MoveInRegistry(IReadOnlyList<Vector2Int> from, IReadOnlyList<Vector2Int> to)
+        {
+            if (from == null || to == null || from.Count == 0 || from.Count != to.Count) return false;
+            var moving = new HashSet<Vector2Int>(from);
+            if (moving.Count != from.Count || new HashSet<Vector2Int>(to).Count != to.Count) return false;
+            foreach (var c in from)
+                if (!_fieldMap.ContainsKey(c)) return false;
+            foreach (var c in to)
+                if (_fieldMap.ContainsKey(c) && !moving.Contains(c)) return false;
+
+            var fields    = new FieldSO[from.Count];
+            var instances = new FieldInstance[from.Count];
+            for (int i = 0; i < from.Count; i++)
+            {
+                fields[i] = _fieldMap[from[i]];
+                _instanceMap.TryGetValue(from[i], out instances[i]);
+                _fieldMap.Remove(from[i]);
+                _instanceMap.Remove(from[i]);
+            }
+            for (int i = 0; i < to.Count; i++)
+            {
+                _fieldMap[to[i]] = fields[i];
+                if (instances[i] != null) _instanceMap[to[i]] = instances[i];
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Moves placed fields (one, or a quark pair) to new cells: the player's Move from a press-and-hold
+        /// (#542). The caller has checked the target cells are bare ground. Tap cooldowns travel with the
+        /// field; the new cells save with the grid on the next save.
+        /// </summary>
+        public bool MoveFields(IReadOnlyList<Vector2Int> from, IReadOnlyList<Vector2Int> to)
+        {
+            if (gridRenderer == null || !MoveInRegistry(from, to)) return false;
+
+            foreach (var c in from)
+                gridRenderer.ClearFieldTileColor(c.x, c.y);
+
+            float cs = gridRenderer.CellSize;
+            foreach (var c in to)
+            {
+                var fieldSO = _fieldMap[c];
+                gridRenderer.SetFieldTileColor(c.x, c.y, fieldSO.fieldColor);
+                if (_instanceMap.TryGetValue(c, out var fi) && fi != null)
+                    fi.transform.position = new Vector3(c.x * cs, 0.5f, c.y * cs);
+            }
+            return true;
         }
 
         /// <summary>Called by GridSaveService.LoadGrid() to restore saved field positions.</summary>
@@ -478,7 +570,7 @@ namespace MobileIdleBuilder
             if (world == null) return;
 
             using var query = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<EntropySinkTag>(),
+                ComponentType.ReadOnly<DemonTag>(),
                 ComponentType.ReadOnly<GridPosition>()
             );
 

@@ -83,6 +83,8 @@ block's expected prestiges and permanent upgrades bought, worlds and sites that 
 | `block capture <n\|id\|name>` | Save the current game as that block's save point (e.g. after laying out a starter factory) |
 
 - `block load 1` is a fresh game (the tutorial).
+- `block load` and `block fresh` first save your game as the `visit` return point (2026-11-23), so `visit return` brings it back. Only the first return point is kept: chained visits and block loads all return to the game as it was before the first one. Recipes the block's research teaches stay marked as learned in recipe knowledge.
+- A block in another world (2026-11-23: the six Chemistry blocks `chemistry_entry` .. `chem_molecules_of_life`; Metallurgy and Engineering as they arrive) opens that world and starts you on its entry site. That world's tutorial is marked done, except on its first block (`block fresh chemistry_entry` plays the Chemistry tutorial). `block list` shows each block's world. To test one world's tutorial on its own, use `visit world <id>` or `tutorial restart <world>`. Worlds: `block fresh chemistry_entry`, `bio_biomolecules`, `metallurgy_ores`, `engineering_components` (each its world's first block). End game: `block fresh engineering_megastructure`, then `ascend` (or unlock every research and use the Megastructure panel's Ascend button); `add material <n>` to test Expansion levels. In Biology and Metallurgy, `task status/complete` act on the next world's delivery stages.
 - Wait for the game to finish loading before running `block load`; it refuses while a scene transition is running.
 - Back up first with `snapshot save <name>` if you want your current save back (`snapshot load <name>`).
 - Captured save points live in `persistentDataPath/snapshots/block_<id>.json`, per device.
@@ -163,6 +165,28 @@ Notes:
   `UNITY_EDITOR || DEVELOPMENT_BUILD`).
 - The auto-save loop will persist the loaded snapshot as the live save; if cloud save is on, it will
   also push to cloud on the next interval. Use `clear save` to get back to a clean slate.
+
+### 1.x Visiting and coming back (`visit`)
+
+Try something out and return to exactly where you were. The first `visit` saves your current game as a
+return point (`snapshots/visit_return.json`); further visits keep that original point, and `visit return`
+restores it and deletes it.
+
+| Command | Effect |
+|---|---|
+| `visit world <id>` | Saves the return point, then enters a world as a first arrival: unlocked for free, its buildings and channels removed (fields stay), its own tutorial from the first step. `<id>` is the world id, its short name (`chemistry`) or its index. Reloads the scene. |
+| `visit <name>` | Saves the return point, then loads any snapshot (`snapshot list`), e.g. one you made with `snapshot save`. |
+| `visit return` | Restores the game saved before the first visit and reloads. |
+| `visit status` | Says whether a return point is waiting. |
+| `tutorial restart <world>` | Same as `visit world <world>`: start that world's tutorial over on a fresh map (for `physics`, a fresh run with the main tutorial; prestige progress kept). `visit return` comes back. |
+
+Test the Chemistry tutorial on a phone: `tutorial restart chemistry`, play it through (the tutorial grants the
+entropy it needs), then `visit return`. Both commands build the visit in the save and reload the scene once.
+
+Notes:
+- While visiting, autosave and cloud save hold the visit's state; `visit return` writes your game back. If
+  the app is closed mid-visit, the return point stays on the device and `visit return` still works.
+- Recipe knowledge is not part of a snapshot, so recipes learned during a visit stay learned.
 
 ---
 

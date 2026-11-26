@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e70ad6e391dc549863f3024a35ad89, type: 3}
+  m_Name: antimatter
+  m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.ResearchSO
+  id: antimatter
+  displayName: Antimatter
+  description: 'Antimatter: Antimatter Cell.'
+  icon: {fileID: 0}
+  branch: 3
+  prerequisites:
+  - {fileID: 11400000, guid: 7ba831a6a8f7b0149b267ccf87e0ff11, type: 2}
+  depthInTree: 6
+  block: engineering_systems
+  treeX: -1
+  treeY: -1
+  requiredWorld: world_engineering
+  world: world_engineering
+  costBaseCurrency: 637000000000
+  costPrestigeCurrency: 0
+  durationSeconds: 3600
+  fieldCooldownMult: 1
+  effects: []
+  unlocksItems:
+  - {fileID: 11400000, guid: 15ee57d7a12401b4ea36624da0ebbcec, type: 2}
+  unlocksRecipes:
+  - {fileID: 11400000, guid: c606a2e7e0f38e84ab3e7eeccc2c33f1, type: 2}
+  unlocksBuildings: []
+  unlocksGridExpansion: 0
+  unlocksResearch:
+  - {fileID: 11400000, guid: 80bc36f1f3afb7249a3774024bc40584, type: 2}
+  resetsOnPrestige: 1
+  codexEntry: Antimatter

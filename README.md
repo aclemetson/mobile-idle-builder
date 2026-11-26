@@ -58,7 +58,7 @@ It's in closed testing on Google Play's internal track and TestFlight (release 0
 | Sign-in | Google Play Games / Google Sign-In, with UGS session-token reuse |
 | Tests | Unity Test Framework (NUnit): EditMode logic and ECS-world tests, plus PlayMode integration tests |
 | Tooling | Python (uv) for economy generation, balance and pacing reports, and icon and music pipelines; Blender for 3D molecule icons; PowerShell build and test scripts |
-| CI/CD | GitHub Actions on a self-hosted Windows runner for tests and signed builds (Play internal track, TestFlight). Paused for now; see [docs/runbooks/ci-setup.md](docs/runbooks/ci-setup.md). |
+| CI/CD | GitHub Actions on a self-hosted Windows runner for tests and signed builds (Play internal track, TestFlight); see [docs/runbooks/ci-setup.md](docs/runbooks/ci-setup.md). |
 
 ## Architecture
 
@@ -139,7 +139,7 @@ docs/
   balance/ analytics/ testing/   balance reports, telemetry dashboard, test checklists
 Playtests/            AI playtest briefs, fixtures and reports
 scripts/              build, test, economy and asset-pipeline tooling
-.github/workflows/    CI/CD (paused)
+.github/workflows/    CI/CD
 ```
 
 ## Getting started

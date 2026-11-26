@@ -17,11 +17,14 @@ namespace MobileIdleBuilder
         public readonly int                 maxLevel;
         public readonly int[]               levelCosts;     // prestige currency cost per level (index 0 = level 1)
         public readonly (string id, int minLevel)[] prereqs;
+        /// <summary>For WorldCraftSpeed / WorldOutput: the world the bonus applies in (WorldSO id); null = every world.</summary>
+        public readonly string              world;
 
         public UpgradeDef(string id, string displayName, string description,
             UpgradeEffectType effectType, float effectPerLevel, int maxLevel,
-            int[] levelCosts, (string, int)[] prereqs = null)
+            int[] levelCosts, (string, int)[] prereqs = null, string world = null)
         {
+            this.world          = world;
             this.id             = id;
             this.displayName    = displayName;
             this.description    = description;
@@ -57,14 +60,15 @@ namespace MobileIdleBuilder
             new UpgradeDef(
                 "memory_resonance", "Memory Resonance",
                 "All research costs are 5% cheaper per level on every run.",
-                UpgradeEffectType.GlobalResearchDiscount, 0.05f, 5,
-                new[]{ 10, 20, 40, 80, 160 }),
+                UpgradeEffectType.GlobalResearchDiscount, 0.05f, 10,
+                new[]{ 10, 20, 40, 80, 160, 230, 330, 480, 700, 1000 }),
 
             new UpgradeDef(
                 "assembly_line", "Assembly Line",
                 "All buildings craft 10% faster per level.",
-                UpgradeEffectType.CraftSpeedMultiplier, 0.10f, 5,
-                new[]{ 15, 30, 60, 120, 240 }),
+                UpgradeEffectType.CraftSpeedMultiplier, 0.10f, 20,
+                new[]{ 15, 30, 60, 120, 240, 310, 400, 520, 680, 880,
+                       1100, 1400, 1800, 2300, 3000, 3900, 5100, 6600, 8600, 11000 }),
 
             new UpgradeDef(
                 "expanded_vault", "Expanded Vault",
@@ -79,11 +83,13 @@ namespace MobileIdleBuilder
                 new[]{ 20, 35, 55, 85, 130, 200, 305, 465, 705, 1070 }),
 
             // ── Tier 2: require 1 Tier-1 level ───────────────────────────────
+            // 10 levels since the Item Timeline (2026-11-23): its walls (Sodium, Copper) expect the later ones.
             new UpgradeDef(
                 "quantum_yield", "Quantum Yield",
                 "All recipes produce +10% more output per level.",
-                UpgradeEffectType.OutputQuantityMultiplier, 0.10f, 5,
-                new[]{ 40, 80, 160, 320, 640 },
+                UpgradeEffectType.OutputQuantityMultiplier, 0.10f, 20,
+                new[]{ 40, 80, 160, 320, 640, 960, 1500, 2200, 3300, 4900,
+                       6100, 7600, 9500, 12000, 15000, 19000, 24000, 30000, 38000, 48000 },
                 new[]{ ("assembly_line", 1) }),
 
             new UpgradeDef(
@@ -121,13 +127,71 @@ namespace MobileIdleBuilder
                 new[]{ 30, 50, 85, 140, 230, 380, 625, 1030, 1700, 2800 },
                 new[]{ ("memory_resonance", 2) }),
 
+            // #491: the first N research of each run skip their timer (still paid in entropy). Early timers
+            // are short and later ones long, so each level is worth more as the tree deepens; priced alongside
+            // Research Overdrive, which it follows.
+            new UpgradeDef(
+                "free_research", "Free Research",
+                "One more research per level finishes the moment you start it, each run (you still pay its entropy).",
+                UpgradeEffectType.FreeResearch, 1f, 10,
+                new[]{ 25, 45, 75, 120, 190, 300, 470, 740, 1150, 1800 },
+                new[]{ ("research_overdrive", 1) }),
+
             new UpgradeDef(
                 "entropy_echo", "Entropy Echo",
                 "Earn +5% more prestige currency per run per level.",
-                UpgradeEffectType.PrestigeGainMultiplier, 0.05f, 4,
-                new[]{ 200, 600, 1800, 5400 },
+                UpgradeEffectType.PrestigeGainMultiplier, 0.05f, 10,
+                new[]{ 200, 600, 1800, 5400, 7000, 9100, 12000, 16000, 21000, 27000 },
                 new[]{ ("entropy_headstart", 3), ("memory_resonance", 3) }),
 
+            // ── World tracks (Item Timeline, 2026-11-23) ─────────────────────
+            // Each world has its own track, bought at its walls: the research there costs more than one run
+            // earns, so the player prestiges at the same spot and buys a level or two each time. A level costs
+            // about half a run's prestige currency at its wall (docs/item-timeline.html, Prestige upgrades).
+            new UpgradeDef(
+                "fission_yield", "Fission Yield",
+                "Physics buildings produce +15% more output per level.",
+                UpgradeEffectType.WorldOutput, 0.15f, 15,
+                new[]{ 95, 140, 190, 270, 370, 520, 680, 880, 1100, 1400,
+                       1800, 2300, 3000, 3900, 5100 }, null, WorldGate.Physics),
+            new UpgradeDef(
+                "neutron_economy", "Neutron Economy",
+                "Physics buildings craft 10% faster per level.",
+                UpgradeEffectType.WorldCraftSpeed, 0.10f, 15,
+                new[]{ 130, 180, 250, 340, 480, 620, 810, 1100, 1400, 1800,
+                       2300, 3000, 3900, 5100, 6600 },
+                new[]{ ("fission_yield", 1) }, WorldGate.Physics),
+            new UpgradeDef(
+                "spring_pressure", "Spring Pressure",
+                "Chemistry Springs pour +20% more water per level, so more buildings run at full speed.",
+                UpgradeEffectType.WorldStreamFlow, 0.20f, 12,
+                new[]{ 89, 130, 180, 250, 340, 480, 620, 810, 1100, 1400,
+                       1800, 2300 }, null, WorldGate.Chemistry),
+            new UpgradeDef(
+                "catalysis", "Catalysis",
+                "Chemistry buildings react 15% faster per level.",
+                UpgradeEffectType.WorldCraftSpeed, 0.15f, 15,
+                new[]{ 120, 170, 230, 320, 450, 630, 870, 1300, 1700, 2200,
+                       2900, 3800, 4900, 6400, 8300 },
+                new[]{ ("spring_pressure", 1) }, WorldGate.Chemistry),
+            new UpgradeDef(
+                "growth_media", "Growth Media",
+                "Biology buildings produce +15% more output per level.",
+                UpgradeEffectType.WorldOutput, 0.15f, 15,
+                new[]{ 180, 250, 350, 480, 680, 940, 1400, 1900, 2500, 3200,
+                       4200, 5500, 7200, 9400, 12000 }, null, WorldGate.Biology),
+            new UpgradeDef(
+                "furnace_heat", "Furnace Heat",
+                "Metallurgy buildings smelt 15% faster per level.",
+                UpgradeEffectType.WorldCraftSpeed, 0.15f, 15,
+                new[]{ 220, 310, 440, 610, 850, 1200, 1700, 2400, 3100, 4000,
+                       5200, 6800, 8800, 11000, 14000 }, null, WorldGate.Metallurgy),
+            new UpgradeDef(
+                "precision", "Precision",
+                "Engineering buildings produce +10% more output per level.",
+                UpgradeEffectType.WorldOutput, 0.10f, 15,
+                new[]{ 240, 330, 460, 650, 900, 1300, 1800, 2500, 3200, 4200,
+                       5500, 7200, 9400, 12000, 16000 }, null, WorldGate.Engineering),
             // ── Idle collection ───────────────────────────────────────────────
             // A short 30 min base cap brings players back to collect; the first levels are cheap and have
             // no prerequisite so the first prestige (~50✦) buys the first four levels (2.5 h) straight away.
@@ -168,6 +232,20 @@ namespace MobileIdleBuilder
             return total;
         }
 
+        /// <summary>
+        /// Sum of the world-only upgrades of <paramref name="type"/> (WorldCraftSpeed / WorldOutput) that apply in
+        /// <paramref name="worldId"/> (null = Physics). An upgrade with no world applies everywhere.
+        /// </summary>
+        public float GetWorldEffect(UpgradeEffectType type, string worldId)
+        {
+            worldId = string.IsNullOrEmpty(worldId) ? WorldGate.Physics : worldId;
+            float total = 0f;
+            foreach (var def in All)
+                if (def.effectType == type && (def.world == null || def.world == worldId))
+                    total += def.effectPerLevel * GetLevel(def.id);
+            return total;
+        }
+
         /// <summary>True if all prerequisites for <paramref name="def"/> are satisfied.</summary>
         public bool PrereqsMet(UpgradeDef def)
         {
@@ -195,6 +273,9 @@ namespace MobileIdleBuilder
             int cur = GetLevel(id);
             if (cur >= def.maxLevel) return false;
             _levels[id] = cur + 1;
+            if (def.effectType == UpgradeEffectType.WorldCraftSpeed || def.effectType == UpgradeEffectType.WorldOutput
+                || def.effectType == UpgradeEffectType.WorldStreamFlow)
+                WorldRules.RefreshWorldBonus();
             OnUpgradePurchased?.Invoke();
             return true;
         }

@@ -113,12 +113,44 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 08a38c1e689b7204f99cdd0492f12120, type: 2}
   - id: intro_upgrades_context
     dialogue: {fileID: 11400000, guid: e3e62733b7f06bc4187f90c710833864, type: 2}
-  - id: intro_quantum_domains
-    dialogue: {fileID: 11400000, guid: d250f565c3f9d474089ec6a354b950d9, type: 2}
   - id: intro_world_chemistry
     dialogue: {fileID: 11400000, guid: 1af5689e683ed1a4884b81b8decc7091, type: 2}
+  - id: chem_tut_fields
+    dialogue: {fileID: 11400000, guid: 30078a786ddba7b4d862553c44001688, type: 2}
+  - id: chem_tut_channel
+    dialogue: {fileID: 11400000, guid: 0bc2f5a3121eae44ca3ad46e283aca90, type: 2}
+  - id: chem_tut_flow
+    dialogue: {fileID: 11400000, guid: 8b0076def2dd99749bc2046cf344ac90, type: 2}
+  - id: chem_tut_calorimeter
+    dialogue: {fileID: 11400000, guid: ff6fc5db69392d546b77b8ee1e3af969, type: 2}
+  - id: chem_tut_bank
+    dialogue: {fileID: 11400000, guid: b53f81da2a2ebfe469116c837e683176, type: 2}
+  - id: chem_tut_extractors
+    dialogue: {fileID: 11400000, guid: 563e16e6450697f4f97aeb8984c5f515, type: 2}
+  - id: chem_tut_spring
+    dialogue: {fileID: 11400000, guid: 263ac4c52909f804bbfb82aa97e4b2d4, type: 2}
+  - id: chem_tut_welcome
+    dialogue: {fileID: 11400000, guid: f9604ebf0d69d2a49908e094f4073f82, type: 2}
   - id: intro_world_biology
     dialogue: {fileID: 11400000, guid: de01fe572e8254a48a1dff034e904cde, type: 2}
+  - id: intro_world_metallurgy
+    dialogue: {fileID: 11400000, guid: 0b7a869a29d5f0b4fa53dd87ed907f11, type: 2}
+  - id: met_tut_welcome
+    dialogue: {fileID: 11400000, guid: 06cc16fd6a7dc1147ae63b396cd06329, type: 2}
+  - id: met_tut_ore
+    dialogue: {fileID: 11400000, guid: 9a29e402f7b01f646adfcd97465ab253, type: 2}
+  - id: met_tut_harvester
+    dialogue: {fileID: 11400000, guid: 8b78d7108e7c3ea428a0df61700a6adf, type: 2}
+  - id: met_tut_next
+    dialogue: {fileID: 11400000, guid: ac67672704dc98a4ead7b1d32fafe92a, type: 2}
+  - id: intro_world_engineering
+    dialogue: {fileID: 11400000, guid: f486581510f0abe478b7f3298ad5b80a, type: 2}
+  - id: eng_tut_welcome
+    dialogue: {fileID: 11400000, guid: d33bb6b3289875c41807095fe47fadf1, type: 2}
+  - id: eng_tut_fabricator
+    dialogue: {fileID: 11400000, guid: 86493563551b44b4daea4687f61c0d26, type: 2}
+  - id: eng_tut_next
+    dialogue: {fileID: 11400000, guid: b1c58bf371111d543b0decaa3ab59804, type: 2}
   - id: upgrade_complete_context
     dialogue: {fileID: 11400000, guid: 2c2556e84dcc14546a4eba82264a32cc, type: 2}
   - id: post_tutorial_intro
@@ -135,14 +167,6 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: 2f4e215fc284ae24b8586b12e645fdbb, type: 2}
   - id: uranium_crafted_context
     dialogue: {fileID: 11400000, guid: 6070f72c988bfdf4cbbf64026ce51ed9, type: 2}
-  - id: intro_isotopes_context
-    dialogue: {fileID: 11400000, guid: 6d35297167589f64ea4b9432175ad754, type: 2}
-  - id: isotopes_unlocked_context
-    dialogue: {fileID: 11400000, guid: 721eb2ff2d10d8b4d8e2f245da48ca0e, type: 2}
-  - id: place_manipulator_context
-    dialogue: {fileID: 11400000, guid: 5c4f6e2e370d5fd4397ccc11dacf20bc, type: 2}
-  - id: isotope_crafted_context
-    dialogue: {fileID: 11400000, guid: 26ae493ab17b8e84a80806f435b7a37f, type: 2}
   - id: intro_radioactive_context
     dialogue: {fileID: 11400000, guid: ef38038a87f7e9b44b020f791a455337, type: 2}
   - id: radioactive_unlocked_context
@@ -165,3 +189,9 @@ MonoBehaviour:
     dialogue: {fileID: 11400000, guid: d2cf1b4040bb32d408ea0c4e6e5b9281, type: 2}
   - id: tutorial_complete_context
     dialogue: {fileID: 11400000, guid: a5540aeff9bc6ae4b9ffec407e63040c, type: 2}
+  - id: intro_cyclotron
+    dialogue: {fileID: 11400000, guid: c8010d473d24e3f41bd40323248be0c9, type: 2}
+  - id: pve_intro
+    dialogue: {fileID: 11400000, guid: 8ef996e5c833b8f4598e578d99e2234f, type: 2}
+  - id: pve_intro_weekly
+    dialogue: {fileID: 11400000, guid: be826a57f58e48d49a2fbdc9e2d32e61, type: 2}

@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: MobileIdleBuilder::MobileIdleBuilder.BuildingSO
   id: isotopic_manipulator
   displayName: Isotopic Manipulator
-  description: Adds or removes neutrons from a base element to produce isotopes.
-    Slower than the Atomic Assembler by design.
-  icon: {fileID: 0}
+  description: 'Adds or removes neutrons: enriches Uranium into Uranium-235 and irradiates
+    or strips the decay-chain elements. Slower than the Atom Generator by design.'
+  icon: {fileID: 21300000, guid: f81b8eeeab8820349b4129348bd1feea, type: 3}
   prefab: {fileID: 0}
   buildingId: 5
   tier: 2
@@ -31,11 +31,12 @@ MonoBehaviour:
   baseOutputEV: 0
   influenceRadiusTiles: 0
   linkRadiusTiles: 0
+  isSpring: 0
+  streamFlow: 0
+  flowDraw: 0
+  isPlacedSink: 0
   baseOutputRate: 0.5
   supportedRecipes:
-  - {fileID: 11400000, guid: e06a77d34877ff84dafb8531a1ae1e97, type: 2}
-  - {fileID: 11400000, guid: 320d8f44744963e479aa45bce808200f, type: 2}
-  - {fileID: 11400000, guid: 534588c4ae9e1be4ea3e6db25bf28162, type: 2}
   - {fileID: 11400000, guid: e297838e6c17c8549aaaf00848ed3049, type: 2}
   - {fileID: 11400000, guid: 6966f8f8699f998428149392eacfb28f, type: 2}
   - {fileID: 11400000, guid: bb5ca4790c0140040b816372a7f24335, type: 2}
@@ -49,7 +50,6 @@ MonoBehaviour:
   - Neutrons
   isEntropySink: 0
   isItemFilter: 0
-  isSplitter: 0
   assignableOutputs: 0
   recipeModeLabels: []
   recipeModePrefixes: []
@@ -68,6 +68,7 @@ MonoBehaviour:
   placementRule: 0
   compatibleAdjacentCategories: 
   compatibleFields: []
+  world: world_physics
   entropyCost: 1500
   baseMaxOutputItems: 15
   baseMaxInputItemsPerSlot: 30
@@ -124,7 +125,7 @@ MonoBehaviour:
     costPrestigeCurrency: 0
   hasSpecialUpgrade: 0
   specialUpgrade: {fileID: 0}
-  requiredResearch: {fileID: 11400000, guid: 9dc1fbec64c5b7c4d93a848cf07bdc84, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 202753c68bb8ed344a9718acbf017182, type: 2}
   availableFromStart: 0
   tutorialNote: 
   collectsDecayParticles: 0

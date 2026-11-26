@@ -63,6 +63,18 @@
     border-radius: var(--border-radius);
 }
 
+/* Weekly / Monthly / Progress before the first prestige: still tappable (the list says how to unlock). */
+.achievements-tab--locked {
+    opacity: 0.45;
+}
+
+.ach-locked-msg {
+    margin: var(--spacing-md) var(--spacing-sm);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
 .achievements-tab--active {
     background-color: rgba(0, 230, 118, 0.12);
     border-color: var(--color-success);

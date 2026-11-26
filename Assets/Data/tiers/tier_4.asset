@@ -18,6 +18,5 @@ MonoBehaviour:
     with engineered properties.
   tierColor: {r: 0.5882353, g: 0.80784315, b: 0.7058824, a: 1}
   tierIcon: {fileID: 0}
-  unlockResearch:
-  - {fileID: 11400000, guid: b2ca19681f4e4ae45908f9a9f39b7d11, type: 2}
+  unlockResearch: []
   starterItems: []

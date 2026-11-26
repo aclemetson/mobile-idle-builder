@@ -123,27 +123,28 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void NeutronCaptureChain_RunsInInputOrder()
+        public void SpallationChain_RunsInInputOrder()
         {
+            // Item Timeline (2026-11-23): each Spallation node needs the one before, whose last element feeds it.
             var db = _db.allResearch.Where(r => r != null).ToDictionary(r => r.id);
             void Requires(string node, string prereq) =>
                 Assert.IsTrue(db[node].prerequisites.Any(p => p != null && p.id == prereq), $"{node} should require {prereq}");
-            Requires("heavy_transition_metals",      "slow_neutron_capture");   // Samarium from Cerium (fission)
-            Requires("rapid_neutron_capture",        "heavy_transition_metals"); // Europium needs Samarium
-            Requires("lanthanides_and_heavy_metals", "rapid_neutron_capture");  // Gadolinium..Rhenium from Europium
-            Requires("exotic_metals",                "lanthanides_and_heavy_metals"); // Osmium needs Rhenium
-            Requires("precious_metals",              "exotic_metals");          // Platinum needs Iridium
-            Assert.AreEqual("precious_metals", _recipes.First(r => r.id == "s_capture_mercury").requiredResearch?.id,
-                            "Mercury (Gold + neutron) unlocks with Gold");
+            Requires("spallation_1", "decay_branches");      // Mercury from Thallium
+            for (int i = 2; i <= 11; i++) Requires($"spallation_{i}", $"spallation_{i - 1}");
+            Requires("iron_convergence", "spallation_11");   // Iron needs Cobalt
+            Assert.AreEqual("spallation_1", _recipes.First(r => r.id == "spall_mercury").requiredResearch?.id,
+                            "Mercury (Thallium + neutron) opens the metal descent");
         }
 
         [Test]
-        public void WaterAndAmmonia_UnlockWithOxygenAndNitrogen()
+        public void WaterAndAmmonia_AreChemistry()
         {
+            // 2026-11-19 Chemistry gate: every molecule is made in the Chemistry world.
             var water   = _recipes.First(r => r.id == "water");
             var ammonia = _recipes.First(r => r.id == "ammonia");
-            Assert.AreEqual("fusion_ii",    water.requiredResearch?.id,   "Water unlocks with Oxygen (Alpha Process)");
-            Assert.AreEqual("mid_elements", ammonia.requiredResearch?.id, "Ammonia unlocks with Nitrogen (Mid-Period Elements)");
+            // 2026-11-19 natural feedstock: water opens Chemistry (H2 + O2), ammonia waits for nitrogen gas.
+            Assert.AreEqual("chemistry_lab",     water.requiredResearch?.id,   "Water is Chemistry's first molecule");
+            Assert.AreEqual("nitrogen_fixation", ammonia.requiredResearch?.id, "Ammonia comes with Nitrogen Fixation");
         }
     }
 }

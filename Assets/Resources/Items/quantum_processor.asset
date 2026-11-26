@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: world_engineering
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     Factorises problems in polynomial time that classical computers cannot solve
     in the lifetime of the universe.
   codexUnlocked: 0
-  baseSellValue: 32600000
+  baseSellValue: 8.19e+9
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

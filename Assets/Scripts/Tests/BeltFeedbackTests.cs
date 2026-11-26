@@ -46,6 +46,11 @@ namespace MobileIdleBuilder.Tests
             Assert.LessOrEqual(BeltFeedback.BadStartMessage.Length, 45);
             Assert.LessOrEqual(BeltFeedback.BadEndMessage.Length, 45);
             Assert.LessOrEqual(BeltFeedback.RetapStartMessage.Length, 45);
+            Assert.LessOrEqual(BeltFeedback.CrossesItselfMessage.Length, 45);
+            Assert.LessOrEqual(BeltFeedback.NoRouteMessage.Length, 45);
+            Assert.LessOrEqual(BeltFeedback.TraceEndedMessage.Length, 45);
+            Assert.LessOrEqual(ConveyorPlacer.PlayerReason("cell (1,2) would have 4 inbounds (max 3)").Length, 45);
+            Assert.LessOrEqual(ConveyorPlacer.PlayerReason("cell (1,2) already outputs East; cannot fork output").Length, 45);
         }
 
         // ---- IsDetour ----

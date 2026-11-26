@@ -31,7 +31,9 @@ namespace MobileIdleBuilder
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            float deltaTime = SystemAPI.Time.DeltaTime;
+            // Speed burst: the whole factory runs on a faster clock (FactoryClock, 1 when absent).
+            float clockRate = FactoryClock.Sanitize(SystemAPI.TryGetSingleton<FactoryClock>(out var fc) ? fc.Rate : 1f);
+            float deltaTime = SystemAPI.Time.DeltaTime * clockRate;
             var inventory   = SystemAPI.GetSingletonBuffer<InventorySlot>();
             long escapedEntropy = 0;
             // Cyclotron Kick boost (1 when none is running) multiplies the byproduct entropy paid below.
@@ -54,6 +56,12 @@ namespace MobileIdleBuilder
                 if (pd.SpeedMultiplier  > 0f) globalSpeedMult  *= pd.SpeedMultiplier;
                 if (pd.OutputMultiplier > 0f) globalOutputMult *= pd.OutputMultiplier;
             }
+            // The live world's prestige-shop track (Fission Yield / Neutron Economy in Physics...).
+            if (SystemAPI.TryGetSingleton<ActiveWorldRules>(out var wr))
+            {
+                if (wr.SpeedMult  > 0f) globalSpeedMult  *= wr.SpeedMult;
+                if (wr.OutputMult > 0f) globalOutputMult *= wr.OutputMult;
+            }
 
             foreach (var (building, process, inputs, outputs, localIn, localOut, invConfig, entity) in
                 SystemAPI.Query<
@@ -75,6 +83,10 @@ namespace MobileIdleBuilder
                 float powerRatio = SystemAPI.HasComponent<PowerStatus>(entity)
                     ? SystemAPI.GetComponent<PowerStatus>(entity).ThrottleRatio
                     : 1f;
+                // Stream worlds (Chemistry): flow replaces power. StreamFlowSystem writes the share of its
+                // draw the building got from the stream beside it, upstream first.
+                if (SystemAPI.HasComponent<StreamStatus>(entity))
+                    powerRatio *= SystemAPI.GetComponent<StreamStatus>(entity).Ratio;
 
                 // ---- Input availability check (drives InputsSatisfied flag for UI) ----
                 // Optional buffer (probed, not queried): entities built without it keep the old path.
@@ -201,7 +213,7 @@ namespace MobileIdleBuilder
                 {
                     var income = SystemAPI.GetSingletonRW<AutomationIncome>();
                     income.ValueRW.Total     += escapedEntropy;
-                    income.ValueRW.Unboosted += escapedEntropy / (double)entropyBoost;
+                    income.ValueRW.Unboosted += escapedEntropy / ((double)entropyBoost * clockRate);
                 }
             }
         }

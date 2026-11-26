@@ -1,31 +1,33 @@
 # CI/CD Setup Guide
 
-> **Current status (2026-11-17): paused.** Every workflow in `.github/workflows/` is set to
-> `workflow_dispatch` only, so nothing builds, signs or uploads on a PR, merge or push. The original
-> triggers are kept in each file as a commented `# on:` block. Tests run locally before each commit
-> (`scripts/test-local.ps1`, see `docs/agents/testing.md`).
+> **Current status (2026-11-21): running.** The pipeline was paused from 2026-11-17 (every workflow
+> `workflow_dispatch` only) and is back on its original triggers: PR Tests on every PR into develop,
+> main, `release/**` and `integration/**`; Release Internal when a PR merges into `release/**`; Release
+> iOS on a push to develop; Bump Version when a `release/**` branch is created. Prod Release stays
+> manual-only (parked). All five are enabled in GitHub, and `Edit Mode Tests` is again a required check
+> on the "Protect main and develop" ruleset. Still run the suite locally before each PR
+> (`scripts/test-local.ps1`, see `docs/agents/testing.md`); CI is the second line.
 >
-> To run the CI test job on demand, dispatch it on a branch: `gh workflow run "PR Tests" --ref <branch>`
-> (or Actions > PR Tests > Run workflow). It runs EditMode and PlayMode tests on the self-hosted runner.
+> Manual runs still work alongside the triggers: `gh workflow run "PR Tests" --ref <branch>` tests any
+> branch, and `gh workflow run "Release Internal" --ref release/<x.y>` rebuilds and uploads a release
+> branch to the Play **internal** track (and sets `update.latest.android` in the UGS **development**
+> environment). A manual Release Internal run only builds `release/*` branches.
 >
-> **To re-enable:**
-> 1. Restore the commented `on:` block in each workflow.
-> 2. Re-enable the workflows in GitHub (`gh workflow enable "<name>"`).
-> 3. Re-add `Edit Mode Tests` as a required status check on the repository ruleset.
->
-> The rest of this guide describes the pipeline as it ran through release 0.5.
+> **To pause again:** set each workflow's `on:` to `workflow_dispatch` only, `gh workflow disable` the
+> ones that should not run, and drop `Edit Mode Tests` from the ruleset's required checks (a required
+> check that never runs blocks every PR into develop/main).
 
 ## At a glance
 
 ```mermaid
 flowchart LR
   PR["PR into integration/**, release/**,<br/>develop or main"] --> T["pr-tests.yml<br/>EditMode + PlayMode tests<br/>(self-hosted Windows runner)"]
-  T -->|merge into release/**| A["release-internal.yml<br/>signed .aab -> Google Play internal"]
+  T -->|merge into release/**| A["release-internal.yml<br/>signed .aab -> Google Play internal<br/>+ PvE Cloud Code module -> UGS development"]
   A -->|release/** merged into develop| I["release-ios.yml<br/>.ipa -> TestFlight"]
   I -.->|manual| P["prod-release.yml<br/>.aab -> Play production (draft)"]
 ```
 
-Hardening that stays in place while the pipeline is paused:
+Hardening in place:
 - Every action is pinned to a full commit SHA (with the tag in a comment), and Dependabot proposes updates.
 - Each workflow declares least-privilege `permissions:`. Only the two jobs that push a tag or commit get `contents: write`.
 - Self-hosted jobs only run for same-repository PRs. Fork PRs never reach the build machine.
@@ -279,9 +281,16 @@ window EDM4U documents), after generation and before `pod install`.
 Podfile, so a dropped pod fails the cheap Ubuntu job with the pod named instead of the 10x
 macOS one.
 
+### Dev console
+
+The TestFlight lane builds with `BuildScript.BuildIOSDevelopment()`, which adds the
+`DEVELOPMENT_BUILD` define (dev console and dev tooling, shake to open) without making a
+debuggable player, the same as the Android internal lane's `BuildAndroidDevelopment()`.
+`BuildIOS()` is the plain build for a future App Store lane.
+
 ### Build number
 
-`BuildScript.BuildIOS()` sets `CFBundleVersion` from the existing
+`BuildScript.BuildIOS()` (and `BuildIOSDevelopment()`) sets `CFBundleVersion` from the existing
 `AndroidBundleVersionCode`, so one monotonic counter feeds both stores. There is no
 separate pre-merge iOS guard; TestFlight rejecting a duplicate build number is the
 backstop (the same role the Play upload plays for Android).
@@ -333,6 +342,8 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 
 ## Secrets Summary
 
+Full inventory, blast radius and rotation procedures: `docs/runbooks/secrets.md`.
+
 | Secret | Source | Used By |
 |--------|--------|---------|
 | `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | builds |
@@ -347,6 +358,21 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
 | `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
+| `UGS_PROJECT_SERVICE_KEY_ID` / `UGS_PROJECT_SERVICE_KEY_SECRET` | key of UGS service account **`ci-project`** (Remote Config Admin) | Remote Config writes: internal + iOS update prompt, what's new, Publish Game Data |
+| `UGS_DEV_SERVICE_KEY_ID` / `UGS_DEV_SERVICE_KEY_SECRET` | key of **`ci-development`** (Cloud Code Editor in development) | internal: Cloud Code deploy |
+| `UGS_SYMBOLS_SERVICE_KEY_ID` / `UGS_SYMBOLS_SERVICE_KEY_SECRET` | key of **`ci-symbols`** (Observability Symbols Uploader) | internal + prod: Diagnostics symbol upload (Basic header = base64 of `keyId:secret`, built in the workflow) |
+| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + symbol upload |
+| `UGS_ENV_ID_PRODUCTION` | production environment id, in the **`production`** GitHub environment | Publish Game Data to production |
+| `DISCORD_BOT_TOKEN` | Foundry Bot token (Discord Developer Portal) | Discord Forum Sync |
+| `DISCORD_BETA_WEBHOOK` / `DISCORD_PATCH_NOTES_WEBHOOK` / `DISCORD_STAFF_WEBHOOK` | channel webhook URLs | beta announcement (internal), Discord Announce, failure alerts (all release workflows) |
+| `DISCORD_GUILD_ID`, `DISCORD_*_FORUM_ID`, `DISCORD_*_PING_ROLE_ID` (variables) | Discord IDs (Developer Mode > Copy ID) | Discord Forum Sync, announcements |
+
+One UGS service account per job (Unity Cloud Dashboard > Administration > Service accounts); roles, scopes and
+rotation are in `docs/runbooks/secrets.md`. After creating or rotating a key, run **UGS Key Check** (it checks each
+key's allowed and refused calls).
+
+The Discord secrets, variables and workflows (`discord-sync.yml`, `discord-announce.yml`, the `discord-alert` jobs) are
+set up in `docs/community/discord-server.md` ("Automation"). All of them skip while unset.
 
 ## Local Testing
 

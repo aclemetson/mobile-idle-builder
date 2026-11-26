@@ -19,23 +19,23 @@ MonoBehaviour:
   tier: 3
   category: 5
   inputs:
-  - item: {fileID: 11400000, guid: 41f1f21cc30520d45b7d322ea7882272, type: 2}
+  - item: {fileID: 11400000, guid: d0fea56aa6644c4419ff2c9bd9a53418, type: 2}
+    quantity: 1
+  - item: {fileID: 11400000, guid: 505749244743c844091346de530490ad, type: 2}
     quantity: 3
-  - item: {fileID: 11400000, guid: 593455915dc02b64b9e543f6d8e40dd5, type: 2}
-    quantity: 7
   neutronAdjustment: []
   outputItem: {fileID: 11400000, guid: d5b02317e42a8894987ece79732b5188, type: 2}
-  outputQuantity: 1
+  outputQuantity: 2
   byproducts: []
-  baseCraftTime: 90
+  baseCraftTime: 36
   manualCraftTime: 0
   powerCostIsDynamic: 0
-  fixedPowerCostEV: 450
+  fixedPowerCostEV: 200
   validBuildings:
   - {fileID: 11400000, guid: da621cf564a4fb64487c1ca532c862d6, type: 2}
   canCraftManually: 0
   knownFromStart: 0
-  requiredResearch: {fileID: 11400000, guid: aebb3fe660204d04a94ce55afc25ce0d, type: 2}
+  requiredResearch: {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
   unlocksResearch: {fileID: 0}
   isSimplified: 0
-  simplificationNote: 
+  simplificationNote: N2 + 3 H2 -> 2 NH3

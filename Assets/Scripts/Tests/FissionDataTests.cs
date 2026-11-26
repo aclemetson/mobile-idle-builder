@@ -8,8 +8,9 @@ using UnityEngine;
 namespace MobileIdleBuilder.Tests
 {
     /// <summary>
-    /// #322 phase 2. Splitting Uranium used to turn a 128e U-235 into ~18M of Krypton + Barium. The heavy-element
-    /// values were rescaled so fission gains a few times its input, and every split is physically honest.
+    /// The nuclear side of the Item Timeline (2026-11-23): Uranium is mined and walked down to Iron, so
+    /// splitting it into Barium + Krypton (worth 66x its fuel under the descent's prices) is gone. The Fission
+    /// Reactor is a breeder instead: Uranium -> Neptunium -> Plutonium, the first transuranics.
     /// </summary>
     [TestFixture]
     public class FissionDataTests
@@ -23,44 +24,37 @@ namespace MobileIdleBuilder.Tests
 
         GameData _gd;
         Dictionary<string, GdItem> _items;
-        List<GdRecipe> _fission;
+        List<GdRecipe> _reactor;
 
         [OneTimeSetUp]
         public void Load()
         {
             _gd      = JsonUtility.FromJson<GameData>(File.ReadAllText("Assets/Data/game_data.json"));
             _items   = _gd.items.ToDictionary(i => i.id);
-            _fission = _gd.recipes.Where(r => r.valid_buildings.Contains("fission_reactor")).ToList();
+            _reactor = _gd.recipes.Where(r => r.valid_buildings.Contains("fission_reactor")).ToList();
         }
 
         [Test]
-        public void EverySplit_HasTwoFragmentsWhoseProtonsAddUpToTheFuel()
+        public void FissionReactor_BreedsUraniumIntoNeptuniumThenPlutonium()
         {
-            Assert.GreaterOrEqual(_fission.Count, 8);
-            foreach (var r in _fission)
+            CollectionAssert.AreEquivalent(new[] { "neptunium", "plutonium" }, _reactor.Select(r => r.output_item));
+            foreach (var r in _reactor)
             {
-                var fuel      = _items[r.inputs.Single().item];
-                var fragments = new[] { r.output_item }
-                    .Concat(r.byproducts.Where(b => b.item != "neutron").Select(b => b.item))
-                    .Select(id => _items[id]).ToList();
-                Assert.AreEqual(2, fragments.Count, r.id);
-                Assert.AreEqual(fuel.atomic_number, fragments.Sum(f => f.atomic_number), $"{r.id}: protons are conserved");
-                Assert.Greater(r.byproducts.Where(b => b.item == "neutron").Sum(b => b.quantity), 0, $"{r.id}: releases neutrons");
+                var fuel = _items[r.inputs.Single().item];
+                Assert.AreEqual(fuel.atomic_number + 1, _items[r.output_item].atomic_number,
+                    $"{r.id}: one beta decay raises Z by one");
+                Assert.IsTrue(r.byproducts.Any(b => b.item == "beta_particle"), $"{r.id}: emits the beta particle");
             }
+            Assert.IsFalse(_gd.recipes.Any(r => r.id.StartsWith("fission_u235") || r.id.StartsWith("fission_pu239")),
+                "splitting Uranium would skip the descent");
         }
 
         [Test]
-        public void EverySplit_GainsAFewTimesItsFuel_NotThousands()
+        public void Plutonium_IsBred_NotMinedOrAssembled()
         {
-            foreach (var r in _fission)
-            {
-                var fuel   = r.inputs.Single();
-                double inV  = _items[fuel.item].base_sell_value * fuel.quantity;
-                double outV = _items[r.output_item].base_sell_value
-                              + r.byproducts.Sum(b => _items[b.item].base_sell_value * b.quantity);
-                double gain = outV / inV;
-                Assert.That(gain, Is.InRange(1.0, 20.0), $"{r.id}: {inV} -> {outV} (x{gain:0.0})"); // gains, never thousands (derived economy: inputs + wage)
-            }
+            var makers = _gd.recipes.Where(r => r.output_item == "plutonium").ToList();
+            Assert.AreEqual(1, makers.Count);
+            Assert.AreEqual("fission_reactor", makers[0].valid_buildings.Single());
         }
 
         [Test]
@@ -73,8 +67,8 @@ namespace MobileIdleBuilder.Tests
         }
 
         /// <summary>
-        /// Every nuclear processing step is worth doing on its own (scripts/rebalance_curve.py prices each recipe
-        /// as inputs + wage x craft time). Before 2026-11-02 values peaked at iron and every neutron capture lost value.
+        /// Every nuclear processing step is worth doing on its own: values are inputs + wage x craft time
+        /// (scripts/economy_plan.py for the planned Physics, scripts/rebalance_curve.py elsewhere).
         /// </summary>
         [Test]
         public void EveryNuclearStep_GainsValue()

@@ -53,6 +53,15 @@ find "$PROJ_DIR" -type f -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
 find "$PROJ_DIR" -type f -iname 'usymtool*' -exec chmod +x {} \; 2>/dev/null || true
 find "$PROJ_DIR" -type f -iname 'process_symbols*' -exec chmod +x {} \; 2>/dev/null || true
 
+# Some post-process steps write absolute paths of the Linux build container into the project (the push
+# package's notificationservice extension: its Info.plist, .h and .m). Point them at this checkout.
+LINUX_BUILD_DIR="/github/workspace/build/iOS"
+PBXPROJ="$PROJ_DIR/Unity-iPhone.xcodeproj/project.pbxproj"
+if grep -q "$LINUX_BUILD_DIR" "$PBXPROJ"; then
+    echo "[ios] Rewriting $(grep -c "$LINUX_BUILD_DIR" "$PBXPROJ") line(s) with Linux build paths to $PROJ_DIR"
+    sed -i '' "s#$LINUX_BUILD_DIR#$PROJ_DIR#g" "$PBXPROJ"
+fi
+
 # Write the API key where xcodebuild / altool look it up by id.
 KEY_DIR="$HOME/.appstoreconnect/private_keys"
 mkdir -p "$KEY_DIR"

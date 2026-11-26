@@ -28,6 +28,7 @@ MonoBehaviour:
   halfLifeNote: 
   isFissile: 0
   isHarvested: 0
+  world: 
   fieldType: None
   isSecondaryParticle: 0
   particleUses: 0
@@ -35,6 +36,6 @@ MonoBehaviour:
     steel, lithium-nickel battery cathodes, and superalloys that survive jet engine
     temperatures.
   codexUnlocked: 0
-  baseSellValue: 32800
+  baseSellValue: 286000
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

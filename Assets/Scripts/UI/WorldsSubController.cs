@@ -65,8 +65,78 @@ namespace MobileIdleBuilder
             _entropyLabel = root.Q<Label>("worlds-entropy");
             _list         = root.Q<ScrollView>("worlds-list");
             _navButton    = root.Q<Button>("btn-worlds");
+            _taskStrip    = root.Q("task-status");
+            _taskLabel    = root.Q<Label>("task-status-label");
+            _taskStrip?.RegisterCallback<ClickEvent>(_ => _hud?.OpenWorldsPanel());
             if (_list == null)
                 GameLogger.Error("[WorldsSubController] 'worlds-list' not found in GameHUD.uxml.");
+        }
+
+        // ── Chemistry task strip + live progress ─────────────────────────────
+
+        private VisualElement _taskStrip;
+        private Label         _taskLabel;
+        private WorldTaskService _taskService;
+        private float _taskStripTimer;
+        private const float TaskStripInterval = 0.5f;
+
+        void Update()
+        {
+            if (_taskService == null && WorldTaskService.Instance != null)
+            {
+                _taskService = WorldTaskService.Instance;
+                _taskService.OnChanged        += OnTasksChanged;
+                _taskService.OnStageCompleted += OnTaskStageCompleted;
+            }
+
+            _taskStripTimer -= Time.unscaledDeltaTime;
+            if (_taskStripTimer > 0f) return;
+            _taskStripTimer = TaskStripInterval;
+            RefreshTaskStrip();
+        }
+
+        void OnDestroy()
+        {
+            if (_taskService == null) return;
+            _taskService.OnChanged        -= OnTasksChanged;
+            _taskService.OnStageCompleted -= OnTaskStageCompleted;
+        }
+
+        private void OnTasksChanged()
+        {
+            if (_panel != null && !_panel.ClassListContains("hidden")) Refresh();
+        }
+
+        private void OnTaskStageCompleted(WorldTaskStage stage)
+        {
+            var save  = SaveManager.Instance?.Current;
+            var tasks = System.Array.Find(WorldTasks.All, t => t != null && t.stages != null && System.Array.IndexOf(t.stages, stage) >= 0)
+                        ?? WorldTasks.Data;
+            string text = WorldTasks.IsComplete(save, tasks)
+                ? $"{WorldGate.DisplayName(tasks.worldId)} is open! Travel there from Worlds."
+                : $"{stage.displayName} delivered. Next: {WorldTasks.CurrentStage(save, tasks)?.displayName}.";
+            _hud?.ShowNotification("⚗", text);
+            OnTasksChanged();
+        }
+
+        /// <summary>
+        /// The strip under the top bar: "⚗ Chemistry  Stage 2/5: Light Elements  43%". Hidden in the tutorial, once
+        /// the tasks are done, without task data, or in any world other than the one they are delivered in.
+        /// </summary>
+        private void RefreshTaskStrip()
+        {
+            if (_taskStrip == null) return;
+            var save  = SaveManager.Instance?.Current;
+            var tasks = WorldTasks.Focus(save, WorldGate.ActiveWorldId());
+            var stage = WorldTasks.CurrentStage(save, tasks);
+            bool loaded = ECSLoadBridge.Instance != null && ECSLoadBridge.Instance.IsLoaded;
+            bool show = loaded && stage != null && save != null && !(save.tutorial?.isActive ?? false)
+                        && WorldTasks.ShownIn(tasks, WorldGate.ActiveWorldId());   // only where they are delivered
+            HUDController.SetElementVisible(_taskStrip, show);
+            if (!show || _taskLabel == null) return;
+            int pct = Mathf.FloorToInt(WorldTasks.StageFraction(save, tasks, stage) * 100f);
+            _taskLabel.text = $"⚗ {WorldGate.DisplayName(tasks.worldId)}  " +
+                              $"{TaskStageTitle(WorldTasks.CompletedStages(save, tasks), WorldTasks.StageCount(tasks), stage.displayName)}  {pct}%";
         }
 
         public void SetECSContext(EntityManager em)
@@ -137,8 +207,13 @@ namespace MobileIdleBuilder
             header.Add(badgeLabel);
             row.Add(header);
 
+            // A task-gated world (Chemistry) shows its delivery stage instead of research.
+            if (action == WorldRowAction.Locked && world.unlockByTasks)
+            {
+                row.Add(BuildTaskProgress(world));
+            }
             // Locked rows explain what research is still required.
-            if (action == WorldRowAction.Locked)
+            else if (action == WorldRowAction.Locked)
             {
                 string need = DescribeMissingPrereqs(world);
                 if (!string.IsNullOrEmpty(need))
@@ -202,6 +277,65 @@ namespace MobileIdleBuilder
 
             row.Add(footer);
             return row;
+        }
+
+        /// <summary>
+        /// The locked row's task block: "Stage 2/5: Light Elements", what to do, one progress bar per item
+        /// ("Lithium 120 / 300"). Items reaching Maxwell's Demon count while the stage is active (WorldTasks).
+        /// </summary>
+        private VisualElement BuildTaskProgress(WorldSO world)
+        {
+            var box = new VisualElement();
+            var tasks = WorldTasks.Data;
+            var save  = SaveManager.Instance?.Current;
+            var stage = tasks != null && tasks.worldId == world.id ? WorldTasks.CurrentStage(save, tasks) : null;
+            if (stage == null)
+            {
+                var none = new Label("Opens when its delivery tasks are done.");
+                none.AddToClassList("upgrade-row-desc");
+                box.Add(none);
+                return box;
+            }
+
+            var title = new Label(TaskStageTitle(WorldTasks.CompletedStages(save, tasks), WorldTasks.StageCount(tasks), stage.displayName));
+            title.AddToClassList("upgrade-row-desc");
+            box.Add(title);
+            var how = new Label("Send these to Maxwell's Demon. They still pay entropy.");
+            how.AddToClassList("upgrade-row-desc");
+            box.Add(how);
+
+            var seen = new HashSet<int>();
+            foreach (var item in stage.items ?? new ItemSO[0])
+            {
+                if (item == null || !seen.Add(item.itemId)) continue;
+                int need = WorldTasks.Required(stage, item.itemId);
+                int have = Mathf.Min(need, WorldTasks.Delivered(save, item.itemId));
+                box.Add(ProgressBar($"{(string.IsNullOrEmpty(item.displayName) ? item.id : item.displayName)}  {have:N0} / {need:N0}",
+                                    need <= 0 ? 1f : (float)have / need));
+            }
+            return box;
+        }
+
+        /// <summary>"Stage 2/5: Light Elements" for the stage after <paramref name="completed"/> finished ones.</summary>
+        public static string TaskStageTitle(int completed, int count, string stageName) =>
+            $"Stage {Mathf.Min(completed + 1, count)}/{count}: {stageName}";
+
+        private static VisualElement ProgressBar(string text, float fraction)
+        {
+            var bar = new VisualElement();
+            bar.AddToClassList("progress-bar");
+            var label = new Label(text);
+            label.AddToClassList("progress-bar__label");
+            var track = new VisualElement();
+            track.AddToClassList("progress-bar__track");
+            var fill = new VisualElement();
+            fill.AddToClassList("progress-bar__fill");
+            if (fraction >= 1f) fill.AddToClassList("progress-bar__fill--success");
+            fill.style.width = Length.Percent(Mathf.Clamp01(fraction) * 100f);
+            track.Add(fill);
+            bar.Add(label);
+            bar.Add(track);
+            return bar;
         }
 
         /// <summary>Human-readable list of the world's still-unmet prerequisite research (display names).</summary>
@@ -275,7 +409,7 @@ namespace MobileIdleBuilder
         // ── One-shot world introduction ──────────────────────────────────────
 
         /// <summary>Plays a world's intro dialogue the first time it is unlocked, then records it as seen.</summary>
-        private void PlayWorldIntro(string worldId)
+        public void PlayWorldIntro(string worldId)
         {
             var save = SaveManager.Instance?.Current;
             if (save != null) save.worldsIntroSeen ??= new List<string>();
