@@ -39,8 +39,12 @@ Both platforms report to the **`development`** UGS environment for internal buil
 
 2. **Upload symbols for readable stack traces.** Both platforms build with **IL2CPP** (Android is ARM64-only),
    so without symbols crash frames are raw addresses.
-   - **Android:** enable symbol generation (Player Settings / Build → Debug Symbols → `symbols.zip` with
-     line numbers). Upload the produced `symbols.zip` for that version code to the Cloud Diagnostics dashboard.
+   - **Android:** symbol generation is on in code: `BuildScript.ConfigureAndroidDebugSymbols` sets
+     Debug Symbols to **Full** (line numbers) as a **`symbols.zip`** for every Android build. CI keeps it as the
+     `android-symbols-<run>` artifact (90 days) in `release-internal.yml` and `prod-release.yml`. Upload that zip
+     for the matching version code to the Cloud Diagnostics dashboard, and to Play Console
+     (**App bundle explorer → the version → Downloads → Native debug symbols**) to clear Play's missing-symbols
+     warning. The zip is deliberately not embedded in the AAB (full IL2CPP symbols would trip Play's size check).
    - **iOS:** upload the `.dSYM` files produced by the Xcode archive (`scripts/archive-upload-ios.sh`) to the
      dashboard so iOS frames symbolicate.
    - Symbols are per build version; automate the upload later if it proves fiddly.
@@ -61,5 +65,7 @@ Both platforms report to the **`development`** UGS environment for internal buil
   the `com.unity.modules.crashreport` engine module is not in the manifest, so confirm the `CrashReportHandler`
   API resolves before adding the call (a good spot is `SaveManager.ReconcileWithCloud` after auth, in a
   no-throw guarded block). Low priority — native reports already carry device/OS/app-version.
-- **Automated symbol upload** as a CI step after each build.
+- **Automated symbol upload** as a CI step after each build. The Editor ships `usymtool`
+  (`Editor/Data/Tools/usymtool.exe -symbolPath <dir> -projectId <cloudProjectId>`), but it needs an upload
+  auth token for a batchmode runner; work that out against the docs before wiring it.
 - Migrate to the newer built-in **Diagnostics** experience (Unity 6.2+) for richer reports incl. Android ANRs.

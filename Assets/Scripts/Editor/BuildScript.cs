@@ -103,6 +103,7 @@ namespace MobileIdleBuilder.Editor
             ConfigureAndroidKeystore();
 
             EditorUserBuildSettings.buildAppBundle = appBundle;
+            ConfigureAndroidDebugSymbols();
 
             // Define DEVELOPMENT_BUILD for compilation only (dev console + tooling) via
             // extraScriptingDefines, while keeping options = BuildOptions.None so the bundle is a
@@ -157,6 +158,19 @@ namespace MobileIdleBuilder.Editor
             {
                 GameLogger.Warning("APPLE_TEAM_ID not set; leaving iOS signing configuration unchanged.");
             }
+        }
+
+        // Writes <product>-<version>-v<code>.symbols.zip next to the build so IL2CPP crash frames can be
+        // symbolicated (Cloud Diagnostics, and Play Console's native crash view). Full = with line numbers.
+        // Zip only, not IncludeInBundle: full IL2CPP symbols inside the AAB would push it past Play's size
+        // check. CI keeps the zip as an artifact; see docs/runbooks/cloud-diagnostics-setup.md.
+        private static void ConfigureAndroidDebugSymbols()
+        {
+#if UNITY_ANDROID
+            UnityEditor.Android.UserBuildSettings.DebugSymbols.level = Unity.Android.Types.DebugSymbolLevel.Full;
+            UnityEditor.Android.UserBuildSettings.DebugSymbols.format = Unity.Android.Types.DebugSymbolFormat.Zip;
+            GameLogger.Info("Android debug symbols: Full, symbols.zip");
+#endif
         }
 
         private static void ConfigureAndroidKeystore()
