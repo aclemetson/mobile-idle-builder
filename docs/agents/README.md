@@ -20,6 +20,7 @@ Layered, token-efficient context for AI coding sessions on this repo. Read this 
 | remote toggles, feature gating, kill-switches, env-specific behavior | `feature-flags.md` |
 | telemetry, analytics events, player data collection, balancing dashboards | `analytics.md` |
 | crash/exception reporting, Cloud Diagnostics, debug data to Unity Cloud, symbol upload | `../runbooks/cloud-diagnostics-setup.md` |
+| CI secrets, API keys, service accounts, key rotation, a new `secrets.*` in a workflow | `../runbooks/secrets.md` |
 | building/structure visuals, procedural meshes, shaders, art direction | `visual-design.md` |
 | rewarded ads, ad SDK, LevelPlay go-live | `../runbooks/levelplay-ads-setup.md` |
 | PvE tournaments, leagues, player names, item stars, Cloud Code module | `tasks/feature-pve-tournaments.md` + `../runbooks/pve-backend-setup.md` |
