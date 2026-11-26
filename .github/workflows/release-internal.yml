@@ -119,8 +119,8 @@ jobs:
         continue-on-error: true
         shell: powershell
         env:
-          UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
-          UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+          UGS_SERVICE_KEY_ID: ${{ secrets.UGS_SYMBOLS_SERVICE_KEY_ID }}
+          UGS_SERVICE_SECRET: ${{ secrets.UGS_SYMBOLS_SERVICE_KEY_SECRET }}
           UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
         run: powershell -ExecutionPolicy Bypass -File .\scripts\ci\upload-symbols.ps1
 
@@ -141,7 +141,10 @@ jobs:
         with:
           name: android-aab-${{ github.run_number }}
           path: build/Android/*.aab
-          retention-days: 30
+          # Short on purpose: the repo is public, so any signed-in GitHub user can download artifacts, and this
+          # is an unreleased build. The upload job below uses it right away; 3 days covers re-running a failed
+          # upload over a weekend. Play Console keeps every uploaded bundle (App bundle explorer).
+          retention-days: 3
 
       # IL2CPP debug symbols (BuildScript.ConfigureAndroidDebugSymbols) for symbolicating crash reports in
       # Cloud Diagnostics and Play Console. See docs/runbooks/cloud-diagnostics-setup.md.
@@ -157,7 +160,8 @@ jobs:
   # development environment's PveModule always matches the newest internal APK. Runs beside the Unity build
   # (it doesn't need it), and a failure here never blocks the Play upload. Tests -> dotnet publish -> .ccm ->
   # `ugs deploy`; see scripts/deploy-cloud-code.sh and docs/runbooks/pve-backend-setup.md ("CI deploy").
-  # The ci-cd-automation service account needs the "Cloud Code Editor" project role.
+  # Uses the ci-development service account: "Cloud Code Editor" in the development environment only, no
+  # project roles, so the environment is passed by name (docs/runbooks/secrets.md).
   cloud-code:
     name: Cloud Code Deploy (development)
     if: >-
@@ -165,10 +169,9 @@ jobs:
       (github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     env:
-      UGS_CLI_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
-      UGS_CLI_SERVICE_SECRET_KEY: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_CLI_SERVICE_KEY_ID: ${{ secrets.UGS_DEV_SERVICE_KEY_ID }}
+      UGS_CLI_SERVICE_SECRET_KEY: ${{ secrets.UGS_DEV_SERVICE_KEY_SECRET }}
       UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
-      UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
       UGS_CLI_VERSION: 2.1.0
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
@@ -192,7 +195,7 @@ jobs:
           CCM_OUT_DIR: ${{ runner.temp }}/cloud-code
         run: |
           chmod +x scripts/deploy-cloud-code.sh
-          ./scripts/deploy-cloud-code.sh "$UGS_ENV_ID_DEVELOPMENT"
+          ./scripts/deploy-cloud-code.sh development
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -210,8 +213,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
-      UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+      UGS_SERVICE_KEY_ID: ${{ secrets.UGS_PROJECT_SERVICE_KEY_ID }}
+      UGS_SERVICE_SECRET: ${{ secrets.UGS_PROJECT_SERVICE_KEY_SECRET }}
       UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
       UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
       DISCORD_BETA_WEBHOOK: ${{ secrets.DISCORD_BETA_WEBHOOK }}

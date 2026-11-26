@@ -7,8 +7,9 @@
 # Run right after the Android build, BEFORE "Save Library" moves Library/ out of the checkout: the
 # symbols are read from Library/Bee/Android/Prj/IL2CPP.
 #
-# Environment (GitHub secrets of the ci-cd-automation service account):
-#   UGS_SERVICE_KEY_ID, UGS_SERVICE_SECRET, UGS_PROJECT_ID
+# Environment: UGS_SERVICE_KEY_ID, UGS_SERVICE_SECRET, UGS_PROJECT_ID. The workflows map the ci-symbols
+# service account (UGS_SYMBOLS_SERVICE_KEY_ID / _SECRET; project role Observability Symbols Uploader only) onto
+# these names, so this step on the self-hosted runner never holds a key that can change game data.
 # Missing credentials skip with a warning (exit 0). See docs/runbooks/cloud-diagnostics-setup.md.
 param(
     [string]$EditorPath = "C:\Program Files\Unity\Hub\Editor\6000.3.6f1",
