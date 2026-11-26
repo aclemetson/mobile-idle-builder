@@ -116,8 +116,10 @@ machine and who can read secrets.
 | Open alerts | secret scanning: 1 (Firebase key, above). Dependabot: 0. Code scanning: 0 |
 
 **Public artifacts.** On a public repo any signed-in GitHub user can download workflow artifacts, including the
-internal-build AAB (30 days) and its symbols. The source is public, so this exposes unreleased builds rather than
-secrets. Accepted for now; shorten `retention-days` if pre-release builds should stay private.
+internal-build AAB and its symbols. The source is public, so this exposes unreleased builds rather than secrets.
+Since 2026-11-26 the internal AAB is kept **3 days** (was 30): long enough to re-run a failed upload, and Play Console
+keeps every uploaded bundle anyway. Symbols stay 90 days because crash reports need them; they hold no secrets.
+`prod-release` and `release-ios` artifacts are unchanged (production builds are public once released).
 
 **Where the real risk sits.** Every secret is repository-wide, and only the owner can push, so the attack paths are
 the owner's accounts (GitHub, Unity, Google, Apple, Discord) and a compromised dependency. Strong passwords and 2FA
@@ -211,8 +213,9 @@ Steps (manual, because GitHub never shows a secret's value again, so it can't be
 
 ## To do (#534 follow-ups)
 
-- [ ] Restrict the Firebase API key (Android apps + API restrictions, above), then close secret-scanning alert #1.
-- [ ] Confirm 2FA on GitHub, Unity ID, the Google account behind Play Console and Google Cloud, the Apple ID, and Discord.
+- [x] Restrict the Firebase API key (Android apps + API restrictions, above); alert #1 closed as won't fix (2026-11-26).
+- [x] Confirm 2FA on GitHub, Unity ID, the Google account behind Play Console and Google Cloud, the Apple ID, and Discord (2026-11-26).
+- [x] Internal AAB artifact retention cut to 3 days (2026-11-26).
 - [ ] Non-provider patterns and validity checks: not available on this plan (tried 2026-11-26).
 - [ ] Create the `production` environment and move `UGS_ENV_ID_PRODUCTION` (section above).
 - [ ] Split the UGS service account into dev and prod accounts.
