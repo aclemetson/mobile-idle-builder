@@ -12,15 +12,15 @@ data type ships. Issues: #163 (Play Console), #176 (App Store).
 | Google account id (optional link) | Google Sign-In -> UGS | yes | no | Account restore |
 | Player name (PvE leagues) | `PlayerNameService` -> Cloud Code | yes | no, but shown to other players | Tournament standings |
 | Game progress | UGS Cloud Save | yes | no | Cloud save |
-| Gameplay analytics | UGS Analytics (only while `analytics.enabled`) | yes (player id) | no | Balancing |
+| Gameplay analytics (incl. tutorial steps, rewarded-ad use, purchases by product and price, league entries, feedback-link use; #567) | UGS Analytics (only while `analytics.enabled`) | yes (player id) | no | Balancing |
 | Crash and diagnostic reports | Cloud Diagnostics | device/app info | no | Bug fixing |
 | Advertising ID (GAID / IDFA) + device and network info | LevelPlay and mediated networks | yes | **yes** (ad networks) | Ads, ad measurement, fraud prevention |
-| Purchase history | Google Play Billing / StoreKit via Unity IAP | yes | no | Deliver purchases, refunds |
+| Purchase history | Google Play Billing / StoreKit via Unity IAP; product and price also in UGS Analytics (`iap_purchase`, #567) | yes | no | Deliver purchases, refunds, Analytics |
 | Push notification token | Unity Push Notifications | yes | no | Notifications |
 
 Policy URL: https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html (GitHub Pages, served from
 `develop:/docs`, so a policy edit is live only once it reaches `develop`). The policy covers every row above
-as of 2026-11-25.
+as of 2026-11-26 (purchase history used for analytics since #567).
 
 Everything goes over HTTPS (all UGS, LevelPlay and store endpoints), so **encrypted in transit: yes**.
 Deletion: by email request. For the Play "delete account" URL use
@@ -40,7 +40,7 @@ Data collected (and processed ephemerally: no):
 | Location -> Approximate location | yes | **yes** | required | Analytics, Fraud prevention, Advertising or marketing |
 | Personal info -> User IDs | yes | no | required | App functionality, Account management |
 | Personal info -> Name (player name) | yes | no | optional (only PvE) | App functionality |
-| Financial info -> Purchase history | yes | no | optional | App functionality |
+| Financial info -> Purchase history | yes | no | optional | App functionality, Analytics |
 | App activity -> App interactions | yes | no | required | Analytics |
 | App activity -> Other actions (gameplay, ad interactions) | yes | **yes** | required | App functionality, Analytics, Fraud prevention, Advertising or marketing |
 | App info and performance -> Crash logs | yes | no | required | Analytics |
@@ -95,7 +95,7 @@ Data linked to you:
 |---|---|
 | Identifiers -> User ID | App functionality |
 | Contact info -> Name (player name) | App functionality |
-| Purchases -> Purchase history | App functionality |
+| Purchases -> Purchase history | App functionality, Analytics |
 | Usage data -> Product interaction | Analytics |
 | Usage data -> Advertising data | Third-party advertising |
 | Other data -> Gameplay content | App functionality |
