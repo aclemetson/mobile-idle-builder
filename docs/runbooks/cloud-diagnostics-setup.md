@@ -53,9 +53,10 @@ Both platforms report to the **`development`** UGS environment for internal buil
 
 1. Make an internal device build (Android internal track via `release-internal.yml`, or TestFlight via
    `release-ios.yml`).
-2. Force an uncaught exception on device (a temporary `throw`, or a dev-console command), then confirm the
-   crash/exception appears in the dashboard within a few minutes **with a symbolicated stack trace** (validates
-   the symbol upload). Remove the temporary throw afterward.
+2. Open the dev console on device and run `diag exception` (an uncaught C# exception on the next frame), then
+   `diag crash` (a native abort: the app closes; reopen it so the report is sent). Both should appear in the
+   dashboard within a few minutes. The native crash shows whether the symbol upload worked: its
+   `libil2cpp.so` frames should show method names and line numbers, not raw addresses.
 3. Cross-check `adb logcat -s Unity` on Android to confirm clean UGS init and no exceptions on normal launch.
 
 ## Deferred / optional follow-ups
@@ -65,7 +66,14 @@ Both platforms report to the **`development`** UGS environment for internal buil
   the `com.unity.modules.crashreport` engine module is not in the manifest, so confirm the `CrashReportHandler`
   API resolves before adding the call (a good spot is `SaveManager.ReconcileWithCloud` after auth, in a
   no-throw guarded block). Low priority — native reports already carry device/OS/app-version.
-- **Automated symbol upload** as a CI step after each build. The Editor ships `usymtool`
-  (`Editor/Data/Tools/usymtool.exe -symbolPath <dir> -projectId <cloudProjectId>`), but it needs an upload
-  auth token for a batchmode runner; work that out against the docs before wiring it.
+- **Automated symbol upload** as a CI step after each build (Unity docs: "Upload debugging symbols from
+  CI/CD pipelines"). Setup: in the Dashboard create a service account with the project role
+  **LiveOps > Observability Symbols Uploader** (project level, or uploads get 403), copy its Basic
+  Authorization header, and download the Windows `usymtool.ps1` script from the Dashboard. Store the header and
+  project ID as GitHub secrets (`UNITY_SA_AUTH_HEADER`, `UNITY_PROJECT_ID`). The script fetches a fresh 7-day
+  upload token on every run and calls `Editor/Data/Tools/usymtool.exe` with `USYM_UPLOAD_AUTH_TOKEN` and
+  `USYM_UPLOAD_URL_SOURCE=https://perf-events.cloud.unity3d.com/url`. Do not pass `-projectId` to usymtool:
+  that switches to a different upload mode and ignores the token. Success prints
+  `Auth token acquired successfully` and `Failed: 0`. Symbols uploaded this way do not appear on the
+  Dashboard's Debugging Symbols page.
 - Migrate to the newer built-in **Diagnostics** experience (Unity 6.2+) for richer reports incl. Android ANRs.

@@ -403,6 +403,19 @@ namespace MobileIdleBuilder.Dev
 
         // ── Command registration ──────────────────────────────────────────────
 
+        private static System.Collections.IEnumerator ThrowNextFrame()
+        {
+            yield return null;
+            throw new InvalidOperationException("Dev console test exception (diag exception)");
+        }
+
+        private static System.Collections.IEnumerator CrashNextFrame()
+        {
+            yield return null;
+            GameLogger.Warning("[Diag] Forcing a native crash (diag crash)");
+            UnityEngine.Diagnostics.Utils.ForceCrash(UnityEngine.Diagnostics.ForcedCrashCategory.Abort);
+        }
+
         private void RegisterCommands()
         {
             // ── help ─────────────────────────────────────────────────────────
@@ -436,7 +449,23 @@ namespace MobileIdleBuilder.Dev
             _registry.Register("push status", "Remote push: registered / why not / device token (for dashboard Test on Device)",
                 _ => RemotePushService.Instance?.DevStatus() ?? "Error: RemotePushService not running.");
 
-            _registry.Register("notif prompt", "Reset the opt-in answers (asked, next ask date, never ask) and show the card now",
+            // ── crash reporting check (docs/runbooks/cloud-diagnostics-setup.md, #168) ──
+            // The registry catches handler exceptions, so throw on the next frame to make it uncaught.
+            _registry.Register("diag exception", "Throw an uncaught exception next frame (Cloud Diagnostics check)",
+                _ =>
+                {
+                    StartCoroutine(ThrowNextFrame());
+                    return "Throwing next frame; look under Diagnostics in the Unity Dashboard in a few minutes.";
+                });
+
+            _registry.Register("diag crash", "Force a native crash: the app closes (symbol upload check)",
+                _ =>
+                {
+                    StartCoroutine(CrashNextFrame());
+                    return "Crashing next frame. Reopen the app so the report is sent.";
+                });
+
+            _registry.Register("notif prompt","Reset the opt-in answers (asked, next ask date, never ask) and show the card now",
                 _ => NotificationService.Instance?.DevShowPrompt() ?? "Error: NotificationService not running.");
 
             _registry.Register("notif exact", "Show the on-time reminders card (Android Alarms & reminders) now",
