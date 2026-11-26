@@ -135,7 +135,6 @@ snapshots. Phase 1 and 2 also need:
 | `feedback_opened` | source (String) | how many players reach the feedback link |
 
 Each event also needs its schema registered in the UGS dashboard, with the same names and types. Tracked in #567.
-follow-up issue (#567).
 
 ## Tools
 
