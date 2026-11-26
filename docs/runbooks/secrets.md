@@ -29,8 +29,10 @@ without touching shipped builds.
 
 | Secret | What it is | Read by | Blast radius if leaked | Rotates |
 |---|---|---|---|---|
-| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | key of the UGS service account `ci-cd-automation` | `release-internal`, `release-ios`, `prod-release`, `publish-gamedata` | **High**: edit Remote Config (maintenance mode, kill-switches, game data overrides) and deploy Cloud Code (PvE module) in every environment the account's roles cover | Yes: add a second key, swap the secret, delete the old key |
-| `UGS_PROJECT_ID`, `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` | UGS identifiers | the same workflows | None alone: identifiers, not credentials | n/a |
+| `UGS_PROJECT_SERVICE_KEY_ID` / `UGS_PROJECT_SERVICE_KEY_SECRET` | key of `ci-project` (project role **Remote Config Admin**) | `release-internal` (upload job), `release-ios` (release job), `publish-gamedata` | **High**: edit Remote Config in **every** environment, production included (maintenance mode, kill-switches, game data overrides). Remote Config has no environment roles, so this can't be narrowed. Only GitHub-hosted jobs get it | Yes: procedure A |
+| `UGS_DEV_SERVICE_KEY_ID` / `UGS_DEV_SERVICE_KEY_SECRET` | key of `ci-development` (environment role **Cloud Code Editor** on development; project role **Unity Environment Viewer**, read-only, because `ugs deploy` lists environments) | `release-internal` (cloud-code job) | **Low**: change the development PvE module (internal testers). Refused in production | Yes: procedure A |
+| `UGS_SYMBOLS_SERVICE_KEY_ID` / `UGS_SYMBOLS_SERVICE_KEY_SECRET` | key of `ci-symbols` (project role **Observability Symbols Uploader** only) | `release-internal`, `prod-release` (build jobs, **self-hosted runner**) | **Low**: upload junk debug symbols | Yes: procedure A |
+| `UGS_PROJECT_ID`, `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` | UGS identifiers (`UGS_ENV_ID_PRODUCTION` belongs in the `production` environment, below) | the same workflows | None alone: identifiers, not credentials | n/a |
 | `GOOGLE_PLAY_JSON_KEY` | Google Play service account JSON (Release manager) | `pr-tests` (version-code guard), `release-internal`, `prod-release` | **High**: upload and roll out builds to any Play track, change store listing | Yes: new JSON key on the same service account, swap, delete the old key |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASS`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASS` | Android **upload** keystore and its passwords | `release-internal`, `prod-release` | **Medium**: sign an APK/AAB Play will accept as ours. Still needs the Play JSON or console access to publish | Not freely. Play App Signing holds the real app key, so a lost or leaked upload key is replaced through Play Console support (upload key reset) |
 | `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_P8` | App Store Connect API key (role **Admin**, needed for cloud signing) | `release-ios` | **High**: Admin on App Store Connect (builds, TestFlight, users, agreements) | Yes: create a new key, swap three secrets, revoke the old one. Apple lets you download a `.p8` only once |
@@ -123,13 +125,15 @@ keeps every uploaded bundle anyway. Symbols stay 90 days because crash reports n
 
 **Where the real risk sits.** Every secret is repository-wide, and only the owner can push, so the attack paths are
 the owner's accounts (GitHub, Unity, Google, Apple, Discord) and a compromised dependency. Strong passwords and 2FA
-everywhere matter more than anything in this file, followed by the dev/prod split of the UGS service account.
+everywhere matter more than anything in this file. The UGS keys are split per job (2026-11-26): the self-hosted runner
+only ever holds the symbols key, and the Cloud Code key can't reach production.
 
 ## Rotation schedule
 
 | Secret | How often | How |
 |---|---|---|
-| UGS `ci-cd-automation` key | every 90 days, and right away after any suspected leak | procedure A |
+| UGS `ci-project` key (Remote Config) | every 90 days, and right away after any suspected leak | procedure A |
+| UGS `ci-development`, `ci-symbols` keys | every 180 days | procedure A |
 | Google Play service account key | every 180 days | procedure B |
 | App Store Connect API key | every 180 days | procedure C |
 | Discord bot token and webhooks | only on suspected leak, or when someone with server admin leaves | procedure D |
@@ -139,17 +143,32 @@ everywhere matter more than anything in this file, followed by the dev/prod spli
 
 Log each rotation in the table at the bottom so the next one is easy to date.
 
-### A. UGS service account key (`ci-cd-automation`)
+### A. UGS service account keys (`ci-project`, `ci-development`, `ci-symbols`)
 
-1. Unity Cloud Dashboard > Administration > Service accounts > `ci-cd-automation` > Keys > **Add key**. Copy the
-   Key ID and Secret key. The secret is shown once.
-2. Update GitHub:
+The three accounts and their roles (Unity Cloud Dashboard > Administration > Service accounts). Never add a role
+to make a job pass without writing it here first.
+
+| Account | Project roles | Environment roles | GitHub secrets |
+|---|---|---|---|
+| `ci-project` | Remote Config Admin | none (Remote Config has none) | `UGS_PROJECT_SERVICE_KEY_ID` / `_SECRET` |
+| `ci-development` | Unity Environment Viewer | development: Cloud Code Editor | `UGS_DEV_SERVICE_KEY_ID` / `_SECRET` |
+| `ci-symbols` | LiveOps > Observability Symbols Uploader | none | `UGS_SYMBOLS_SERVICE_KEY_ID` / `_SECRET` |
+
+None of them has Unity Environments Admin, Authentication, Cloud Save, Economy, Leaderboards or any organization role.
+A `ci-production` account (production environment roles only) gets created when CI first needs production Cloud
+Code, Cloud Save or Leaderboards (for example the #529 league report); its key lives only in the `production`
+GitHub environment as `UGS_PROD_SERVICE_KEY_ID` / `_SECRET`.
+
+To rotate one:
+1. The account > Keys > **Add key**. Copy the Key ID and Secret key. The secret is shown once.
+2. Update GitHub, for example for `ci-project`:
    ```
-   gh secret set UGS_GAME_CONFIG_SERVICE_KEY_ID      # paste the Key ID
-   gh secret set UGS_GAME_CONFIG_SERVICE_SECRET_KEY  # paste the secret
+   gh secret set UGS_PROJECT_SERVICE_KEY_ID      # paste the Key ID
+   gh secret set UGS_PROJECT_SERVICE_KEY_SECRET  # paste the secret
    ```
-3. Check it works: Actions > **Publish Game Data** > Run workflow > environment `development`, or re-run the latest
-   release-internal `cloud-code` job. It must authenticate.
+3. Check it: Actions > **UGS Key Check** > Run workflow. Every line must be PASS: each key's allowed calls return
+   200 and its refused calls 403 (a 403 where 200 was expected means a missing role; a 200 where 403 was
+   expected means the account has too much).
 4. Delete the **old** key in the dashboard. Update the password manager entry.
 
 ### B. Google Play service account key
@@ -187,29 +206,27 @@ Log each rotation in the table at the bottom so the next one is easy to date.
 3. Once approved, update all four `ANDROID_*` secrets (`base64 -w0 new-upload.keystore | gh secret set ANDROID_KEYSTORE_BASE64`)
    and replace the files in `secrets/` (both `mobile-idle-builder.keystore` and any local `user.keystore`).
 
-## Moving production secrets behind a protected environment
+## The `production` GitHub environment
 
-Today every secret is repository-wide, so any workflow on any branch can read the production UGS environment ID and
-the Play key. The target:
+Holds `UGS_ENV_ID_PRODUCTION` (and later `UGS_PROD_SERVICE_KEY_*`). Only a job that declares `environment: production`
+can read it, and that job waits for your approval. Today that is the production publish in `publish-gamedata.yml`
+(a development publish declares no environment and runs straight away).
 
-| GitHub environment | Holds | Protection |
-|---|---|---|
-| `production` | `UGS_ENV_ID_PRODUCTION`; later a production-only UGS service account key and the Play key used by `prod-release` | required reviewer (you), deployment branches: `main` only |
-| `development` | everything the internal and iOS builds use | none, or branches `release/**` + `develop` |
+It protects the *production publish*, not the Remote Config key: `ci-project` can write production from any job
+that holds it, because UGS has no environment roles for Remote Config. That's why its key is only given to
+GitHub-hosted jobs and rotates every 90 days.
 
-Steps (manual, because GitHub never shows a secret's value again, so it can't be copied over):
-
-1. Settings > Environments > New environment `production` > Required reviewers: yourself > Deployment branches:
-   Selected > `main`.
-2. Set the secret on the environment from your password manager, then delete the repository copy:
+Set it up (manual, because GitHub never shows a secret's value again):
+1. Settings > Environments > `production` (the first production publish creates it if it doesn't exist) >
+   Required reviewers: yourself > Deployment branches: Selected > `main` (add `develop` if you publish from there).
+2. Move the ID from your password manager:
    ```
    gh secret set UGS_ENV_ID_PRODUCTION --env production
    gh secret delete UGS_ENV_ID_PRODUCTION
    ```
-3. Add `environment: production` to the jobs that read it (`publish-gamedata.yml` when publishing to production,
-   `prod-release.yml`). Ask Claude to make that workflow change in the same PR as step 2, or the jobs lose the secret.
-4. Stronger, later: create a second UGS service account with roles **only** in the production environment, keep its key
-   only in `production`, and remove production roles from `ci-cd-automation`. A leaked CI key then can't touch live players.
+3. Check it: Actions > **Publish Game Data** > environment `production`, confirm `production`, `dry_run` on. The run
+   must wait for your approval, then show the payload without writing. UGS Key Check then skips its production
+   checks (it has no access to the ID any more), which is expected.
 
 ## To do (#534 follow-ups)
 
@@ -217,8 +234,8 @@ Steps (manual, because GitHub never shows a secret's value again, so it can't be
 - [x] Confirm 2FA on GitHub, Unity ID, the Google account behind Play Console and Google Cloud, the Apple ID, and Discord (2026-11-26).
 - [x] Internal AAB artifact retention cut to 3 days (2026-11-26).
 - [ ] Non-provider patterns and validity checks: not available on this plan (tried 2026-11-26).
-- [ ] Create the `production` environment and move `UGS_ENV_ID_PRODUCTION` (section above).
-- [ ] Split the UGS service account into dev and prod accounts.
+- [ ] Protect the `production` environment and move `UGS_ENV_ID_PRODUCTION` into it (section above).
+- [x] Split the UGS service account per job: `ci-project`, `ci-development`, `ci-symbols` (2026-11-26, procedure A).
 - [ ] Automate procedure A as a scheduled workflow (create a key through the UGS Admin API, `gh secret set` with a
       fine-grained PAT that has `secrets: write`, revoke the old key). It needs a PAT stored as a secret itself, so
       decide whether a 90-day manual rotation with a calendar reminder is enough first.
@@ -230,3 +247,4 @@ Steps (manual, because GitHub never shows a secret's value again, so it can't be
 |---|---|---|---|
 | 2026-11-16 | UGS service account key, project/env IDs | owner | set (initial) |
 | 2026-11-26 | Discord bot token + webhooks | owner | set (initial, #533) |
+| 2026-11-26 | UGS: `ci-project`, `ci-development`, `ci-symbols` keys | owner | created; `ci-cd-automation` and `UGS_GAME_CONFIG_*` retired |
