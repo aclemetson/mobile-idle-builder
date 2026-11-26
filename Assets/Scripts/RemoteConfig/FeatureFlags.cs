@@ -35,6 +35,8 @@ namespace MobileIdleBuilder
         public const string MaintenanceEnabledKey = "maintenance.enabled";
         public const string MaintenanceMessageKey = "maintenance.message";
         public const string MaintenanceUntilUtcKey = "maintenance.untilUtc";
+        public const string MaintenanceStartsUtcKey = "maintenance.startsUtc";
+        public const string MaintenancePollSecondsKey = "maintenance.pollSeconds";
         public const string AnalyticsEnabledKey    = "analytics.enabled";
         public const string AnalyticsPhaseKey      = "analytics.phase";
         public const string GameDataUpdatedUtcKey  = "gamedata.updatedUtc";
@@ -72,6 +74,8 @@ namespace MobileIdleBuilder
         public const bool MaintenanceEnabledDefault = false; // default off => fail-open (never locks players out)
         public const string MaintenanceMessageDefault = "We're performing scheduled maintenance. Please check back soon.";
         public const string MaintenanceUntilUtcDefault = ""; // ISO-8601 UTC; blank => no time line shown
+        public const string MaintenanceStartsUtcDefault = ""; // ISO-8601 UTC; blank => maintenance.enabled applies at once (#224)
+        public const int    MaintenancePollSecondsDefault = 300; // mid-session re-fetch interval, clamped by MaintenancePollSchedule
         public const bool   AnalyticsEnabledDefault  = false;     // opt-in: telemetry stays off until a collection phase is opened
         public const string AnalyticsPhaseDefault    = "default"; // label stamped on every event so phases are segmentable
         // Game-data update notice. updatedUtc drives the once-per-publish popup (blank => never show);
@@ -112,6 +116,8 @@ namespace MobileIdleBuilder
             new FlagDef(MaintenanceEnabledKey, FlagType.Bool),
             new FlagDef(MaintenanceMessageKey, FlagType.String),
             new FlagDef(MaintenanceUntilUtcKey, FlagType.String),
+            new FlagDef(MaintenanceStartsUtcKey, FlagType.String),
+            new FlagDef(MaintenancePollSecondsKey, FlagType.Int),
             new FlagDef(AnalyticsEnabledKey,   FlagType.Bool),
             new FlagDef(AnalyticsPhaseKey,     FlagType.String),
             new FlagDef(GameDataUpdatedUtcKey,    FlagType.String),
@@ -164,6 +170,8 @@ namespace MobileIdleBuilder
         public static bool   MaintenanceEnabled  => GetBool(MaintenanceEnabledKey,  MaintenanceEnabledDefault);
         public static string MaintenanceMessage  => GetString(MaintenanceMessageKey,  MaintenanceMessageDefault);
         public static string MaintenanceUntilUtc => GetString(MaintenanceUntilUtcKey, MaintenanceUntilUtcDefault);
+        public static string MaintenanceStartsUtc => GetString(MaintenanceStartsUtcKey, MaintenanceStartsUtcDefault);
+        public static int    MaintenancePollSeconds => GetInt(MaintenancePollSecondsKey, MaintenancePollSecondsDefault);
         public static bool   AnalyticsEnabled => GetBool(AnalyticsEnabledKey, AnalyticsEnabledDefault);
         public static string AnalyticsPhase   => GetString(AnalyticsPhaseKey,  AnalyticsPhaseDefault);
         public static string GameDataUpdatedUtc   => GetString(GameDataUpdatedUtcKey,   GameDataUpdatedUtcDefault);

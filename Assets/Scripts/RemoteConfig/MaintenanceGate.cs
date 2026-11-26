@@ -68,7 +68,10 @@ namespace MobileIdleBuilder
             }
 
             await svc.FetchAsync();
-            bool maintenance = FeatureFlags.MaintenanceEnabled;
+            // A window scheduled for later (maintenance.startsUtc, #224) lets the player in; MaintenanceWatcher
+            // then sends them back to the splash when it starts.
+            bool maintenance = MaintenancePollSchedule.IsActive(
+                FeatureFlags.MaintenanceEnabled, FeatureFlags.MaintenanceStartsUtc, NowUtc());
 
             // Wipe a throwaway identity so GameScene's Google/anon flow runs on a clean slate.
             // (Only when maintenance is OFF — otherwise we stay on the splash and never enter GameScene.)
@@ -80,6 +83,9 @@ namespace MobileIdleBuilder
 
             return maintenance;
         }
+
+        /// <summary>Server time when synced, else the device clock (only used to compare against a schedule).</summary>
+        public static DateTime NowUtc() => ServerClock.UtcNow ?? DateTime.UtcNow;
 
         /// <summary>
         /// Pure: formats an ISO-8601 UTC timestamp as a local "Estimated back: MMM d, h:mm tt" line.
