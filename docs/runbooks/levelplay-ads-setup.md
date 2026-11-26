@@ -31,8 +31,8 @@ functional gain. Do these steps when you are ready to ship ads.
 - The adapter is verified against the 9.4.1 API (`LevelPlay.Init(appKey)`,
   `new LevelPlayRewardedAd(adUnitId)`, `OnAdRewarded(info, reward)` / `OnAdClosed(info)` / `OnAdDisplayFailed(info, error)`).
 - **App Key + Rewarded Ad Unit ID per platform are wired** in `LevelPlayAdProvider.cs` (public client
-  identifiers — not secrets). Remaining go-live work is platform/store config: iOS ATT
-  (`NSUserTrackingUsageDescription` + `AdConsent`), SKAdNetwork ids, and store privacy forms (below).
+  identifiers — not secrets). iOS ATT and SKAdNetwork ids are wired (section 5); the remaining
+  go-live work is the store privacy forms (`docs/runbooks/store-privacy-declarations.md`).
 
 ## 1. Your identifiers — what goes where
 
@@ -65,24 +65,31 @@ functional gain. Do these steps when you are ready to ship ads.
 - The package's Gradle dependencies are injected by the External Dependency Manager; no manual edit of
   `Assets/Plugins/Android/mainTemplate.gradle` should be needed. If a network adapter needs an extra
   repo/dependency, add it there (next to the existing `play-services-auth` line).
-- Google Play: declare the advertising ID. Recent Google Play services include the
-  `com.google.android.gms.permission.AD_ID` permission automatically; confirm it is present in the built
-  AAB and disclose ad usage in the Play Console Data Safety form.
+- Google Play: declare the advertising ID. `play-services-ads-identifier` (pulled in by
+  `Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml`) merges the
+  `com.google.android.gms.permission.AD_ID` permission into the manifest, so LevelPlay's own
+  "Declare AD_ID Permission" setting is not needed. Confirm it on a built bundle with
+  `java -jar bundletool.jar dump manifest --bundle <aab>` and look for `AD_ID`. Store answers:
+  `docs/runbooks/store-privacy-declarations.md`.
 
 ## 5. iOS (App Tracking Transparency + privacy)
 
-- Add `NSUserTrackingUsageDescription` to the Info.plist. Inject it in `scripts/archive-upload-ios.sh`
-  next to the existing `ITSAppUsesNonExemptEncryption` step, e.g.:
+Shipped in the repo:
 
-  ```sh
-  /usr/libexec/PlistBuddy -c "Add :NSUserTrackingUsageDescription string 'We use your data to show you more relevant ads.'" "$PLIST" || \
-  /usr/libexec/PlistBuddy -c "Set :NSUserTrackingUsageDescription 'We use your data to show you more relevant ads.'" "$PLIST"
-  ```
+- **ATT prompt:** `AdConsent.RequestIfNeededAsync()` calls the native bridge
+  `Assets/Plugins/iOS/TrackingAuthorization.mm`. When the status is still undetermined it shows the system
+  prompt and waits (up to 60 s) for the answer before `LevelPlay.Init`.
+- **Info.plist + framework:** `Assets/Scripts/Editor/IOSTrackingPostProcess.cs` writes
+  `NSUserTrackingUsageDescription` and weak-links `AppTrackingTransparency.framework` into UnityFramework.
+- **SKAdNetwork ids:** added by the LevelPlay package's own iOS post-process
+  (`NetworkManagerSettings.AddNetworksSkadnetworkID`, on by default while
+  `Assets/LevelPlay/Editor/NetworkManagerSettings.asset` does not exist). It downloads the id lists at
+  build time, so a build without network access logs an error and ships without them.
+- The CocoaPods `pod install` already runs in the iOS archive script, so LevelPlay's pods are picked up.
 
-- Implement the ATT request in `AdConsent.RequestIfNeededAsync()` (currently a no-op scaffold) — request
-  tracking authorization and await the user's choice before `LevelPlay.Init`. The CocoaPods `pod install`
-  already runs in the iOS archive script, so LevelPlay's pods are picked up automatically.
-- Verify the SDK's `PrivacyInfo.xcprivacy` is included and the App Store privacy questionnaire matches.
+Still to verify on the first TestFlight build: the prompt appears once on first launch, `SKAdNetworkItems`
+is in the built Info.plist, and the IronSource pod's `PrivacyInfo.xcprivacy` is in the archive. Store
+answers: `docs/runbooks/store-privacy-declarations.md`.
 
 ## 6. Turn it on
 

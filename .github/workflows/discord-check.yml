@@ -1,0 +1,75 @@
+name: Discord Check
+
+# Validates the live Discord server and the repo's Discord secrets/variables (#533):
+#   1. scripts/discord unit tests
+#   2. validate_server.py: settings, roles, channels, forums, bot overrides, webhook targets (read-only)
+#   3. forum_sync.py dry run: the bot can read the forums and would do the right thing
+# Add the label `discord-post-test` to the PR to also post one test message per webhook.
+#
+# Runs on PRs that touch the Discord files, because pull_request workflows run from the PR branch (manual and
+# scheduled ones only run once the file is on main). Same-repo PRs only, so fork code never sees the secrets.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - 'scripts/discord/**'
+      - '.github/workflows/discord-*.yml'
+      - 'docs/community/discord-server.md'
+  workflow_dispatch:
+    inputs:
+      post_test:
+        description: Also post a test message to each webhook
+        type: boolean
+        default: false
+
+concurrency:
+  group: discord-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  check:
+    name: Validate Discord setup
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.action != 'labeled' || github.event.label.name == 'discord-post-test'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      DISCORD_GUILD_ID: ${{ vars.DISCORD_GUILD_ID }}
+      DISCORD_BUG_FORUM_ID: ${{ vars.DISCORD_BUG_FORUM_ID }}
+      DISCORD_BETA_FORUM_ID: ${{ vars.DISCORD_BETA_FORUM_ID }}
+      DISCORD_IDEA_FORUM_ID: ${{ vars.DISCORD_IDEA_FORUM_ID }}
+      DISCORD_BETA_PING_ROLE_ID: ${{ vars.DISCORD_BETA_PING_ROLE_ID }}
+      DISCORD_PATCH_PING_ROLE_ID: ${{ vars.DISCORD_PATCH_PING_ROLE_ID }}
+      DISCORD_BETA_WEBHOOK: ${{ secrets.DISCORD_BETA_WEBHOOK }}
+      DISCORD_PATCH_NOTES_WEBHOOK: ${{ secrets.DISCORD_PATCH_NOTES_WEBHOOK }}
+      DISCORD_STAFF_WEBHOOK: ${{ secrets.DISCORD_STAFF_WEBHOOK }}
+      POST_TEST: ${{ (inputs.post_test || contains(github.event.pull_request.labels.*.name, 'discord-post-test')) && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            scripts
+            docs
+          persist-credentials: false
+
+      - name: Unit tests
+        run: python3 -m unittest scripts/discord/test_discord.py
+
+      - name: Validate the server
+        run: |
+          if [ "$POST_TEST" = "1" ]; then python3 scripts/discord/validate_server.py --post-test
+          else python3 scripts/discord/validate_server.py; fi
+
+      - name: Forum sync dry run
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: '1'
+        run: python3 scripts/discord/forum_sync.py

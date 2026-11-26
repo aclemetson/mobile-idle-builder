@@ -176,6 +176,12 @@ namespace MobileIdleBuilder
             if (_wasActive && !state.IsActive)
             {
                 _wasActive = false;
+                // Finished by the ECS step system (AdvanceECSStep reports its own completion and sets _lastStepIndex
+                // past the end). An end by prestige leaves the index inside the flow and is not a completion.
+                var endedFlow = TutorialFlowSO.Current;
+                if (endedFlow?.steps != null && state.CurrentStepIndex >= endedFlow.steps.Length
+                    && _lastStepIndex < endedFlow.steps.Length)
+                    ReportStep(state.CurrentStepIndex);
                 UnlockAllFields();
                 StopPulseRoutine();
                 tutorialHighlighter?.ClearHighlight();
@@ -216,6 +222,9 @@ namespace MobileIdleBuilder
             {
                 int prevIdx = _lastStepIndex;
                 _lastStepIndex = state.CurrentStepIndex;
+                // prevIdx -1 is the first frame after a load (or a flow switch): the step was already reported
+                // when it was entered, so only step 0 (a fresh start) counts as new here.
+                if (prevIdx >= 0 || state.CurrentStepIndex == 0) ReportStep(state.CurrentStepIndex);
                 OnStepChanged(state.CurrentStepIndex, prevIdx);
             }
 
@@ -363,7 +372,18 @@ namespace MobileIdleBuilder
             _tutorialQuery.SetSingleton(state);
 
             _lastStepIndex = state.CurrentStepIndex;
+            ReportStep(state.CurrentStepIndex);
             OnStepChanged(state.CurrentStepIndex);
+        }
+
+        // Tutorial funnel telemetry (#567): one tutorial_step per step entered, plus "complete" when the flow ends.
+        private static void ReportStep(int stepIndex)
+        {
+            var flow = TutorialFlowSO.Current;
+            if (flow?.steps == null || TelemetryService.Instance == null) return;
+            string prefix = string.IsNullOrEmpty(flow.worldId) ? "" : flow.worldId + "/";
+            string id = stepIndex >= flow.steps.Length ? "complete" : flow.steps[stepIndex]?.id;
+            TelemetryService.Instance.RecordTutorialStep(prefix + (string.IsNullOrEmpty(id) ? $"step_{stepIndex}" : id), stepIndex);
         }
 
         // ── Dialogue event handlers ───────────────────────────────────────────

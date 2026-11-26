@@ -195,6 +195,22 @@ namespace MobileIdleBuilder
                 return false;
             }
 
+            // The building feeding a chain's head: the one whose output port faces it, as ConveyorSystem pass 4
+            // pulls. Two producers often touch one head (a harvester pair side by side); taking whichever came
+            // first credited the belt to the wrong one, starved the synth it feeds, and the Demon got nothing
+            // offline or from a Time Warp (#535). Without port data, any adjacent producer (the old rule).
+            BuildingSaveData HeadProducer(Vector2Int head)
+            {
+                if (getOutputPorts != null)
+                    for (int d = 0; d < 4; d++)
+                    {
+                        if (!cellToBuilding.TryGetValue(Step(head, d), out var b) || !CanProduce(b)) continue;
+                        foreach (var (pc, facing) in getOutputPorts(b))
+                            if (Step(pc, facing) == head) return b;
+                    }
+                return FindAdjacent(head.x, head.y, cellToBuilding, CanProduce);
+            }
+
             // ---- Edges (producer at head → consumer/inventory at tail, shared at splits) --------
             var routed = new List<(int to, float w)>();
             foreach (var chain in conveyors)
@@ -207,7 +223,7 @@ namespace MobileIdleBuilder
                 routed.Clear();
                 Route(chain, 1f, routed, 0);
 
-                var producer = FindAdjacent(hx, hy, cellToBuilding, CanProduce);
+                var producer = HeadProducer(new Vector2Int(hx, hy));
                 if (producer == null)
                 {
                     // A belt leaving a Filter: remember which side it starts from and where it ends.

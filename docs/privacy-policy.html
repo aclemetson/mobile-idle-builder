@@ -30,7 +30,7 @@
 </head>
 <body>
 <h1>Privacy Policy</h1>
-<p class="meta">Quantum Foundry (shown as Mobile Idle Builder in test builds), published by Clemtek Softworks<br>Effective date: October 4, 2026</p>
+<p class="meta">Quantum Foundry (shown as Mobile Idle Builder in test builds), published by Clemtek Softworks<br>Effective date: November 26, 2026</p>
 
 <p>This policy explains what information Quantum Foundry (the "game") collects, why, who it is shared
 with, and the choices you have. The game is currently in alpha testing. If you have any question about
@@ -38,8 +38,8 @@ this policy, contact us at
 <a href="mailto:aclemetson12492@gmail.com">aclemetson12492@gmail.com</a>.</p>
 
 <h2>Information we collect</h2>
-<p>We do not ask for your name, address or phone number, and we do not sell personal information. The game
-collects the following:</p>
+<p>We do not ask for your real name, address or phone number, and we do not sell personal information. The
+game collects the following:</p>
 <table>
   <thead><tr><th>Data</th><th>What it is</th><th>Why</th></tr></thead>
   <tbody>
@@ -47,28 +47,41 @@ collects the following:</p>
         <td>A random identifier created by Unity Gaming Services when you first play.</td>
         <td>To keep your account, save your progress and link the data below to one player.</td></tr>
     <tr><td>Google account link (optional)</td>
-        <td>If you sign in with Google, a Google account identifier is linked to your player ID. We do not
-            receive your Google password.</td>
+        <td>If you sign in with Google, a Google account identifier is linked to your player ID. Your Google
+            email address is kept only on your device, to show which account is linked. We do not receive
+            your Google password.</td>
         <td>To restore your progress on a new device.</td></tr>
+    <tr><td>Player name and league results (optional)</td>
+        <td>If you join a tournament league, the player name you choose, your name colour and title, your
+            league scores, rank and weekly results. Your player name, cosmetics and scores are shown to the
+            other players in your league.</td>
+        <td>To run the tournament leagues and their standings.</td></tr>
     <tr><td>Game progress</td>
         <td>Your save data (buildings, resources, research, purchases of in-game items, settings).</td>
         <td>Cloud save, so progress survives reinstalls and device changes.</td></tr>
     <tr><td>Gameplay analytics</td>
         <td>Game events and periodic snapshots of game state (for example currency totals, buildings
-            placed, research completed, prestige runs, play time, and whether developer tools were
-            used). Collected only during announced testing phases.</td>
+            placed, research completed, prestige runs, tutorial progress, play time, rewarded ads watched,
+            in-app purchases made (product and price), tournament league entries and ranks, whether you
+            opened the feedback link, and whether developer tools were used). Collected only during
+            announced testing phases.</td>
         <td>To balance the game's economy and find where players get stuck.</td></tr>
     <tr><td>Crash and diagnostic reports</td>
         <td>Error logs and crash reports with device model, operating system version and app version.</td>
         <td>To find and fix bugs.</td></tr>
     <tr><td>Advertising ID</td>
-        <td>Your device's resettable advertising identifier, plus basic device and network information,
-            collected by our ad provider when you choose to watch a rewarded ad.</td>
+        <td>Your device's resettable advertising identifier (on iOS, only if you allow tracking), basic device
+            and network information, approximate location derived from your IP address, and how you interact
+            with ads, collected by our ad provider and the ad networks it works with.</td>
         <td>To serve and measure ads, prevent ad fraud, and (where allowed) personalize ads.</td></tr>
+    <tr><td>Notification token</td>
+        <td>A device token from Google (Android) or Apple (iOS), if you allow notifications.</td>
+        <td>To send you game notifications. You can turn them off in your device settings.</td></tr>
     <tr><td>Purchase records</td>
         <td>Records of in-app purchases (product, time, transaction ID). Payment details are handled by
-            Google Play; we never see your card number.</td>
-        <td>To deliver what you bought and handle refunds.</td></tr>
+            Google Play or the Apple App Store; we never see your card number.</td>
+        <td>To deliver what you bought and handle refunds. During testing phases, which product was bought
+            and its price are also recorded in gameplay analytics (see above).</td></tr>
     <tr><td>Feedback you send</td>
         <td>If you use "Send Feedback", your email address, your message, and the app version and player
             ID that the game adds to the email.</td>
@@ -79,33 +92,39 @@ collects the following:</p>
 <h2>Third-party services</h2>
 <p>The game uses the following providers, who process data on our behalf or under their own policies:</p>
 <ul>
-  <li><strong>Unity Gaming Services</strong> (Authentication, Cloud Save, Analytics, Remote Config, Cloud
-      Diagnostics): <a href="https://unity.com/legal/game-player-and-app-user-privacy-policy">Unity privacy policy</a></li>
+  <li><strong>Unity Gaming Services</strong> (Authentication, Cloud Save, Cloud Code for tournament leagues,
+      Analytics, Remote Config, Cloud Diagnostics, Push Notifications) and <strong>Unity IAP</strong>:
+      <a href="https://unity.com/legal/game-player-and-app-user-privacy-policy">Unity privacy policy</a></li>
   <li><strong>Unity LevelPlay (ironSource)</strong> and the ad networks it mediates, for rewarded ads:
       <a href="https://developers.is.com/ironsource-mobile/air/ironsource-mobile-privacy-policy/">ironSource privacy policy</a></li>
   <li><strong>Google Play Billing</strong> for in-app purchases, and <strong>Google Sign-In</strong> for
-      optional account linking: <a href="https://policies.google.com/privacy">Google privacy policy</a></li>
+      optional account linking, and <strong>Firebase Cloud Messaging</strong> for notifications on Android:
+      <a href="https://policies.google.com/privacy">Google privacy policy</a></li>
+  <li><strong>Apple</strong> (App Store purchases and push notifications on iOS):
+      <a href="https://www.apple.com/legal/privacy/">Apple privacy policy</a></li>
 </ul>
 
 <h2>Advertising</h2>
 <p>Ads appear only when you choose to watch one for a reward. You can reset your advertising ID or opt out of
 personalized ads in your device settings (on Android: Settings &gt; Google &gt; Ads, or Settings &gt;
-Privacy &gt; Ads).</p>
+Privacy &gt; Ads). On iOS the game asks before allowing tracking; you can change your answer at any time in
+Settings &gt; Privacy &amp; Security &gt; Tracking.</p>
 
 <h2>How long we keep data</h2>
 <ul>
-  <li>Account and cloud save data: for as long as your account exists, or until you ask us to delete it.</li>
+  <li>Account, cloud save and league data (player name, standings, results): for as long as your account
+      exists, or until you ask us to delete it.</li>
   <li>Analytics events: up to 13 months (the Unity Analytics retention limit), then deleted.</li>
   <li>Crash reports: kept as long as needed to fix the issue, normally no longer than 12 months.</li>
   <li>Feedback emails: kept until the issue is resolved.</li>
 </ul>
 
-<h2>Your choices and deleting your data</h2>
+<h2 id="delete">Your choices and deleting your data</h2>
 <p>To access or delete your data, email
 <a href="mailto:aclemetson12492@gmail.com?subject=Data%20deletion%20request">aclemetson12492@gmail.com</a>
 with the subject "Data deletion request". Include your player ID if you can (the game adds it to feedback
-emails). We will delete your account, cloud save and associated analytics records within 30 days and
-confirm by email. Uninstalling the game removes local data from your device but does not delete cloud data.</p>
+emails). We will delete your account, cloud save, league data and associated analytics records within 30
+days and confirm by email. Uninstalling the game removes local data from your device but does not delete cloud data.</p>
 
 <h2>Children</h2>
 <p>The game is not directed at children under 13, and we do not knowingly collect personal information from

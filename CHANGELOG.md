@@ -23,18 +23,33 @@ Building and belt editing that works with fingers, a startup that keeps your acc
 - **Longer prestige-shop tails** so the shop lasts through Ascension (about 680k prestige currency in total) (#515).
 - **Ad-Free Forever** (one-time purchase): ad rewards without ads, plus +20% entropy income (#517).
 - **What's new**: release notes are published by CI and shown once after an update (#516).
+- **Login reward entropy scales with income**: bonus days pay minutes of current production, with the old flat amounts as the floor (#539).
+- **Entropy Surge stacks** with any running boost (#537).
 
 ### Gameplay and UX
 - **Building edit mode**: press and hold a placed building to move, rotate or flip it without destroying it. Its contents, recipe, upgrades, manager and filter rules move with it, and moving is free. A Remove button deletes it after a confirmation; delete mode stays for clearing several buildings (#430).
 - **Belt tracing**: tap a start, tap each point along the route, and confirm to place the whole belt. It routes itself between points, never crosses itself, and can join an existing belt. Undo removes the last point (#432).
 - **Taps vs. pans and zooms**: one shared rule for the map. Pinches, pans, glide stops and resting fingers no longer place or delete anything, and the tap allowance scales with screen density so real taps aren't lost to finger wobble (#432).
 - The achievement reset countdown ticks while the panel is open (#429).
+- **Progress bars** above producing buildings (#547). Press and hold a field to move it (#542).
+- **Belts**: a split in front of a building's input feeds the building (#556), belts merge at a building's exit, and seams show while previewing (#544). Chemistry streams only flow away from their Spring (#543).
+- **Discord** invite in Settings > Support (#570).
+
+### Platform and live ops
+- **Faster startup**: one UGS sign-in and one Remote Config fetch per launch, and no throwaway anonymous player on a new install (#209, #573).
+- **Smaller install**: unused packages removed, IL2CPP built for size, Medium managed stripping (#207, #574, #575).
+- **Maintenance windows** can be scheduled (`maintenance.startsUtc`) and the poll interval tuned remotely (#224, #572).
+- **Game-data publisher**: `live-ops/gamedata.json` is published to Remote Config by a workflow (#210, #571).
+- **Beta telemetry**: tutorial funnel (`tutorial_step`, with lifetime play time), rewarded ads by placement, store purchases, PvE league joins and finishes, and feedback-link use (#567, #580).
+- **CI security**: one UGS service account per job (Remote Config, development Cloud Code, symbol upload), so the self-hosted runner only holds the symbols key; a UGS Key Check workflow; production game-data publishes wait for approval in a protected `production` environment; internal-build AABs are kept 3 days (#534, #581, #583, #584).
+- Store readiness: iOS tracking prompt, Android crash symbols, privacy answers (#563); HUD split into sub-controllers (#286, #548-#555); Burst net-worth systems (#284, #546).
 
 ### Fixes
 - The Research header no longer disappears in list mode, and no panel header shrinks under a long list (#499, #521).
 - **Sign-in sticks**: a Google-linked account no longer shows as Guest after a restart (#431).
 - **Newest save wins**: an upload that never reached the cloud no longer lets an older cloud save replace this device's progress (#431).
 - **No more hang at 99%**: when the device and cloud saves differ, the game loads and then asks which to keep, instead of waiting behind the loading screen (#431).
+- Time Warp credits world-task items (#540, #560). The tutorial can no longer soft-lock on a research step (#541, #559).
 
 ## 0.5 (November 2026)
 

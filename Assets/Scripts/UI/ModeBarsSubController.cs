@@ -184,7 +184,8 @@ namespace MobileIdleBuilder
             if (isPlacing && _placementLabel != null)
             {
                 string rotateHint = canRotate ? (canFlip ? "  ·  R rotate  ·  F flip" : "  ·  R rotate") : "";
-                _placementLabel.text = editing
+                bool moving = editing || (_placement?.IsMovingField ?? false);
+                _placementLabel.text = moving
                     ? $"Tap a tile to move it  ·  confirm to keep it there{rotateHint}"
                     : $"Tap a tile to position  ·  drag to pan  ·  confirm to place{rotateHint}";
             }

@@ -1,0 +1,84 @@
+name: UGS Key Check
+
+# Checks each UGS service account after it is created or rotated (docs/runbooks/secrets.md): every key can do
+# its CI job, and is refused outside it (the development key can't reach production, the symbols key can't
+# touch game data). Prints HTTP status codes only. Runs on PRs that change the check or the deploy script, and
+# by hand from Actions > UGS Key Check once this file is on the default branch.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/ugs-key-check.yml'
+      - 'scripts/ci/ugs_key_check.py'
+      - 'scripts/deploy-cloud-code.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ugs-key-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: Key permissions
+    # Fork PRs get no secrets; nothing to check there.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+      UGS_ENV_ID_DEVELOPMENT: ${{ secrets.UGS_ENV_ID_DEVELOPMENT }}
+      # Empty once it lives only in the `production` environment: the production checks then skip.
+      UGS_ENV_ID_PRODUCTION: ${{ secrets.UGS_ENV_ID_PRODUCTION }}
+      UGS_PROJECT_SERVICE_KEY_ID: ${{ secrets.UGS_PROJECT_SERVICE_KEY_ID }}
+      UGS_PROJECT_SERVICE_KEY_SECRET: ${{ secrets.UGS_PROJECT_SERVICE_KEY_SECRET }}
+      UGS_DEV_SERVICE_KEY_ID: ${{ secrets.UGS_DEV_SERVICE_KEY_ID }}
+      UGS_DEV_SERVICE_KEY_SECRET: ${{ secrets.UGS_DEV_SERVICE_KEY_SECRET }}
+      UGS_SYMBOLS_SERVICE_KEY_ID: ${{ secrets.UGS_SYMBOLS_SERVICE_KEY_ID }}
+      UGS_SYMBOLS_SERVICE_KEY_SECRET: ${{ secrets.UGS_SYMBOLS_SERVICE_KEY_SECRET }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: /scripts/ci/
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # --write PUTs the development Remote Config back unchanged to prove the write permission.
+      - name: Check each key
+        run: python3 scripts/ci/ugs_key_check.py --write
+
+  cloud-code:
+    name: Cloud Code deploy (dry run, development)
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      UGS_CLI_SERVICE_KEY_ID: ${{ secrets.UGS_DEV_SERVICE_KEY_ID }}
+      UGS_CLI_SERVICE_SECRET_KEY: ${{ secrets.UGS_DEV_SERVICE_KEY_SECRET }}
+      UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+      UGS_CLI_VERSION: 2.1.0
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Install UGS CLI
+        run: npm install -g "ugs@${UGS_CLI_VERSION}"
+
+      - name: Deploy PveModule (dry run)
+        env:
+          CCM_OUT_DIR: ${{ runner.temp }}/cloud-code
+        run: |
+          chmod +x scripts/deploy-cloud-code.sh
+          ./scripts/deploy-cloud-code.sh development --dry-run

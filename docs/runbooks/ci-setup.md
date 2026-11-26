@@ -342,6 +342,8 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 
 ## Secrets Summary
 
+Full inventory, blast radius and rotation procedures: `docs/runbooks/secrets.md`.
+
 | Secret | Source | Used By |
 |--------|--------|---------|
 | `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | builds |
@@ -356,8 +358,21 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
 | `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
-| `UGS_GAME_CONFIG_SERVICE_KEY_ID` / `UGS_GAME_CONFIG_SERVICE_SECRET_KEY` | UGS service account | internal: Remote Config update prompt + **Cloud Code deploy** (needs the "Cloud Code Editor" project role) |
-| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + Cloud Code deploy |
+| `UGS_PROJECT_SERVICE_KEY_ID` / `UGS_PROJECT_SERVICE_KEY_SECRET` | key of UGS service account **`ci-project`** (Remote Config Admin) | Remote Config writes: internal + iOS update prompt, what's new, Publish Game Data |
+| `UGS_DEV_SERVICE_KEY_ID` / `UGS_DEV_SERVICE_KEY_SECRET` | key of **`ci-development`** (Cloud Code Editor in development) | internal: Cloud Code deploy |
+| `UGS_SYMBOLS_SERVICE_KEY_ID` / `UGS_SYMBOLS_SERVICE_KEY_SECRET` | key of **`ci-symbols`** (Observability Symbols Uploader) | internal + prod: Diagnostics symbol upload (Basic header = base64 of `keyId:secret`, built in the workflow) |
+| `UGS_PROJECT_ID` / `UGS_ENV_ID_DEVELOPMENT` | UGS project / development environment ids | internal: Remote Config + symbol upload |
+| `UGS_ENV_ID_PRODUCTION` | production environment id, in the **`production`** GitHub environment | Publish Game Data to production |
+| `DISCORD_BOT_TOKEN` | Foundry Bot token (Discord Developer Portal) | Discord Forum Sync |
+| `DISCORD_BETA_WEBHOOK` / `DISCORD_PATCH_NOTES_WEBHOOK` / `DISCORD_STAFF_WEBHOOK` | channel webhook URLs | beta announcement (internal), Discord Announce, failure alerts (all release workflows) |
+| `DISCORD_GUILD_ID`, `DISCORD_*_FORUM_ID`, `DISCORD_*_PING_ROLE_ID` (variables) | Discord IDs (Developer Mode > Copy ID) | Discord Forum Sync, announcements |
+
+One UGS service account per job (Unity Cloud Dashboard > Administration > Service accounts); roles, scopes and
+rotation are in `docs/runbooks/secrets.md`. After creating or rotating a key, run **UGS Key Check** (it checks each
+key's allowed and refused calls).
+
+The Discord secrets, variables and workflows (`discord-sync.yml`, `discord-announce.yml`, the `discord-alert` jobs) are
+set up in `docs/community/discord-server.md` ("Automation"). All of them skip while unset.
 
 ## Local Testing
 

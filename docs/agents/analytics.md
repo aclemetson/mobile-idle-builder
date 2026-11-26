@@ -4,7 +4,7 @@ Player-data collection for **economy balancing** — how currency rates scale, h
 run, when/how often players prestige, how big builds get, where progression stalls. Backed by **UGS
 Analytics** (`com.unity.services.analytics`), the same ecosystem as Auth / Cloud Save / Remote Config.
 
-> Verified against: `feature/player-telemetry-analytics`, 2026-06-23.
+> Verified against: `feature/player-telemetry-analytics`, 2026-06-23; beta events (#567) 2026-11-26.
 
 ## How it works
 
@@ -41,7 +41,8 @@ Analytics** (`com.unity.services.analytics`), the same ecosystem as Auth / Cloud
   `Emit`, which counts accepted/refused), snapshot loop, lifecycle flush.
 - Flags: `analytics.enabled` / `analytics.phase` in `FeatureFlags.cs`.
 - Taps: `SaveManager.InitialCloudReconcile` (start), `AchievementService.Notify{BuildingPlaced,
-  ResearchCompleted,TierReached}`, `PrestigeSystem.OnUpdate` (rich pre-reset event), `MegastructureService.Deduct`.
+  ResearchCompleted,TierReached}`, `PrestigeSystem.OnUpdate` (rich pre-reset event), `MegastructureService.Deduct`;
+  beta events (#567): `TutorialOverlayController`, `AdService`, `IAPService`, `TournamentService`, `HUDSettingsSubController`.
 - Tests: `Assets/Scripts/Tests/TelemetryServiceTests.cs`.
 - Dashboard + data dictionary: `docs/analytics/`.
 
@@ -70,6 +71,11 @@ Every event also carries `player_id` (String) + `collection_phase` (String).
 | `notification_preference` | enabled (Boolean) | `NotificationService.SetEnabledFromSettings` when the Settings toggle changes. Push campaign audiences exclude players whose latest value is false |
 | `notification_opened_local` | notification_kind (String, `NotificationKind` name) | `NotificationService.ReportLaunchNotification` when the app opens from a tapped local notification |
 | `dev_console_used` | command (String) | `DevConsoleController.SubmitCommand` on a successful command; once per session (command name only, no args) |
+| `tutorial_step` | step_id (String), step_index (Int), playtime_total_sec (Int) | `TutorialOverlayController.ReportStep`: each step entered (ECS advance or a UI-event advance), plus `complete` (step_index = step count) when a flow finishes; not on a prestige end. World flows prefix the id (`chemistry/...`). A reload re-entering a step does not re-send it, except step 0. `playtime_total_sec` is **lifetime** foreground play time (`SaveData.playtimeSec`), unlike the session-relative `playtime_*` params elsewhere (#567) |
+| `ad_reward` | placement (String, `AdPlacement` name), granted (Boolean), ad_free (Boolean) | `AdService.ShowInternal` when the ad finishes: `granted` false when skipped or nothing to collect. Ad-Free owners (no ad played) send `ad_free` true. Blocked attempts (cap, cooldown, no fill) send nothing |
+| `iap_purchase` | product_id (String), price (Float), currency (String, ISO) | `IAPService.ProcessPurchase` for a known product, store's localized price. The store can re-deliver a purchase (iOS restore, an Android pending purchase finishing on a later launch), so treat it as "purchase processed" and dedupe by player + product for ad_free |
+| `pve_league` | action (String: `joined` / `finished`), league_tier (Int, position in `game_config.pve.leagues`, 0 = first, -1 unknown), rank (Int, 0 for joined) | `TournamentService.JoinAsync` (joined) and `ClaimAsync` when the week's reward is applied (finished, final rank). A player who never claims sends no `finished` |
+| `feedback_opened` | source (String: `settings_email`, `settings_discord`) | `HUDSettingsSubController.OnSendFeedback` / `OnDiscord` after the link opens |
 
 ### Dev console in alpha builds (#169)
 

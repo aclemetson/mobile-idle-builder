@@ -2,6 +2,8 @@
 
 How to test the crystal-pack in-app purchases (IAP) end-to-end through Google Play Console.
 
+The iOS / App Store Connect version is `docs/runbooks/app-store-iap-testing.md`.
+
 ## What the game ships
 
 Unity IAP (`com.unity.purchasing`) is integrated. `IAPService`

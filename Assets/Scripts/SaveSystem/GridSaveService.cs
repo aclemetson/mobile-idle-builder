@@ -794,7 +794,17 @@ namespace MobileIdleBuilder
         /// <summary>A saved building's output ports on the grid: (cell, facing), as BuildingPlacer places them.</summary>
         internal static IEnumerable<(UnityEngine.Vector2Int cell, int facing)> OutputPorts(BuildingSaveData bsd, BuildingSO building)
         {
-            if (building?.ports == null || bsd?.position == null || bsd.position.Length < 2) yield break;
+            if (bsd?.position == null || bsd.position.Length < 2) yield break;
+            // A field harvester has no port layout: BuildingPlacer gives it one output port on its own cell,
+            // facing its chosen output direction (#535: offline must know which belt a harvester feeds). Only for
+            // buildings without ports: a save older than the field reads 0 for every building.
+            if (building != null && (building.ports == null || building.ports.Length == 0))
+            {
+                if (building.placementRule == PlacementRule.MustBeOnField && bsd.outputDirection >= 0 && bsd.outputDirection < 4)
+                    yield return (new UnityEngine.Vector2Int(bsd.position[0], bsd.position[1]), bsd.outputDirection);
+                yield break;
+            }
+            if (building?.ports == null) yield break;
             var baseFootprint = new UnityEngine.Vector2Int(UnityEngine.Mathf.Max(1, building.footprint.x),
                                                            UnityEngine.Mathf.Max(1, building.footprint.y));
             foreach (var port in building.ports)
