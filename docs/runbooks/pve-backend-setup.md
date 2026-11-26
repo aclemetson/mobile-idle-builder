@@ -59,8 +59,8 @@ dotnet test
 `release-internal.yml` deploys the module to the **development** environment whenever integration merges into a
 `release/**` branch: the same trigger and commit as the internal Android build, so the development module always
 matches the newest internal APK. Job `cloud-code` (ubuntu) runs `scripts/deploy-cloud-code.sh`: module tests, then
-`dotnet publish -c Release -r linux-x64`, zipped into `PveModule.ccm`, then `ugs deploy` with the existing UGS
-service account (`UGS_GAME_CONFIG_SERVICE_KEY_ID` / `..._SECRET_KEY`; the environment name is looked up from
+`dotnet publish -c Release -r linux-x64`, zipped into `PveModule.ccm`, then `ugs deploy` with the UGS
+service account `ci-cd-automation` (`UGS_GAME_CONFIG_SERVICE_KEY_ID` / `..._SECRET_KEY`; the environment name is looked up from
 `UGS_ENV_ID_DEVELOPMENT`). The `.ccm` and the CLI's JSON result are kept as the run's `pve-module-<n>` artifact.
 A failed deploy fails that job only; the Play upload still goes out.
 

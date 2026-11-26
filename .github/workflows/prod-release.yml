@@ -80,6 +80,17 @@ jobs:
         shell: powershell
         run: Remove-Item -Force "secrets\user.keystore" -ErrorAction SilentlyContinue
 
+      # IL2CPP symbols to Unity Diagnostics for readable crash reports. Reads Library/, so it must run
+      # before Save Library. Never blocks the release; see docs/runbooks/cloud-diagnostics-setup.md.
+      - name: Upload symbols to Unity Diagnostics
+        continue-on-error: true
+        shell: powershell
+        env:
+          UGS_SERVICE_KEY_ID: ${{ secrets.UGS_GAME_CONFIG_SERVICE_KEY_ID }}
+          UGS_SERVICE_SECRET: ${{ secrets.UGS_GAME_CONFIG_SERVICE_SECRET_KEY }}
+          UGS_PROJECT_ID: ${{ secrets.UGS_PROJECT_ID }}
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\ci\upload-symbols.ps1
+
       - name: Save Library
         if: always()
         shell: powershell
