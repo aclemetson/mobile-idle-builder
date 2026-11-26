@@ -37,19 +37,22 @@ Data collected (and processed ephemerally: no):
 
 | Play category -> type | Collected | Shared | Required / optional | Purposes |
 |---|---|---|---|---|
+| Location -> Approximate location | yes | **yes** | required | Analytics, Fraud prevention, Advertising or marketing |
 | Personal info -> User IDs | yes | no | required | App functionality, Account management |
 | Personal info -> Name (player name) | yes | no | optional (only PvE) | App functionality |
 | Financial info -> Purchase history | yes | no | optional | App functionality |
 | App activity -> App interactions | yes | no | required | Analytics |
-| App activity -> In-game progress / other actions | yes | no | required | App functionality, Analytics |
-| App info and performance -> Crash logs | yes | no | required | Analytics (stability) |
-| App info and performance -> Diagnostics | yes | no | required | Analytics (stability) |
-| Device or other IDs | yes | **yes** | required | Advertising or marketing, Fraud prevention, App functionality (push) |
+| App activity -> Other actions (gameplay, ad interactions) | yes | **yes** | required | App functionality, Analytics, Fraud prevention, Advertising or marketing |
+| App info and performance -> Crash logs | yes | no | required | Analytics |
+| App info and performance -> Diagnostics | yes | no | required | Analytics, Fraud prevention, Advertising or marketing |
+| Device or other IDs | yes | **yes** | required | App functionality (push), Analytics, Fraud prevention, Advertising or marketing |
 
-- Location: LevelPlay and some ad networks derive approximate location from the IP address. Check the
-  current ironSource / LevelPlay Data Safety guidance and add **Location -> Approximate location (shared,
-  Advertising)** if they list it.
+- The LevelPlay rows (approximate location, ad interactions under Other actions, diagnostics, device IDs) follow
+  Unity's [LevelPlay Google Data Safety Questionnaire](https://docs.unity.com/en-us/grow/levelplay/platform/legal-resources/google-data-safety-questionnaire),
+  which marks them required. Re-check it when the LevelPlay SDK is updated.
 - Feedback emails are sent from the player's own mail app, so they are not collected by the app.
+- Account creation method: **OAuth** (Google Sign-In; Sign in with Apple later, #564). Partial deletion without
+  deleting the account: **No**.
 
 ### Ads
 
