@@ -342,6 +342,8 @@ Ensure the repo allows Actions to create tags, releases, and the version bump co
 
 ## Secrets Summary
 
+Full inventory, blast radius and rotation procedures: `docs/runbooks/secrets.md`.
+
 | Secret | Source | Used By |
 |--------|--------|---------|
 | `ANDROID_KEYSTORE_BASE64` | base64 of `secrets/user.keystore` | builds |
