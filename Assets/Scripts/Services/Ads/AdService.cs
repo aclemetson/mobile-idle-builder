@@ -262,12 +262,14 @@ namespace MobileIdleBuilder
                 if (!earned)
                 {
                     _provider?.LoadRewarded();
+                    TelemetryService.Instance?.RecordAdReward(p.ToString(), granted: false, adFree: skipAd);
                     Finish(onDone, Fail(p, AdShowOutcome.Declined, "Ad skipped — no reward."));
                     return;
                 }
 
                 bool granted = GrantReward(save, p, doubleOfflineResult, quoted, out string message);
                 if (!skipAd) _provider?.LoadRewarded();
+                TelemetryService.Instance?.RecordAdReward(p.ToString(), granted, adFree: skipAd);
 
                 if (!granted)
                 {

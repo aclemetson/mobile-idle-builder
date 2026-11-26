@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         public string lastSeenWhatsNewHash;                // WhatsNew.Hash of the release notes last shown (#502). Survives prestige.
         public string lastSeenGameDataUtc;                 // ISO 8601 UTC — newest gamedata.updatedUtc the player has acknowledged via the update-notice modal. Survives prestige.
         public bool  devConsoleUsed;                       // sticky: a dev-console command ran on this save (alpha builds ship the console). Stamped on telemetry snapshots so balancing data can exclude it. Survives prestige.
+        public long  playtimeSec;                          // lifetime foreground play time in seconds (TelemetryService accumulates it, analytics on or off). Reported as tutorial_step.playtime_total_sec. Survives prestige. Starts at 0 for saves from before it existed.
         // Public player name (PvE phase 1, PlayerNameService). UGS Authentication holds the real one; this caches it
         // for offline display. Full UGS form "Name#1234"; "" = never chosen. Survives prestige.
         public string playerName                    = "";

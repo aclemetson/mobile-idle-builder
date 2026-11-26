@@ -290,6 +290,7 @@ namespace MobileIdleBuilder
             string playerId = SaveManager.Instance?.Current?.playerId;
             string device   = $"{SystemInfo.deviceModel} / {SystemInfo.operatingSystem}";
             Application.OpenURL(BuildFeedbackMailto(FeatureFlags.FeedbackEmail, Application.version, playerId, device));
+            TelemetryService.Instance?.RecordFeedbackOpened("settings_email");
         }
 
         private void OnPrivacyPolicy() => Application.OpenURL(FeatureFlags.PrivacyPolicyUrl);
@@ -297,7 +298,9 @@ namespace MobileIdleBuilder
         private void OnDiscord()
         {
             string url = FeatureFlags.DiscordUrl;
-            if (IsDiscordInvite(url)) Application.OpenURL(url.Trim());
+            if (!IsDiscordInvite(url)) return;
+            Application.OpenURL(url.Trim());
+            TelemetryService.Instance?.RecordFeedbackOpened("settings_discord");
         }
 
         /// <summary>

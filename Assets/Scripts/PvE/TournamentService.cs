@@ -125,6 +125,7 @@ namespace MobileIdleBuilder
             SaveManager.Instance.SaveLocal();
             _forceSnapshot = true;
             GameLogger.Info($"[PvE] Joined {status.bracketId}, run until {status.runEndsUtc}.");
+            TelemetryService.Instance?.RecordPveLeague("joined", LeagueTier(status.profile?.league), 0);
             OnChanged?.Invoke();
             return status;
         }
@@ -185,11 +186,27 @@ namespace MobileIdleBuilder
                 outcome.applied = true;
                 SaveManager.Instance.SaveLocal();
                 GameLogger.Info($"[PvE] Reward {reward.week} applied: {reward.crystals} crystals, {outcome.starsLanded.Count} stars, {reward.strings} Strings.");
+                // Once per week: the RewardApplied guard above keeps a re-claim from reporting again.
+                TelemetryService.Instance?.RecordPveLeague("finished", LeagueTier(reward.league), reward.rank);
             }
             var r = await PveApi.Claim(reward.week);
             if (!string.IsNullOrEmpty(r.error) && r.error != PveErrors.NothingToClaim) outcome.serverError = r.error;
             await RefreshAsync();
             return outcome;
+        }
+
+        /// <summary>The league's position in the game_config.pve ladder (0 = first), or -1 when unknown.</summary>
+        public static int LeagueTier(string leagueId) =>
+            LeagueTier(GameBootstrap.Instance != null && GameBootstrap.Instance.gameConfig != null
+                ? GameBootstrap.Instance.gameConfig.pve : null, leagueId);
+
+        public static int LeagueTier(PveConfig cfg, string leagueId)
+        {
+            var leagues = cfg?.leagues;
+            if (leagues == null || string.IsNullOrEmpty(leagueId)) return -1;
+            for (int i = 0; i < leagues.Length; i++)
+                if (leagues[i] != null && leagues[i].id == leagueId) return i;
+            return -1;
         }
 
         bool _lookSyncing;
