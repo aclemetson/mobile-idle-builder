@@ -171,12 +171,27 @@ namespace MobileIdleBuilder
             if (InRun(t, nowUtc)) return TournamentPanelState.Running;   // works offline too
             if (status == null || !string.IsNullOrEmpty(status.error)) return TournamentPanelState.Offline;
 
+            // A status from before the current phase began (fetched before entry opened, or the panel was left
+            // open across the boundary) must not hold the old phase: the clock decides until a refresh lands, and a
+            // status from last week says nothing about this week's entry.
+            bool stale = StatusStale(status, nowUtc);
+            string phase = stale ? PveRules.Phase(nowUtc).ToString() : status.phase;
+            bool joined = status.joinedThisWeek && !(stale && status.week != PveRules.WeekId(nowUtc));
+
             // Entered this week and the run is over: waiting for settlement, or settled.
-            if (status.joinedThisWeek)
+            if (joined)
                 return status.bracketSettled ? TournamentPanelState.Results : TournamentPanelState.Finished;
             // Not entered this week: open while entry is, else a countdown to Friday (the panel also shows the
             // last tournament's result from the profile history).
-            return status.phase == nameof(PvePhase.Entry) ? TournamentPanelState.Open : TournamentPanelState.Waiting;
+            return phase == nameof(PvePhase.Entry) ? TournamentPanelState.Open : TournamentPanelState.Waiting;
+        }
+
+        /// <summary>The status's phase has ended (its phaseEndsUtc is past): it should be fetched again.</summary>
+        public static bool StatusStale(PveStatusResponse status, DateTime nowUtc)
+        {
+            if (status == null || !string.IsNullOrEmpty(status.error)) return false;
+            var ends = Parse(status.phaseEndsUtc);
+            return ends.HasValue && nowUtc >= ends.Value;
         }
 
         /// <summary>"14h 05m", "6m 30s".</summary>

@@ -188,6 +188,33 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(TournamentPanelState.Waiting,  State(Status("Results"), null, sun), "didn't enter this week");
         }
 
+        [Test]
+        public void PanelState_StaleStatus_FollowsTheClockIntoTheNextPhase()
+        {
+            // Fetched Thursday (Results, last week), entry opens Friday 00:00 UTC (Thu 7 PM EST) with the panel
+            // open or before a refresh lands: Start shows on time, not a "0m 00s" countdown.
+            var thu = new DateTime(2026, 11, 26, 23, 0, 0, DateTimeKind.Utc);
+            var lastWeek = new PveStatusResponse
+            {
+                week = PveRules.WeekId(thu), phase = "Results", joinedThisWeek = true, bracketSettled = true,
+                phaseEndsUtc = PveRules.Iso(PveRules.PhaseEnds(thu)), profile = new PveProfile(),
+            };
+            Assert.IsFalse(TournamentRules.StatusStale(lastWeek, thu));
+            Assert.AreEqual(TournamentPanelState.Results, State(lastWeek, null, thu), "last week's result until the window opens");
+
+            var fri = thu.AddHours(1).AddSeconds(5);
+            Assert.IsTrue(TournamentRules.StatusStale(lastWeek, fri));
+            Assert.AreEqual(TournamentPanelState.Open, State(lastWeek, null, fri), "last week's entry is not this week's");
+
+            var waiting = new PveStatusResponse { week = PveRules.WeekId(thu), phase = "Results",
+                phaseEndsUtc = PveRules.Iso(PveRules.PhaseEnds(thu)), profile = new PveProfile() };
+            Assert.AreEqual(TournamentPanelState.Waiting, State(waiting, null, thu));
+            Assert.AreEqual(TournamentPanelState.Open, State(waiting, null, fri));
+
+            Assert.IsFalse(TournamentRules.StatusStale(null, fri));
+            Assert.IsFalse(TournamentRules.StatusStale(new PveStatusResponse { error = "network:x" }, fri));
+        }
+
         // ── Panel text ────────────────────────────────────────────────────────
 
         static PveConfig Cfg() => new PveConfig
