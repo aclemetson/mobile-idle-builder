@@ -147,7 +147,9 @@ namespace MobileIdleBuilder.Tests
             foreach (var so in Resources.LoadAll<ItemSO>("Items"))
             {
                 if (so == null) continue;
-                bool expected = BeltItemVisuals.Has(so.id) || BeltItemVisuals.IsAtom(so) || BeltItemVisuals.IsMolecule(so);
+                // Chemistry's feedstocks (graphite, H2, O2, N2) are drawn from the Physics atoms since 2026-11-27.
+                bool expected = BeltItemVisuals.Has(so.id) || BeltItemVisuals.IsAtom(so) || BeltItemVisuals.IsMolecule(so)
+                             || BeltItemVisuals.IsFeedstock(so);
                 Assert.AreEqual(expected, BeltItemVisuals.Has(so), so.id);
                 if (so.category is ItemCategory.Alloy or ItemCategory.Component)
                     Assert.IsNull(BeltItemVisuals.TryCreate(so, null), $"{so.id} should still be an icon tile");

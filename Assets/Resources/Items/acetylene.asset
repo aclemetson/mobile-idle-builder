@@ -34,6 +34,6 @@ MonoBehaviour:
   particleUses: 0
   codexEntry: 'C2H2: a triple-bonded fuel that burns hot enough to weld.'
   codexUnlocked: 0
-  baseSellValue: 6400
+  baseSellValue: 5380
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

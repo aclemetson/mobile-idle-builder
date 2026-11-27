@@ -202,21 +202,32 @@ namespace MobileIdleBuilder
             // Shares the power cache fields: only one of the two strips shows at a time.
             if (Mathf.Approximately(state.Draw, _lastPowerDraw) &&
                 Mathf.Approximately(state.Supply, _lastPowerSupply) &&
-                state.StalledCount == _lastDisconnected) return;
+                state.StalledCount == _lastDisconnected && state.OverdrawnCount == _lastOverdrawn) return;
             _lastPowerDraw    = state.Draw;
             _lastPowerSupply  = state.Supply;
             _lastDisconnected = state.StalledCount;
+            _lastOverdrawn    = state.OverdrawnCount;
 
-            _powerLabel.text = FormatFlowLabel(state.Draw, state.Supply, state.StalledCount);
-            _powerLabel.EnableInClassList("power-brownout", state.StalledCount > 0);
+            _powerLabel.text = FormatFlowLabel(state.Draw, state.Supply, state.StalledCount, state.OverdrawnCount);
+            _powerLabel.EnableInClassList("power-brownout", state.StalledCount > 0 || state.OverdrawnCount > 0);
             HUDController.SetElementVisible(_powerStatus, state.Supply > 0f || state.Draw > 0f);
         }
 
-        internal static string FormatFlowLabel(float draw, float supply, int stalled)
+        private int _lastOverdrawn;
+
+        /// <summary>
+        /// The site total, warning when buildings are short of water and when any one stream draws more than its own
+        /// Springs give (each stream is shared on its own, so the total can look fine while one stream runs dry).
+        /// </summary>
+        internal static string FormatFlowLabel(float draw, float supply, int stalled, int overdrawnStreams = 0)
         {
             string text = $"Flow {draw:0.#} / {supply:0.#} L/s";
-            if (stalled > 0) text = $"⚠ {text}  ({stalled} short of water)";
-            return text;
+            if (stalled <= 0 && overdrawnStreams <= 0) return text;
+            var notes = new System.Collections.Generic.List<string>(2);
+            if (overdrawnStreams > 0)
+                notes.Add(overdrawnStreams == 1 ? "1 stream over its Springs" : $"{overdrawnStreams} streams over their Springs");
+            if (stalled > 0) notes.Add($"{stalled} short of water");
+            return $"⚠ {text}  ({string.Join(", ", notes)})";
         }
 
         private const string PrestigeButtonText = "⬆ Prestige";

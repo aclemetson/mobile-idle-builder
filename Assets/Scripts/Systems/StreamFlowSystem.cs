@@ -64,11 +64,25 @@ namespace MobileIdleBuilder
             // Heads first: a segment's inbound neighbours are always one hop further from the tail.
             var order   = HeadsFirst(segs);
             var inflow  = new Dictionary<Entity, (float flow, bool source)>(segs.Length);
-            float supply = 0f, draw = 0f;
+            float supply = 0f;
+
+            // Separate streams: tiles linked downstream are one stream (merging branches included). Each keeps its
+            // own totals, so a Spring only counts toward the stream it pours into.
+            var networks = new StreamNetworks<Entity>();
+            foreach (var e in segs)
+            {
+                networks.Add(e);
+                var s = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+                if (s.NextSegment != Entity.Null && !s.OutputBlocked && EntityManager.HasComponent<StreamSegment>(s.NextSegment))
+                    networks.Link(e, s.NextSegment);
+            }
+            var totals   = new Dictionary<Entity, StreamTotals>();
+            var streamOf = new Dictionary<Entity, Entity>(consumers.Length);   // consumer -> its stream
 
             foreach (var e in order)
             {
                 var seg = EntityManager.GetComponentData<ConveyorSegmentData>(e);
+                var net = networks.Find(e);
                 inflow.TryGetValue(e, out var inc);
                 float left   = inc.flow;
                 bool  source = inc.source;
@@ -84,6 +98,10 @@ namespace MobileIdleBuilder
                     left   += f;
                     supply += f;
                     source  = true;
+                    totals.TryGetValue(net, out var t);
+                    t.Supply += f;
+                    t.Springs++;
+                    totals[net] = t;
                 }
 
                 // Buildings on this segment's banks take their draw, upstream first, in a fixed side order.
@@ -98,10 +116,10 @@ namespace MobileIdleBuilder
                     if (!HasPort(b, cell, dir, PortType.Input) && !HasPort(b, cell, Opposite(dir), PortType.Output)) continue;
 
                     float d = EntityManager.GetComponentData<StreamConsumer>(b).Draw;
-                    if (!wasDry) draw += d;
                     float ratio = source ? StreamRules.Take(ref left, d) : 0f;
                     if (source) fed.Add(b);
-                    status[b] = new StreamStatus { OnStream = 1, Ratio = ratio };
+                    status[b]   = new StreamStatus { OnStream = 1, Ratio = ratio };
+                    streamOf[b] = net;   // a building beside a dry channel and a fed one counts on the fed one
                 }
 
                 EntityManager.SetComponentData(e, new StreamSegment { Flow = left, HasSource = (byte)(source ? 1 : 0) });
@@ -113,14 +131,38 @@ namespace MobileIdleBuilder
                 }
             }
 
+            // Each building's draw counts once, on the stream it takes its water from.
+            float draw = 0f;
+            foreach (var kv in streamOf)
+            {
+                float d = EntityManager.GetComponentData<StreamConsumer>(kv.Key).Draw;
+                draw += d;
+                totals.TryGetValue(kv.Value, out var t);
+                t.Draw += d;
+                totals[kv.Value] = t;
+            }
+
             int stalled = 0;
             foreach (var kv in status)
             {
-                EntityManager.SetComponentData(kv.Key, kv.Value);
-                if (kv.Value.Ratio < 1f) stalled++;
+                var st = kv.Value;
+                if (streamOf.TryGetValue(kv.Key, out var net) && totals.TryGetValue(net, out var t))
+                {
+                    st.StreamSupply  = t.Supply;
+                    st.StreamDraw    = t.Draw;
+                    st.StreamSprings = t.Springs;
+                }
+                EntityManager.SetComponentData(kv.Key, st);
+                if (st.Ratio < 1f) stalled++;
             }
+            int overdrawn = 0;
+            foreach (var t in totals.Values) if (t.Overdrawn) overdrawn++;
             if (SystemAPI.TryGetSingletonEntity<StreamGridState>(out var gridEnt))
-                EntityManager.SetComponentData(gridEnt, new StreamGridState { Supply = supply, Draw = draw, StalledCount = stalled });
+                EntityManager.SetComponentData(gridEnt, new StreamGridState
+                {
+                    Supply = supply, Draw = draw, StalledCount = stalled,
+                    StreamCount = segs.Length > 0 ? networks.Count : 0, OverdrawnCount = overdrawn,
+                });
 
             buildingMap.Dispose();
             consumers.Dispose();
