@@ -36,6 +36,9 @@ namespace MobileIdleBuilder
         public int run_hours = 24;
         public int test_bracket_size = 5;
         public int snapshot_bucket_minutes = 10;
+        /// <summary>Highest league players can reach (a league id); blank = the whole ladder. While the player base is
+        /// too small for real competition this is "bronze": nobody is promoted, and anyone above it plays Bronze.</summary>
+        public string max_league = "";
         public PveLeagueDef[] leagues;
     }
 

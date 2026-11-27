@@ -65,6 +65,9 @@ namespace MobileIdleBuilder.PveModule
         async Task<PveStatusResponse> BuildStatus(PveStore store, PveConfig cfg, string playerId, PveProfile profile, DateTime now)
         {
             string week = PveRules.WeekId(now);
+            // Show the league the player will actually join (a profile above pve.max_league plays at the cap).
+            // Display only; Join writes it to the profile.
+            profile.league = PveRules.CappedLeague(cfg, profile.league);
             var r = new PveStatusResponse
             {
                 serverNowUtc = PveRules.Iso(now),
@@ -114,7 +117,8 @@ namespace MobileIdleBuilder.PveModule
             if (PlayerNameRules.Validate(PlayerNameRules.WithoutTag(name), PveGameConfig.Embedded.NamePatterns) != NameCheck.Ok)
                 return Ser(new PveStatusResponse { error = PveErrors.NameBlocked });
 
-            var leagueDef = PveRules.League(cfg, profile.league) ?? cfg.leagues[0];
+            // A league above pve.max_league (the cap was lowered) joins at the cap, and the profile is moved there below.
+            var leagueDef = PveRules.League(cfg, PveRules.CappedLeague(cfg, profile.league)) ?? cfg.leagues[0];
             int capacity = PveRules.Capacity(cfg, leagueDef, settings.smallBrackets);
             string cursorKey = PveRules.CursorKey(leagueDef.id, dev);
             string indexId = PveRules.WeekIndexId(week);

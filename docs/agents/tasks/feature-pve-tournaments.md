@@ -89,6 +89,7 @@ Settle uses the same function at `t = 86400`. A player who went offline before t
 
 - Everyone starts in Bronze. `pve_test_bracket_size` (default 5) overrides sizes while the `pve.small_brackets` flag is on, for testing.
 - A bracket smaller than its capacity at settle scales promote/demote counts proportionally, rounded down, minimum 1 if it has 3 or more members.
+- **League cap (2026-11-26):** `game_config.pve.max_league` is the highest league players can reach (blank = the whole ladder). It is `bronze` while the player base is too small for real brackets: `PveRules.Moves` promotes nobody from the cap league, `NextLeague` never goes above it and settles a bracket above it back to it ("stayed"), and `Join`/`Status` use `PveRules.CappedLeague`, so a profile above the cap (an earlier Silver) shows and joins as Bronze. Lift it by blanking the field and redeploying the module.
 - Rewards are per rank band per league: `{ crystals, stars }`. Bands: 1st, 2nd-3rd, 4th-10th, top 25%, the rest. Higher leagues multiply both. Numbers go in `game_config.pve_rewards`, and the first-pass values are set in Phase 5 against `economy-balance.md` crystal pricing. A "special currency" slot is reserved in the reward schema, not implemented.
 
 ## Client

@@ -36,6 +36,8 @@
       "run_hours": 24,
       "test_bracket_size": 5,
       "snapshot_bucket_minutes": 10,
+      "_comment_max_league": "Highest league players can reach (blank = the whole ladder). bronze while the player base is too small for real competition (2026-11-26): nobody is promoted, and a profile above it plays Bronze from its next join. Server-side: REDEPLOY the PvE module after changing.",
+      "max_league": "bronze",
       "leagues": [
         {
           "id": "bronze",

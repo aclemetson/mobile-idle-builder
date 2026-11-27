@@ -205,6 +205,20 @@ namespace MobileIdleBuilder
             return -1;
         }
 
+        /// <summary>Index of the highest league players can reach: pve.max_league, or the top league when it is blank or unknown.</summary>
+        public static int TopLeagueIndex(PveConfig cfg)
+        {
+            int capped = LeagueIndex(cfg, cfg?.max_league);
+            return capped >= 0 ? capped : (cfg?.leagues?.Length ?? 0) - 1;
+        }
+
+        /// <summary>The league a player with <paramref name="leagueId"/> plays in: itself, or the cap when it is above it.</summary>
+        public static string CappedLeague(PveConfig cfg, string leagueId)
+        {
+            int idx = LeagueIndex(cfg, leagueId), top = TopLeagueIndex(cfg);
+            return idx > top && top >= 0 ? cfg.leagues[top].id : leagueId;
+        }
+
         /// <summary>Bracket capacity for a league (the test size while small brackets are on).</summary>
         public static int Capacity(PveConfig cfg, PveLeagueDef league, bool smallBrackets) =>
             smallBrackets ? Math.Max(2, cfg?.test_bracket_size ?? 5) : Math.Max(2, league?.bracket_size ?? 100);
@@ -212,13 +226,14 @@ namespace MobileIdleBuilder
         /// <summary>
         /// How many of a bracket of <paramref name="size"/> go up and down. A bracket below its capacity scales
         /// both down (rounded down, at least 1 when the league moves anyone and the bracket has 3+ members);
-        /// the top league promotes nobody and the bottom demotes nobody; promote + demote never exceeds size.
+        /// the top league (or the pve.max_league cap) promotes nobody and the bottom demotes nobody; promote + demote
+        /// never exceeds size.
         /// </summary>
         public static (int promote, int demote) Moves(PveConfig cfg, PveLeagueDef league, int size, int capacity)
         {
             if (league == null || size <= 1) return (0, 0);
             int idx = LeagueIndex(cfg, league.id);
-            bool top    = idx == (cfg?.leagues?.Length ?? 1) - 1;
+            bool top    = idx >= TopLeagueIndex(cfg);
             bool bottom = idx == 0;
             int Scale(int n)
             {
@@ -238,7 +253,9 @@ namespace MobileIdleBuilder
         {
             int idx = LeagueIndex(cfg, leagueId);
             if (idx < 0) return (leagueId, "stayed");
-            if (rank <= promote && idx + 1 < cfg.leagues.Length) return (cfg.leagues[idx + 1].id, "promoted");
+            int top = TopLeagueIndex(cfg);
+            if (idx > top) return (cfg.leagues[top].id, "stayed");   // above the cap (it was lowered): back to it
+            if (rank <= promote && idx + 1 <= top) return (cfg.leagues[idx + 1].id, "promoted");
             if (rank > size - demote && idx > 0) return (cfg.leagues[idx - 1].id, "demoted");
             return (leagueId, "stayed");
         }
