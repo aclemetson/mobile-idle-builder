@@ -7,6 +7,8 @@ namespace MobileIdleBuilder
     public enum ResearchEffectType
     {
         ConveyorSpeed,
+        /// <summary>Raises the largest stream stack (Chemistry) by this many: Gas Compression adds 4, so stacks of 1-5.</summary>
+        StreamStack,
     }
 
     /// <summary>One effect of a research node. Values of the same type add up across unlocked research.</summary>
@@ -26,6 +28,8 @@ namespace MobileIdleBuilder
             {
                 case ResearchEffectType.ConveyorSpeed:
                     return "+" + Percent(effect.value) + "% belt speed";
+                case ResearchEffectType.StreamStack:
+                    return "Stack stream items up to " + StreamStackRules.Clamp(1 + (int)effect.value) + " high";
                 default:
                     return effect.type + " " + effect.value.ToString(CultureInfo.InvariantCulture);
             }

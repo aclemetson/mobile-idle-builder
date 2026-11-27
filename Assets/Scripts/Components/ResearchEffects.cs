@@ -11,5 +11,11 @@ namespace MobileIdleBuilder
     public struct ResearchEffects : IComponentData
     {
         public float ConveyorSpeedMult; // multiplies belt item speed; 1 = no bonus
+
+        /// <summary>
+        /// Largest stack a Chemistry building may drop onto a stream (<see cref="StreamStack"/>). 0 or 1 = no
+        /// stacking (before the Gas Compression research). Read through <see cref="StreamStackRules.MaxUnlocked"/>.
+        /// </summary>
+        public int MaxStreamStack;
     }
 }
