@@ -183,12 +183,19 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '22'
-
+      # The release binary, fetched with the job's own token. The npm "ugs" package's installer asks the GitHub API
+      # for it anonymously, and hosted runners share IPs, so it failed on the anonymous rate limit (Release
+      # Internal #83, 2026-11-27).
       - name: Install UGS CLI
-        run: npm install -g "ugs@${UGS_CLI_VERSION}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ugs-bin"
+          gh release download "v${UGS_CLI_VERSION}" --repo Unity-Technologies/unity-gaming-services-cli \
+            --pattern ugs-linux-x64 --output "$RUNNER_TEMP/ugs-bin/ugs"
+          chmod +x "$RUNNER_TEMP/ugs-bin/ugs"
+          echo "$RUNNER_TEMP/ugs-bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/ugs-bin/ugs" --version
 
       - name: Test, build and deploy PveModule
         env:
