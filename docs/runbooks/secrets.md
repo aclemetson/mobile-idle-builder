@@ -36,6 +36,7 @@ without touching shipped builds.
 | `GOOGLE_PLAY_JSON_KEY` | Google Play service account JSON (Release manager) | `pr-tests` (version-code guard), `release-internal`, `prod-release` | **High**: upload and roll out builds to any Play track, change store listing | Yes: new JSON key on the same service account, swap, delete the old key |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASS`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASS` | Android **upload** keystore and its passwords | `release-internal`, `prod-release` | **Medium**: sign an APK/AAB Play will accept as ours. Still needs the Play JSON or console access to publish | Not freely. Play App Signing holds the real app key, so a lost or leaked upload key is replaced through Play Console support (upload key reset) |
 | `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_P8` | App Store Connect API key (role **Admin**, needed for cloud signing) | `release-ios` | **High**: Admin on App Store Connect (builds, TestFlight, users, agreements) | Yes: create a new key, swap three secrets, revoke the old one. Apple lets you download a `.p8` only once |
+| `IOS_SIGNING_CERT_P12_BASE64`, `IOS_SIGNING_CERT_PASSWORD` | the fixed **Apple Development** certificate + private key (`.p12`, base64) the iOS archive step signs with | `release-ios` (macOS job; imported into a temporary keychain, deleted at job end) | **Low-Medium**: sign development builds for our team's registered devices. Not App Store or TestFlight signing (export uses cloud-managed distribution) | Yes: procedure F, yearly (the certificate expires after 1 year) |
 | `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` | Unity license file and Unity ID login for game-ci activation | `release-ios` | **High**: the password is your **personal Unity ID** | Password: change in Unity ID, then update the secret. License: re-activate |
 | `DISCORD_BOT_TOKEN` | Foundry Bot token | `discord-sync`, `discord-check` | **Medium**: post, edit and delete as the bot in the server (its role's permissions) | Yes: Reset Token in the Developer Portal, swap the secret |
 | `DISCORD_BETA_WEBHOOK`, `DISCORD_PATCH_NOTES_WEBHOOK`, `DISCORD_STAFF_WEBHOOK` | channel webhook URLs | `discord-announce`, `discord-check`, release workflows (alerts) | **Low**: post spam into that one channel | Yes: delete the webhook, create a new one, swap |
@@ -138,6 +139,7 @@ only ever holds the symbols key, and the Cloud Code key can't reach production.
 | App Store Connect API key | every 180 days | procedure C |
 | Discord bot token and webhooks | only on suspected leak, or when someone with server admin leaves | procedure D |
 | APNs key, FCM sender key | only on suspected leak | re-upload in **each** UGS environment |
+| iOS CI signing certificate | yearly, before it expires (the date is in the portal) | procedure F |
 | Upload keystore | **never** routinely. Only on loss or leak, through Play Console support | procedure E |
 | Unity ID password | on suspected leak. Prefer replacing it with a dedicated CI Unity account | change, then `gh secret set UNITY_PASSWORD` |
 
@@ -205,6 +207,33 @@ To rotate one:
    few days.
 3. Once approved, update all four `ANDROID_*` secrets (`base64 -w0 new-upload.keystore | gh secret set ANDROID_KEYSTORE_BASE64`)
    and replace the files in `secrets/` (both `mobile-idle-builder.keystore` and any local `user.keystore`).
+
+### F. iOS CI signing certificate
+
+Why it exists: on a fresh macOS runner, `xcodebuild archive -allowProvisioningUpdates` creates a new
+"Apple Development: Created via API" certificate on every run when it has no signing identity. Those pile up until
+Apple refuses new ones ("Your account has reached the maximum number of certificates"), which broke Release iOS on
+2026-11-26. `scripts/archive-upload-ios.sh` now imports this fixed certificate first, so Xcode reuses it.
+
+No Mac needed:
+1. Key and request (keep both in `secrets/ios-ci/`, gitignored; the key never leaves your machine):
+   ```
+   MSYS_NO_PATHCONV=1 openssl req -new -newkey rsa:2048 -nodes -keyout secrets/ios-ci/ios-ci-signing.key      -out secrets/ios-ci/ios-ci-signing.csr -subj "/CN=Quantum Foundry CI/C=US"
+   ```
+2. developer.apple.com > Certificates > **+** > **Apple Development** > upload the `.csr` > download the `.cer` as
+   `secrets/ios-ci/ios-ci-signing.cer`.
+3. Package and store it (a new random password each time; keep it in the password manager):
+   ```
+   openssl x509 -inform DER -in secrets/ios-ci/ios-ci-signing.cer -out secrets/ios-ci/ios-ci-signing.pem
+   openssl pkcs12 -export -legacy -inkey secrets/ios-ci/ios-ci-signing.key -in secrets/ios-ci/ios-ci-signing.pem      -out secrets/ios-ci/ios-ci-signing.p12 -passout pass:<password>
+   base64 -w0 secrets/ios-ci/ios-ci-signing.p12 | gh secret set IOS_SIGNING_CERT_P12_BASE64
+   gh secret set IOS_SIGNING_CERT_PASSWORD   # paste <password>
+   ```
+   `-legacy` matters: macOS `security import` can't read OpenSSL 3's default p12 encryption.
+4. Check it: re-run **Release iOS**. The archive step logs `CI signing keychain: 1 valid identities found`, and
+   the portal shows no new "Created via API" certificate.
+5. Revoke the old CI certificate and any "Created via API" ones. Development certificates don't affect
+   TestFlight or App Store builds.
 
 ## The `production` GitHub environment
 

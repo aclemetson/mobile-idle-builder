@@ -358,6 +358,7 @@ Full inventory, blast radius and rotation procedures: `docs/runbooks/secrets.md`
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC API Issuer ID | iOS archive + TestFlight upload |
 | `APP_STORE_CONNECT_API_KEY_P8` | base64 of the `.p8` | iOS archive + TestFlight upload |
 | `APPLE_TEAM_ID` (variable) | Apple Developer Team ID | iOS build + archive |
+| `IOS_SIGNING_CERT_P12_BASE64` / `IOS_SIGNING_CERT_PASSWORD` | fixed Apple Development certificate (`.p12`, base64) and its password; `secrets.md` procedure F | iOS archive (stops a new certificate per run) |
 | `UGS_PROJECT_SERVICE_KEY_ID` / `UGS_PROJECT_SERVICE_KEY_SECRET` | key of UGS service account **`ci-project`** (Remote Config Admin) | Remote Config writes: internal + iOS update prompt, what's new, Publish Game Data |
 | `UGS_DEV_SERVICE_KEY_ID` / `UGS_DEV_SERVICE_KEY_SECRET` | key of **`ci-development`** (Cloud Code Editor in development) | internal: Cloud Code deploy |
 | `UGS_SYMBOLS_SERVICE_KEY_ID` / `UGS_SYMBOLS_SERVICE_KEY_SECRET` | key of **`ci-symbols`** (Observability Symbols Uploader) | internal + prod: Diagnostics symbol upload (Basic header = base64 of `keyId:secret`, built in the workflow) |
