@@ -34,6 +34,6 @@ MonoBehaviour:
   particleUses: 0
   codexEntry: 'A nucleobase made from five HCN: the A in DNA and the A in ATP.'
   codexUnlocked: 0
-  baseSellValue: 44000
+  baseSellValue: 44600
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

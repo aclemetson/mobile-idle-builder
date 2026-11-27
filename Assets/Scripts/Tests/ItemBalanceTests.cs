@@ -98,22 +98,35 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 3 — Molecular ───────────────────────────────────────────────
 
         [Test] public void T3_Water_SellValue()                 => AssertSell("water",            445f);
-        [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          1830f);
-        [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          935f);
+        [Test] public void T3_Methane_SellValue()               => AssertSell("methane",          1320f);
+        [Test] public void T3_Ammonia_SellValue()               => AssertSell("ammonia",          1580f);
         [Test] public void T3_Silica_SellValue()                => AssertSell("silica",           3000000f);
         [Test] public void T3_IronOxide_SellValue()             => AssertSell("iron_oxide",       16100000f);
 
+        // First Chemistry: CO2 and methane share a craft time, so their values differ only by their inputs
+        // (CH4 = C + 2 H2 is a little dearer than CO2 = C + O2). Ammonia unlocks after both (Nitrogen Fixation)
+        // and is worth more per unit, as nitrogen is worth more than carbon in Physics (2026-11-27).
+        [Test]
+        public void FirstChemistry_LaterMoleculeIsWorthMore()
+        {
+            float co2 = Sell("carbon_dioxide"), ch4 = Sell("methane"), nh3 = Sell("ammonia");
+            Assert.Less(co2, ch4, "CO2 < methane (cheaper inputs, same craft time)");
+            Assert.Less(ch4, nh3, "methane < ammonia (ammonia unlocks later)");
+            Assert.Less(ch4 / co2, 1.25f, "CO2 and methane stay close in value");
+            Assert.Less(Sell("carbon"), Sell("nitrogen"), "Physics agrees: nitrogen is worth more than carbon");
+        }
+
         // ── Tier 3 — Chemistry compounds (C1 P4a, C2-C3 P4b). First-pass values, re-tier in Phase 6. ──
 
-        [Test] public void T3_CarbonDioxide_SellValue()   => AssertSell("carbon_dioxide",    1010f);
+        [Test] public void T3_CarbonDioxide_SellValue()   => AssertSell("carbon_dioxide",    1180f);
         [Test] public void T3_SulfuricAcid_SellValue()    => AssertSell("sulfuric_acid",     4810f);
-        [Test] public void T3_NitricAcid_SellValue()      => AssertSell("nitric_acid",       2900f);
-        [Test] public void T3_Ethane_SellValue()          => AssertSell("ethane",            7990f);
-        [Test] public void T3_Ethanol_SellValue()         => AssertSell("ethanol",           8830f);
+        [Test] public void T3_NitricAcid_SellValue()      => AssertSell("nitric_acid",       3550f);
+        [Test] public void T3_Ethane_SellValue()          => AssertSell("ethane",            6970f);
+        [Test] public void T3_Ethanol_SellValue()         => AssertSell("ethanol",           7810f);
 
         // ── Tier 3 — Biology B1 biomolecules. First-pass values, re-tier in Phase 6. ──
 
-        [Test] public void T3_Protein_SellValue()       => AssertSell("protein",       474000f);
+        [Test] public void T3_Protein_SellValue()       => AssertSell("protein",       477000f);
         [Test] public void T3_Carbohydrate_SellValue()  => AssertSell("carbohydrate",  156000f);
         [Test] public void T3_LipidMembrane_SellValue() => AssertSell("lipid_membrane", 1070000f);
         [Test] public void T3_NucleicAcid_SellValue()   => AssertSell("nucleic_acid",  1040000f);
@@ -121,9 +134,9 @@ namespace MobileIdleBuilder.Tests
         // ── Tier 3 — Biology B2-B4 (cells -> organs -> ecosystems). First-pass, re-tier in Phase 6. ──
 
         [Test] public void T3_Ribosome_SellValue()        => AssertSell("ribosome",         2210000f);
-        [Test] public void T3_Mitochondria_SellValue()    => AssertSell("mitochondria",     2980000f);
+        [Test] public void T3_Mitochondria_SellValue()    => AssertSell("mitochondria",     2990000f);
         [Test] public void T3_CellMembrane_SellValue()    => AssertSell("cell_membrane",    2850000f);
-        [Test] public void T3_ProkaryoticCell_SellValue() => AssertSell("prokaryotic_cell", 8800000f);
+        [Test] public void T3_ProkaryoticCell_SellValue() => AssertSell("prokaryotic_cell", 8810000f);
         [Test] public void T3_EukaryoticCell_SellValue()  => AssertSell("eukaryotic_cell",  13000000f);
         [Test] public void T3_Tissue_SellValue()          => AssertSell("tissue",           30500000f);
         [Test] public void T3_Organ_SellValue()           => AssertSell("organ",            72500000f);
@@ -151,6 +164,14 @@ namespace MobileIdleBuilder.Tests
         [Test] public void T5_GravitonLens_SellValue()            => AssertSell("graviton_lens",           33600000000f);
 
         // ── Helper ───────────────────────────────────────────────────────────
+
+        private float Sell(string id)
+        {
+            foreach (var so in _items)
+                if (so.id == id) return so.baseSellValue;
+            Assert.Fail($"ItemSO with id '{id}' not found in Resources/Items/");
+            return 0f;
+        }
 
         private void AssertSell(string id, float expected)
         {
