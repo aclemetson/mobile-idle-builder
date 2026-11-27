@@ -70,6 +70,22 @@ namespace MobileIdleBuilder
 
             LoadFromSave(SaveManager.Instance?.Current);
             ApplyBonusToECS();
+            SaveManager.CurrentReplaced += OnCurrentReplaced;
+        }
+
+        protected override void OnDestroy()
+        {
+            SaveManager.CurrentReplaced -= OnCurrentReplaced;
+            base.OnDestroy();
+        }
+
+        // The startup "which save?" choice took another save after Start read this device's: reload, or the next
+        // flush would write this device's Dyson Sphere progress into the chosen save.
+        void OnCurrentReplaced(SaveData save)
+        {
+            if (this == null || Instance != this) { SaveManager.CurrentReplaced -= OnCurrentReplaced; return; }
+            LoadFromSave(save);
+            ApplyBonusToECS();
         }
 
         // ── Gating ───────────────────────────────────────────────────────────

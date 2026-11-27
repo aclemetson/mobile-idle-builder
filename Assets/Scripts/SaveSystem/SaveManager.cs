@@ -55,6 +55,15 @@ namespace MobileIdleBuilder
         /// loop is about to be suspended, so handlers must not wait on frames.
         /// </summary>
         public event Action Backgrounding;
+
+        /// <summary>
+        /// Current was replaced by another save before the game applied it (the startup "which save?" choice took
+        /// the cloud save, or the dev console swapped saves). GameScene services that copied the save in Start
+        /// (research, megastructure) reload from it here: they start while the loading screen still asks, so they
+        /// read this device's save first (2026-11-27: the cloud run kept the local run's research). Static so a
+        /// service can subscribe before or after SaveManager's Awake.
+        /// </summary>
+        public static event Action<SaveData> CurrentReplaced;
         public bool     IsNewGame { get; private set; }
 
         // True once ReconcileWithCloud() has finished (whether it pulled cloud data, found
@@ -427,6 +436,7 @@ namespace MobileIdleBuilder
             _local.Save(_current);
             SaveSync.SaveMarker(playerId, cloudStamp, _local.LastWrittenContentHash);
             RecipeKnowledgeService.Instance?.AdoptProfileKnowledge();
+            RaiseCurrentReplaced();
             GameLogger.Info("[SaveManager] Reconciled with cloud (took the cloud save).");
         }
 
@@ -689,6 +699,13 @@ namespace MobileIdleBuilder
             _current  = data;
             IsNewGame = false;
             _local.Save(_current);
+            RaiseCurrentReplaced();
+        }
+
+        void RaiseCurrentReplaced()
+        {
+            try { CurrentReplaced?.Invoke(_current); }
+            catch (Exception ex) { GameLogger.Error($"[SaveManager] A CurrentReplaced handler failed: {ex}"); }
         }
 
         /// <summary>
