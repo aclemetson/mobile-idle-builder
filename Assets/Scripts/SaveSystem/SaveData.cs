@@ -260,6 +260,7 @@ namespace MobileIdleBuilder
         public bool  flipped;
         public int   outputDirection; // -1 = not a field-collector
         public int[] portFilters;     // Filter rules [facing, itemId, …] (PortFilterRules); null = none / defaults
+        public int   stackSize;       // stream stack setting (StreamStack, Chemistry producers) 1-5; 0 = 1 (older saves)
     }
 
     [Serializable]

@@ -152,7 +152,8 @@ namespace MobileIdleBuilder
             if (_effectsQuery.IsEmptyIgnoreFilter) return;
             _effectsQuery.SetSingleton(new ResearchEffects
             {
-                ConveyorSpeedMult = 1f + GetEffectTotal(ResearchEffectType.ConveyorSpeed)
+                ConveyorSpeedMult = 1f + GetEffectTotal(ResearchEffectType.ConveyorSpeed),
+                MaxStreamStack    = StreamStackRules.Clamp(1 + (int)GetEffectTotal(ResearchEffectType.StreamStack))
             });
             _effectsDirty = false;
         }
