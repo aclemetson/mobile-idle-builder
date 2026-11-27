@@ -34,6 +34,6 @@ MonoBehaviour:
   particleUses: 0
   codexEntry: 'A nucleobase: the C in the genetic code.'
   codexUnlocked: 0
-  baseSellValue: 39900
+  baseSellValue: 40300
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

@@ -121,15 +121,16 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void Methane_IsCH4_4Hydrogen_1Carbon_40s()
+        public void Methane_IsCH4_4Hydrogen_1Carbon_25s()
         {
             // CH4: one carbon. It once took 6, starving Methane lines of Carbon (fixed 2026-11-18,
             // craft time halved with the atom count: 10 atoms / 80 s -> 5 atoms / 40 s).
             // 2026-11-19 natural feedstock: C + 2 H2 -> CH4, from graphite and hydrogen gas.
+            // 2026-11-27: 25 s, the same as CO2, so the two differ in value only by their inputs.
             var r = RequireRecipe("methane");
             RequireInput(r, "hydrogen_gas", quantity: 2);
             RequireInput(r, "graphite",     quantity: 1);
-            Assert.AreEqual(40f, r.base_craft_time, 0.001f);
+            Assert.AreEqual(25f, r.base_craft_time, 0.001f);
         }
 
         // Molecules use their real formula. Several were multiples or plain wrong (water 4 H + 8 O, ammonia 7 N,
@@ -137,7 +138,8 @@ namespace MobileIdleBuilder.Tests
         // reacts the gases as found (H2, O2, N2), so some reactions make two molecules
         // (2 H2 + O2 -> 2 H2O); ChemistryFeedstockTests checks the atoms balance.
         [TestCase("water",                "hydrogen_gas", 2, "oxygen_gas",   1, 15f)]
-        [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 36f)]
+        // Ammonia 72 s for two (2026-11-27): 36 s a molecule, so it is worth more than methane and CO2.
+        [TestCase("ammonia",              "hydrogen_gas", 3, "nitrogen_gas", 1, 72f)]
         public void Molecule_MatchesItsFormula(string id, string a, int qa, string b, int qb, float seconds)
         {
             var r = RequireRecipe(id);
