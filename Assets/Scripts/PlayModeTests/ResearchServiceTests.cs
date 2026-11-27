@@ -110,6 +110,63 @@ namespace MobileIdleBuilder.PlayModeTests
             RunStart(svc); // Start() → ECS setup + load unlockedIds from SaveManager
         }
 
+        // ── Save replaced before the load (startup "which save?" took the cloud save) ──
+
+        [Test]
+        public void CurrentReplaced_ReloadsResearch_FromTheChosenSave()
+        {
+            // 2026-11-27: the loading screen asked "which save?" after ResearchService.Start had read this
+            // device's save; the cloud run then showed the local run's research and got none of its effects.
+            _saveManagerGO = new GameObject("SaveManager");
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
+            SaveManager.Instance.Current.unlockedResearch.Add("test_res_a");   // this device's save
+            _serviceGO = new GameObject("ResearchService");
+            var svc = _serviceGO.AddComponent<ResearchService>();
+            RunAwake(svc);
+            RunStart(svc);
+            Assert.IsTrue(ResearchService.Instance.IsUnlocked("test_res_a"));
+
+            var cloud = new SaveData { playerId = SaveManager.Instance.Current.playerId };
+            cloud.unlockedResearch.Add("test_res_b");
+            SaveManager.Instance.DevReplaceCurrent(cloud);
+
+            Assert.IsFalse(ResearchService.Instance.IsUnlocked("test_res_a"), "the replaced save's research is gone");
+            Assert.IsTrue(ResearchService.Instance.IsUnlocked("test_res_b"), "the chosen save's research is loaded");
+        }
+
+        [Test]
+        public void CurrentReplaced_DropsTheReplacedSavesResearchTimer()
+        {
+            var real = Resources.Load<ResearchDatabaseSO>("ResearchDatabase")?.allResearch;
+            Assume.That(real != null && System.Array.Exists(real, r => r != null && r.id == "recombination_i"),
+                        "needs the imported ResearchDatabase");
+
+            _saveManagerGO = new GameObject("SaveManager");
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
+            SaveManager.Instance.Current.activeResearchId = "recombination_i";
+            SaveManager.Instance.Current.activeResearchCompleteUtc =
+                System.DateTime.UtcNow.AddHours(1).ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+            _serviceGO = new GameObject("ResearchService");
+            var svc = _serviceGO.AddComponent<ResearchService>();
+            RunAwake(svc);
+            RunStart(svc);
+            Assert.IsTrue(ResearchService.Instance.HasActiveResearch);
+
+            SaveManager.Instance.DevReplaceCurrent(new SaveData { playerId = SaveManager.Instance.Current.playerId });
+            Assert.IsFalse(ResearchService.Instance.HasActiveResearch,
+                "the other save's timer must not finish into the chosen save");
+        }
+
+        [Test]
+        public void CurrentReplaced_StopsAfterTheServiceIsDestroyed()
+        {
+            SpawnServices();
+            Object.DestroyImmediate(_serviceGO); _serviceGO = null;
+            // The destroyed service's handler lets go instead of reloading into a dead object (an Error log
+            // here, from the handler throwing, fails the test).
+            Assert.DoesNotThrow(() => SaveManager.Instance.DevReplaceCurrent(new SaveData()));
+        }
+
         // ── IsUnlocked ───────────────────────────────────────────────────────
 
         [Test]
