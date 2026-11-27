@@ -99,15 +99,16 @@ The UGS CLI can do the same from a terminal (`ugs scheduler` / `ugs triggers`) i
 Dashboard → **Cloud Save → Game Data** (custom items live there; the other tabs are Configure Indexes, Player Data, Player Files) → add an item with ID `pve_settings`, key `settings`, and this value. Either access class works (the module reads private first, then default); clients can't write either:
 
 ```json
-{ "smallBrackets": true, "allowDebugTime": true }
+{ "smallBrackets": true, "allowDebugTime": true, "maxLeague": "bronze" }
 ```
 
 | Switch | Effect |
 |---|---|
 | `smallBrackets` | every new bracket uses `game_config.pve.test_bracket_size` (5) instead of the league's size |
 | `allowDebugTime` | the server honours the client's `debugNow` (dev console `pve time`) instead of its own clock |
+| `maxLeague` | highest league players can reach (a league id). `bronze` in dev while there are too few players to compete: nobody is promoted and a profile above it plays Bronze from its next join. Blank or missing = the whole ladder. Takes effect on the next call, no redeploy |
 
-**Set both to false (or delete the item) in production.** With `allowDebugTime` on, any client could choose its own time.
+**Set `smallBrackets` and `allowDebugTime` to false (or delete the item) in production, and leave `maxLeague` out there.** With `allowDebugTime` on, any client could choose its own time.
 
 ## 5. Testing from the dev console
 

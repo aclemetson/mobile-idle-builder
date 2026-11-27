@@ -200,6 +200,17 @@ namespace MobileIdleBuilder.Tests
         };
 
         [Test]
+        public void Text_Disabled_SaysComingSoon_WithNoStart()
+        {
+            // pve.enabled off (production until PvE launches): the button stays and the panel says Coming Soon.
+            var d = TournamentPanelText.Describe(TournamentPanelState.Disabled, null, null, Start, Cfg(), false);
+            Assert.AreEqual("Coming Soon", d.headline);
+            Assert.IsFalse(string.IsNullOrEmpty(d.info));
+            Assert.IsFalse(d.showStart);
+            Assert.IsFalse(d.showRetire);
+        }
+
+        [Test]
         public void Text_OpenShowsStart_RunningShowsTimeLeft()
         {
             var open = TournamentPanelText.Describe(TournamentPanelState.Open, Status("Entry"), null, Start, Cfg(), false);

@@ -205,6 +205,20 @@ namespace MobileIdleBuilder
             return -1;
         }
 
+        /// <summary>
+        /// <paramref name="cfg"/> with this environment's league cap (pve_settings maxLeague) applied, as a copy so the
+        /// shared embedded config is never changed. Blank = unchanged (production: the whole ladder).
+        /// </summary>
+        public static PveConfig WithCap(PveConfig cfg, string maxLeague)
+        {
+            if (cfg == null || string.IsNullOrEmpty(maxLeague)) return cfg;
+            return new PveConfig
+            {
+                run_hours = cfg.run_hours, test_bracket_size = cfg.test_bracket_size,
+                snapshot_bucket_minutes = cfg.snapshot_bucket_minutes, leagues = cfg.leagues, max_league = maxLeague,
+            };
+        }
+
         /// <summary>Index of the highest league players can reach: pve.max_league, or the top league when it is blank or unknown.</summary>
         public static int TopLeagueIndex(PveConfig cfg)
         {
@@ -299,5 +313,6 @@ namespace MobileIdleBuilder
     {
         public bool smallBrackets;      // use game_config.pve.test_bracket_size for every bracket
         public bool allowDebugTime;     // honour the client's debugNow (testing only; never in production)
+        public string maxLeague;        // highest league players can reach, e.g. "bronze" (dev, too few players); blank = whole ladder
     }
 }

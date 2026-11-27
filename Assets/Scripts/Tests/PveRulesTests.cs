@@ -265,10 +265,26 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
-        public void RealConfig_CapsAtBronze_WhileThePlayerBaseIsSmall()
+        public void RealConfig_HasNoLeagueCap_TheEnvironmentSetsIt()
         {
-            // 2026-11-26: too few players for real brackets, so everyone plays Bronze. Lift by blanking max_league.
-            Assert.AreEqual("bronze", RealConfig().max_league);
+            // The cap is per environment (pve_settings maxLeague: dev = bronze); the shipped config must not cap
+            // production, which shares this file through the module.
+            Assert.IsTrue(string.IsNullOrEmpty(RealConfig().max_league));
+        }
+
+        [Test]
+        public void WithCap_CopiesTheConfig_AndBlankLeavesItAlone()
+        {
+            var cfg = Ladder(("bronze", 10, 3, 0), ("silver", 10, 3, 2));
+            Assert.AreSame(cfg, PveRules.WithCap(cfg, null));
+            Assert.AreSame(cfg, PveRules.WithCap(cfg, ""));
+            var capped = PveRules.WithCap(cfg, "bronze");
+            Assert.AreNotSame(cfg, capped);
+            Assert.AreEqual("bronze", capped.max_league);
+            Assert.IsTrue(string.IsNullOrEmpty(cfg.max_league), "the shared config is untouched");
+            Assert.AreSame(cfg.leagues, capped.leagues);
+            Assert.AreEqual(("bronze", "stayed"), PveRules.NextLeague(capped, "bronze", 1, 10, 3, 0));
+            Assert.AreEqual(("silver", "promoted"), PveRules.NextLeague(cfg, "bronze", 1, 10, 3, 0));
         }
 
         [Test]
