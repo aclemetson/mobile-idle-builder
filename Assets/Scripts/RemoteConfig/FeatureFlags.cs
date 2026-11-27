@@ -91,7 +91,7 @@ namespace MobileIdleBuilder
         // What's-new notes (#502): CI writes both from docs/whats-new.md on each release. Blank => no notice.
         public const string WhatsNewDefault = "";
         // Settings > Support links. Remote so the inbox / policy host can move without a release.
-        public const string FeedbackEmailDefault    = "aclemetson12492@gmail.com";
+        public const string FeedbackEmailDefault    = "clemtek1@gmail.com";
         public const string PrivacyPolicyUrlDefault = "https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html";
         // Community invite (#533): the server's permanent invite. Remote Config can swap it; blank hides the button.
         public const string DiscordUrlDefault       = "https://discord.gg/aVt8Z9ntkC";
