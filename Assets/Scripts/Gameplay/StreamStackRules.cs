@@ -26,8 +26,28 @@ namespace MobileIdleBuilder
             return s < m ? s : m;
         }
 
-        /// <summary>How much bigger a stack draws on the stream than one unit: x1 for one, +15% per extra unit (x1.6 for five).</summary>
-        public static float VisualScale(int quantity) => 1f + 0.15f * (Clamp(quantity) - 1);
+        /// <summary>
+        /// How much bigger a stack draws on the stream than one unit: x1 for one, +8% per extra unit (x1.32 for five).
+        /// Its colour (<see cref="StackColor"/>) is the main cue; the size only backs it up.
+        /// </summary>
+        public static float VisualScale(int quantity) => 1f + 0.08f * (Clamp(quantity) - 1);
+
+        /// <summary>
+        /// The colour of a stack of <paramref name="quantity"/>: the glow around it on the stream and its button in the
+        /// inspector (one source, so they always match). Rises like loot rarity: none for one, then green, blue,
+        /// purple, gold.
+        /// </summary>
+        public static UnityEngine.Color StackColor(int quantity) => Clamp(quantity) switch
+        {
+            2 => Hex(0x5BD66B),
+            3 => Hex(0x4C9BFF),
+            4 => Hex(0xB565FF),
+            5 => Hex(0xFFC23D),
+            _ => UnityEngine.Color.clear,
+        };
+
+        private static UnityEngine.Color Hex(int rgb) =>
+            new UnityEngine.Color(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
 
         /// <summary>True when an input holding <paramref name="held"/> of an item takes a whole stack of <paramref name="quantity"/>.</summary>
         public static bool HasRoomFor(int held, int quantity, int cap) => held + quantity <= cap;

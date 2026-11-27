@@ -107,8 +107,25 @@ namespace MobileIdleBuilder
         /// <summary>True for a molecule with a ball-and-stick structure (<see cref="BeltMoleculeData"/>).</summary>
         public static bool IsMolecule(ItemSO item) => item != null && !IsAtom(item) && BeltMoleculeData.Has(item.id);
 
+        /// <summary>
+        /// Chemistry's mined feedstocks (2026-11-27), drawn from the Physics atoms: graphite is the carbon atom; the
+        /// gases are two atoms bonded as they really are (H-H single, O=O double, N≡N triple). Values: Z, neutrons
+        /// of the common isotope, atoms (1 or 2), bond order.
+        /// </summary>
+        internal static readonly Dictionary<string, (int z, int neutrons, int atoms, int bonds)> Feedstocks = new()
+        {
+            { "graphite",     (6, 6, 1, 0) },
+            { "hydrogen_gas", (1, 0, 2, 1) },
+            { "oxygen_gas",   (8, 8, 2, 2) },
+            { "nitrogen_gas", (7, 7, 2, 3) },
+        };
+
+        /// <summary>True for a Chemistry feedstock drawn as an atom or a diatomic molecule (<see cref="Feedstocks"/>).</summary>
+        public static bool IsFeedstock(ItemSO item) => item != null && Feedstocks.ContainsKey(item.id);
+
         /// <summary>True when <paramref name="item"/> gets a 3D belt visual (a registered particle, an atom or a molecule).</summary>
-        public static bool Has(ItemSO item) => item != null && (Has(item.id) || IsAtom(item) || IsMolecule(item));
+        public static bool Has(ItemSO item) =>
+            item != null && (Has(item.id) || IsAtom(item) || IsMolecule(item) || IsFeedstock(item));
 
         /// <summary>How the visual for <paramref name="item"/> should be turned each frame.</summary>
         public static Facing FacingOf(ItemSO item)
@@ -142,13 +159,15 @@ namespace MobileIdleBuilder
         {
             if (item == null) return null;
             if (Has(item.id)) return TryCreate(item.id, parent);
-            bool atom = IsAtom(item), molecule = !atom && IsMolecule(item);
-            if (!atom && !molecule) return null;
+            bool feedstock = IsFeedstock(item);
+            bool atom = !feedstock && IsAtom(item), molecule = !feedstock && !atom && IsMolecule(item);
+            if (!feedstock && !atom && !molecule) return null;
             if (Shader.Find(ParticleShader) == null || Shader.Find(CloudShader) == null)
             {
                 GameLogger.Warning($"[BeltItemVisuals] Particle shaders missing; '{item.id}' falls back to its icon tile.");
                 return null;
             }
+            if (feedstock) return BuildFeedstock(parent, item.id);
             return atom
                 ? BuildAtom(parent, item.id, item.atomicNumber, AtomStructure.NeutronCount(item.atomicNumber, item.atomicMass),
                             item.isRadioactive)
@@ -167,6 +186,113 @@ namespace MobileIdleBuilder
             StructureParts.AddMesh("Molecule", root.transform, mesh,
                                    MetalMolecules.Contains(id) ? MetalMoleculeMaterial() : MoleculeMaterial(), Vector3.zero);
             return root;
+        }
+
+        // Diatomic gases: the two atoms' outer shells overlap by this much of a ring radius (a covalent bond shares
+        // electrons), and the pair is shrunk to fit a stream slot.
+        internal const float DiatomicSpacing = 1.4f;    // nucleus-to-nucleus distance, in outer ring radii
+        internal const float DiatomicWidth   = 0.40f;   // the whole pair, outer ring to outer ring, in tiles
+        internal const float BondRadius      = 0.009f;
+        internal const float BondGap         = 0.03f;   // between the parallel sticks of a double / triple bond (reads at belt size)
+
+        /// <summary>
+        /// A Chemistry feedstock (<see cref="Feedstocks"/>): one Physics atom (graphite), or two side by side, their
+        /// outer shells overlapping, joined by one electron-coloured stick per shared pair. Built facing local -Z like
+        /// an atom, so <see cref="ConveyorVisualizer"/> turns it to the camera and the pair reads side by side.
+        /// </summary>
+        internal static GameObject BuildFeedstock(Transform parent, string id)
+        {
+            if (!Feedstocks.TryGetValue(id, out var f)) return null;
+            if (f.atoms <= 1) return BuildAtom(parent, id, f.z, f.neutrons, radioactive: false);
+
+            var root = Root(parent, id);
+            float core  = AtomStructure.NucleusRadius(f.z, f.neutrons);
+            var shells  = AtomStructure.ShellOccupancy(f.z);
+            float ring  = AtomStructure.ShellRadius(shells.Length - 1, shells.Length, core);
+            float apart = ring * DiatomicSpacing;
+            float scale = DiatomicWidth / (apart + 2f * ring);
+            float half  = apart * 0.5f * scale;
+
+            for (int side = 0; side < 2; side++)
+            {
+                var atom = BuildAtom(root.transform, $"{id}_atom{side}", f.z, f.neutrons, radioactive: false);
+                atom.transform.localPosition = new Vector3(side == 0 ? -half : half, 0f, 0f);
+                atom.transform.localScale    = Vector3.one * scale;
+            }
+            StructureParts.AddMesh("Bonds", root.transform,
+                CachedMesh($"bonds_{id}", () => BondMesh(f.bonds, half, ToShaderSpace(Electron))),
+                BondMaterial(), Vector3.zero);
+            return root;
+        }
+
+        /// <summary>
+        /// <paramref name="order"/> parallel sticks between the two nuclei at x = -half and x = +half, spread
+        /// <see cref="BondGap"/> apart in Y (one per shared electron pair).
+        /// </summary>
+        internal static Mesh BondMesh(int order, float half, Color color)
+        {
+            var b = new BeltParticleMeshes.Builder();
+            order = Mathf.Clamp(order, 1, 3);
+            for (int k = 0; k < order; k++)
+            {
+                float y = (k - (order - 1) * 0.5f) * BondGap;
+                b.Tube(new Vector3(-half, y, 0f), new Vector3(half, y, 0f), BondRadius, color, 1f, 2f, 0f, 1f, 6);
+            }
+            return b.ToMesh($"Bonds_{order}");
+        }
+
+        private static Material s_BondMat;
+
+        private static Material BondMaterial()
+        {
+            if (s_BondMat != null) return s_BondMat;
+            s_BondMat = NewParticleMaterial(Color.white);   // colour comes from the mesh
+            s_BondMat.SetFloat("_PhaseSpin", 0f);           // stays between the two atoms
+            s_BondMat.SetFloat("_Emission", 0.6f);
+            return s_BondMat;
+        }
+
+        // ----------------------------------------------------------------
+        // Stream stacks: a glow in the stack's colour (StreamStackRules.StackColor)
+        // ----------------------------------------------------------------
+
+        private const string StackAuraName = "StackAura";
+        internal const float StackAuraRadius = 0.21f;
+        private static readonly Material[] s_StackAuraMats = new Material[StreamStackRules.Max + 1];
+
+        /// <summary>
+        /// Shows the glow for a stream stack of <paramref name="quantity"/> around <paramref name="visual"/> (any item
+        /// visual: particle, atom, molecule or icon tile), or hides it for one unit. <paramref name="rootScale"/> is the
+        /// visual's own size before stack scaling, so the glow is the same size around every kind of item.
+        /// </summary>
+        public static void SetStackAura(GameObject visual, int quantity, float rootScale = 1f)
+        {
+            if (visual == null) return;
+            var existing = visual.transform.Find(StackAuraName);
+            int q = StreamStackRules.Clamp(quantity);
+            if (q <= 1)
+            {
+                if (existing != null && existing.gameObject.activeSelf) existing.gameObject.SetActive(false);
+                return;
+            }
+            if (Shader.Find(CloudShader) == null) return;
+            var mat = StackAuraMaterial(q);
+            if (existing == null)
+            {
+                existing = StructureParts.AddMesh(StackAuraName, visual.transform,
+                    CachedMesh("stack_aura", () => BeltParticleMeshes.ElectronCloud(1, 0f, StackAuraRadius, StackAuraRadius, 1)),
+                    mat, Vector3.zero);
+            }
+            var r = existing.GetComponent<MeshRenderer>();
+            if (r != null && r.sharedMaterial != mat) r.sharedMaterial = mat;
+            existing.localScale = Vector3.one / Mathf.Max(0.01f, rootScale);
+            if (!existing.gameObject.activeSelf) existing.gameObject.SetActive(true);
+        }
+
+        private static Material StackAuraMaterial(int quantity)
+        {
+            ref var cache = ref s_StackAuraMats[quantity];
+            return CloudMaterial(ref cache, StreamStackRules.StackColor(quantity), 0.45f, 0.12f, 1.6f);
         }
 
         /// <summary>

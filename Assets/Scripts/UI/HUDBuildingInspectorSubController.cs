@@ -1134,6 +1134,7 @@ namespace MobileIdleBuilder
                 if (btn.text != text) btn.text = text;
                 btn.AddToClassList("filter-side-btn");
                 btn.EnableInClassList("filter-side-btn--on", size == current);
+                StyleStackButton(btn, size, size == current);
                 ListTapRouter.Register(_inspectorRecipes, btn, () =>
                 {
                     if (!_ecsReady || !_em.Exists(entity) || !_em.HasComponent<StreamStack>(entity)) return;
@@ -1144,6 +1145,24 @@ namespace MobileIdleBuilder
             }
             if (current > 1)
                 AddInspectorRow(_inspectorRecipes, $"Drops {current} at a time; buildings downstream need room for all {current}.");
+        }
+
+        /// <summary>
+        /// A stack button in its stack colour (<see cref="StreamStackRules.StackColor"/>), the same colour its stacks
+        /// glow on the stream: an outline, filled when chosen. Size 1 has no colour and keeps the default look.
+        /// </summary>
+        private static void StyleStackButton(Button btn, int size, bool chosen)
+        {
+            var c = StreamStackRules.StackColor(size);
+            if (c.a <= 0f)
+            {
+                btn.style.borderTopColor = btn.style.borderBottomColor = btn.style.borderLeftColor = btn.style.borderRightColor = StyleKeyword.Null;
+                btn.style.backgroundColor = StyleKeyword.Null;
+                return;
+            }
+            btn.style.borderTopColor = btn.style.borderBottomColor = btn.style.borderLeftColor = btn.style.borderRightColor = c;
+            btn.style.borderTopWidth = btn.style.borderBottomWidth = btn.style.borderLeftWidth = btn.style.borderRightWidth = 2f;
+            btn.style.backgroundColor = chosen ? new StyleColor(new Color(c.r, c.g, c.b, 0.55f)) : new StyleColor(StyleKeyword.Null);
         }
 
         private void AddFilterRow(Entity entity, List<(int facing, int itemId)> rules, List<int> sides,

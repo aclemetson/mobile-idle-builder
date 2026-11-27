@@ -303,10 +303,11 @@ namespace MobileIdleBuilder
                     pos.y       = 0.3f + lift;
                     sphere.transform.localPosition = pos;
 
-                    // A stream stack (Chemistry) draws bigger the more it carries: x1 for one unit up to x1.6 for five.
+                    // A stream stack (Chemistry) glows in its stack colour and draws a little bigger (x1.32 at five).
                     if (!_baseScale.TryGetValue(sphere, out var baseScale))
                         _baseScale[sphere] = baseScale = sphere.transform.localScale;
                     sphere.transform.localScale = baseScale * StreamStackRules.VisualScale(item.Quantity);
+                    BeltItemVisuals.SetStackAura(sphere, item.Quantity, baseScale.x);
 
                     // Tiles and atoms face the camera so they stay readable as it orbits; a comet tail or wave
                     // packet points along the belt (round on corners too); round particles are left alone.
