@@ -626,8 +626,17 @@ namespace MobileIdleBuilder
                 AddInspectorRow(_inspectorInfo, "—— Stream ——");
                 AddInspectorRow(_inspectorInfo, $"Draw: {so.flowDraw:0.#} L/s");
                 AddInspectorRow(_inspectorInfo, $"Status: {s}");
+                if (st.OnStream != 0) AddInspectorRow(_inspectorInfo, StreamTotalsText(st));
                 if (st.OnStream == 0 || st.Ratio < 0.999f) AddInspectorRow(_inspectorStatic, $"💧 {s}");
             }
+        }
+
+        /// <summary>This building's own stream: what its buildings draw against what its Springs give.</summary>
+        internal static string StreamTotalsText(StreamStatus st)
+        {
+            string springs = st.StreamSprings == 1 ? "1 Spring" : $"{st.StreamSprings} Springs";
+            string text    = $"This stream: {st.StreamDraw:0.#} / {st.StreamSupply:0.#} L/s from {springs}";
+            return st.StreamDraw > st.StreamSupply + 1e-4f ? $"⚠ {text}: add a Spring or move buildings" : text;
         }
 
         internal static string StreamStatusText(StreamStatus st) =>
