@@ -42,6 +42,7 @@ MonoBehaviour:
   unlocksGridExpansion: 0
   unlocksResearch:
   - {fileID: 11400000, guid: 1acf37b3105601145a3a999b71cb1ddb, type: 2}
+  - {fileID: 11400000, guid: 8b99918a40b3fd445989e723b918171a, type: 2}
   resetsOnPrestige: 1
   codexEntry: "Atoms combine into molecules through covalent and ionic bonds. Water,
     methane, and ammonia are the feedstocks of planetary chemistry \u2014 and industrial

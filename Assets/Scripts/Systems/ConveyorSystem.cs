@@ -50,6 +50,8 @@ namespace MobileIdleBuilder
             // Research effects (Transportation I etc.): belts move faster by this factor. 1 = no bonus.
             float speedMult = SystemAPI.TryGetSingleton<ResearchEffects>(out var fx) ? fx.ConveyorSpeedMult : 1f;
             if (speedMult <= 0f) speedMult = 1f;
+            // Stream stacks (Chemistry): the largest stack the research allows, 1 before it.
+            int maxStreamStack = StreamStackRules.MaxUnlocked(fx.MaxStreamStack);
             int   itemsPerTile = SystemAPI.TryGetSingleton<BeltSettings>(out var bs)
                 ? BeltSettings.Clamp(bs.ItemsPerTile) : BeltSettings.DefaultItemsPerTile;
             float spacing = BeltSettings.Spacing(itemsPerTile);
@@ -131,10 +133,10 @@ namespace MobileIdleBuilder
                 if (isStream && EntityManager.GetComponentData<StreamSegment>(e).HasSource == 0) continue;
 
                 float frontLimit = EntityManager.HasComponent<BeltSplit>(e) && SplitHasOutput(e, seg, segMap, buildingMap)
-                    ? SplitFrontLimit(e, seg, segMap, buildingMap, buf[0].ItemID, spacing)
+                    ? SplitFrontLimit(e, seg, segMap, buildingMap, buf[0].ItemID, buf[0].Quantity, spacing)
                     : seg.NextSegment != Entity.Null
                     ? FrontLimitInto(e, seg.NextSegment, spacing)
-                    : isStream || TryPickInput(e, seg, buf[0].ItemID, buildingMap, out _, out _, out _)
+                    : isStream || TryPickInput(e, seg, buf[0].ItemID, buf[0].Quantity, buildingMap, out _, out _, out _)
                         ? BeltMotion.Open : BeltMotion.TailRest(sp);
 
                 for (int k = 0; k < buf.Length; k++)
@@ -155,8 +157,9 @@ namespace MobileIdleBuilder
             // cell per frame and the inbound directions take turns via the cell's MergeCursor, so
             // no branch starves.
             // ----------------------------------------------------------------
-            var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir)>();
-            var overflows         = new List<(Entity from, int itemID, Entity bldg)>();
+            // qty: units the item carries (a stream stack is delivered or sold whole).
+            var buildingDeposits = new List<(Entity from, Entity bldg, int itemID, int deliverDir, int qty)>();
+            var overflows         = new List<(Entity from, int itemID, Entity bldg, int qty)>();
             var mergeTargets      = new HashSet<Entity>();
             var feederTurns       = new Dictionary<Entity, int>();   // merge cells whose turn this frame is a building's (#206)
             var splitChoice       = new Dictionary<Entity, int>();   // split segment -> the side it hands off to now
@@ -182,7 +185,7 @@ namespace MobileIdleBuilder
                     else if (dir >= 0 && SplitInputAt(seg, dir, buildingMap, out Entity bldg))
                     {
                         // A building's input faces this side: the item goes straight in, as at a belt's tail.
-                        buildingDeposits.Add((e, bldg, item.ItemID, dir));
+                        buildingDeposits.Add((e, bldg, item.ItemID, dir, item.Quantity));
                     }
                     // else every output is backed up: the item waits
                 }
@@ -198,26 +201,27 @@ namespace MobileIdleBuilder
                     // Tail segment — deposit into a building input whose port faces this cell,
                     // in whichever adjacent direction it sits (independent of the belt's exit dir).
                     bool streamMouth = EntityManager.HasComponent<StreamSegment>(e);
-                    if (TryPickInput(e, seg, item.ItemID, buildingMap, out Entity bldg, out int deliverDir, out var decision))
+                    int  qty         = item.Quantity;
+                    if (TryPickInput(e, seg, item.ItemID, qty, buildingMap, out Entity bldg, out int deliverDir, out var decision))
                     {
                         switch (decision)
                         {
-                            case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir)); break;
-                            case InputDecision.Overflow: overflows.Add((e, item.ItemID, bldg));                    break;
+                            case InputDecision.Accept:   buildingDeposits.Add((e, bldg, item.ItemID, deliverDir, qty)); break;
+                            case InputDecision.Overflow: overflows.Add((e, item.ItemID, bldg, qty));                    break;
                             // Wait: input full (for this item) or item unused -- it waits on the belt,
                             // except at a stream's mouth, which sells it as surplus.
-                            default: if (streamMouth) overflows.Add((e, item.ItemID, Entity.Null));                 break;
+                            default: if (streamMouth) overflows.Add((e, item.ItemID, Entity.Null, qty));                 break;
                         }
                     }
                     // No adjacent input port: a belt's item waits at the tail; a stream's open mouth sells it.
-                    else if (streamMouth) overflows.Add((e, item.ItemID, Entity.Null));
+                    else if (streamMouth) overflows.Add((e, item.ItemID, Entity.Null, qty));
                 }
             }
 
-            foreach (var (from, bldg, itemID, deliverDir) in buildingDeposits)
+            foreach (var (from, bldg, itemID, deliverDir, qty) in buildingDeposits)
             {
                 if (!FrontIsReady(from, itemID)) continue;
-                SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(bldg), itemID, 1);
+                SlotBufferUtils.AddToInputBuffer(EntityManager.GetBuffer<BuildingInputSlot>(bldg), itemID, qty);
                 ConveyorItems.RemoveFront(EntityManager, from);
 
                 // The delivery direction may differ from the belt's own exit direction: log it so the
@@ -237,10 +241,10 @@ namespace MobileIdleBuilder
                 // Cyclotron Kick boost (1 when none is running) multiplies what the sales pay.
                 double boost = SystemAPI.TryGetSingleton<EntropyIncomeBoost>(out var eb) && eb.Mult > 0f ? eb.Mult : 1d;
                 float now      = UnityEngine.Time.time;
-                foreach (var (from, itemID, bldg) in overflows)
+                foreach (var (from, itemID, bldg, qty) in overflows)
                 {
                     if (!FrontIsReady(from, itemID)) continue;
-                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), 1, fraction) * boost;
+                    double value = SurplusSale.ExactValue(SurplusSale.DemonPrice(itemID), qty, fraction) * boost;
                     _surplusCarry += value;
                     if (bldg != Entity.Null) SurplusSaleLog.Record(bldg, value, now);
                     ConveyorItems.RemoveFront(EntityManager, from);
@@ -339,7 +343,8 @@ namespace MobileIdleBuilder
                 {
                     ItemID   = chosenItem.ItemID,
                     Progress = CarryInto(target, chosen, chosenItem.Progress),
-                    InEdge   = ConveyorItem.EncodeEdge(chosenDir)   // the edge it came through (merge arm)
+                    InEdge   = ConveyorItem.EncodeEdge(chosenDir),  // the edge it came through (merge arm)
+                    Stack    = chosenItem.Stack                     // a stream stack stays whole
                 });
                 ConveyorItems.RemoveFront(EntityManager, chosen);
 
@@ -465,7 +470,7 @@ namespace MobileIdleBuilder
             }
 
             // Streams: bank buildings drop their products into the middle of the tile beside them.
-            StreamSideDrop(segEntities, buildingMap, spacing);
+            StreamSideDrop(segEntities, buildingMap, spacing, maxStreamStack);
 
             segEntities.Dispose();
             bldgEntities.Dispose();
@@ -532,7 +537,7 @@ namespace MobileIdleBuilder
         // The front item may run to the edge when any output has room for it; else it stops behind the best one.
         // A building input that takes the item lets it run to the edge, like a belt's tail.
         private float SplitFrontLimit(Entity e, ConveyorSegmentData seg, NativeHashMap<int2, Entity> segMap,
-                                      NativeHashMap<int2, Entity> buildingMap, int frontItem, float spacing)
+                                      NativeHashMap<int2, Entity> buildingMap, int frontItem, int frontQty, float spacing)
         {
             var split = EntityManager.GetComponentData<BeltSplit>(e);
             float best = float.NegativeInfinity;
@@ -541,7 +546,7 @@ namespace MobileIdleBuilder
                 if (!BeltSplitRules.Has(split.Mask, d)) continue;
                 float lim;
                 if (segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)) lim = FrontLimitInto(e, t, spacing);
-                else if (SplitInputAt(seg, d, buildingMap, out Entity b) && DecideDeposit(e, b, frontItem) == InputDecision.Accept)
+                else if (SplitInputAt(seg, d, buildingMap, out Entity b) && DecideDeposit(e, b, frontItem, frontQty) == InputDecision.Accept)
                     lim = BeltMotion.Open;
                 else continue;
                 if (lim > best) best = lim;
@@ -558,7 +563,7 @@ namespace MobileIdleBuilder
             bool Room(int d) =>
                 segMap.TryGetValue(AdjacentCell(seg.Cell, d), out Entity t)
                     ? RoomInto(t, e, front.Progress, spacing)
-                    : SplitInputAt(seg, d, buildingMap, out Entity b) && DecideDeposit(e, b, front.ItemID) == InputDecision.Accept;
+                    : SplitInputAt(seg, d, buildingMap, out Entity b) && DecideDeposit(e, b, front.ItemID, front.Quantity) == InputDecision.Accept;
 
             var split = EntityManager.GetComponentData<BeltSplit>(e);
             int planned = front.OutEdge - 1;
@@ -607,10 +612,12 @@ namespace MobileIdleBuilder
                     var inputBuf     = EntityManager.GetBuffer<BuildingInputSlot>(bldg);
                     for (int k = 0; k < items.Length; k++)
                     {
-                        int id = items[k].ItemID;
+                        int id  = items[k].ItemID;
+                        int qty = items[k].Quantity;
                         if (!InputAcceptance.RecipeUses(recipeInputs, id)) continue;
-                        if (SlotBufferUtils.CountInInputBuffer(inputBuf, id) >= cap) continue;
-                        SlotBufferUtils.AddToInputBuffer(inputBuf, id, 1);
+                        // A stack is taken whole or not at all: it floats on when the input has no room for all of it.
+                        if (!StreamStackRules.HasRoomFor(SlotBufferUtils.CountInInputBuffer(inputBuf, id), qty, cap)) continue;
+                        SlotBufferUtils.AddToInputBuffer(inputBuf, id, qty);
                         items.RemoveAt(k);
                         if (BuildingInputFX.Instance != null) BuildingInputFX.Instance.Trigger(seg.Cell, dir, id);
                         break;
@@ -625,9 +632,11 @@ namespace MobileIdleBuilder
         /// that tile when there is a gap (<see cref="StreamRules.DropIndex"/>); otherwise it keeps it. At a
         /// stream's head the Spring is pulled by pass 4 instead; every other building drops here (#543).
         /// </summary>
-        private void StreamSideDrop(NativeArray<Entity> segs, NativeHashMap<int2, Entity> buildingMap, float spacing)
+        private void StreamSideDrop(NativeArray<Entity> segs, NativeHashMap<int2, Entity> buildingMap, float spacing,
+                                    int maxStack)
         {
             var progresses = new List<float>(4);
+            var quantities = new List<int>(4);
             for (int i = 0; i < segs.Length; i++)
             {
                 var e = segs[i];
@@ -645,19 +654,35 @@ namespace MobileIdleBuilder
                     var outputBuf = EntityManager.GetBuffer<BuildingOutputSlot>(bldg);
                     if (outputBuf.Length == 0 || outputBuf[0].Quantity <= 0) continue;
 
+                    // Stack setting: drop once a product reaches a full stack (StreamStackRules.PickDrop).
+                    int stack = EntityManager.HasComponent<StreamStack>(bldg)
+                        ? StreamStackRules.Effective(EntityManager.GetComponentData<StreamStack>(bldg).Size, maxStack) : 1;
+                    int slot = 0, qty = 1;
+                    if (stack > 1)
+                    {
+                        quantities.Clear();
+                        for (int k = 0; k < outputBuf.Length; k++) quantities.Add(outputBuf[k].Quantity);
+                        int outCap = EntityManager.HasComponent<BuildingInventoryConfig>(bldg)
+                            ? EntityManager.GetComponentData<BuildingInventoryConfig>(bldg).OutputCapacity : int.MaxValue;
+                        slot = StreamStackRules.PickDrop(quantities, stack, SlotBufferUtils.TotalInOutputBuffer(outputBuf),
+                                                         outCap, out qty);
+                        if (slot < 0) continue;   // still filling the stack
+                    }
+
                     var items = ConveyorItems.Get(EntityManager, e);
                     progresses.Clear();
                     for (int k = 0; k < items.Length; k++) progresses.Add(items[k].Progress);
                     int at = StreamRules.DropIndex(progresses, StreamRules.DropAt, spacing);
                     if (at < 0) continue;
 
-                    int itemID = outputBuf[0].ItemID;
-                    SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, 1);
+                    int itemID = outputBuf[slot].ItemID;
+                    SlotBufferUtils.RemoveFromOutputBuffer(outputBuf, itemID, qty);
                     items.Insert(at, new ConveyorItem
                     {
                         ItemID   = itemID,
                         Progress = StreamRules.DropAt,
                         InEdge   = ConveyorItem.EncodeEdge(dir),
+                        Stack    = (byte)(qty > 1 ? qty : 0),
                     });
                 }
             }
@@ -686,11 +711,13 @@ namespace MobileIdleBuilder
         /// What the input of <paramref name="bldg"/> does with <paramref name="itemID"/> waiting on
         /// <paramref name="tail"/>. See <see cref="InputAcceptance"/> for the rules (#200).
         /// </summary>
-        private InputDecision DecideDeposit(Entity tail, Entity bldg, int itemID)
+        private InputDecision DecideDeposit(Entity tail, Entity bldg, int itemID, int qty = 1)
         {
             var inputBuf = EntityManager.GetBuffer<BuildingInputSlot>(bldg, isReadOnly: true);
             int cap      = EntityManager.GetComponentData<BuildingInventoryConfig>(bldg).InputCapacity;
-            int count    = SlotBufferUtils.CountInInputBuffer(inputBuf, itemID);
+            // A stream stack goes in whole (StreamStackRules.HasRoomFor): it counts as full once the last unit
+            // would not fit. For one unit (qty 1) this is the plain count.
+            int count    = SlotBufferUtils.CountInInputBuffer(inputBuf, itemID) + (qty > 1 ? qty - 1 : 0);
 
             bool recipeSet = EntityManager.HasComponent<RecipeProcessData>(bldg)
                           && EntityManager.HasBuffer<RecipeInputSlot>(bldg)
@@ -822,7 +849,7 @@ namespace MobileIdleBuilder
         /// a building that needs the item gets it and the Demon still takes anything nobody else wants.
         /// False (item waits) when no adjacent input takes it now.
         /// </summary>
-        private bool TryPickInput(Entity tail, ConveyorSegmentData seg, int itemID,
+        private bool TryPickInput(Entity tail, ConveyorSegmentData seg, int itemID, int qty,
                                   NativeHashMap<int2, Entity> buildingMap,
                                   out Entity building, out int deliverDir, out InputDecision decision)
         {
@@ -845,7 +872,7 @@ namespace MobileIdleBuilder
 
                 int rank = TailInputPriority.Rank(dir == seg.ExitDir, EntityManager.HasComponent<EntropySinkTag>(cand));
                 if (rank >= bestAcceptRank) continue;
-                var d = DecideDeposit(tail, cand, itemID);
+                var d = DecideDeposit(tail, cand, itemID, qty);
                 if (d == InputDecision.Accept)
                 {
                     bestAcceptRank = rank;

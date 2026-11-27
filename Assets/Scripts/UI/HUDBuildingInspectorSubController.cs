@@ -492,6 +492,8 @@ namespace MobileIdleBuilder
                 if (buildingSO.assignableOutputs && !buildingSO.isItemFilter)
                     AddFilterSection(_inspectorEntity);
 
+                AddStreamStackSection(_inspectorEntity);
+
                 AddPowerSection(buildingSO, buildingData, buildingCellX, buildingCellY);
                 AddSpeedUpgradeSection(_inspectorEntity, buildingSO, buildingData);
                 AddStorageUpgradeSection(_inspectorEntity, buildingSO, buildingData);
@@ -1103,6 +1105,64 @@ namespace MobileIdleBuilder
             foreach (var itemId in items)
                 AddFilterRow(entity, rules, sides, itemId, ItemName(itemId));
             AddFilterRow(entity, rules, sides, PortFilterRules.Everything, "Everything else");
+        }
+
+        // ── Stream stacks (Chemistry, 2026-11-27) ──────────────────────────────
+
+        /// <summary>
+        /// On a Chemistry producer (<see cref="StreamStack"/>) once Gas Compression is researched: how many of its
+        /// products ride the stream as one item (1 up to what research allows). A stack waits in the building until
+        /// it is full, and a building downstream takes it only when its input has room for all of it.
+        /// </summary>
+        private void AddStreamStackSection(Entity entity)
+        {
+            if (!_em.HasComponent<StreamStack>(entity)) return;
+            int max = StreamStackRules.MaxUnlocked(ResearchService.Instance != null
+                ? 1 + (int)ResearchService.Instance.GetEffectTotal(ResearchEffectType.StreamStack) : 1);
+            if (max <= 1) return;
+            int current = StreamStackRules.Effective(_em.GetComponentData<StreamStack>(entity).Size, max);
+
+            AddInspectorRow(_inspectorRecipes, "—— Stream stacks ——");
+            var row = _ui.Take<VisualElement>(_inspectorRecipes, "stack-row");
+            row.AddToClassList("filter-row");
+            _ui.Label(row, "name", "Items per stack", "filter-row__name");
+            for (int size = 1; size <= max; size++)
+            {
+                int captured = size;
+                var btn = _ui.Take<Button>(row, "stack");
+                string text = size.ToString();
+                if (btn.text != text) btn.text = text;
+                btn.AddToClassList("filter-side-btn");
+                btn.EnableInClassList("filter-side-btn--on", size == current);
+                StyleStackButton(btn, size, size == current);
+                ListTapRouter.Register(_inspectorRecipes, btn, () =>
+                {
+                    if (!_ecsReady || !_em.Exists(entity) || !_em.HasComponent<StreamStack>(entity)) return;
+                    _em.SetComponentData(entity, new StreamStack { Size = (byte)StreamStackRules.Clamp(captured) });
+                    SaveManager.Instance?.SaveLocal();
+                    RefreshInspectorContent();
+                });
+            }
+            if (current > 1)
+                AddInspectorRow(_inspectorRecipes, $"Drops {current} at a time; buildings downstream need room for all {current}.");
+        }
+
+        /// <summary>
+        /// A stack button in its stack colour (<see cref="StreamStackRules.StackColor"/>), the same colour its stacks
+        /// glow on the stream: an outline, filled when chosen. Size 1 has no colour and keeps the default look.
+        /// </summary>
+        private static void StyleStackButton(Button btn, int size, bool chosen)
+        {
+            var c = StreamStackRules.StackColor(size);
+            if (c.a <= 0f)
+            {
+                btn.style.borderTopColor = btn.style.borderBottomColor = btn.style.borderLeftColor = btn.style.borderRightColor = StyleKeyword.Null;
+                btn.style.backgroundColor = StyleKeyword.Null;
+                return;
+            }
+            btn.style.borderTopColor = btn.style.borderBottomColor = btn.style.borderLeftColor = btn.style.borderRightColor = c;
+            btn.style.borderTopWidth = btn.style.borderBottomWidth = btn.style.borderLeftWidth = btn.style.borderRightWidth = 2f;
+            btn.style.backgroundColor = chosen ? new StyleColor(new Color(c.r, c.g, c.b, 0.55f)) : new StyleColor(StyleKeyword.Null);
         }
 
         private void AddFilterRow(Entity entity, List<(int facing, int itemId)> rules, List<int> sides,
