@@ -43,6 +43,7 @@ namespace MobileIdleBuilder
         private readonly Dictionary<(int, int), GameObject> _spawnedBelts = new();
         private readonly Dictionary<(Entity, int), GameObject> _itemSpheres = new();
         private readonly Dictionary<(Entity, int), int>       _itemSpriteIds = new();   // which item each visual shows
+        private readonly Dictionary<GameObject, Vector3>      _baseScale     = new();   // each visual's own size, before stream-stack scaling
 
         // Item visuals are pooled per item id instead of destroyed: a slot changes item every time the
         // item at the front of a belt leaves, and the 3D particles cost more to build than a quad.
@@ -165,6 +166,7 @@ namespace MobileIdleBuilder
             foreach (var stack in _itemPool.Values)
                 foreach (var go in stack) if (go) Destroy(go);
             _itemPool.Clear();
+            _baseScale.Clear();
             TailDeliveryLog.Clear();   // scene reload (e.g. prestige): the next layout starts fresh
             _spawnedBelts.Clear();
             _itemSpheres.Clear();
@@ -301,6 +303,11 @@ namespace MobileIdleBuilder
                     pos.y       = 0.3f + lift;
                     sphere.transform.localPosition = pos;
 
+                    // A stream stack (Chemistry) draws bigger the more it carries: x1 for one unit up to x1.6 for five.
+                    if (!_baseScale.TryGetValue(sphere, out var baseScale))
+                        _baseScale[sphere] = baseScale = sphere.transform.localScale;
+                    sphere.transform.localScale = baseScale * StreamStackRules.VisualScale(item.Quantity);
+
                     // Tiles and atoms face the camera so they stay readable as it orbits; a comet tail or wave
                     // packet points along the belt (round on corners too); round particles are left alone.
                     var facing = _particleFacing.TryGetValue(item.ItemID, out var f) ? f : BeltItemVisuals.Facing.Camera;
@@ -387,10 +394,10 @@ namespace MobileIdleBuilder
         private void ReleaseItemVisual(int itemId, GameObject go)
         {
             if (go == null) return;
-            if (itemId < 0) { Destroy(go); return; }
+            if (itemId < 0) { _baseScale.Remove(go); Destroy(go); return; }
             if (!_itemPool.TryGetValue(itemId, out var stack))
                 _itemPool[itemId] = stack = new Stack<GameObject>();
-            if (stack.Count >= MaxPooledPerItem) { Destroy(go); return; }
+            if (stack.Count >= MaxPooledPerItem) { _baseScale.Remove(go); Destroy(go); return; }
             go.SetActive(false);
             stack.Push(go);
         }

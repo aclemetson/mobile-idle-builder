@@ -56,6 +56,17 @@ namespace MobileIdleBuilder
         public float Ratio;
     }
 
+    /// <summary>
+    /// A bank building's stack setting (every building with a flow draw, i.e. Chemistry's producers): it drops its
+    /// products onto the stream in stacks of <see cref="Size"/> (1-5), once it holds that many. Capped by the
+    /// stacking research (<see cref="ResearchEffects.MaxStreamStack"/>), so it acts as 1 until that is done.
+    /// Saved in <c>BuildingSaveData.stackSize</c>. See <see cref="StreamStackRules"/>.
+    /// </summary>
+    public struct StreamStack : IComponentData
+    {
+        public byte Size;
+    }
+
     /// <summary>Singleton: totals for the HUD flow readout (StreamFlowSystem).</summary>
     public struct StreamGridState : IComponentData
     {
