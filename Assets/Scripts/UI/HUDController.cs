@@ -512,7 +512,7 @@ namespace MobileIdleBuilder
         /// </summary>
         private void ApplyFeatureFlagGates(VisualElement root)
         {
-            if (!FeatureFlags.PveEnabled)         SetElementVisible(root.Q<Button>("btn-tournament"), false);
+            // pve.enabled off keeps the Tournament button: its panel says "Coming Soon" (production until PvE launches).
             if (!FeatureFlags.AdsEnabled)         SetElementVisible(root.Q<Button>("btn-rewards"), false);
         }
 

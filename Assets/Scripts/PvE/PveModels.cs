@@ -36,6 +36,10 @@ namespace MobileIdleBuilder
         public int run_hours = 24;
         public int test_bracket_size = 5;
         public int snapshot_bucket_minutes = 10;
+        /// <summary>Highest league players can reach (a league id); blank = the whole ladder. Not set in game_data.json:
+        /// the server fills it per environment from pve_settings maxLeague (<see cref="PveRules.WithCap"/>), so the dev
+        /// environment can cap at "bronze" while production keeps the full ladder.</summary>
+        public string max_league = "";
         public PveLeagueDef[] leagues;
     }
 

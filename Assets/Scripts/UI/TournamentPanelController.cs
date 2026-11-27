@@ -490,6 +490,9 @@ namespace MobileIdleBuilder
             public bool showStart, showRetire;
         }
 
+        /// <summary>The panel headline while pve.enabled is off (production until PvE launches).</summary>
+        public const string ComingSoon = "Coming Soon";
+
         public static Lines Describe(TournamentPanelState state, PveStatusResponse status, TournamentSaveData entry,
                                      DateTime now, PveConfig cfg, bool prestigePending)
         {
@@ -499,7 +502,8 @@ namespace MobileIdleBuilder
             switch (state)
             {
                 case TournamentPanelState.Disabled:
-                    d.headline = "Tournaments are unavailable right now.";
+                    d.headline = ComingSoon;
+                    d.info = "Weekly tournaments are on their way: race a fresh run for 24 hours against other players for crystals and item stars.";
                     break;
                 case TournamentPanelState.Locked:
                     d.headline = "Locked";
