@@ -88,6 +88,47 @@ ARCHIVE_PATH="$PROJECT_ROOT/build/iOS-archive/Unity-iPhone.xcarchive"
 EXPORT_DIR="$PROJECT_ROOT/build/iOS-ipa"
 mkdir -p "$(dirname "$ARCHIVE_PATH")" "$EXPORT_DIR"
 
+# Fixed CI signing identity for the archive step (docs/runbooks/secrets.md, "iOS CI signing certificate").
+# Without one, every run on a fresh runner made -allowProvisioningUpdates create a new "Apple Development:
+# Created via API" certificate, until the account hit Apple's certificate limit and signing failed
+# ("Your account has reached the maximum number of certificates"). With the identity in a keychain, Xcode
+# reuses it and only manages profiles. Export still uses cloud-managed distribution signing.
+# Unset secrets keep the old behaviour, so a missing secret degrades instead of breaking the lane.
+if [ -n "${IOS_SIGNING_CERT_P12_BASE64:-}" ]; then
+    TMP="${RUNNER_TEMP:-$(mktemp -d)}"
+    KEYCHAIN="$TMP/ci-signing.keychain-db"
+    KEYCHAIN_PASS="$(uuidgen)"
+    P12="$TMP/ci-signing.p12"
+    cleanup_keychain() {
+        security delete-keychain "$KEYCHAIN" 2>/dev/null || true
+        rm -f "$P12"
+    }
+    trap cleanup_keychain EXIT
+
+    security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN"
+    security set-keychain-settings -lut 21600 "$KEYCHAIN"
+    security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN"
+    echo "$IOS_SIGNING_CERT_P12_BASE64" | base64 --decode > "$P12"
+    security import "$P12" -k "$KEYCHAIN" -P "${IOS_SIGNING_CERT_PASSWORD:-}" -f pkcs12 \
+        -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/xcodebuild
+    rm -f "$P12"
+    # Apple's intermediate, so the identity validates even on an image that lacks it.
+    curl -fsSL https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer -o "$TMP/AppleWWDRCAG3.cer" \
+        && security import "$TMP/AppleWWDRCAG3.cer" -k "$KEYCHAIN" 2>/dev/null || true
+    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN" >/dev/null
+    # Search the CI keychain first, then the existing ones.
+    # shellcheck disable=SC2046
+    security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+    IDENTITIES="$(security find-identity -v -p codesigning "$KEYCHAIN")"
+    echo "[ios] CI signing keychain: $(echo "$IDENTITIES" | tail -1)"
+    if ! echo "$IDENTITIES" | grep -q "Apple Development"; then
+        echo "[ios] IOS_SIGNING_CERT_P12_BASE64 holds no valid Apple Development identity (expired or revoked?)." >&2
+        exit 1
+    fi
+else
+    echo "[ios] IOS_SIGNING_CERT_P12_BASE64 not set: Xcode will create a new development certificate this run."
+fi
+
 AUTH_ARGS=(
     -allowProvisioningUpdates
     -authenticationKeyPath "$P8_PATH"

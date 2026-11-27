@@ -2073,7 +2073,7 @@
       "codex_entry": "Chemistry made the parts; biology assembles them into machines that copy themselves. The first tier weaves monomers into the four macromolecules of life: proteins, carbohydrates, lipid membranes, and nucleic acids.",
       "icon_path": "TODO",
       "block": "bio_biomolecules",
-      "world": "world_biology",
+      "world": "world_chemistry",
       "planned": true,
       "_comment": "--- BIOLOGY WORLD (Chem/Bio Biology track). New branch 'Biology'. biology_lab is the Biology WORLD gate: prereq biochem_precursors (must have unlocked the organic precursors in Chemistry). Costs are FIRST-PASS (Phase 6 re-tier). ---"
     },

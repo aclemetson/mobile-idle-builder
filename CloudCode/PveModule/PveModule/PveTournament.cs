@@ -49,6 +49,7 @@ namespace MobileIdleBuilder.PveModule
             if (cfg?.leagues == null) return Ser(new PveStatusResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
             var settings = await Settings(store);
+            cfg = PveRules.WithCap(cfg, settings.maxLeague);   // this environment's league cap (dev: bronze)
             var now = Now(settings, debugNow);
 
             var profile = (await store.GetProfile(ctx.PlayerId)).Value ?? new PveProfile();
@@ -65,6 +66,9 @@ namespace MobileIdleBuilder.PveModule
         async Task<PveStatusResponse> BuildStatus(PveStore store, PveConfig cfg, string playerId, PveProfile profile, DateTime now)
         {
             string week = PveRules.WeekId(now);
+            // Show the league the player will actually join (a profile above the league cap plays at the cap).
+            // Display only; Join writes it to the profile.
+            profile.league = PveRules.CappedLeague(cfg, profile.league);
             var r = new PveStatusResponse
             {
                 serverNowUtc = PveRules.Iso(now),
@@ -101,6 +105,7 @@ namespace MobileIdleBuilder.PveModule
             if (cfg?.leagues == null) return Ser(new PveStatusResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
             var settings = await Settings(store);
+            cfg = PveRules.WithCap(cfg, settings.maxLeague);   // this environment's league cap (dev: bronze)
             var now = Now(settings, debugNow);
             string week = PveRules.WeekId(now);
 
@@ -114,7 +119,8 @@ namespace MobileIdleBuilder.PveModule
             if (PlayerNameRules.Validate(PlayerNameRules.WithoutTag(name), PveGameConfig.Embedded.NamePatterns) != NameCheck.Ok)
                 return Ser(new PveStatusResponse { error = PveErrors.NameBlocked });
 
-            var leagueDef = PveRules.League(cfg, profile.league) ?? cfg.leagues[0];
+            // A league above the cap (pve_settings maxLeague) joins at the cap, and the profile is moved there below.
+            var leagueDef = PveRules.League(cfg, PveRules.CappedLeague(cfg, profile.league)) ?? cfg.leagues[0];
             int capacity = PveRules.Capacity(cfg, leagueDef, settings.smallBrackets);
             string cursorKey = PveRules.CursorKey(leagueDef.id, dev);
             string indexId = PveRules.WeekIndexId(week);
@@ -184,6 +190,7 @@ namespace MobileIdleBuilder.PveModule
             if (cfg?.leagues == null) return Ser(new PveSnapshotResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
             var settings = await Settings(store);
+            cfg = PveRules.WithCap(cfg, settings.maxLeague);   // this environment's league cap (dev: bronze)
             var now = Now(settings, debugNow);
 
             var profile = (await store.GetProfile(ctx.PlayerId)).Value;
@@ -234,6 +241,7 @@ namespace MobileIdleBuilder.PveModule
             if (cfg?.leagues == null) return Ser(new PveSnapshotResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
             var settings = await Settings(store);
+            cfg = PveRules.WithCap(cfg, settings.maxLeague);   // this environment's league cap (dev: bronze)
             var now = Now(settings, debugNow);
 
             var profile = (await store.GetProfile(ctx.PlayerId)).Value;
@@ -280,6 +288,7 @@ namespace MobileIdleBuilder.PveModule
             if (cfg?.leagues == null) return Ser(new PveBoardResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
             var settings = await Settings(store);
+            cfg = PveRules.WithCap(cfg, settings.maxLeague);   // this environment's league cap (dev: bronze)
             var now = Now(settings, debugNow);
 
             var profile = (await store.GetProfile(ctx.PlayerId)).Value;
@@ -330,6 +339,7 @@ namespace MobileIdleBuilder.PveModule
             if (cfg?.leagues == null) return Ser(new PveStatusResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
             var settings = await Settings(store);
+            cfg = PveRules.WithCap(cfg, settings.maxLeague);   // this environment's league cap (dev: bronze)
             var now = Now(settings, debugNow);
 
             var profile = await PveStore.WithRetry(
@@ -396,6 +406,7 @@ namespace MobileIdleBuilder.PveModule
             var cfg = Config();
             if (cfg?.leagues == null) return Ser(new PveStatusResponse { error = PveErrors.Config });
             var store = new PveStore(_api, ctx);
+            cfg = PveRules.WithCap(cfg, (await Settings(store)).maxLeague);
             var now = DateTime.UtcNow;
             week ??= PveRules.Phase(now) == PvePhase.Results ? PveRules.WeekId(now) : PveRules.WeekId(now.AddDays(-7));
             if (now < PveRules.SettleAfter(week)) return Ser(new PveStatusResponse { error = "too_early", week = week });

@@ -92,8 +92,21 @@ namespace MobileIdleBuilder
         void Tick()
         {
             if (!IsOpen) { _ticker?.Pause(); return; }
+            // The countdown reached the phase change (entry opening, a run ending): fetch the new status so
+            // Start (or the results) appears without reopening the panel. The rules already use the clock meanwhile.
+            var svc = TournamentService.Instance;
+            if (svc != null && !_refreshing && Time.unscaledTime >= _nextStaleRefresh
+                && TournamentRules.StatusStale(svc.LastStatus, TournamentService.Now))
+            {
+                _nextStaleRefresh = Time.unscaledTime + StaleRefreshSeconds;
+                _ = RefreshAllAsync();
+            }
             Rebuild(rowsToo: false);
         }
+
+        const float StaleRefreshSeconds = 15f;
+        float _nextStaleRefresh;
+        bool  _refreshing;
 
         void Update()
         {
@@ -123,14 +136,19 @@ namespace MobileIdleBuilder
         async System.Threading.Tasks.Task RefreshAllAsync()
         {
             var svc = TournamentService.Instance;
-            if (svc == null || !TournamentService.Enabled) return;
-            await svc.RefreshAsync();
-            var state = svc.PanelState;
-            if (state == TournamentPanelState.Running || state == TournamentPanelState.Finished || state == TournamentPanelState.Results)
+            if (svc == null || !TournamentService.Enabled || _refreshing) return;
+            _refreshing = true;
+            try
             {
-                var board = await PveApi.Board();
-                _board = string.IsNullOrEmpty(board.error) ? board : _board;
+                await svc.RefreshAsync();
+                var state = svc.PanelState;
+                if (state == TournamentPanelState.Running || state == TournamentPanelState.Finished || state == TournamentPanelState.Results)
+                {
+                    var board = await PveApi.Board();
+                    _board = string.IsNullOrEmpty(board.error) ? board : _board;
+                }
             }
+            finally { _refreshing = false; }
             if (this != null) Rebuild();
         }
 
@@ -472,6 +490,9 @@ namespace MobileIdleBuilder
             public bool showStart, showRetire;
         }
 
+        /// <summary>The panel headline while pve.enabled is off (production until PvE launches).</summary>
+        public const string ComingSoon = "Coming Soon";
+
         public static Lines Describe(TournamentPanelState state, PveStatusResponse status, TournamentSaveData entry,
                                      DateTime now, PveConfig cfg, bool prestigePending)
         {
@@ -481,7 +502,8 @@ namespace MobileIdleBuilder
             switch (state)
             {
                 case TournamentPanelState.Disabled:
-                    d.headline = "Tournaments are unavailable right now.";
+                    d.headline = ComingSoon;
+                    d.info = "Weekly tournaments are on their way: race a fresh run for 24 hours against other players for crystals and item stars.";
                     break;
                 case TournamentPanelState.Locked:
                     d.headline = "Locked";

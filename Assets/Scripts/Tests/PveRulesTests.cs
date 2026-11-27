@@ -242,6 +242,52 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void MaxLeague_CapsPromotion_AndPullsHigherLeaguesBackToIt()
+        {
+            var cfg = Ladder(("bronze", 10, 3, 0), ("silver", 10, 3, 2), ("gold", 10, 0, 2));
+            Assert.AreEqual(2, PveRules.TopLeagueIndex(cfg), "blank cap = the whole ladder");
+            cfg.max_league = "nope";
+            Assert.AreEqual(2, PveRules.TopLeagueIndex(cfg), "an unknown id doesn't cap");
+
+            cfg.max_league = "bronze";
+            Assert.AreEqual((0, 0), PveRules.Moves(cfg, cfg.leagues[0], 10, 10), "bronze is the top: nobody goes up");
+            Assert.AreEqual(("bronze", "stayed"), PveRules.NextLeague(cfg, "bronze", 1, 10, 3, 0), "even a winner stays");
+            Assert.AreEqual(("bronze", "stayed"), PveRules.NextLeague(cfg, "silver", 1, 10, 0, 2), "a Silver bracket settles to Bronze");
+            Assert.AreEqual("bronze", PveRules.CappedLeague(cfg, "silver"));
+            Assert.AreEqual("bronze", PveRules.CappedLeague(cfg, "gold"));
+            Assert.AreEqual("bronze", PveRules.CappedLeague(cfg, "bronze"));
+            Assert.IsNull(PveRules.CappedLeague(cfg, null), "a new player has no league yet (joins the first)");
+
+            cfg.max_league = "silver";
+            Assert.AreEqual(("silver", "promoted"), PveRules.NextLeague(cfg, "bronze", 1, 10, 3, 0));
+            Assert.AreEqual((0, 2), PveRules.Moves(cfg, cfg.leagues[1], 10, 10), "the cap league demotes but never promotes");
+            Assert.AreEqual("silver", PveRules.CappedLeague(cfg, "gold"));
+        }
+
+        [Test]
+        public void RealConfig_HasNoLeagueCap_TheEnvironmentSetsIt()
+        {
+            // The cap is per environment (pve_settings maxLeague: dev = bronze); the shipped config must not cap
+            // production, which shares this file through the module.
+            Assert.IsTrue(string.IsNullOrEmpty(RealConfig().max_league));
+        }
+
+        [Test]
+        public void WithCap_CopiesTheConfig_AndBlankLeavesItAlone()
+        {
+            var cfg = Ladder(("bronze", 10, 3, 0), ("silver", 10, 3, 2));
+            Assert.AreSame(cfg, PveRules.WithCap(cfg, null));
+            Assert.AreSame(cfg, PveRules.WithCap(cfg, ""));
+            var capped = PveRules.WithCap(cfg, "bronze");
+            Assert.AreNotSame(cfg, capped);
+            Assert.AreEqual("bronze", capped.max_league);
+            Assert.IsTrue(string.IsNullOrEmpty(cfg.max_league), "the shared config is untouched");
+            Assert.AreSame(cfg.leagues, capped.leagues);
+            Assert.AreEqual(("bronze", "stayed"), PveRules.NextLeague(capped, "bronze", 1, 10, 3, 0));
+            Assert.AreEqual(("silver", "promoted"), PveRules.NextLeague(cfg, "bronze", 1, 10, 3, 0));
+        }
+
+        [Test]
         public void RealConfig_LadderRunsBronzeToChampion_WithRewardsForEveryone()
         {
             var cfg = RealConfig();

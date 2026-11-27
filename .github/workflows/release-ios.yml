@@ -118,6 +118,9 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          # Fixed Apple Development identity for the archive step, so runs stop creating certificates.
+          IOS_SIGNING_CERT_P12_BASE64: ${{ secrets.IOS_SIGNING_CERT_P12_BASE64 }}
+          IOS_SIGNING_CERT_PASSWORD: ${{ secrets.IOS_SIGNING_CERT_PASSWORD }}
         run: |
           chmod +x scripts/archive-upload-ios.sh
           scripts/archive-upload-ios.sh

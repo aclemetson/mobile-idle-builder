@@ -107,6 +107,7 @@ MonoBehaviour:
     run_hours: 24
     test_bracket_size: 5
     snapshot_bucket_minutes: 10
+    max_league: 
     leagues:
     - id: bronze
       name: Bronze

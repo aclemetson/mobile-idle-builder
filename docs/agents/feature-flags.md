@@ -40,7 +40,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 
 | Key | Type | Default | Gates |
 |---|---|---|---|
-| `pve.enabled` | bool | `true` | Weekly PvE tournaments (kill-switch, 2026-11-23). Off: HUD hides `btn-tournament` (the Tournament drawer button), `TournamentService` sends no snapshots and the panel shows Disabled. Replaced `pvp.enabled` (the dead PvP stub). |
+| `pve.enabled` | bool | `true` | Weekly PvE tournaments (kill-switch, 2026-11-23). Off: the Tournament drawer button stays and its panel shows Disabled, headlined "Coming Soon" (2026-11-26: production keeps it off until PvE launches); `TournamentService` sends no snapshots and the panel fetches no status. Replaced `pvp.enabled` (the dead PvP stub). |
 | `iap.enabled` | bool | `true` | `IAPService.Start` skips store init (purchases impossible); premium shop hides the Crystals tab. Other shop tabs (spend owned crystals) stay. |
 | `ads.enabled` | bool | `true` | `AdService.Start` skips ad-provider init; HUD hides `btn-rewards`; the idle-return "Double" button is suppressed. The full reward/limit flow ships, but ads run on `MockAdProvider` until the LevelPlay SDK is wired (see `docs/runbooks/levelplay-ads-setup.md`). |
 | `ads.test_mode` | bool | `true` | **Dev builds only** (`FeatureFlags.IsDevBuild`: Editor or `DEV_ENVIRONMENT`; production builds ignore the key). On: `AdService.CreateProvider` picks `TestAdProvider`, so no ad network runs and Watch opens the "Test Ad" card (`TestAdOverlayController`, `test-ad-modal` in `GameHUD.uxml`): Finish grants the reward, Skip/back grants nothing. Read once at startup, so a change applies on the next launch. Set `true` in the development environment; never create it in production. |
@@ -62,7 +62,7 @@ rollout. Backed by **Unity Remote Config** (UGS) — the same ecosystem as Auth/
 | `whatsnew.version` | string | "" | Build version the what's-new notes are for (#502). Written by CI with `whatsnew.notes`. |
 | `whatsnew.notes` | string | "" | Player-facing release notes (#502), from `docs/whats-new.md`. Shown once per text (`SaveData.lastSeenWhatsNewHash`) on builds >= `whatsnew.version`, never to new players (`WhatsNew.Decide`, `WhatsNewTests`). They share the update-notice card (left-aligned, scrolls); when `gamedata.updatedUtc` also changed, the balance message is appended. Blank = no notice. |
 | `gamedata.overrides` | string | `"{}"` | JSON blob of curated **scalar** overrides applied onto the baked SOs at boot (`GameDataOverrides`). Covers `config` (GameConfigSO), `items` (ItemSO sell values), `research` (ResearchSO costs/durations). Empty ⇒ baked baseline. Takes effect next cold start. See "Game-data overrides" below. |
-| `links.feedbackEmail` | string | `"aclemetson12492@gmail.com"` | Recipient of Settings > Support > **Send Feedback** (`mailto:` prefilled with version, player id, device; built by `HUDSettingsSubController.BuildFeedbackMailto`). Read at tap time. |
+| `links.feedbackEmail` | string | `"clemtek1@gmail.com"` | Recipient of Settings > Support > **Send Feedback** (`mailto:` prefilled with version, player id, device; built by `HUDSettingsSubController.BuildFeedbackMailto`). Read at tap time. |
 | `links.privacyPolicyUrl` | string | GitHub Pages `privacy-policy.html` URL | Opened by Settings > Support > **Privacy Policy**. Source is `docs/privacy-policy.html`, served from `develop:/docs`. Read at tap time. |
 | `links.discordUrl` | string | `"https://discord.gg/aVt8Z9ntkC"` | Community invite (#533), the server's permanent invite. Settings > Support > **Join our Discord** shows only when this is an https `discord.gg/...` or `discord.com/invite/...` link (`HUDSettingsSubController.IsDiscordInvite`); blank or anything else hides it. Checked each time Settings opens. |
 | `update.enabled` | bool | `false` | Master switch for the boot-time update prompt. See "App update prompt" below. Default off: a fetch failure never prompts. |
@@ -110,6 +110,10 @@ When `maintenance.enabled` is true the app shows the splash, then a maintenance 
   `UgsEnvironment.Name`.
 - Time formatting is the pure, unit-tested `MaintenanceGate.FormatEstimatedReturn`; the active/scheduled decision
   and poll clamp are `MaintenancePollSchedule.IsActive` / `IsScheduledAhead` / `ClampPollSeconds` (`MaintenancePollScheduleTests`).
+- **Always a new campaign:** each maintenance window (scheduled or emergency) is a **newly created** Remote Config
+  Game Override (campaign). Never edit and re-enable an existing one, even a finished one with the same keys. Found
+  in the #224 device tests (2026-11-26). After the window, disable the override and leave it; the next window gets
+  a new one.
 - **Planned window:** set `maintenance.startsUtc` at least one poll interval (5 min) ahead, then `maintenance.enabled`
   on. Foreground players leave at the start, give or take a second. Backgrounded apps check when resumed. **Emergency:**
   `maintenance.enabled` on with a blank start reaches players within one poll (5 min worst case, sooner if
