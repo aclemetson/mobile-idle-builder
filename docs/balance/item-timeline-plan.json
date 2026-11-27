@@ -3764,7 +3764,7 @@
    ],
    "node": "molecular_synthesis",
    "builtValue": 1010.0,
-   "craft": 20.0,
+   "craft": 25.0,
    "outQ": 1
   },
   {
@@ -3791,7 +3791,7 @@
    ],
    "node": "molecular_synthesis",
    "builtValue": 1830.0,
-   "craft": 40.0,
+   "craft": 25.0,
    "outQ": 1
   },
   {
@@ -3834,7 +3834,7 @@
    ],
    "node": "nitrogen_fixation",
    "builtValue": 935.0,
-   "craft": 36.0,
+   "craft": 72.0,
    "outQ": 2
   },
   {

@@ -34,6 +34,6 @@ MonoBehaviour:
   particleUses: 0
   codexEntry: A small amino acid, built from formaldehyde and ammonia.
   codexUnlocked: 0
-  baseSellValue: 26500
+  baseSellValue: 27100
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

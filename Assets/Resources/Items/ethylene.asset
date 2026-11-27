@@ -34,6 +34,6 @@ MonoBehaviour:
   particleUses: 0
   codexEntry: 'C2H4: the simplest alkene, a plant hormone and the start of plastics.'
   codexUnlocked: 0
-  baseSellValue: 6210
+  baseSellValue: 5190
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

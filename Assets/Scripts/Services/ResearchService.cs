@@ -58,7 +58,31 @@ namespace MobileIdleBuilder
                 _effectsReady  = true;
             }
 
-            var save = SaveManager.Instance?.Current;
+            LoadFromSave(SaveManager.Instance?.Current);
+            SaveManager.CurrentReplaced += OnCurrentReplaced;
+        }
+
+        protected override void OnDestroy()
+        {
+            SaveManager.CurrentReplaced -= OnCurrentReplaced;
+            base.OnDestroy();
+        }
+
+        void OnCurrentReplaced(SaveData save)
+        {
+            // A destroyed or replaced instance (OnDestroy doesn't run for DestroyImmediate outside Play) lets go.
+            if (this == null || Instance != this) { SaveManager.CurrentReplaced -= OnCurrentReplaced; return; }
+            LoadFromSave(save);
+        }
+
+        /// <summary>
+        /// (Re)reads the unlocked research and the active timer from <paramref name="save"/>. Start runs while the
+        /// loading screen may still be asking "which save?", so a cloud choice calls this again with the cloud save
+        /// (<see cref="SaveManager.CurrentReplaced"/>); the old run's research, timer and effects must not survive.
+        /// </summary>
+        internal void LoadFromSave(SaveData save)
+        {
+            _unlockedIds.Clear();
             long refund = MigrateMergedResearch(save);
             if (refund > 0) RefundRetired(save, refund);
             if (save?.unlockedResearch != null)
@@ -152,7 +176,8 @@ namespace MobileIdleBuilder
             if (_effectsQuery.IsEmptyIgnoreFilter) return;
             _effectsQuery.SetSingleton(new ResearchEffects
             {
-                ConveyorSpeedMult = 1f + GetEffectTotal(ResearchEffectType.ConveyorSpeed)
+                ConveyorSpeedMult = 1f + GetEffectTotal(ResearchEffectType.ConveyorSpeed),
+                MaxStreamStack    = StreamStackRules.Clamp(1 + (int)GetEffectTotal(ResearchEffectType.StreamStack))
             });
             _effectsDirty = false;
         }

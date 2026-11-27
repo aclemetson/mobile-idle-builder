@@ -35,6 +35,6 @@ MonoBehaviour:
   codexEntry: 'CO(NH2)2: the first organic molecule made from inorganic ones (Wohler,
     1828).'
   codexUnlocked: 0
-  baseSellValue: 4440
+  baseSellValue: 5900
   isotopeSellMultiplier: 1
   escapesAsEntropy: 0

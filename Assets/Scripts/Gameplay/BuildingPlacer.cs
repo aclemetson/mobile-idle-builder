@@ -50,7 +50,7 @@ namespace MobileIdleBuilder
         public bool PlaceBuilding(int gridX, int gridY, BuildingSO building, RecipeSO recipe,
                                   int? outputDirection = null, int rotation = 0, bool flipped = false,
                                   int speedLevel = 1, int storageLevel = 1, int inputLevel = 1,
-                                  int[] portFilters = null)
+                                  int[] portFilters = null, int stackSize = 1)
         {
             int fw = 1, fh = 1;
             var baseFootprint = new UnityEngine.Vector2Int(1, 1);
@@ -216,6 +216,8 @@ namespace MobileIdleBuilder
             {
                 _em.AddComponentData(entity, new StreamConsumer { Draw = building.flowDraw });
                 _em.AddComponentData(entity, new StreamStatus { OnStream = 0, Ratio = 0f });
+                // Its products ride the stream in stacks of this many (1-5) once stacking is researched.
+                _em.AddComponentData(entity, new StreamStack { Size = (byte)StreamStackRules.Clamp(stackSize) });
             }
 
             if (hasPorts)

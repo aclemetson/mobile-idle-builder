@@ -122,6 +122,28 @@ namespace MobileIdleBuilder.PlayModeTests
         // ── Contribution clamping ──────────────────────────────────────────────
 
         [Test]
+        public void CurrentReplaced_ReloadsStages_SoTheOtherSavesProgressIsNotFlushedIntoIt()
+        {
+            // The startup "which save?" choice can take the cloud save after Start read this device's (2026-11-27).
+            _saveManagerGO = new GameObject("SaveManager");
+            { var sm = _saveManagerGO.AddComponent<SaveManager>(); RunAwake(sm); }
+            SaveManager.Instance.Current.megastructureStage = 2;   // this device's save
+            _serviceGO = new GameObject("MegastructureService");
+            var svc = _serviceGO.AddComponent<MegastructureService>();
+            RunAwake(svc);
+            typeof(MegastructureService).GetField("_data", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(svc, _data);
+            RunStart(svc);
+            Assert.AreEqual(2, svc.CompletedStages);
+
+            var cloud = new SaveData { playerId = SaveManager.Instance.Current.playerId, megastructureStage = 0 };
+            SaveManager.Instance.DevReplaceCurrent(cloud);
+            Assert.AreEqual(0, svc.CompletedStages, "reloaded from the chosen save");
+
+            svc.FlushToSave(cloud);
+            Assert.AreEqual(0, cloud.megastructureStage, "the replaced save's stages are not written into the chosen one");
+        }
+
+        [Test]
         public void Contribute_InsufficientInventory_RejectsAndDeductsNothing()
         {
             SpawnServices();

@@ -71,6 +71,17 @@ namespace MobileIdleBuilder
 
         /// <summary>The planned exit, or <paramref name="fallbackDir"/> when none is planned.</summary>
         public int ExitEdgeOr(int fallbackDir) => OutEdge > 0 ? OutEdge - 1 : fallbackDir;
+
+        /// <summary>
+        /// Stream stacks (Chemistry, 2026-11-27): how many units of <see cref="ItemID"/> this one item carries, so a
+        /// stream moves up to <see cref="StreamStackRules.Max"/> times as much in the same space. 0 or 1 = one unit
+        /// (every belt item outside Chemistry). Set by a bank building's stack setting (<see cref="StreamStack"/>) when
+        /// it drops onto the stream; a stack is taken or sold whole. Read it through <see cref="Quantity"/>.
+        /// </summary>
+        public byte Stack;
+
+        /// <summary>Units this item carries: <see cref="Stack"/>, at least 1.</summary>
+        public int Quantity => Stack > 1 ? Stack : 1;
     }
 
     /// <summary>

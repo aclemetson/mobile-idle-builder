@@ -269,6 +269,9 @@ namespace MobileIdleBuilder
                     bsd.portFilters = PortFilterRules.Flatten(
                         FilterSystem.ReadRules(_em.GetBuffer<OutputPortFilter>(e, isReadOnly: true)));
 
+                if (_em.HasComponent<StreamStack>(e))
+                    bsd.stackSize = _em.GetComponentData<StreamStack>(e).Size;
+
                 grid.buildings.Add(bsd);
             }
             entities.Dispose();
@@ -514,7 +517,8 @@ namespace MobileIdleBuilder
                         speedLevel:   Mathf.Max(1, bsd.level),
                         storageLevel: Mathf.Max(1, bsd.storageLevel),
                         inputLevel:   Mathf.Max(1, bsd.inputLevel),
-                        portFilters:  bsd.portFilters);
+                        portFilters:  bsd.portFilters,
+                        stackSize:    bsd.stackSize);
                 }
             }
 
