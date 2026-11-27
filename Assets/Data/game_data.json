@@ -3508,7 +3508,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The simplest hydrocarbon. Natural gas is mostly methane. SpaceX's Raptor engine burns it with oxygen. A key carbon feedstock for synthesising carbon fibre and polymers.",
-      "base_sell_value": 1830.0,
+      "base_sell_value": 1320.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -3534,7 +3534,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The Haber–Bosch synthesis of ammonia is arguably the most important industrial reaction in history — it enabled fertilisers that now feed half the world's population.",
-      "base_sell_value": 935.0,
+      "base_sell_value": 1580.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -6525,7 +6525,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "One carbon bonded to two oxygens. The exhaust of combustion and the feedstock of photosynthesis.",
-      "base_sell_value": 1010.0,
+      "base_sell_value": 1180.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -6579,7 +6579,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A powerful oxidizing acid of nitrogen, oxygen, and hydrogen. The reagent behind fertilizers, explosives, and etched metal.",
-      "base_sell_value": 2900.0,
+      "base_sell_value": 3550.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -6606,7 +6606,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The simplest two-carbon hydrocarbon. A short link in the chain that organic chemistry builds outward without end.",
-      "base_sell_value": 7990.0,
+      "base_sell_value": 6970.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -6633,7 +6633,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A hydrocarbon with an oxygen-hydrogen head — the first alcohol. Solvent, fuel, and a stepping stone to more complex organics.",
-      "base_sell_value": 8830.0,
+      "base_sell_value": 7810.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -6661,7 +6661,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A folded chain of amino acids. Enzymes, motors, and scaffolds — proteins do nearly all the work of a living cell.",
-      "base_sell_value": 474000.0,
+      "base_sell_value": 477000.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_biology",
       "planned": true
@@ -6797,7 +6797,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The powerhouse of the cell. A membrane-bound organelle that burns fuel into usable energy.",
-      "base_sell_value": 2980000.0,
+      "base_sell_value": 2990000.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_biology",
       "planned": true
@@ -6851,7 +6851,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The first complete cell: a membrane enclosing ribosomes, energy, and a loop of DNA. Simple, ancient, and alive.",
-      "base_sell_value": 8800000.0,
+      "base_sell_value": 8810000.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_biology",
       "planned": true
@@ -7381,7 +7381,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "HCN: deadly to us, yet five of them make adenine, a letter of the genetic code.",
-      "base_sell_value": 4250.0,
+      "base_sell_value": 4380.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7407,7 +7407,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "CO(NH2)2: the first organic molecule made from inorganic ones (Wohler, 1828).",
-      "base_sell_value": 4440.0,
+      "base_sell_value": 5900.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7433,7 +7433,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "C2H4: the simplest alkene, a plant hormone and the start of plastics.",
-      "base_sell_value": 6210.0,
+      "base_sell_value": 5190.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7459,7 +7459,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "C2H2: a triple-bonded fuel that burns hot enough to weld.",
-      "base_sell_value": 6400.0,
+      "base_sell_value": 5380.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7745,7 +7745,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The simplest amino acid.",
-      "base_sell_value": 26400.0,
+      "base_sell_value": 27100.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7771,7 +7771,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A small amino acid, built from formaldehyde and ammonia.",
-      "base_sell_value": 26500.0,
+      "base_sell_value": 27100.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7797,7 +7797,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "An amino acid with an alcohol group.",
-      "base_sell_value": 48300.0,
+      "base_sell_value": 49000.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7823,7 +7823,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "The amino acid with sulfur: its bridges hold proteins in shape.",
-      "base_sell_value": 77000.0,
+      "base_sell_value": 77700.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7875,7 +7875,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A nucleobase made from five HCN: the A in DNA and the A in ATP.",
-      "base_sell_value": 44000.0,
+      "base_sell_value": 44600.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7901,7 +7901,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A nucleobase: the G in the genetic code.",
-      "base_sell_value": 45500.0,
+      "base_sell_value": 46100.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7927,7 +7927,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "A nucleobase: the C in the genetic code.",
-      "base_sell_value": 39900.0,
+      "base_sell_value": 40300.0,
       "isotope_sell_multiplier": 1.0,
       "world": "world_chemistry",
       "planned": true
@@ -7979,7 +7979,7 @@
       "is_secondary_particle": false,
       "particle_uses": 0,
       "codex_entry": "Two amino acids joined by a peptide bond: the start of every protein.",
-      "base_sell_value": 134000.0,
+      "base_sell_value": 135000.0,
       "isotope_sell_multiplier": 1.0,
       "planned": true
     },
@@ -8593,7 +8593,7 @@
       "output_item": "methane",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 40.0,
+      "base_craft_time": 25.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 200.0,
@@ -8620,7 +8620,7 @@
       "output_item": "ammonia",
       "output_quantity": 2,
       "byproducts": [],
-      "base_craft_time": 36.0,
+      "base_craft_time": 72.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 200.0,
@@ -11000,7 +11000,7 @@
       "output_item": "carbon_dioxide",
       "output_quantity": 1,
       "byproducts": [],
-      "base_craft_time": 20.0,
+      "base_craft_time": 25.0,
       "manual_craft_time": 0.0,
       "power_cost_is_dynamic": false,
       "fixed_power_cost_ev": 200.0,
