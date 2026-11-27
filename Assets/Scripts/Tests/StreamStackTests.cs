@@ -59,8 +59,47 @@ namespace MobileIdleBuilder.Tests
         [Test]
         public void VisualScale_GrowsWithTheStack()
         {
-            Assert.AreEqual(1f,   StreamStackRules.VisualScale(1), 1e-5f);
-            Assert.AreEqual(1.6f, StreamStackRules.VisualScale(5), 1e-5f);
+            Assert.AreEqual(1f,    StreamStackRules.VisualScale(1), 1e-5f);
+            Assert.AreEqual(1.32f, StreamStackRules.VisualScale(5), 1e-5f);
+        }
+
+        [Test]
+        public void StackColor_NoneForOne_ADistinctColourForEachLargerStack()
+        {
+            Assert.AreEqual(0f, StreamStackRules.StackColor(1).a, "a single unit has no glow");
+            var seen = new System.Collections.Generic.HashSet<UnityEngine.Color>();
+            for (int q = 2; q <= StreamStackRules.Max; q++)
+            {
+                var c = StreamStackRules.StackColor(q);
+                Assert.AreEqual(1f, c.a, $"stack of {q} has a colour");
+                Assert.IsTrue(seen.Add(c), $"stack of {q} has its own colour");
+            }
+        }
+
+        [Test]
+        public void Feedstocks_AreDrawnFromThePhysicsAtoms_BondedAsInLife()
+        {
+            var f = BeltItemVisuals.Feedstocks;
+            Assert.AreEqual((6, 6, 1, 0), f["graphite"],     "graphite is the carbon atom");
+            Assert.AreEqual((1, 0, 2, 1), f["hydrogen_gas"], "H-H: single bond");
+            Assert.AreEqual((8, 8, 2, 2), f["oxygen_gas"],   "O=O: double bond");
+            Assert.AreEqual((7, 7, 2, 3), f["nitrogen_gas"], "N≡N: triple bond");
+        }
+
+        [Test]
+        public void DiatomicPair_FitsAStreamSlot()
+        {
+            // Two outer rings plus the gap between nuclei fit in DiatomicWidth, which is under the item spacing (0.5).
+            Assert.LessOrEqual(BeltItemVisuals.DiatomicWidth * StreamStackRules.VisualScale(StreamStackRules.Max), 0.55f);
+            Assert.Less(BeltItemVisuals.DiatomicSpacing, 2f, "the outer shells overlap, as in a covalent bond");
+        }
+
+        [Test]
+        public void BondMesh_HasOneStickPerSharedPair()
+        {
+            int Verts(int order) => BeltItemVisuals.BondMesh(order, 0.1f, UnityEngine.Color.white).vertexCount;
+            Assert.AreEqual(2 * Verts(1), Verts(2));
+            Assert.AreEqual(3 * Verts(1), Verts(3));
         }
 
         [Test]

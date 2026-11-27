@@ -203,6 +203,8 @@ Blender mockup first.
   item; `ConveyorVisualizer` pools all item visuals (`AcquireItemVisual` / `ReleaseItemVisual`, max 64
   per id) and never billboards the 3D particles.
 - Both shaders are in `m_AlwaysIncludedShaders`. Tests: `Assets/Scripts/Tests/BeltItemVisualsTests.cs`.
+- **Chemistry feedstocks (2026-11-27):** the mined raw resources reuse the Physics atoms (`BeltItemVisuals.Feedstocks`, `BuildFeedstock`): `graphite` is the carbon atom; `hydrogen_gas`, `oxygen_gas` and `nitrogen_gas` are two atoms side by side, outer shells overlapping (nuclei `DiatomicSpacing` = 1.4 ring radii apart), the pair shrunk to `DiatomicWidth` 0.40 tiles, joined by electron-teal bond sticks, one per shared pair (H-H 1, O=O 2, N≡N 3, `BondMesh`, `BondGap` 0.03). Facing Camera, like atoms. Other Chemistry minerals (sulfur, phosphorus, salts) keep their icon tiles.
+- **Stream stacks (2026-11-27):** a stack carrying n > 1 units glows (`SetStackAura`, an ElectronCloud halo of radius `StackAuraRadius` 0.21, kept the same size around every kind of item) in `StreamStackRules.StackColor(n)`: green 2, blue 3, purple 4, gold 5 (loot-rarity order), and draws x`VisualScale` (+8% per extra unit). The inspector's stack buttons use the same colour (outline, filled when chosen), so the colour is one source.
 
 ### Field wire-mesh (tappable resource fields)
 - `Assets/Scripts/Gameplay/FieldWireMeshBuilder.cs` — line-topology grid mesh.
