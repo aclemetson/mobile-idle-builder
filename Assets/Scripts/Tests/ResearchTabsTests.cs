@@ -37,7 +37,23 @@ namespace MobileIdleBuilder.Tests
             Assert.AreEqual(WorldGate.Physics, Tab("heavy_elements"), "gated by Chemistry, but Physics research");
             Assert.AreEqual(WorldGate.Chemistry, Tab("chemistry_lab"));
             Assert.AreEqual(WorldGate.Metallurgy, Tab("roasting"), "unlocks the Metallurgy-only Materials Forge (2026-11-23)");
-            Assert.AreEqual("world_biology", Tab("biology_lab"));
+            Assert.AreEqual(WorldGate.Chemistry, Tab("biology_lab"), "opens Biology, so it is researched from Chemistry");
+            Assert.AreEqual("world_biology", Tab("cell_biology"));
+        }
+
+        [Test]
+        public void WorldGateResearch_IsNotInTheTabItOpens()
+        {
+            // A world's tab only shows once the world is open, so the research that opens it must live elsewhere
+            // (biology_lab sat in the Biology tab and could never be found, 2026-11-26).
+            foreach (var w in Resources.Load<WorldDatabaseSO>("WorldDatabase").allWorlds.Where(w => w != null))
+                foreach (var gate in w.prereqUnlockIds ?? new System.Collections.Generic.List<string>())
+                {
+                    var r = _research.FirstOrDefault(x => x.id == gate);
+                    if (r == null) continue;
+                    Assert.AreNotEqual(w.id, ResearchPanelSubController.TabOf(r),
+                        $"{gate} opens {w.id} but is listed in its tab, so it can never be seen");
+                }
         }
 
         [Test]
