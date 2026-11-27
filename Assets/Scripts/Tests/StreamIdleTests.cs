@@ -104,6 +104,35 @@ namespace MobileIdleBuilder.Tests
         }
 
         [Test]
+        public void ASecondSpringOnABranch_AddsItsFlowWhereTheBranchJoins()
+        {
+            // 2.5 L/s alone starves the synth (see FlowRunsOut_DownstreamBuildingStalls). A branch from a second Spring
+            // at (2,-4) runs north and joins at (2,0), saved the way GridSaveService saves it: through to the mouth.
+            var g = Grid(B(Spring, 0, 1), B(H2Ex, 1, 1), B(O2Ex, 2, 1), B(Synth, 3, 1), B(Cal, 6, 0), B(Spring, 2, -4));
+            var branch = new List<int> { 2, -3, 2, -2, 2, -1 };
+            for (int x = 2; x <= 5; x++) { branch.Add(x); branch.Add(0); }
+            g.conveyors.Add(new ConveyorSaveData { cells = branch.ToArray() });
+
+            var s = Run(g, springFlow: 2.5f);
+
+            Assert.AreEqual(1f, Rate(s, Water, delivered: true), 1e-4f, "past the join the synth has both Springs' water");
+        }
+
+        [Test]
+        public void ASpringBesideAnotherStream_DoesNotFeedThisOne()
+        {
+            // A second stream (y = 10) with its own Spring: none of its water reaches the first.
+            var g = Grid(B(Spring, 0, 1), B(H2Ex, 1, 1), B(O2Ex, 2, 1), B(Synth, 3, 1), B(Cal, 6, 0), B(Spring, 0, 11));
+            var other = new List<int>();
+            for (int x = 0; x <= 3; x++) { other.Add(x); other.Add(10); }
+            g.conveyors.Add(new ConveyorSaveData { cells = other.ToArray() });
+
+            var s = Run(g, springFlow: 2.5f);
+
+            Assert.AreEqual(2f * 0.5f / 3f, Rate(s, Water, delivered: true), 1e-4f, "still starved: the other Spring feeds its own stream");
+        }
+
+        [Test]
         public void NoSpring_ProducesNothing()
         {
             var s = Run(Grid(B(H2Ex, 1, 1), B(Cal, 6, 0)));

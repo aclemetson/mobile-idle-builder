@@ -54,6 +54,15 @@ namespace MobileIdleBuilder
     {
         public byte  OnStream;
         public float Ratio;
+
+        /// <summary>
+        /// The stream this building is on (2026-11-27): every tile linked to it, branches that merge in included.
+        /// Its Springs' total flow, what every building on it draws, and how many Springs feed it. 0 when the
+        /// building is beside no stream. Streams that never join are tracked apart.
+        /// </summary>
+        public float StreamSupply;
+        public float StreamDraw;
+        public int   StreamSprings;
     }
 
     /// <summary>
@@ -67,11 +76,18 @@ namespace MobileIdleBuilder
         public byte Size;
     }
 
-    /// <summary>Singleton: totals for the HUD flow readout (StreamFlowSystem).</summary>
+    /// <summary>
+    /// Singleton: totals for the HUD flow readout (StreamFlowSystem). Supply/Draw add up every stream on the
+    /// site; each stream is still shared on its own (a Spring only feeds the stream it pours into).
+    /// </summary>
     public struct StreamGridState : IComponentData
     {
         public float Supply;
         public float Draw;
         public int   StalledCount;
+        /// <summary>Separate streams on the site (a branch that merges into another is part of it).</summary>
+        public int   StreamCount;
+        /// <summary>Streams whose buildings draw more than their own Springs supply (warned even when the site total is fine).</summary>
+        public int   OverdrawnCount;
     }
 }
