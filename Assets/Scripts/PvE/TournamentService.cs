@@ -54,6 +54,15 @@ namespace MobileIdleBuilder
             if (Instance == this) Instance = null;
         }
 
+        /// <summary>Account deletion: forget the deleted player's server status; the new player fetches their own.</summary>
+        public void ResetForNewAccount()
+        {
+            LastStatus = null;
+            _pendingRetryAt = 0;
+            _forceSnapshot = true;
+            OnChanged?.Invoke();
+        }
+
         // ── State ─────────────────────────────────────────────────────────
 
         /// <summary>Server time as far as the client knows it (the dev console's debug time wins).</summary>

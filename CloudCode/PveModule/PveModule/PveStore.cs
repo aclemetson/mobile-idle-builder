@@ -123,6 +123,37 @@ namespace MobileIdleBuilder.PveModule
             _api.CloudSaveData.SetPrivateCustomItemAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId, customId,
                 new SetItemBody(key, Serialize(value), string.IsNullOrEmpty(writeLock) ? null : writeLock));
 
+        /// <summary>Deletes one custom item key. A missing key or custom ID counts as deleted.</summary>
+        public async Task DeleteCustom(string customId, string key)
+        {
+            try
+            {
+                await _api.CloudSaveData.DeletePrivateCustomItemAsync(_ctx, _ctx.ServiceToken, key: key, projectId: _ctx.ProjectId, customId: customId);
+            }
+            catch (ApiException e) when (IsNotFound(e)) { }
+        }
+
+        // ── Account deletion ──────────────────────────────────────────────
+
+        /// <summary>
+        /// Deletes every Cloud Save key the player has, in all four access classes (default: the game save;
+        /// protected: the PvE profile; public and private: unused today, cleared so nothing is left behind).
+        /// A class with no data counts as deleted.
+        /// </summary>
+        public async Task DeleteAllPlayerData(string playerId)
+        {
+            await IgnoreNotFound(() => _api.CloudSaveData.DeleteItemsAsync(_ctx, _ctx.ServiceToken, projectId: _ctx.ProjectId, playerId: playerId));
+            await IgnoreNotFound(() => _api.CloudSaveData.DeleteProtectedItemsAsync(_ctx, _ctx.ServiceToken, projectId: _ctx.ProjectId, playerId: playerId));
+            await IgnoreNotFound(() => _api.CloudSaveData.DeletePublicItemsAsync(_ctx, _ctx.ServiceToken, projectId: _ctx.ProjectId, playerId: playerId));
+            await IgnoreNotFound(() => _api.CloudSaveData.DeletePrivateItemsAsync(_ctx, _ctx.ServiceToken, projectId: _ctx.ProjectId, playerId: playerId));
+        }
+
+        static async Task IgnoreNotFound(Func<Task> call)
+        {
+            try { await call(); }
+            catch (ApiException e) when (IsNotFound(e)) { }
+        }
+
         // ── Protected player data (the PvE profile) ────────────────────────
 
         public async Task<Locked<PveProfile>> GetProfile(string playerId)

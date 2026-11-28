@@ -49,5 +49,17 @@ namespace MobileIdleBuilder
         /// Google account. Never throws.
         /// </summary>
         Task<GoogleSignInOutcome> SignInWithGoogleAsync(GoogleAuthMode mode);
+
+        /// <summary>
+        /// Settings "Delete account": deletes the signed-in UGS account (and its Google link) and signs out,
+        /// leaving no session to resume. Throws when the delete fails (the account is then untouched).
+        /// </summary>
+        Task DeleteAccountAsync();
+
+        /// <summary>
+        /// After <see cref="DeleteAccountAsync"/> and the local wipe: signs in a brand-new guest so the session keeps
+        /// working without a relaunch, and stops silent Google linking. Never throws; false = offline until relaunch.
+        /// </summary>
+        Task<bool> StartNewGuestAsync();
     }
 }

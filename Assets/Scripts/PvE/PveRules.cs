@@ -293,6 +293,19 @@ namespace MobileIdleBuilder
             return null;
         }
 
+        // ── Account deletion ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// The bracket's member list without <paramref name="playerId"/>, for deleting a player's account. Null when
+        /// there is nothing to write (no bracket, or the player is not in it). Settlement reads the member list,
+        /// so a removed player is neither ranked nor given a profile again.
+        /// </summary>
+        public static PveBracketMeta WithoutPlayer(PveBracketMeta meta, string playerId)
+        {
+            if (meta?.playerIds == null || string.IsNullOrEmpty(playerId)) return null;
+            return meta.playerIds.RemoveAll(id => id == playerId) > 0 ? meta : null;
+        }
+
         // ── Ids ──────────────────────────────────────────────────────────────
 
         public static string WeekIndexId(string week) => $"pve_{week}";

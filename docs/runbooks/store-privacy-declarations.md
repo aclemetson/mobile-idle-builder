@@ -23,8 +23,10 @@ Policy URL: https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html
 as of 2026-11-26 (purchase history used for analytics since #567).
 
 Everything goes over HTTPS (all UGS, LevelPlay and store endpoints), so **encrypted in transit: yes**.
-Deletion: by email request. For the Play "delete account" URL use
-https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html#delete.
+Deletion: in the app (Settings > Delete account: account, cloud save and league data, immediately) or by email
+request (also covers analytics records). For the Play "delete account" URL use
+https://aclemetson.github.io/mobile-idle-builder/privacy-policy.html#delete. Apple: in-app account deletion is
+required for apps with account creation (Guideline 5.1.1(v)); the Settings button covers it.
 
 The Google account email is stored only on the device (PlayerPrefs, shown in Settings), so it is not
 "collected" in the store sense.

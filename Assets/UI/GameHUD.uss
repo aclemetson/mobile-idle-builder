@@ -423,6 +423,11 @@
     color: #d2a8ff;
 }
 
+/* Settings "Delete account": red text so it never reads as a normal option. */
+.drawer-nav-btn--danger {
+    color: var(--color-danger);
+}
+
 .drawer-nav-btn:hover {
     background-color: rgba(0, 229, 255, 0.08);
     border-color: rgba(0, 229, 255, 0.2);

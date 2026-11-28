@@ -54,6 +54,12 @@ dotnet test
 
 - `SetLook(nameColor, title)` (#500): the leaderboard look, as PveCosmetics ids validated server-side. Stored on the profile and on this week's member. Join copies it onto new members, and Board returns it per row. Redeploy the module so the game's equip calls stop failing; until then the client just retries on each refresh.
 
+- `DeleteMyData()` (account deletion, `docs/agents/tasks/feature-account-deletion.md`): acts on the caller only.
+  Removes them from their current bracket (`meta.playerIds` and the `m_<playerId>` member record), then deletes
+  every Cloud Save key they own in all four access classes (game save, `pve_profile`, public, private). Returns
+  `{"deleted":true}`; failures throw, so the client keeps the account and the player can retry. Settings "Delete
+  account" needs it deployed: without it the button reports a `network:` error and deletes nothing.
+
 ## CI deploy (automatic)
 
 `release-internal.yml` deploys the module to the **development** environment whenever integration merges into a

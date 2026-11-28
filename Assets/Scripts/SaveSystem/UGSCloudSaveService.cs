@@ -27,6 +27,15 @@ namespace MobileIdleBuilder
         /// <summary>PlayerPrefs: email of the Google account last signed in on this device (display only).</summary>
         public const string k_GoogleEmailKey = "auth_google_email";
 
+        /// <summary>
+        /// PlayerPrefs: set after the player deleted their account. A guest normally links Google silently on
+        /// launch, which would quietly attach the deleted player's Google account to the new guest. While set,
+        /// Google is linked only from Settings "Sign in with Google" (which clears it).
+        /// </summary>
+        public const string k_GoogleAutoLinkOffKey = "auth_google_autolink_off";
+
+        internal static bool GoogleAutoLinkOff => PlayerPrefs.GetInt(k_GoogleAutoLinkOffKey, 0) == 1;
+
         bool _initialized;
         bool _initFailed;
         bool _hasGoogle;
@@ -157,6 +166,11 @@ namespace MobileIdleBuilder
         async Task SignInFreshAsync()
         {
             var auth = AuthenticationService.Instance;
+            if (GoogleAutoLinkOff)
+            {
+                await auth.SignInAnonymouslyAsync();
+                return;
+            }
             GoogleCredential cred;
             try
             {
@@ -194,6 +208,12 @@ namespace MobileIdleBuilder
                 return GoogleSignInOutcome.Failed;
             }
             if (_hasGoogle) return GoogleSignInOutcome.AlreadyGoogle;
+            // After an account deletion only the player's own tap in Settings links Google again.
+            if (mode != GoogleAuthMode.Interactive && GoogleAutoLinkOff)
+            {
+                LastSignInError = null;
+                return GoogleSignInOutcome.Failed;
+            }
 
             var auth = AuthenticationService.Instance;
             GoogleCredential cred;
@@ -290,9 +310,56 @@ namespace MobileIdleBuilder
 
         static void RememberEmail(string email)
         {
-            if (string.IsNullOrEmpty(email)) return;
+            // Google is attached again (only the Settings button gets here while the flag is set).
+            PlayerPrefs.DeleteKey(k_GoogleAutoLinkOffKey);
+            if (string.IsNullOrEmpty(email)) { PlayerPrefs.Save(); return; }
             PlayerPrefs.SetString(k_GoogleEmailKey, email);
             PlayerPrefs.Save();
+        }
+
+        public async Task DeleteAccountAsync()
+        {
+            if (!_initialized || _initFailed) throw new InvalidOperationException("Not connected.");
+            var auth = AuthenticationService.Instance;
+            if (!auth.IsSignedIn) throw new InvalidOperationException("Not signed in.");
+
+            string deletedId = auth.PlayerId;
+            await auth.DeleteAccountAsync();   // throws on failure: the account and its Google link are untouched
+            GameLogger.Info($"[UGSCloudSave] Deleted account {deletedId}.");
+
+            _hasGoogle = false;
+            AccountSwitched = false;
+            LastSignInError = null;
+            PlayerPrefs.DeleteKey(k_GoogleEmailKey);
+            PlayerPrefs.SetInt(k_GoogleAutoLinkOffKey, 1);
+            PlayerPrefs.Save();
+            if (auth.IsSignedIn) auth.SignOut(true);
+            if (auth.SessionTokenExists) auth.ClearSessionToken();   // never resume the deleted player
+        }
+
+        public async Task<bool> StartNewGuestAsync()
+        {
+            // Set again here: the local wipe between the two steps clears every PlayerPrefs key.
+            PlayerPrefs.SetInt(k_GoogleAutoLinkOffKey, 1);
+            PlayerPrefs.Save();
+            try
+            {
+                var auth = AuthenticationService.Instance;
+                if (auth.IsSignedIn) auth.SignOut(true);
+                await auth.SignInAnonymouslyAsync();
+                _initialized = true;
+                _initFailed = false;
+                GameLogger.Info($"[UGSCloudSave] New guest player {auth.PlayerId} after account deletion.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Offline for the rest of the session; the next launch signs in a fresh guest.
+                _initialized = false;
+                _initFailed = true;
+                GameLogger.Warning($"[UGSCloudSave] Guest sign-in after account deletion failed: {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>

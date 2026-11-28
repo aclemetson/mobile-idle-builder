@@ -79,6 +79,8 @@ namespace MobileIdleBuilder.PlayModeTests
             public bool AccountSwitched => Switched;
             public Task<GoogleSignInOutcome> SignInWithGoogleAsync(GoogleAuthMode mode) =>
                 Task.FromResult(GoogleSignInOutcome.AlreadyGoogle);
+            public Task DeleteAccountAsync()                  => Task.CompletedTask;
+            public Task<bool> StartNewGuestAsync()            => Task.FromResult(true);
         }
 
         [Test]
