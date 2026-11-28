@@ -279,6 +279,34 @@ namespace MobileIdleBuilder.PveModule
             return Ser(new PveSnapshotResponse { accepted = true, t = t });
         }
 
+        // ── DeleteMyData (account deletion) ───────────────────────────────
+
+        /// <summary>
+        /// The first step of the Settings "Delete account" flow (docs/agents/tasks/feature-account-deletion.md):
+        /// takes the caller off their bracket (member list and member record, so their name leaves the board and
+        /// settlement skips them), then deletes every Cloud Save key they own, the game save included. Acts only on
+        /// the caller; there is deliberately no player id argument. The client deletes the UGS account afterwards.
+        /// Only the current bracket is cleared: the profile does not record older ones (they are settled history).
+        /// Failures throw, so the client stops before deleting the account and the player can retry.
+        /// </summary>
+        [CloudCodeFunction("DeleteMyData")]
+        public async Task<string> DeleteMyData(IExecutionContext ctx)
+        {
+            var store = new PveStore(_api, ctx);
+            var profile = (await store.GetProfile(ctx.PlayerId)).Value;
+            string bracketId = profile?.bracketId;
+            if (!string.IsNullOrEmpty(bracketId))
+            {
+                await PveStore.WithRetry(
+                    () => store.GetCustom<PveBracketMeta>(bracketId, PveRules.MetaKey),
+                    meta => PveRules.WithoutPlayer(meta, ctx.PlayerId),
+                    (meta, lk) => store.SetCustom(bracketId, PveRules.MetaKey, meta, lk));
+                await store.DeleteCustom(bracketId, PveRules.MemberKey(ctx.PlayerId));
+            }
+            await store.DeleteAllPlayerData(ctx.PlayerId);
+            return Ser(new PveDeleteResponse { deleted = true });
+        }
+
         // ── Board ─────────────────────────────────────────────────────────
 
         [CloudCodeFunction("Board")]

@@ -55,6 +55,10 @@ namespace MobileIdleBuilder
         public static Task<PveClaimResponse> Claim(string week) =>
             Send<PveClaimResponse>("Claim", new Dictionary<string, object> { { "week", week } });
 
+        /// <summary>Account deletion step 1: the server removes the caller from their bracket and deletes all their Cloud Save data.</summary>
+        public static Task<PveDeleteResponse> DeleteMyData() =>
+            Send<PveDeleteResponse>("DeleteMyData", new Dictionary<string, object>());
+
         static Dictionary<string, object> Args(params (string key, object value)[] pairs)
         {
             var d = new Dictionary<string, object>();

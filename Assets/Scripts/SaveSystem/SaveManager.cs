@@ -209,13 +209,16 @@ namespace MobileIdleBuilder
         // failure, the previous marker is put back so the unpushed progress still counts as local change.
         async Task<bool> PushAndRecord()
         {
+            if (CloudPushSuspended) return false;
             ulong hash = _local.LastWrittenContentHash;
             _pushingHash = hash;
             _lastPushStartedAt = RealtimeNow();
             var previousMarker = SaveSync.LoadMarker();
             string playerId = _cloud.AccountPlayerId;
             SaveSync.SaveMarker(playerId, _current.lastSaved, hash);
-            bool ok = await _cloud.PushAsync(_current);
+            var push = _cloud.PushAsync(_current);
+            _pushInFlight = push;
+            bool ok = await push;
             if (ok) _lastPushedHash = hash;
             else if (!string.IsNullOrEmpty(playerId)) SaveSync.RestoreMarker(previousMarker);
             return ok;
@@ -679,12 +682,35 @@ namespace MobileIdleBuilder
             onDone?.Invoke(!task.IsFaulted);
         }
 
-        /// <summary>Resets in-memory save state to a blank new game. Call before scene reload when wiping saves.</summary>
-        public void ResetToFreshSave()
+        /// <summary>
+        /// Resets in-memory save state to a blank new game. Call before scene reload when wiping saves.
+        /// <paramref name="playerId"/>: the UGS player the new save belongs to (account deletion signs in a new
+        /// guest); null generates a local id, which the next launch's reconcile replaces.
+        /// </summary>
+        public void ResetToFreshSave(string playerId = null)
         {
-            _current  = new SaveData { playerId = GeneratePlayerId() };
+            _current  = new SaveData { playerId = string.IsNullOrEmpty(playerId) ? GeneratePlayerId() : playerId };
             IsNewGame = true;
         }
+
+        // ── Account deletion ──────────────────────────────────────────────────
+
+        // The last cloud push started (completed when none is running).
+        Task<bool> _pushInFlight = Task.FromResult(true);
+
+        /// <summary>True while an account deletion runs: no cloud pushes, so none can recreate the deleted save.</summary>
+        public bool CloudPushSuspended { get; private set; }
+
+        /// <summary>Stops cloud pushes and waits for one already uploading, so the server delete is the last write.</summary>
+        public async Task SuspendCloudPushesAsync()
+        {
+            CloudPushSuspended = true;
+            try { await _pushInFlight; }
+            catch (Exception) { /* a failed push wrote nothing */ }
+        }
+
+        /// <summary>The deletion failed before the account was gone: saving to the cloud carries on.</summary>
+        public void ResumeCloudPushes() => CloudPushSuspended = false;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         /// <summary>
