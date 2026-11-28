@@ -209,7 +209,7 @@ namespace MobileIdleBuilder
         // failure, the previous marker is put back so the unpushed progress still counts as local change.
         async Task<bool> PushAndRecord()
         {
-            if (CloudPushSuspended) return false;
+            if (CloudPushSuspended || AccountSuspension.IsSuspended) return false;
             ulong hash = _local.LastWrittenContentHash;
             _pushingHash = hash;
             _lastPushStartedAt = RealtimeNow();
@@ -339,6 +339,14 @@ namespace MobileIdleBuilder
 
             var fetchTask = _cloud.FetchAsync(_current.playerId);
             yield return new WaitUntil(() => fetchTask.IsCompleted);
+
+            // Banned (the load was refused, not empty): keep this device's save and leave the cloud copy alone, so
+            // lifting the ban can't be mistaken for a new account. Pushes stay off for the session (PushAndRecord).
+            if (AccountSuspension.IsSuspended)
+            {
+                GameLogger.Warning("[SaveManager] Account suspended: cloud save skipped; running local-only.");
+                yield break;
+            }
 
             yield return SyncWithCloudSave(fetchTask.Result, IsNewGame, _cloud.AccountSwitched);
         }

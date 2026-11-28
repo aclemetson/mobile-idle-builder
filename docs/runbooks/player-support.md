@@ -14,12 +14,22 @@ Access, Logs, and State (Cloud Save). We do not use Economy, Progression (Leader
 ## Common tasks
 
 ### Ban a cheater (Access tab)
-- **Disable** the player. Their next sign-in fails, so they cannot reach Cloud Save or PvE Cloud Code.
-  The game falls back to local-only play; nothing else breaks.
+- **Ban** the player in the Access tab. Verified on a device (2026-11-28): the player stays signed in, but
+  every service call is refused with HTTP 403 and Unity error code 57 ("Principal is not authorized to
+  access resource"): Cloud Save load and push, player name, tournament Cloud Code.
+- The game recognizes that (`AccountSuspension.cs`). After the first refused call it shows a one-time
+  "Account suspended" card with the support email. Settings shows the account as suspended, cloud sync and
+  tournament calls stop for the session, and local play goes on. It never treats the refused cloud load as
+  "no cloud save" or makes a new player, so the cloud copy is left as it was.
+- A ban applied while the game is running takes effect on the next refused call. The card shows then, or on
+  the next launch if nothing calls a service before that.
 - Their existing PvE bracket entry stays on the board until settlement. To remove it before then, edit the
   bracket's `m_<playerId>` custom item in Cloud Save (Custom items -> the bracket id) or wait for the
   week to settle.
-- **Re-enable** to lift the ban. Note the reason and date in the issue tracking the report.
+- **Lift** the ban in the same tab. The player is back after relaunching the app (the suspension is never
+  saved), and their next push uploads the progress they made on the device meanwhile. Note the reason and
+  date in the issue tracking the report.
+- *Disable player* (a different dashboard action) has not been tested with the game; use the ban.
 
 ### Delete a player's data (email deletion requests)
 Players can delete their own account in the game (Settings > Delete account,

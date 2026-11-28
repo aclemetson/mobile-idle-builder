@@ -104,6 +104,24 @@ namespace MobileIdleBuilder.PlayModeTests
         }
 
         [Test]
+        public void Suspended_NoCloudPush_OnBackground_OrFocusLoss()
+        {
+            var sm    = NewSaveManager();
+            var cloud = new FakeCloud();
+            sm.SetCloudServiceForTesting(cloud);
+            AccountSuspension.MarkSuspended();
+            try
+            {
+                InvokePrivate(sm, "OnApplicationPause", true);
+                Assert.AreEqual(0, cloud.PushCount, "a banned account must not keep pushing (every push is refused)");
+            }
+            finally
+            {
+                AccountSuspension.ResetForTests();
+            }
+        }
+
+        [Test]
         public void OnApplicationPause_Backgrounded_PushesToCloud()
         {
             var sm    = NewSaveManager();

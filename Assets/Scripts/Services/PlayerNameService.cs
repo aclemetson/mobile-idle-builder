@@ -113,6 +113,7 @@ namespace MobileIdleBuilder
             try { server = await backend.GetAsync(); }
             catch (Exception e)
             {
+                AccountSuspension.Report(e);
                 GameLogger.Warning($"[PlayerName] Reading the name failed: {e.Message}");
                 return;
             }

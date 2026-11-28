@@ -228,10 +228,10 @@ namespace MobileIdleBuilder
             if (_accountLabel != null)
                 _accountLabel.text = AccountText(kind, cloud?.AccountEmail, cloud?.AccountPlayerId,
                                                  kind == CloudAccountKind.Guest ? cloud?.LastSignInError : null,
-                                                 _accountStatus);
+                                                 _accountStatus ?? (AccountSuspension.IsSuspended ? SuspendedLine : null));
             if (_btnGoogleSignIn != null)
             {
-                HUDController.SetElementVisible(_btnGoogleSignIn, kind == CloudAccountKind.Guest);
+                HUDController.SetElementVisible(_btnGoogleSignIn, kind == CloudAccountKind.Guest && !AccountSuspension.IsSuspended);
                 _btnGoogleSignIn.SetEnabled(!_signingIn);
                 _btnGoogleSignIn.text = _signingIn ? "Signing in..." : "Sign in with Google";
             }
@@ -242,6 +242,9 @@ namespace MobileIdleBuilder
                 _btnDeleteAccount.text = _deleting ? "Deleting account..." : "Delete account";
             }
         }
+
+        /// <summary>The account row's status line while the account is suspended (AccountSuspension).</summary>
+        internal const string SuspendedLine = "Account suspended: cloud saves and tournaments are off. Progress is saved on this device.";
 
         // ── Delete account (store requirement) ───────────────────────────────
 
