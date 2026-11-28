@@ -38,6 +38,7 @@ Each task file opens with its own Required-reading line and a Status line; updat
 |---|---|---|
 | `tasks/feature-worlds-chem-bio.md` — Chemistry & Biology tracks (worlds) | Phases 1–5 done (PRs #119–128); only P6 economy re-tier remains | XL (5 phases + deferred re-tier) |
 | `tasks/feature-pve-tournaments.md` — weekly 24h league tournaments (UGS Cloud Code), nicknames, item stars | phases 1-5 merged (#492-#496), phase 6 on feat/pve-6-onboarding | XL (6 phases) |
+| `tasks/feature-economy-crystals.md` — Crystals on UGS Economy (server balance, checked grants, receipt redemption) behind `economy.enabled` | phase 1 (wallet + migration) on feat/economy-1-wallet | XL (5 phases) |
 | `tasks/feature-account-deletion.md` — Settings "Delete account" (store requirement) + Cloud Code `DeleteMyData` | built on feat/account-deletion, on-device check pending | M |
 
 ### Done (`tasks/archive/`)

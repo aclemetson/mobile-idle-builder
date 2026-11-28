@@ -110,6 +110,7 @@ namespace MobileIdleBuilder
         {
             yield return ReconcileWithCloud();
             CloudReconcileDone = true;
+            _ = CrystalWallet.RefreshAsync();   // economy.enabled only: server Crystals balance (+ one-time migration)
 
             // Telemetry starts after reconcile so UGS auth + Remote Config flags are ready and
             // _current.playerId has been synced to the UGS id. Placed here (not inside
@@ -243,6 +244,7 @@ namespace MobileIdleBuilder
         // Works identically on Android and iOS — no platform directives needed.
         void OnReturnFromBackground()
         {
+            if (CloudReconcileDone) _ = CrystalWallet.RefreshAsync();   // economy.enabled only
             if (ECSLoadBridge.Instance == null || !ECSLoadBridge.Instance.IsLoaded)
             {
                 GameLogger.Debug($"[Idle] OnReturnFromBackground — ECS not ready (Instance={ECSLoadBridge.Instance != null} IsLoaded={ECSLoadBridge.Instance?.IsLoaded})");

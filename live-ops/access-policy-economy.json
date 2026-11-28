@@ -1,0 +1,12 @@
+{
+  "_comment": "Project Access Control policy for Crystals on UGS Economy (docs/runbooks/economy-setup.md). Players may read Economy but never change it; Cloud Code (service token) is not a Player principal, so the CrystalWallet/Spend/Grant functions still work. Blocked requests return HTTP 403 with code 56. Apply per environment: PATCH https://services.api.unity.com/access/v1/projects/{projectId}/environments/{environmentId}/resource-policy with this body minus _comment.",
+  "statements": [
+    {
+      "Sid": "deny-player-economy-writes",
+      "Effect": "Deny",
+      "Action": ["Write"],
+      "Principal": "Player",
+      "Resource": "urn:ugs:economy:*"
+    }
+  ]
+}
