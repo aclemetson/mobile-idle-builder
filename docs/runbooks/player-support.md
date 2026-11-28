@@ -45,6 +45,28 @@ Crystals live in the save (client-side), not in Economy, so the dashboard cannot
 save key's crystal balance in the State tab while the player is offline, and ask them to relaunch. If
 this becomes common, that is the signal to move crystals to UGS Economy.
 
+### Purge test players (the Editor's leftover guests)
+Every "clear all save" or lost Editor sign-in creates an anonymous player nobody can sign in as again.
+`scripts/purge_test_players.py` deletes them in bulk: Cloud Save data in both environments first, then the
+account (deleting only the account would leave the data behind). It never touches a player with a linked
+identity (Google, username), any production data, or a save whose `platforms` stamp lists Android or iOS
+(`SaveData.platforms`, `SavePlatform.cs`). Saves written before the stamp existed (2026-11-28) are kept
+unless you pass `--include-unstamped`.
+
+1. Unity Cloud -> Administration -> Service accounts -> create `ops-player-purge` with project roles for
+   Player Authentication admin (list + delete players) and **Cloud Save Editor**. Keep the key in the
+   password manager only (`docs/runbooks/secrets.md`).
+2. In a shell, set `UGS_PURGE_SERVICE_KEY_ID`, `UGS_PURGE_SERVICE_KEY_SECRET`, `UGS_PROJECT_ID`,
+   `UGS_ENV_ID_DEVELOPMENT`, `UGS_ENV_ID_PRODUCTION` (ids from Projects -> Environments).
+3. Dry run: `python scripts/purge_test_players.py` (optionally `--created-before YYYY-MM-DD`). It prints a
+   keep/purge tally by reason and writes `purge-<timestamp>.jsonl`; nothing changes. Check a few of the
+   purge ids in Player Management before going on.
+4. Delete: the same command plus `--confirm` (at most `--max`, default 100, per run). Rate limits allow
+   roughly 500 player deletions per 30 minutes; the script waits on HTTP 429.
+5. Delete the service account key afterwards.
+
+The log files hold player ids only; delete them once you're done.
+
 ## Tabs we do not use
 - **Economy:** crystals are client-side for now. A move to Economy (server-authoritative balance, server
   receipt checks, dashboard grants) is a separate design task once crystal tampering matters; it needs an
