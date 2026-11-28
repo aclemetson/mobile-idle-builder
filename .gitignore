@@ -142,3 +142,6 @@ scripts/belt_items/renders/
 /CloudCode/**/obj/
 !/CloudCode/**/*.sln
 !/CloudCode/**/*.csproj
+
+# scripts/purge_test_players.py run logs (player ids)
+purge-*.jsonl
