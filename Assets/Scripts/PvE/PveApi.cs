@@ -67,7 +67,7 @@ namespace MobileIdleBuilder
             return d;
         }
 
-        static async Task<T> Send<T>(string function, Dictionary<string, object> args) where T : class, new()
+        internal static async Task<T> Send<T>(string function, Dictionary<string, object> args) where T : class, new()
         {
             // A suspended account (AccountSuspension) is refused by every endpoint: don't keep calling.
             if (AccountSuspension.IsSuspended) return WithError<T>(PveErrors.Suspended);

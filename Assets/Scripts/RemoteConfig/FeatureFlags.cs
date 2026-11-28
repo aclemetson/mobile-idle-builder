@@ -26,6 +26,7 @@ namespace MobileIdleBuilder
         // ── Keys ──────────────────────────────────────────────────────────────
         public const string PveEnabledKey         = "pve.enabled";
         public const string IapEnabledKey         = "iap.enabled";
+        public const string EconomyEnabledKey     = "economy.enabled";
         public const string AdsEnabledKey         = "ads.enabled";
         public const string AdsTestModeKey        = "ads.test_mode";
         public const string CloudSaveEnabledKey   = "cloudsave.enabled";
@@ -62,6 +63,8 @@ namespace MobileIdleBuilder
         // Chosen so a total fetch failure leaves the game in its current shipped behavior.
         public const bool PveEnabledDefault         = true;  // weekly PvE tournaments (kill-switch; backend: docs/runbooks/pve-backend-setup.md)
         public const bool IapEnabledDefault         = true;
+        // Crystals on UGS Economy (docs/agents/tasks/feature-economy-crystals.md). Off = the save holds the balance (shipped behaviour).
+        public const bool EconomyEnabledDefault     = false;
         public const bool AdsEnabledDefault         = true;  // rewarded-ad placements + Free Rewards panel
         // Test ads: no ad network, a "test ad" card instead, reward still granted. Defaults ON so a dev
         // build can never show a real ad unless the dashboard explicitly turns it off. Only read in dev
@@ -107,6 +110,7 @@ namespace MobileIdleBuilder
         {
             new FlagDef(PveEnabledKey,         FlagType.Bool),
             new FlagDef(IapEnabledKey,         FlagType.Bool),
+            new FlagDef(EconomyEnabledKey,     FlagType.Bool),
             new FlagDef(AdsEnabledKey,         FlagType.Bool),
             new FlagDef(AdsTestModeKey,        FlagType.Bool),
             new FlagDef(CloudSaveEnabledKey,   FlagType.Bool),
@@ -143,6 +147,7 @@ namespace MobileIdleBuilder
         // ── Typed accessors ───────────────────────────────────────────────────
         public static bool PveEnabled         => GetBool(PveEnabledKey,         PveEnabledDefault);
         public static bool IapEnabled         => GetBool(IapEnabledKey,         IapEnabledDefault);
+        public static bool EconomyEnabled     => GetBool(EconomyEnabledKey,     EconomyEnabledDefault);
         public static bool AdsEnabled         => GetBool(AdsEnabledKey,         AdsEnabledDefault);
 
         /// <summary>

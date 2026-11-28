@@ -175,6 +175,45 @@ namespace MobileIdleBuilder.PveModule
             _api.CloudSaveData.SetProtectedItemAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId, playerId,
                 new SetItemBody(PveRules.ProfileKey, Serialize(profile), string.IsNullOrEmpty(writeLock) ? null : writeLock));
 
+        // ── Crystals (UGS Economy + the protected crystal_ledger item) ─────
+
+        public async Task<Locked<CrystalLedger>> GetLedger(string playerId)
+        {
+            ApiResponse<GetItemsResponse> res;
+            try
+            {
+                res = await _api.CloudSaveData.GetProtectedItemsAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId,
+                    playerId, new List<string> { CrystalRules.LedgerKey });
+            }
+            catch (ApiException e) when (IsNotFound(e)) { return new Locked<CrystalLedger>(); }
+            foreach (var item in res.Data.Results)
+                if (item.Key == CrystalRules.LedgerKey)
+                    return new Locked<CrystalLedger> { Value = Deserialize<CrystalLedger>(item.Value), WriteLock = item.WriteLock };
+            return new Locked<CrystalLedger>();
+        }
+
+        public Task SetLedger(string playerId, CrystalLedger ledger, string writeLock) =>
+            _api.CloudSaveData.SetProtectedItemAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId, playerId,
+                new SetItemBody(CrystalRules.LedgerKey, Serialize(ledger), string.IsNullOrEmpty(writeLock) ? null : writeLock));
+
+        /// <summary>The player's Crystals balance, or null when the currency isn't configured (and published) here.</summary>
+        public async Task<long?> GetCrystals(string playerId)
+        {
+            var res = await _api.EconomyCurrencies.GetPlayerCurrenciesAsync(_ctx, _ctx.ServiceToken, _ctx.ProjectId, playerId);
+            foreach (var c in res.Data.Results ?? new List<Unity.Services.Economy.Model.CurrencyBalanceResponse>())
+                if (c.CurrencyId == CrystalRules.CurrencyId) return c.Balance;
+            return null;
+        }
+
+        /// <summary>Adds <paramref name="amount"/> (> 0) Crystals; returns the new balance.</summary>
+        public async Task<long> IncrementCrystals(string playerId, long amount)
+        {
+            var res = await _api.EconomyCurrencies.IncrementPlayerCurrencyBalanceAsync(_ctx, _ctx.ServiceToken,
+                _ctx.ProjectId, playerId, CrystalRules.CurrencyId,
+                new Unity.Services.Economy.Model.CurrencyModifyBalanceRequest(CrystalRules.CurrencyId, amount, null));
+            return res.Data.Balance;
+        }
+
         // ── Player names ──────────────────────────────────────────────────
 
         /// <summary>The player's chosen name, or null when they have none (never auto-generates one).</summary>

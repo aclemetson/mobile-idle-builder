@@ -86,6 +86,22 @@ public class ModuleTests
         Assert.True(back.deleted);
     }
 
+    [Fact]
+    public void Crystals_MigrationIsCapped_AndTheLedgerAndWalletRoundTrip()
+    {
+        Assert.Equal(0, CrystalRules.MigrationAmount(-5));
+        Assert.Equal(1234, CrystalRules.MigrationAmount(1234));
+        Assert.Equal(CrystalRules.MigrationCap, CrystalRules.MigrationAmount(long.MaxValue));
+
+        var ledger = PveStore.Deserialize<CrystalLedger>(PveStore.Serialize(
+            new CrystalLedger { migrated = true, migratedAmount = 600, migratedUtc = "2026-11-28T00:00:00Z" }));
+        Assert.True(ledger.migrated);
+        Assert.Equal(600, ledger.migratedAmount);
+
+        string json = PveStore.Serialize(new CrystalWalletResponse { balance = 3200, migrated = true });
+        Assert.Contains("\"balance\":3200", json);
+    }
+
     sealed class Wrapper { readonly string _j; public Wrapper(string j) => _j = j; public override string ToString() => _j; }
 
     [Fact]
