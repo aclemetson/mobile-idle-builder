@@ -510,7 +510,7 @@ namespace MobileIdleBuilder
                     d.info = "Finish the Chemistry tutorial to unlock weekly tournaments.";
                     break;
                 case TournamentPanelState.Offline:
-                    d.headline = "Can't reach the tournament server";
+                    d.headline = status?.error == PveErrors.Suspended ? AccountSuspension.Title : "Can't reach the tournament server";
                     d.info = TournamentRules.ErrorText(status?.error ?? "network:");
                     break;
                 case TournamentPanelState.Waiting:

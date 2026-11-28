@@ -218,5 +218,6 @@ namespace MobileIdleBuilder
         public const string Config          = "config_missing";
         public const string Retired         = "retired";
         public const string BadLook         = "bad_look";
+        public const string Suspended       = "suspended";   // client only: the account is banned (AccountSuspension), nothing was sent
     }
 }

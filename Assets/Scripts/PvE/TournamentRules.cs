@@ -263,6 +263,7 @@ namespace MobileIdleBuilder
                 PveErrors.Config         => "Tournaments are unavailable right now.",
                 PveErrors.Retired        => "You already left this tournament.",
                 PveErrors.RunOver        => "Your tournament run is already over.",
+                PveErrors.Suspended      => "Your account is suspended, so tournaments are unavailable.",
                 _                        => "Something went wrong. Try again.",
             };
         }

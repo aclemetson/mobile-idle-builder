@@ -388,6 +388,8 @@ namespace MobileIdleBuilder
             }
             catch (Exception ex)
             {
+                // A ban refuses the load (403, error 57). It is not "no cloud save": SaveManager stops syncing instead.
+                AccountSuspension.Report(ex);
                 GameLogger.Warning($"[UGSCloudSave] FetchAsync failed: {ex.Message}");
                 return null;
             }
@@ -424,7 +426,7 @@ namespace MobileIdleBuilder
         /// <summary>Pushes SaveData to UGS under key "save_v1".</summary>
         public async Task<bool> PushAsync(SaveData data)
         {
-            if (!IsAvailable) return false;
+            if (!IsAvailable || AccountSuspension.IsSuspended) return false;
 
             try
             {
@@ -436,6 +438,7 @@ namespace MobileIdleBuilder
             }
             catch (Exception ex)
             {
+                AccountSuspension.Report(ex);
                 GameLogger.Warning($"[UGSCloudSave] PushAsync failed: {ex.Message}");
                 return false;
             }

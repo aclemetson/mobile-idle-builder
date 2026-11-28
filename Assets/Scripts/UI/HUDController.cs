@@ -354,6 +354,7 @@ namespace MobileIdleBuilder
             _modeBars?.Initialize(root);   // placement / conveyor / deconstruct bars, confirm popup, output selector
             ConfirmPrompt.Init(root); // remove confirmations for buildings and belts
             SaveConflictPrompt.Init(root); // "Two saves found": this device vs the cloud save
+            AccountSuspensionNotice.Attach(); // one-time "Account suspended" card (banned in Unity Cloud)
             _surgeOffer?.Init(root, this); // Entropy Surge side icon + offer card
             _testAd?.Init(root);            // ad test mode card (dev builds, ads.test_mode)
             _cyclotron?.Init(root, this);   // Cyclotron Kick minigame (drawer button from the 2nd prestige)

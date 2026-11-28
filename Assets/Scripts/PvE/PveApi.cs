@@ -69,6 +69,8 @@ namespace MobileIdleBuilder
 
         static async Task<T> Send<T>(string function, Dictionary<string, object> args) where T : class, new()
         {
+            // A suspended account (AccountSuspension) is refused by every endpoint: don't keep calling.
+            if (AccountSuspension.IsSuspended) return WithError<T>(PveErrors.Suspended);
             string json;
             try
             {
@@ -76,6 +78,7 @@ namespace MobileIdleBuilder
             }
             catch (Exception e)
             {
+                if (AccountSuspension.Report(e)) return WithError<T>(PveErrors.Suspended);
                 GameLogger.Warning($"[PvE] {function} failed: {e.Message}");
                 return WithError<T>("network:" + e.Message);
             }
