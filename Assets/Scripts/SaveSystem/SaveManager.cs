@@ -636,6 +636,7 @@ namespace MobileIdleBuilder
                 GridSaveService.Instance?.FlushToSave();
             GameLogger.Debug($"[Save] Writing to disk — tutorial step: '{_current.tutorial.currentStepId}'  " +
                       $"active={_current.tutorial.isActive}  inventory items: {_current.currentRun.inventoryKeys?.Count ?? 0}");
+            SavePlatform.Stamp(_current);
             _local.SaveWithBackup(_current);
         }
 
