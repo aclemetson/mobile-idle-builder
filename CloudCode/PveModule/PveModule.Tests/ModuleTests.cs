@@ -73,6 +73,19 @@ public class ModuleTests
         Assert.Null(PveStore.Deserialize<PveSettings>(null));
     }
 
+    [Fact]
+    public void DeleteMyData_RemovesOnlyTheCallerFromTheBracketMeta_AndTheResponseRoundTrips()
+    {
+        var meta = new PveBracketMeta { id = "pve_2026-11-27_bronze_1", playerIds = new List<string> { "a", "me", "b" } };
+        var stored = PveStore.Deserialize<PveBracketMeta>(PveStore.Serialize(meta));
+        var written = PveRules.WithoutPlayer(stored, "me");
+        Assert.Equal(new[] { "a", "b" }, written.playerIds);
+        Assert.Null(PveRules.WithoutPlayer(written, "me"));   // already gone: nothing to write
+
+        var back = PveStore.Deserialize<PveDeleteResponse>(PveStore.Serialize(new PveDeleteResponse { deleted = true }));
+        Assert.True(back.deleted);
+    }
+
     sealed class Wrapper { readonly string _j; public Wrapper(string j) => _j = j; public override string ToString() => _j; }
 
     [Fact]

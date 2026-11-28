@@ -36,6 +36,8 @@ namespace MobileIdleBuilder
         private Label  _accountLabel;
         private Button _btnGoogleSignIn;
         private Button _btnPlayerName;
+        private Button _btnDeleteAccount;
+        private bool   _deleting;
         private bool   _signingIn;
         private string _accountStatus;   // result of the last Settings sign-in, shown under the account
 
@@ -69,6 +71,7 @@ namespace MobileIdleBuilder
             if (_btnDiscord          != null) _btnDiscord.clicked              -= OnDiscord;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         -= OnGoogleSignIn;
             if (_btnPlayerName       != null) _btnPlayerName.clicked           -= OnPlayerName;
+            if (_btnDeleteAccount    != null) _btnDeleteAccount.clicked        -= OnDeleteAccount;
             PlayerNameService.OnNameChanged -= OnNameChanged;
         }
 
@@ -111,6 +114,7 @@ namespace MobileIdleBuilder
             _accountLabel         = root.Q<Label>("settings-account");
             _btnGoogleSignIn      = root.Q<Button>("btn-google-sign-in");
             _btnPlayerName        = root.Q<Button>("btn-player-name");
+            _btnDeleteAccount     = root.Q<Button>("btn-delete-account");
 
             if (_versionLabel != null) _versionLabel.text = VersionLabel.Format();
         }
@@ -133,6 +137,7 @@ namespace MobileIdleBuilder
             if (_btnDiscord          != null) _btnDiscord.clicked              += OnDiscord;
             if (_btnGoogleSignIn     != null) _btnGoogleSignIn.clicked         += OnGoogleSignIn;
             if (_btnPlayerName       != null) _btnPlayerName.clicked           += OnPlayerName;
+            if (_btnDeleteAccount    != null) _btnDeleteAccount.clicked        += OnDeleteAccount;
             PlayerNameService.OnNameChanged += OnNameChanged;
         }
 
@@ -231,6 +236,62 @@ namespace MobileIdleBuilder
                 _btnGoogleSignIn.text = _signingIn ? "Signing in..." : "Sign in with Google";
             }
             if (_btnPlayerName != null) _btnPlayerName.text = PlayerNameButtonText(PlayerNameService.Current);
+            if (_btnDeleteAccount != null)
+            {
+                _btnDeleteAccount.SetEnabled(!_deleting && !_signingIn);
+                _btnDeleteAccount.text = _deleting ? "Deleting account..." : "Delete account";
+            }
+        }
+
+        // ── Delete account (store requirement) ───────────────────────────────
+
+        internal const string DeleteAccountMessage =
+            "This permanently deletes your progress, crystals, league standings and player name, on every device " +
+            "signed in to this account. It can't be undone.\n\nStore purchases are not refunded. Ad-free can be " +
+            "restored from the Shop afterwards.";
+
+        internal const string DeleteAccountCheckbox = "I understand this can't be undone";
+
+        private void OnDeleteAccount()
+        {
+            if (_deleting) return;
+            ConfirmPrompt.Show("Delete account?", DeleteAccountMessage, "Delete forever",
+                onConfirm: () =>
+                {
+                    if (!ConfirmPrompt.CheckboxChecked)
+                    {
+                        _accountStatus = "Account not deleted: tick the box to confirm.";
+                        RefreshAccount();
+                        return;
+                    }
+                    RunAccountDeletion();
+                },
+                checkboxLabel: DeleteAccountCheckbox);
+        }
+
+        private async void RunAccountDeletion()
+        {
+            _deleting = true;
+            _accountStatus = "Deleting your account...";
+            RefreshAccount();
+            try
+            {
+                var (failure, error) = await AccountDeletion.RunAsync(new UgsAccountDeletionBackend());
+                if (failure == AccountDeletionFailure.None)
+                {
+                    _accountStatus = null;
+                    await AccountDeletion.ResetLocalGameAsync();   // reloads the scene as a new game
+                    return;
+                }
+                _accountStatus = AccountDeletion.FailureMessage(failure, error);
+            }
+            catch (Exception e)
+            {
+                GameLogger.Error($"[Settings] Account deletion failed: {e}");
+                _accountStatus = AccountDeletion.FailureMessage(AccountDeletionFailure.ServerData, e.Message);
+            }
+            _deleting = false;
+            if (this != null) RefreshAccount();
         }
 
         /// <summary>The Settings name row: the current public name (with its UGS tag), or an invitation to pick one.</summary>

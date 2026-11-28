@@ -196,6 +196,14 @@ namespace MobileIdleBuilder
     }
 
     /// <summary>Error codes the module returns in <c>error</c>.</summary>
+    /// <summary>DeleteMyData: every Cloud Save key of the caller is gone and they are off their bracket.</summary>
+    [Serializable]
+    public class PveDeleteResponse
+    {
+        public string error;            // null/"" = ok
+        public bool deleted;
+    }
+
     public static class PveErrors
     {
         public const string OutsideWindow   = "outside_window";

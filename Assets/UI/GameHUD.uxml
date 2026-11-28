@@ -452,6 +452,7 @@
                 <ui:Label name="settings-account" text="" class="settings-account" />
                 <ui:Button name="btn-player-name" text="Choose a player name" class="drawer-nav-btn" />
                 <ui:Button name="btn-google-sign-in" text="Sign in with Google" class="drawer-nav-btn hidden" />
+                <ui:Button name="btn-delete-account" text="Delete account" class="drawer-nav-btn drawer-nav-btn--danger" />
                 <ui:Label text="SUPPORT" class="drawer-section-title" />
                 <ui:Button name="btn-send-feedback"  text="Send Feedback"  class="drawer-nav-btn" />
                 <ui:Button name="btn-discord"        text="Join our Discord" class="drawer-nav-btn hidden" />
